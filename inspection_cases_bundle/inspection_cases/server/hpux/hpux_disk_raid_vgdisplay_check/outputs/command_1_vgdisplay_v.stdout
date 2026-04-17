@@ -1,0 +1,12 @@
+--- Volume groups ---
+VG Name                     /dev/vg00
+VG Status                   available
+Max PV                      16
+Cur PV                      2
+Act PV                      2
+
+--- Physical volumes ---
+PV Name                     /dev/dsk/c0t0d0
+PV Status                   available
+PV Name                     /dev/dsk/c1t0d0
+PV Status                   available

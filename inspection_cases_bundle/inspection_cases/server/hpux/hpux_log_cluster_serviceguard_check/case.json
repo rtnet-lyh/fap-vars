@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 43,
+  "host_id": 322,
+  "job_id": 3112,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-12",
+    "item_id": 93012,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "클러스터 로그",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Serviceguard 클러스터 상태 변경과 통신 장애 로그를 점검한다.",
+    "inspection_command": "tail -n 2000 /var/adm/cmcluster/cmcld.log | egrep -i 'status\\s+change.*offline|status\\s+change.*unknown|cluster\\s+error|communication\\s+failure|\\berror\\b'",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "cluster_bad_log_keywords",
+        "value1": "status\\s+change.*offline|status\\s+change.*unknown|cluster\\s+error|communication\\s+failure|\\berror\\b"
+      },
+      {
+        "name": "cluster_ignore_log_keywords",
+        "value1": "status\\s+change.*online"
+      }
+    ]
+  }
+}

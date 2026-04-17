@@ -1,0 +1,9 @@
+Class = "fc_host"
+
+  Class Device = "host0"
+  Class Device path = "/sys/class/fc_host/host0"
+    node_name          = "0x50014380186baf10"
+    port_name          = "0x50014380186baf12"
+    port_state         = "Online"
+    speed              = "8 Gbit"
+    supported_speeds   = "4 Gbit, 8 Gbit, 16 Gbit"

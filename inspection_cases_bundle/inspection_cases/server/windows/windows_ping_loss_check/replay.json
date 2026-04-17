@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $target = (Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Sort-Object RouteMetric | Select-Object -First 1).NextHop; if (-not $target) { $target = '127.0.0.1' }; $count = 4; $ok = @(Test-Connection -ComputerName $target -Count $count -Quiet:$false -ErrorAction SilentlyContinue); $success = @($ok).Count; [pscustomobject]@{ target = $target; sent_count = $count; success_count = $success; loss_percent = [math]::Round((($count - $success) / $count) * 100, 2) } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"target\":\"192.168.1.1\",\"sent_count\":4,\"success_count\":4,\"loss_percent\":0.0}\n",
+    "stderr": ""
+  }
+]

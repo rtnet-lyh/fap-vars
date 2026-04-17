@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -Fi -e 'resource status unknown' -e 'resource status offline' -e 'resource status online' -e 'cluster error' -e 'cluster failed' -e 'failover failed' -e 'quorum lost' -e 'node down' -e 'node offline' -e 'fencing failed' -e 'stonith failed' -e 'split brain'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

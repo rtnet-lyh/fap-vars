@@ -1,0 +1,16 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ioscan -m dsf",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_ioscan_m_dsf.stdout",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "scsimgr get_info -D /dev/rdisk/disk1",
+    "rc": 0,
+    "stdout_file": "outputs/command_2_scsimgr_get_info_d_dev_rdisk_disk1.stdout",
+    "stderr": ""
+  }
+]

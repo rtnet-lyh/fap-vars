@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "regex",
+    "matcher_value": "^dmesg \\| egrep -i .+$",
+    "rc": 0,
+    "stdout_file": "outputs/output.stdout",
+    "stderr": ""
+  }
+]

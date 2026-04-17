@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $os = Get-CimInstance Win32_OperatingSystem; $total = [double]$os.TotalVisibleMemorySize; $free = [double]$os.FreePhysicalMemory; $usedPercent = if ($total -gt 0) { [math]::Round((($total - $free) / $total) * 100, 2) } else { 0 }; [pscustomobject]@{ total_memory_kib = [int64]$total; free_memory_kib = [int64]$free; memory_usage_percent = $usedPercent } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"total_memory_kib\":16777216,\"free_memory_kib\":8388608,\"memory_usage_percent\":50.0}\n",
+    "stderr": ""
+  }
+]

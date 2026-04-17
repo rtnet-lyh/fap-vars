@@ -1,0 +1,5 @@
+[   10.234567] ipmi_si dmi-ipmi-si.0: Fan1 RPM lower critical - going low
+[   10.235104] ipmi_si dmi-ipmi-si.0: Fan2 RPM lower non-recoverable - fan fail
+[   10.235882] hwmon hwmon2: fan1 input not responding
+[   10.236451] platform sensor_fan: cooling fan failure detected
+[   10.237018] systemd[1]: Warning: chassis fan status is critical

@@ -1,0 +1,45 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 119,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 20,
+  "host_id": 200,
+  "job_id": 2000,
+  "item": {
+    "inspection_code": "U-REPLAY-DMESG-CLUSTER-01",
+    "item_id": 90020,
+    "application_id": 119,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "cluster_log_fail_keywords",
+        "value1": "resource status unknown|resource status offline|resource status online|cluster error|cluster failed|failover failed|quorum lost|node down|node offline|fencing failed|stonith failed|split brain"
+      },
+      {
+        "name": "cluster_log_execpt_keywords",
+        "value1": "unknown kernel command line|unknown numa node|error record serialization table|online controller reset|online cpus|sata link down"
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=111 time=38.8 ms
+10 packets transmitted, 10 received, 0% packet loss
+rtt min/avg/max/mdev = 38.3/39.6/40.6/0.7 ms

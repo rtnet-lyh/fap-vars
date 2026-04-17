@@ -1,0 +1,6 @@
+Class       I  H/W Path        Driver      S/W State   H/W Type     Description
+===========================================================================
+processor  0  120             processor   CLAIMED     PROCESSOR    Processor
+processor  1  121             processor   CLAIMED     PROCESSOR    Processor
+processor  2  122             processor   CLAIMED     PROCESSOR    Processor
+processor  3  123             processor   CLAIMED     PROCESSOR    Processor

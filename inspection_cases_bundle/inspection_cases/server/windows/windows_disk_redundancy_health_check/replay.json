@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $physical = @(); $virtual = @(); $storageModuleAvailable = $false; if (Get-Command Get-PhysicalDisk -ErrorAction SilentlyContinue) { $storageModuleAvailable = $true; $physical = @(Get-PhysicalDisk | Select-Object FriendlyName, HealthStatus, OperationalStatus, MediaType, Size) }; if (Get-Command Get-VirtualDisk -ErrorAction SilentlyContinue) { $storageModuleAvailable = $true; $virtual = @(Get-VirtualDisk | Select-Object FriendlyName, HealthStatus, OperationalStatus, ResiliencySettingName, Size) }; [pscustomobject]@{ storage_module_available = $storageModuleAvailable; physical_disks = $physical; virtual_disks = $virtual } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"storage_module_available\":true,\"physical_disks\":[{\"FriendlyName\":\"PhysicalDisk0\",\"HealthStatus\":\"Healthy\",\"OperationalStatus\":\"OK\",\"MediaType\":\"SSD\",\"Size\":107374182400}],\"virtual_disks\":[]}\n",
+    "stderr": ""
+  }
+]

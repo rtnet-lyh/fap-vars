@@ -1,0 +1,34 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+
+# Coverage and test output
+.coverage
+.coverage.*
+htmlcov/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Notebook and local temp files
+.ipynb_checkpoints/
+*.tmp
+*.temp

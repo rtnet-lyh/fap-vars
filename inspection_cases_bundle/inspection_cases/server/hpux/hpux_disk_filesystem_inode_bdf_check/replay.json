@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "bdf -i",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_bdf_i.stdout",
+    "stderr": ""
+  }
+]

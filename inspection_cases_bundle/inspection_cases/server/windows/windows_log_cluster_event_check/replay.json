@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'cluster|clusvc|failover|csv' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'cluster|clusvc|failover|csv'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"lookback_hours\":24,\"keyword_pattern\":\"demo\",\"event_count\":0,\"events\":[]}\n",
+    "stderr": ""
+  }
+]

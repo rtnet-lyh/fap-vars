@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'ECC error\\|CPU'",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_cpu.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 103,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 4,
+  "host_id": 40,
+  "job_id": 400,
+  "item": {
+    "inspection_code": "U-REPLAY-CPU-01",
+    "item_id": 90004,
+    "application_id": 103,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_cpu_usage_percent",
+        "value1": "0.1"
+      }
+    ]
+  }
+}

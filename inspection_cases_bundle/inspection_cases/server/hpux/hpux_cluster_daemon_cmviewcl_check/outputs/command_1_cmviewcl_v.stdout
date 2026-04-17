@@ -1,0 +1,9 @@
+CLUSTER      STATUS
+sgcluster    up
+
+  NODE        STATUS       STATE
+  node1       up           running
+  node2       up           running
+
+  PACKAGE     STATUS       STATE       AUTO_RUN
+  pkg_app     up           running     enabled

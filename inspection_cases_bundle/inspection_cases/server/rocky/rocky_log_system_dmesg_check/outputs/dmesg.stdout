@@ -1,0 +1,8 @@
+[    0.000000] Linux version 5.14.0-611.13.1.el9_7.x86_64
+[    1.234567] ata1: SATA link up 6.0 Gbps
+[    2.345678] EXT4-fs (sda1): mounted filesystem with ordered data mode
+[   15.456789] device-mapper: multipath: version 1.14.0 loaded
+[  120.567890] Out of memory: Killed process 1234 (java) total-vm:1048576kB
+[  180.678901] blk_update_request: I/O error, dev sda, sector 123456
+[  181.789012] Buffer I/O error on dev sda1, logical block 15432
+[  250.890123] CPU0: Core temperature above threshold, cpu clock throttled

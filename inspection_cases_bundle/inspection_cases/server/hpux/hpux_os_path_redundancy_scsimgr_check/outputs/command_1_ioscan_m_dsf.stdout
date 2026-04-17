@@ -1,0 +1,4 @@
+Persistent DSF           Legacy DSF(s)
+========================================
+/dev/rdisk/disk1         /dev/rdsk/c2t0d0
+                         /dev/rdsk/c3t0d0

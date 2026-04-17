@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $disks = Get-CimInstance Win32_DiskDrive | Select-Object DeviceID, Model, InterfaceType, MediaType, Size, Status; $bad = @($disks | Where-Object { $_.Status -and $_.Status -ne 'OK' }); [pscustomobject]@{ disk_count = @($disks).Count; abnormal_disk_count = @($bad).Count; disks = $disks } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"disk_count\":1,\"abnormal_disk_count\":0,\"disks\":[{\"DeviceID\":\"\\\\\\\\.\\\\PHYSICALDRIVE0\",\"Model\":\"Demo Disk\",\"InterfaceType\":\"SCSI\",\"MediaType\":\"Fixed hard disk media\",\"Size\":107374182400,\"Status\":\"OK\"}]}\n",
+    "stderr": ""
+  }
+]

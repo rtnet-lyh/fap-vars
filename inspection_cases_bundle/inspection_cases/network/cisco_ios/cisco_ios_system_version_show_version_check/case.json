@@ -1,0 +1,35 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "admin",
+  "password": "",
+  "credentials": {
+    "CISCO_IOS": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "CISCO_IOS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "admin",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 4,
+  "host_id": 40,
+  "job_id": 400,
+  "item": {
+    "inspection_code": "N-REPLAY-CISCO-01",
+    "item_id": 90004,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "CISCO_IOS",
+    "application_name": "SW-ACCESS-01",
+    "application_family_name": "NETWORK"
+  }
+}

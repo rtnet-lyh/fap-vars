@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $adapters = Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, LinkSpeed, MacAddress; $down = @($adapters | Where-Object { $_.Status -ne 'Up' }); [pscustomobject]@{ adapter_count = @($adapters).Count; down_adapter_count = @($down).Count; adapters = $adapters } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"adapter_count\":1,\"down_adapter_count\":0,\"adapters\":[{\"Name\":\"Ethernet\",\"InterfaceDescription\":\"Demo NIC\",\"Status\":\"Up\",\"LinkSpeed\":\"1 Gbps\",\"MacAddress\":\"00-11-22-33-44-55\"}]}\n",
+    "stderr": ""
+  }
+]

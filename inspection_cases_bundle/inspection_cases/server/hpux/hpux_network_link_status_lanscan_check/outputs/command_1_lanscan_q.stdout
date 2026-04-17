@@ -1,0 +1,4 @@
+State of LAN Interface(s)
+NamePPA  Hardware Path        Station Address    HP-DLPI   Link
+lan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP
+lan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        DOWN

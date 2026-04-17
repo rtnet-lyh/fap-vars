@@ -1,0 +1,21 @@
+Stack: corosync
+Current DC: node1 (version 2.1.6-9.el8) - partition with quorum
+Last updated: Mon Apr 13 10:15:22 2026
+Last change:  Mon Apr 13 10:10:01 2026 by hacluster via crmd on node1
+
+2 nodes configured
+3 resource instances configured
+
+Node List:
+  * Online: [ node1 node2 ]
+
+Full List of Resources:
+  * vip_1     (ocf::heartbeat:IPaddr2):       Started node1
+  * web_srv   (systemd:httpd):                Started node1
+  * Clone Set: ping-clone [ping]
+    * Started: [ node1 node2 ]
+
+Daemon Status:
+  corosync: active/enabled
+  pacemaker: active/enabled
+  pcsd: active/enabled

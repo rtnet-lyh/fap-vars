@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "vgdisplay -v",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_vgdisplay_v.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,2 @@
+TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME
+dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2

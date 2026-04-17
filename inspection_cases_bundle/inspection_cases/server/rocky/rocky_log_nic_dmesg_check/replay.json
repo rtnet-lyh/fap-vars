@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -Fi -e 'offline due to error' -e 'port offline' -e 'link down' -e 'loop detected' -e 'loop failure' -e 'loop down'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

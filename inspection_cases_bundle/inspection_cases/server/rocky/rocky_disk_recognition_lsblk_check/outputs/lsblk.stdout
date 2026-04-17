@@ -1,0 +1,7 @@
+NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda             8:0    0   50G  0 disk
+├─sda1          8:1    0    1G  0 part /boot
+└─sda2          8:2    0   49G  0 part
+  ├─rhel-root 253:0    0 45.1G  0 lvm  /
+  └─rhel-swap 253:1    0  3.9G  0 lvm  [SWAP]
+sr0            11:0    1  1.3G  0 rom

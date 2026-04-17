@@ -1,0 +1,49 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 31,
+  "host_id": 310,
+  "job_id": 3100,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-CPU-01",
+    "item_id": 93001,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "CPU 사용률",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "HP-UX sar 명령으로 CPU 사용률을 점검합니다.",
+    "inspection_command": "sar -u 1 3",
+    "is_service_affect": "N",
+    "action_content": "CPU 사용률이 기준치를 초과하면 과다 사용 프로세스, 배치 작업, 시스템 부하를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "CPU_MAX_PCT",
+        "value1": "70"
+      }
+    ]
+  }
+}

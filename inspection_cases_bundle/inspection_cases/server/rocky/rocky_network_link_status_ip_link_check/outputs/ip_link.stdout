@@ -1,0 +1,38 @@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+258: br-b687e047b713: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default 
+    link/ether 0a:a9:67:08:33:43 brd ff:ff:ff:ff:ff:ff
+2: eno1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+    link/ether 74:9d:8f:0e:ad:f2 brd ff:ff:ff:ff:ff:ff
+    altname enp2s0f0
+3: eno2: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether 74:9d:8f:0e:ad:f3 brd ff:ff:ff:ff:ff:ff
+    altname enp2s0f1
+4: enp129s0f0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether 04:27:58:0a:fa:2b brd ff:ff:ff:ff:ff:ff
+5: enp129s0f1: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether 04:27:58:0a:fa:2c brd ff:ff:ff:ff:ff:ff
+6: br-3e40457894eb: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default 
+    link/ether 22:e6:03:db:9a:72 brd ff:ff:ff:ff:ff:ff
+7: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 06:51:8e:96:c4:5d brd ff:ff:ff:ff:ff:ff
+8: br-6a04ef950573: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default 
+    link/ether 36:03:8e:67:89:f5 brd ff:ff:ff:ff:ff:ff
+524: veth32719e4@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-c05f4f389f6a state UP mode DEFAULT group default 
+    link/ether 76:1d:6c:77:8b:c5 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+525: veth6291e48@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-c05f4f389f6a state UP mode DEFAULT group default 
+    link/ether 92:74:f7:f8:cd:4e brd ff:ff:ff:ff:ff:ff link-netnsid 2
+14: br-ed17885ef5c2: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default 
+    link/ether ca:ef:a5:bf:46:55 brd ff:ff:ff:ff:ff:ff
+280: docker_gwbridge: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 6e:ca:bc:88:d8:29 brd ff:ff:ff:ff:ff:ff
+282: veth93dbdec@if281: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker_gwbridge state UP mode DEFAULT group default 
+    link/ether c2:9d:8b:c2:cb:b5 brd ff:ff:ff:ff:ff:ff link-netnsid 5
+293: vethda7d78b@if292: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker_gwbridge state UP mode DEFAULT group default 
+    link/ether 5e:0c:cd:47:0e:7d brd ff:ff:ff:ff:ff:ff link-netnsid 8
+294: vethe9072c6@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+    link/ether 26:3a:00:00:e5:90 brd ff:ff:ff:ff:ff:ff link-netnsid 9
+416: br-c05f4f389f6a: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 22:a7:a5:36:a0:0c brd ff:ff:ff:ff:ff:ff
+417: veth73eb6b0@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-c05f4f389f6a state UP mode DEFAULT group default 
+    link/ether 86:8c:33:38:1d:df brd ff:ff:ff:ff:ff:ff link-netnsid 0

@@ -1,0 +1,523 @@
+---
+prompt_result:
+  changed: true
+  connected: true
+  failed: false
+  host_id: 1
+  job_id: 31
+  network_os: hpux
+  protocol: ssh
+  result:
+    data_list:
+
+      - cmd: |-
+          sar -u 1 3
+        cmd_id: 1
+        cmd_name: "1._CPU_사용률 점검"
+        command: |-
+          sar -u 1 3
+        filter_key: "hpuxCpuUsageSarFilter"
+        host_name: 192.168.1.136
+        index: 1
+        insert_time: 1767053400123
+        inspection_criteria: |-
+          시스템 전체 CPU 사용률을 점검합니다. (CPU 사용률 = 100 - %idle)
+          마지막 샘플(3초 시점) 기준 70% 초과 시 불량입니다.
+          명령 실행 불가/권한 문제/파싱 실패 시 보류(is_pass=-1) 처리합니다.
+        CPU_MAX_PCT: 70
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "1._CPU_사용률 점검"
+        os: hpux
+        output: |-
+          HP-UX hpux01 B.11.31 U ia64  12/30/25
+
+          12:10:01  %usr  %sys  %wio  %idle
+          12:10:02     8     7     1     84
+          12:10:03    14     9     2     75
+          Average     11     8     1     80
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          swapinfo -tam
+        cmd_id: 2
+        cmd_name: "2._MEMORY 사용률 점검"
+        command: |-
+          swapinfo -tam
+        filter_key: "hpuxMemoryFreeSwapinfoFilter"
+        host_name: 192.168.1.136
+        index: 2
+        insert_time: 1767053401123
+        inspection_criteria: |-
+          free(사용 가능한 물리 메모리)는 총 메모리의 약 20% 이상 권장.
+          또한 free가 2GB 이상이면 여유로 판단하는 보조 기준을 사용합니다.
+          (FAIL: free% < 20% AND free < 2GB)
+        FREE_MIN_RATIO_PCT: 20
+        FREE_MIN_GB: 2
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "2._MEMORY 사용률 점검"
+        os: hpux
+        output: |-
+          TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME
+          dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2
+          reserve       -       -    2048
+          memory    16384    9200    7184   56%
+          total     24576   10224   14352   42%
+        sleep: 0.1
+        timeout: 3
+
+      - cmd: |-
+          swapinfo -tam
+        cmd_id: 3
+        cmd_name: "3._PagingSpace 사용률점검"
+        command: |-
+          swapinfo -tam
+        filter_key: "hpuxPagingSpaceUsageFilter"
+        host_name: 192.168.1.136
+        index: 3
+        insert_time: 1767053402123
+        inspection_criteria: |-
+          Paging Space(스왑) 사용률/여유를 점검합니다.
+          FREE%가 20% 미만이거나 USED%가 80% 초과 시 불량입니다.
+          명령 실행 불가/권한 문제/파싱 실패 시 보류(is_pass=-1) 처리합니다.
+        FREE_MIN_RATIO_PCT: 20
+        USED_MAX_PCT: 80
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "3._PagingSpace 사용률점검"
+        os: hpux
+        output: |-
+          TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME
+          dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2
+          reserve       -       -    2048
+          memory    16384    9200    7184   56%
+          total     24576   10224   14352   42%
+        sleep: 0.1
+        timeout: 3
+
+      - cmd: |-
+          bdf
+        cmd_id: 4
+        cmd_name: "4._파일시스템사용량"
+        command: |-
+          bdf
+        filter_key: "hpuxFilesystemUsageFilter"
+        host_name: 192.168.1.136
+        index: 4
+        insert_time: 1767053403123
+        inspection_criteria: |-
+          파일시스템 사용률(%used) 80% 이상 또는 가용공간(Avail%) 20% 미만이면 불량입니다.
+          bdf 실행 불가/권한 문제/파싱 실패 시 보류(is_pass=-1) 처리합니다.
+        USED_MAX_PCT: 80
+        AVAIL_MIN_PCT: 20
+        IGNORE_MOUNTS:
+          - "/proc"
+          - "/dev"
+        MAX_SAMPLE: 20
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "4._파일시스템사용량"
+        os: hpux
+        output: |-
+          Filesystem          kbytes    used   avail %used Mounted on
+          /dev/vg00/lvol3   20971520  8300000 12671520  40% /
+          /dev/vg00/lvol4   52428800 42000000 10428800  80% /opt
+          /dev/vg00/lvol5  104857600 70000000 34857600  67% /var
+          tmpfs              8192000        0  8192000   0% /dev/shm
+        sleep: 0.1
+        timeout: 3
+
+      - cmd: |-
+          swapinfo -a
+        cmd_id: 5
+        cmd_name: "5._DiskSwap_사용률"
+        command: |-
+          swapinfo -a
+        filter_key: "hpuxDiskSwapUsageFilter"
+        host_name: 192.168.1.136
+        index: 5
+        insert_time: 1767053404123
+        inspection_criteria: |-
+          Disk Swap(dev) 사용률/여유를 점검합니다.
+          USED% > 80% 또는 FREE% < 20% 이면 불량입니다.
+          명령 실행 불가/권한 문제/파싱 실패 시 보류(is_pass=-1) 처리합니다.
+          (swapinfo는 보통 non-root 가능하지만, 정책에 따라 root만 가능할 수 있음)
+        USED_MAX_PCT: 80
+        FREE_MIN_RATIO_PCT: 20
+        MAX_SAMPLE: 20
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "5._DiskSwap_사용률"
+        os: hpux
+        output: |-
+          TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME
+          dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2
+        sleep: 0.1
+        timeout: 3
+
+      - cmd: |-
+          dmesg | egrep -i 'error|fail|warning'
+        cmd_id: 6
+        cmd_name: "6._시스템 장치 서비스 로그 점검"
+        command: |-
+          dmesg | egrep -i 'error|fail|warning'
+        filter_key: "hpuxDmesgSystemAnomalyFilter"
+        host_name: 192.168.1.136
+        index: 6
+        insert_time: 1767053405123
+        inspection_criteria: |-
+          dmesg 로그에서 error/fail/warning 키워드가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns: ["\\berror\\b", "\\bfail(?:ed|ure)?\\b", "\\bwarning\\b"]
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "6._시스템 장치 서비스 로그 점검"
+        os: hpux
+        output: |-
+          WARNING: SCSI: Disk queue depth adjusted for /dev/dsk/c2t0d0
+          ERROR: fscsi0: I/O error detected on target 0 lun 0
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'panic|kernel panic|panicking'
+        cmd_id: 7
+        cmd_name: "7._커널패닉 로그 점검"
+        command: |-
+          dmesg | egrep -i 'panic|kernel panic|panicking'
+        filter_key: "hpuxDmesgKernelPanicFilter"
+        host_name: 192.168.1.136
+        index: 7
+        insert_time: 1767053406123
+        inspection_criteria: |-
+          dmesg 로그에서 kernel panic/panic/panicking 키워드가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns: ["\\bkernel\\s+panic\\b", "\\bpanic\\b", "\\bpanicking\\b"]
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "7._커널패닉 로그 점검"
+        os: hpux
+        output: |-
+          (no output)
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'ecc error|uncorrectable|cpu.*offline|offline.*cpu'
+        cmd_id: 8
+        cmd_name: "8._CPU 에러로그 점검"
+        command: |-
+          dmesg | egrep -i 'ecc error|uncorrectable|cpu.*offline|offline.*cpu'
+        filter_key: "hpuxDmesgCpuErrorFilter"
+        host_name: 192.168.1.136
+        index: 8
+        insert_time: 1767053407123
+        inspection_criteria: |-
+          dmesg 로그에서 CPU 관련 ECC/uncorrectable/offline 로그가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns:
+            - "\\becc\\s+error\\b"
+            - "\\buncorrectable\\b"
+            - "\\bcpu\\d*\\b.*\\boffline\\b|\\boffline\\b.*\\bcpu\\d*\\b"
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "8._CPU 에러로그 점검"
+        os: hpux
+        output: |-
+          (no output)
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'ecc error|single[- ]?bit|multi[- ]?bit|uncorrectable'
+        cmd_id: 9
+        cmd_name: "9._MEMORY 오류로그 점검"
+        command: |-
+          dmesg | egrep -i 'ecc error|single[- ]?bit|multi[- ]?bit|uncorrectable'
+        filter_key: "hpuxDmesgMemoryErrorFilter"
+        host_name: 192.168.1.136
+        index: 9
+        insert_time: 1767053408123
+        inspection_criteria: |-
+          dmesg 로그에서 메모리 ECC(single/multi/uncorrectable) 관련 로그가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns:
+            - "\\becc\\s+error\\b"
+            - "\\bsingle[- ]?bit\\b"
+            - "\\bmulti[- ]?bit\\b"
+            - "\\buncorrectable\\b"
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "9._MEMORY 오류로그 점검"
+        os: hpux
+        output: |-
+          Multi-bit ECC error detected on memory bank 1
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'fan|over[- ]?temp|not spinning|failed'
+        cmd_id: 10
+        cmd_name: " 10._FAN 로그 점검"
+        command: |-
+          dmesg | egrep -i 'fan|over[- ]?temp|not spinning|failed'
+        filter_key: "hpuxDmesgFanFilter"
+        host_name: 192.168.1.136
+        index: 10
+        insert_time: 1767053409123
+        inspection_criteria: |-
+          dmesg 로그에서 FAN fail/failed/not spinning/over-temp 로그가 발견되면 불량으로 판단합니다.
+          fan operational/normal은 정상으로 간주합니다.
+        interface:
+          bad_patterns:
+            - "\\bfan\\b.*\\bfail\\b"
+            - "\\bfan\\b.*\\bfailed\\b"
+            - "\\bnot\\s+spinning\\b"
+            - "\\bover[- ]?temp(?:erature)?\\b"
+          ignore_patterns:
+            - "\\bfan\\b.*\\boperational\\b"
+            - "\\bfan\\b.*\\bnormal\\b"
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ10._FAN 로그 점검"
+        os: hpux
+        output: |-
+          FAN failed: Over-temperature detected
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'psu|power supply|power.*failed|not detected'
+        cmd_id: 11
+        cmd_name: " 11._POWER PSU 로그 점검"
+        command: |-
+          dmesg | egrep -i 'psu|power supply|power.*failed|not detected'
+        filter_key: "hpuxDmesgPowerPsuFilter"
+        host_name: 192.168.1.136
+        index: 11
+        insert_time: 1767053410123
+        inspection_criteria: |-
+          dmesg 로그에서 PSU/Power supply failed/not detected 로그가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns:
+            - "\\bpsu\\b.*\\bfail\\b"
+            - "\\bpower\\s+supply\\b.*\\bfail\\b"
+            - "\\bpower\\b.*\\bfailed\\b"
+            - "\\bnot\\s+detected\\b"
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ11._POWER PSU 로그 점검"
+        os: hpux
+        output: |-
+          (no output)
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'hba.*(error|fail|failed)|loop detected|port.*offline|offline.*port|port.*online|online.*port'
+        cmd_id: 12
+        cmd_name: " 12._HBA 로그 점검"
+        command: |-
+          dmesg | egrep -i 'hba.*(error|fail|failed)|loop detected|port.*offline|offline.*port|port.*online|online.*port'
+        filter_key: "hpuxDmesgHbaFilter"
+        host_name: 192.168.1.136
+        index: 12
+        insert_time: 1767053411123
+        inspection_criteria: |-
+          dmesg 로그에서 HBA loop/port offline/hba error 로그가 발견되면 불량으로 판단합니다.
+          port online은 정상으로 간주합니다.
+        interface:
+          bad_patterns:
+            - "\\bloop\\s+detected\\b"
+            - "\\bport\\b.*\\boffline\\b|\\boffline\\b.*\\bport\\b"
+            - "\\bhba\\b.*\\b(error|fail|failed)\\b"
+          ignore_patterns:
+            - "\\bport\\b.*\\bonline\\b|\\bonline\\b.*\\bport\\b"
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ12._HBA 로그 점검"
+        os: hpux
+        output: |-
+          HBA1: Loop detected on port 0
+          Port 1 offline due to error
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'link down|status down|failover|lan[0-9]+.*down|link up|status up'
+        cmd_id: 13
+        cmd_name: " 13._NIC 로그 점검"
+        command: |-
+          dmesg | egrep -i 'link down|status down|failover|lan[0-9]+.*down|link up|status up'
+        filter_key: "hpuxDmesgNicFilter"
+        host_name: 192.168.1.136
+        index: 13
+        insert_time: 1767053412123
+        inspection_criteria: |-
+          dmesg 로그에서 NIC link/status down 또는 failover 로그가 발견되면 불량으로 판단합니다.
+          link up/status up은 정상으로 간주합니다.
+        interface:
+          bad_patterns:
+            - "\\blink\\s+down\\b"
+            - "\\bstatus\\s+down\\b"
+            - "\\bfailover\\b"
+            - "\\blan\\d+\\b.*\\bdown\\b"
+          ignore_patterns:
+            - "\\blink\\s+up\\b"
+            - "\\bstatus\\s+up\\b"
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ13._NIC 로그 점검"
+        os: hpux
+        output: |-
+          lan0: Link Down
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          dmesg | egrep -i 'timeout|i/o error|transport failed|media error'
+        cmd_id: 14
+        cmd_name: " 14._IO 에러로그 점검"
+        command: |-
+          dmesg | egrep -i 'timeout|i/o error|transport failed|media error'
+        filter_key: "hpuxDmesgIoErrorFilter"
+        host_name: 192.168.1.136
+        index: 14
+        insert_time: 1767053413123
+        inspection_criteria: |-
+          dmesg 로그에서 timeout/i/o error/transport failed/media error 로그가 발견되면 불량으로 판단합니다.
+        interface:
+          bad_patterns:
+            - "\\btimeout\\b"
+            - "\\bi/o\\s+error\\b"
+            - "\\btransport\\s+failed\\b"
+            - "\\bmedia\\s+error\\b"
+          ignore_patterns: []
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ14._IO 에러로그 점검"
+        os: hpux
+        output: |-
+          Timeout occurred while waiting for device
+          I/O error on device /dev/dsk/c2t0d0
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          tail -n 2000 /var/adm/cmcluster/cmcld.log | egrep -i 'status change|offline|online|unknown|cluster error|communication failure|error'
+        cmd_id: 15
+        cmd_name: " 15._클러스터 Serviceguard 로그 점검"
+        command: |-
+          tail -n 2000 /var/adm/cmcluster/cmcld.log | egrep -i 'status change|offline|online|unknown|cluster error|communication failure|error'
+        filter_key: "hpuxServiceguardClusterLogFilter"
+        host_name: 192.168.1.136
+        index: 15
+        insert_time: 1767053414123
+        inspection_criteria: |-
+          Serviceguard 로그에서 status change offline/unknown, cluster error, communication failure, error 등이 발견되면 불량으로 판단합니다.
+          status change online은 정상으로 간주합니다.
+        interface:
+          bad_patterns:
+            - "\\bstatus\\s+change\\b.*\\boffline\\b"
+            - "\\bstatus\\s+change\\b.*\\bunknown\\b"
+            - "\\bcluster\\s+error\\b"
+            - "\\bcommunication\\s+failure\\b"
+            - "\\berror\\b"
+          ignore_patterns:
+            - "\\bstatus\\s+change\\b.*\\bonline\\b"
+          max_lines: 2000
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ15._클러스터 Serviceguard 로그 점검"
+        os: hpux
+        output: |-
+          Resource Status Change: node1 Offline
+          Cluster Error: node2 communication failure
+        sleep: 0.1
+        timeout: 5
+
+      - cmd: |-
+          lanscan -q
+        cmd_id: 16
+        cmd_name: "16._NIC STATE 점검"
+        command: |-
+          lanscan -q
+        filter_key: "hpuxNicLinkStateFilter"
+        host_name: 192.168.1.136
+        index: 16
+        insert_time: 1767053415123
+        inspection_criteria: |-
+          NIC별 링크 상태가 up이어야 양호입니다. down/unknown 존재 시 불량입니다.
+          명령 실행 불가/권한 문제/파싱 실패 시 보류(is_pass=-1) 처리합니다.
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ16._NIC STATE 점검"
+        os: hpux
+        output: |-
+          State of LAN Interface(s)
+          NamePPA  Hardware Path        Station Address    HP-DLPI   Link
+          lan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP
+          lan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        DOWN
+        sleep: 0.1
+        timeout: 3
+
+      - cmd: |-
+          lanadmin -x 0
+        cmd_id: 17
+        cmd_name: " 17._NIC SPEED DUPLEX 점검"
+        command: |-
+          lanadmin -x 0
+        filter_key: "hpuxNicSpeedDuplexFilter"
+        host_name: 192.168.1.136
+        index: 17
+        insert_time: 1767053416123
+        inspection_criteria: |-
+          Link status=Up, Duplex=Full 확인. 기대 속도(EXPECT_SPEED_MBPS)가 설정된 경우 일치해야 양호입니다.
+          lanadmin은 일부 환경에서 root 권한이 필요할 수 있으며, 실행 불가 시 보류(is_pass=-1) 처리합니다.
+        EXPECT_SPEED_MBPS: 1000
+        REQUIRE_FULL_DUPLEX: true
+        is_save: true
+        is_compare: true
+        is_success: true
+        name: "ㅤ17._NIC SPEED DUPLEX 점검"
+        os: hpux
+        output: |-
+          Interface = lan0
+          Link status   : Up
+          Speed         : 1000 Mbps
+          Duplex        : Full
+          Autoneg       : On
+        sleep: 0.1
+        timeout: 3

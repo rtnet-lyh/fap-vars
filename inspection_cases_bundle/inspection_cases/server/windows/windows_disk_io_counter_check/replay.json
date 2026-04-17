@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $read = (Get-Counter '\\PhysicalDisk(_Total)\\Avg. Disk sec/Read').CounterSamples[0].CookedValue; $write = (Get-Counter '\\PhysicalDisk(_Total)\\Avg. Disk sec/Write').CounterSamples[0].CookedValue; [pscustomobject]@{ avg_disk_sec_read = [math]::Round($read, 4); avg_disk_sec_write = [math]::Round($write, 4) } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"avg_disk_sec_read\":0.001,\"avg_disk_sec_write\":0.002}\n",
+    "stderr": ""
+  }
+]

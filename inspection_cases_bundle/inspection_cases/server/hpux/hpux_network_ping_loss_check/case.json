@@ -1,0 +1,61 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 58,
+  "host_id": 337,
+  "job_id": 3127,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-27",
+    "item_id": 93027,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Ping Loss",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Default Router 또는 지정 대상과의 네트워크 통신 상태를 점검한다.",
+    "inspection_command": "ping 192.168.1.1 64 3",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "PING_LOSS_MAX_PCT",
+        "value1": "0"
+      },
+      {
+        "name": "PING_LATENCY_MAX_MS",
+        "value1": "100"
+      },
+      {
+        "name": "PING_TARGET",
+        "value1": "192.168.1.1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $available = [bool](Get-Command Get-ClusterSharedVolume -ErrorAction SilentlyContinue); $csv = @(); if ($available) { $csv = @(Get-ClusterSharedVolume | Select-Object Name, State, OwnerNode) }; [pscustomobject]@{ cluster_shared_volume_available = $available; csv_count = @($csv).Count; csv = $csv } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"cluster_shared_volume_available\":true,\"csv_count\":1,\"csv\":[{\"Name\":\"Cluster Disk 1\",\"State\":\"Online\",\"OwnerNode\":\"WIN-DEMO\"}]}\n",
+    "stderr": ""
+  }
+]

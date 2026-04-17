@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'panic'",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_panic.stdout",
+    "stderr": ""
+  }
+]

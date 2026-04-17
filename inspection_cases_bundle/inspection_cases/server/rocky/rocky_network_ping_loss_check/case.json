@@ -1,0 +1,49 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 125,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 26,
+  "host_id": 260,
+  "job_id": 2600,
+  "item": {
+    "inspection_code": "U-REPLAY-PING-01",
+    "item_id": 90026,
+    "application_id": 125,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "ping_count",
+        "value1": "10"
+      },
+      {
+        "name": "ping_target",
+        "value1": "8.8.8.8"
+      },
+      {
+        "name": "max_ping_loss_percent",
+        "value1": "0"
+      }
+    ]
+  }
+}

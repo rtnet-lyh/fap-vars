@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "swapinfo -a",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_swapinfo_a.stdout",
+    "stderr": ""
+  }
+]

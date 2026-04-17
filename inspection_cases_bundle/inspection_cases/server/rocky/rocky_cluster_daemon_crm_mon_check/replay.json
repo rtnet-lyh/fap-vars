@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "crm_mon -1",
+    "rc": 0,
+    "stdout_file": "outputs/crm_mon.stdout",
+    "stderr": ""
+  }
+]

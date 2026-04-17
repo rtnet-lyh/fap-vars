@@ -1,0 +1,45 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 120,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 21,
+  "host_id": 210,
+  "job_id": 2100,
+  "item": {
+    "inspection_code": "U-REPLAY-DMESG-IO-02",
+    "item_id": 90021,
+    "application_id": 120,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "io_error_fail_keywords",
+        "value1": "i/o error|timeout|transport failed|media error"
+      },
+      {
+        "name": "io_error_except_keywords",
+        "value1": "hung_task_timeout_secs|rcu:|watchdog"
+      }
+    ]
+  }
+}

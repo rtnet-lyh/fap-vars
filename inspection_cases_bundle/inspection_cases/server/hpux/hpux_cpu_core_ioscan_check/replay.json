@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ioscan -fnC processor",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_ioscan_fnc_processor.stdout",
+    "stderr": ""
+  }
+]

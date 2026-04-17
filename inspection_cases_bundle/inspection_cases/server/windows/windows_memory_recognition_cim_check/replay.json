@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $mem = Get-CimInstance Win32_PhysicalMemory | Select-Object BankLabel, DeviceLocator, Capacity, Speed, Manufacturer, PartNumber; $total = ($mem | Measure-Object -Property Capacity -Sum).Sum; [pscustomobject]@{ dimm_count = @($mem).Count; total_physical_memory_bytes = [int64]$total; modules = $mem } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"dimm_count\":2,\"total_physical_memory_bytes\":17179869184,\"modules\":[{\"BankLabel\":\"BANK 0\",\"DeviceLocator\":\"DIMM 0\",\"Capacity\":8589934592,\"Speed\":2666,\"Manufacturer\":\"Demo\",\"PartNumber\":\"DEMO\"}]}\n",
+    "stderr": ""
+  }
+]

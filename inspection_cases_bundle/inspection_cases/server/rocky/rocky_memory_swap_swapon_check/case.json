@@ -1,0 +1,45 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 105,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 6,
+  "host_id": 60,
+  "job_id": 600,
+  "item": {
+    "inspection_code": "U-REPLAY-SWAP-01",
+    "item_id": 90006,
+    "application_id": 105,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_swap_usage_percent",
+        "value1": "50"
+      },
+      {
+        "name": "min_swap_size_gb",
+        "value1": "4"
+      }
+    ]
+  }
+}

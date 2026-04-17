@@ -1,0 +1,7 @@
+__BECOME_USER__:root
+mpatha (36005076810810548b8000000000000aa) dm-2 IBM,2145
+size=100G features='1 queue_if_no_path' hwhandler='0' wp=rw
+|-+- policy='round-robin 0' prio=1 status=active
+| `- 2:0:0:1 sdb 8:16 active ready running
+`-+- policy='round-robin 0' prio=1 status=enabled
+  `- 3:0:0:1 sdc 8:32 active ready running

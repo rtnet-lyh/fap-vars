@@ -1,0 +1,53 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 42,
+  "host_id": 321,
+  "job_id": 3111,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-11",
+    "item_id": 93011,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Kernel Parameter CHeck",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "커널 파라미터 설정값이 운영 기준에 맞게 적용되어 있는지 점검한다.",
+    "inspection_command": "kctune",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "required_kernel_parameters",
+        "value1": "test"
+      }
+    ]
+  }
+}

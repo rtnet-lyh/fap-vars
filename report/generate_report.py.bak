@@ -1,0 +1,925 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import configparser
+import json
+import re
+import sys
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from statistics import mean
+from typing import Any, Iterable, Mapping, Sequence
+
+DEFAULT_CONFIG_FILE = Path(__file__).resolve().parent / "db.ini"
+DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parent / "output"
+INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
+MAX_SHEETS_PER_WORKBOOK = 250
+
+SUMMARY_QUERY = """
+SELECT
+    ierh.job_id,
+    ierh.category_type_name,
+    ierh.status                  AS run_status,
+    ierh.started_time,
+    ierh.finished_time,
+    iertr.host_id,
+    iertr.host_name,
+    iertr.host_ip,
+    iertr.status                 AS host_status,
+    iertr.total_items,
+    iertr.vuln_items,
+    iertr.error_items,
+    iertr.score,
+    iertr.started_time           AS host_started,
+    iertr.finished_time          AS host_finished,
+    iertr.duration_sec,
+    iertr.error_message
+FROM inspection_execution_run_history ierh
+JOIN inspection_execution_run_target_result iertr
+    ON iertr.execution_run_history_id = ierh.id
+WHERE ierh.job_id = %s
+ORDER BY iertr.host_ip;
+""".strip()
+
+DETAIL_QUERY = """
+SELECT
+    ierh.job_id,
+    iertr.host_id,
+    iertr.host_name,
+    iertr.host_ip,
+    ierr.inspection_item_name,
+    ierr.type_name,
+    ierr.category_name,
+    ierr.area_name,
+    ierr.importance,
+    ierr.is_required,
+    ierr.application_type_name,
+    ierr.application_name,
+    ierr.application_version,
+    ierr.result_status,
+    ierr.message,
+    ierr.raw_output,
+    ierr.checked_time
+FROM inspection_execution_run_history ierh
+JOIN inspection_execution_run_target_result iertr
+    ON iertr.execution_run_history_id = ierh.id
+JOIN inspection_execution_run_item_result ierr
+    ON ierr.execution_run_target_result_id = iertr.id
+WHERE ierh.job_id = %s
+ORDER BY iertr.host_ip, ierr.type_name, ierr.checked_time;
+""".strip()
+
+
+@dataclass(frozen=True)
+class DatabaseConfig:
+    host: str
+    port: int
+    database: str
+    user: str
+    password: str
+
+
+@dataclass(frozen=True)
+class SummaryRow:
+    job_id: int
+    category_type_name: str
+    run_status: str
+    started_time: Any
+    finished_time: Any
+    host_id: int
+    host_name: str
+    host_ip: str
+    host_status: str
+    total_items: int
+    vuln_items: int
+    error_items: int
+    score: float | None
+    host_started: Any
+    host_finished: Any
+    duration_sec: int | None
+    error_message: str
+
+    @property
+    def host_key(self) -> tuple[int, str, str]:
+        return (self.host_id, self.host_name, self.host_ip)
+
+    @property
+    def good_items(self) -> int:
+        return self.vuln_items
+
+    @property
+    def vulnerable_items(self) -> int:
+        return self.error_items
+
+    @property
+    def not_run_items(self) -> int:
+        computed = self.total_items - self.vuln_items - self.error_items
+        return computed if computed > 0 else 0
+
+    @classmethod
+    def from_mapping(cls, row: Mapping[str, Any]) -> "SummaryRow":
+        return cls(
+            job_id=_to_int(row.get("job_id")),
+            category_type_name=str(row.get("category_type_name") or ""),
+            run_status=str(row.get("run_status") or ""),
+            started_time=row.get("started_time"),
+            finished_time=row.get("finished_time"),
+            host_id=_to_int(row.get("host_id")),
+            host_name=str(row.get("host_name") or ""),
+            host_ip=str(row.get("host_ip") or ""),
+            host_status=str(row.get("host_status") or ""),
+            total_items=_to_int(row.get("total_items")),
+            vuln_items=_to_int(row.get("vuln_items")),
+            error_items=_to_int(row.get("error_items")),
+            score=_to_float(row.get("score")),
+            host_started=row.get("host_started"),
+            host_finished=row.get("host_finished"),
+            duration_sec=_to_optional_int(row.get("duration_sec")),
+            error_message=str(row.get("error_message") or ""),
+        )
+
+
+@dataclass(frozen=True)
+class DetailRow:
+    job_id: int
+    host_id: int
+    host_name: str
+    host_ip: str
+    inspection_item_name: str
+    type_name: str
+    category_name: str
+    area_name: str
+    importance: str
+    is_required: bool | None
+    application_type_name: str
+    application_name: str
+    application_version: str
+    result_status: str
+    message: str
+    raw_output: str
+    checked_time: Any
+
+    @property
+    def host_key(self) -> tuple[int, str, str]:
+        return (self.host_id, self.host_name, self.host_ip)
+
+    @classmethod
+    def from_mapping(cls, row: Mapping[str, Any]) -> "DetailRow":
+        return cls(
+            job_id=_to_int(row.get("job_id")),
+            host_id=_to_int(row.get("host_id")),
+            host_name=str(row.get("host_name") or ""),
+            host_ip=str(row.get("host_ip") or ""),
+            inspection_item_name=str(row.get("inspection_item_name") or ""),
+            type_name=str(row.get("type_name") or ""),
+            category_name=str(row.get("category_name") or ""),
+            area_name=str(row.get("area_name") or ""),
+            importance=str(row.get("importance") or ""),
+            is_required=_to_optional_bool(row.get("is_required")),
+            application_type_name=str(row.get("application_type_name") or ""),
+            application_name=str(row.get("application_name") or ""),
+            application_version=str(row.get("application_version") or ""),
+            result_status=str(row.get("result_status") or ""),
+            message=str(row.get("message") or ""),
+            raw_output=str(row.get("raw_output") or ""),
+            checked_time=row.get("checked_time"),
+        )
+
+
+@dataclass(frozen=True)
+class OverviewMetrics:
+    job_id: int
+    category_type_name: str
+    average_score: float
+    average_total_items: float
+    average_good_items: float
+    average_vuln_items: float
+    average_not_run_items: float
+
+
+class BaseReportGenerator(ABC):
+    aliases: Sequence[str] = ()
+
+    @abstractmethod
+    def build_workbook(
+        self,
+        summary_rows: Sequence[SummaryRow],
+        detail_rows: Sequence[DetailRow],
+        overview_rows: Sequence[SummaryRow] | None = None,
+    ) -> Any:
+        raise NotImplementedError
+
+    def save_workbook(
+        self,
+        summary_rows: Sequence[SummaryRow],
+        detail_rows: Sequence[DetailRow],
+        output_path: Path,
+        overview_rows: Sequence[SummaryRow] | None = None,
+    ) -> Path:
+        workbook = self.build_workbook(summary_rows, detail_rows, overview_rows=overview_rows)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        workbook.save(output_path)
+        return output_path
+
+    def save_workbooks(
+        self,
+        summary_rows: Sequence[SummaryRow],
+        detail_rows: Sequence[DetailRow],
+        output_path: Path,
+        max_sheets_per_workbook: int = MAX_SHEETS_PER_WORKBOOK,
+    ) -> list[Path]:
+        max_detail_sheets = max_sheets_per_workbook - 1
+        if max_detail_sheets < 1:
+            raise ValueError("max_sheets_per_workbook must be at least 2")
+
+        unique_hosts = unique_summary_rows(summary_rows)
+        if len(unique_hosts) <= max_detail_sheets:
+            return [self.save_workbook(summary_rows, detail_rows, output_path, overview_rows=summary_rows)]
+
+        saved_paths: list[Path] = []
+        host_chunks = chunk_sequence(unique_hosts, max_detail_sheets)
+        total_parts = len(host_chunks)
+        for part_index, host_chunk in enumerate(host_chunks, start=1):
+            host_keys = {summary_row.host_key for summary_row in host_chunk}
+            part_summary_rows = [summary_row for summary_row in summary_rows if summary_row.host_key in host_keys]
+            part_detail_rows = [detail_row for detail_row in detail_rows if detail_row.host_key in host_keys]
+            part_output_path = build_split_output_path(output_path, part_index, total_parts)
+            saved_paths.append(
+                self.save_workbook(
+                    part_summary_rows,
+                    part_detail_rows,
+                    part_output_path,
+                    overview_rows=summary_rows,
+                )
+            )
+        return saved_paths
+
+
+class DefaultInspectionReportGenerator(BaseReportGenerator):
+    aliases = ("default", "inspection")
+
+    def build_workbook(
+        self,
+        summary_rows: Sequence[SummaryRow],
+        detail_rows: Sequence[DetailRow],
+        overview_rows: Sequence[SummaryRow] | None = None,
+    ) -> Any:
+        if not summary_rows:
+            raise RuntimeError("summary query returned no rows")
+
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+        from openpyxl.utils import get_column_letter
+
+        workbook = Workbook()
+        summary_sheet = workbook.active
+        summary_sheet.title = "요약"
+
+        overview = compute_overview_metrics(overview_rows or summary_rows)
+        sheet_names = build_sheet_name_map(summary_rows)
+
+        title_font = Font(size=15, bold=True, color="FFFFFF")
+        section_title_font = Font(size=12, bold=True, color="FFFFFF")
+        section_label_font = Font(size=10, bold=True, color="FFFFFF")
+        section_value_font = Font(size=11, bold=True, color="1F1F1F")
+        header_font = Font(bold=True, color="FFFFFF")
+        title_fill = PatternFill("solid", fgColor="17365D")
+        header_fill = PatternFill("solid", fgColor="1F4E78")
+        section_fill = PatternFill("solid", fgColor="1F4E78")
+        value_fill = PatternFill("solid", fgColor="EAF2F8")
+        link_font = Font(color="0563C1", underline="single")
+        top_alignment = Alignment(horizontal="left", vertical="center")
+        center_alignment = Alignment(horizontal="center", vertical="center")
+        wrap_alignment = Alignment(vertical="top", wrap_text=True)
+        section_border = Border(
+            left=Side(style="thin", color="B8CCE4"),
+            right=Side(style="thin", color="B8CCE4"),
+            top=Side(style="thin", color="B8CCE4"),
+            bottom=Side(style="thin", color="B8CCE4"),
+        )
+
+        summary_sheet.sheet_view.showGridLines = False
+
+        summary_sheet.merge_cells("A1:K1")
+        summary_sheet["A1"] = overview.category_type_name or "점검 보고서"
+        summary_sheet["A1"].font = title_font
+        summary_sheet["A1"].fill = title_fill
+        summary_sheet["A1"].alignment = top_alignment
+        summary_sheet.row_dimensions[1].height = 24
+
+        summary_info_rows = [
+            [
+                (2, 3, 4, "점검점수", format_metric(overview.average_score)),
+                (6, 7, 8, "작업번호", str(overview.job_id)),
+            ],
+            [
+                (2, 3, 3, "항목", format_metric(overview.average_total_items)),
+                (4, 5, 5, "양호", format_metric(overview.average_good_items)),
+                (6, 7, 7, "취약", format_metric(overview.average_vuln_items)),
+                (8, 9, 9, "미실행", format_metric(overview.average_not_run_items)),
+            ],
+        ]
+        for row_index, pairs in enumerate(summary_info_rows, start=2):
+            write_label_value_pairs_row(
+                summary_sheet,
+                row=row_index,
+                pairs=pairs,
+                label_font=section_label_font,
+                value_font=section_value_font,
+                label_fill=section_fill,
+                value_fill=value_fill,
+                border=section_border,
+                label_alignment=center_alignment,
+                value_alignment=top_alignment,
+            )
+            summary_sheet.row_dimensions[row_index].height = 22
+
+        headers = [
+            "번호",
+            "관리명",
+            "IP",
+            "유형",
+            "점수",
+            "작업상태",
+            "항목",
+            "양호",
+            "취약",
+            "미실행",
+            "시작시간",
+            "종료시간",
+            "소요시간",
+        ]
+        header_row = 5
+        for index, header in enumerate(headers, start=1):
+            cell = summary_sheet.cell(row=header_row, column=index, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_alignment
+            cell.border = section_border
+
+        for row_index, summary_row in enumerate(summary_rows, start=header_row + 1):
+            number = row_index - header_row
+            link_cell = summary_sheet.cell(row=row_index, column=1, value=number)
+            link_cell.hyperlink = f"#'{sheet_names[summary_row.host_key]}'!A1"
+            link_cell.style = "Hyperlink"
+            link_cell.font = link_font
+            link_cell.alignment = center_alignment
+            link_cell.border = section_border
+
+            values = [
+                summary_row.host_name,
+                summary_row.host_ip,
+                summary_row.category_type_name,
+                format_metric(summary_row.score or 0),
+                summary_row.host_status,
+                summary_row.total_items,
+                summary_row.good_items,
+                summary_row.vulnerable_items,
+                summary_row.not_run_items,
+                format_datetime(summary_row.host_started),
+                format_datetime(summary_row.host_finished),
+                format_duration(summary_row.duration_sec),
+            ]
+            for column_offset, value in enumerate(values, start=2):
+                cell = summary_sheet.cell(row=row_index, column=column_offset, value=value)
+                cell.alignment = center_alignment if column_offset in {5, 6, 7, 8, 9, 10, 13} else top_alignment
+                cell.border = section_border
+
+        summary_sheet.freeze_panes = "A6"
+        summary_sheet.auto_filter.ref = f"A5:M{max(len(summary_rows) + 5, 5)}"
+        autosize_sheet(summary_sheet, get_column_letter, fixed_widths={"A": 6.88, "B": 14})
+
+        grouped_details: dict[tuple[int, str, str], list[DetailRow]] = defaultdict(list)
+        for detail in detail_rows:
+            grouped_details[detail.host_key].append(detail)
+
+        unique_detail_hosts = unique_summary_rows(summary_rows)
+        for summary_row in unique_detail_hosts:
+            detail_sheet = workbook.create_sheet(sheet_names[summary_row.host_key])
+            detail_sheet.sheet_view.showGridLines = False
+            detail_sheet["A1"] = "요약으로 돌아가기"
+            detail_sheet["A1"].hyperlink = "#'요약'!A1"
+            detail_sheet["A1"].style = "Hyperlink"
+            detail_sheet["A1"].font = link_font
+
+            detail_sheet.merge_cells("A2:H2")
+            detail_sheet["A2"] = f"{summary_row.host_name or summary_row.host_ip} 상세 점검"
+            detail_sheet["A2"].font = section_title_font
+            detail_sheet["A2"].fill = title_fill
+            detail_sheet["A2"].alignment = top_alignment
+            detail_sheet.row_dimensions[2].height = 24
+
+            detail_headers = ["유형", "영역", "구분", "중요도", "항목", "결과", "메세지", "상세"]
+            detail_header_row = 4
+            for index, header in enumerate(detail_headers, start=1):
+                cell = detail_sheet.cell(row=detail_header_row, column=index, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_alignment
+                cell.border = section_border
+
+            details_for_host = grouped_details.get(summary_row.host_key, [])
+            if not details_for_host:
+                detail_sheet.merge_cells("A5:H5")
+                detail_sheet["A5"] = "상세 데이터가 없습니다."
+                detail_sheet["A5"].alignment = top_alignment
+            else:
+                for row_index, detail_row in enumerate(details_for_host, start=detail_header_row + 1):
+                    row_values = [
+                        detail_row.type_name,
+                        detail_row.area_name,
+                        detail_row.category_name,
+                        format_importance(detail_row.importance),
+                        detail_row.inspection_item_name,
+                        detail_row.result_status,
+                        detail_row.message,
+                        detail_row.raw_output,
+                    ]
+                    for column_index, value in enumerate(row_values, start=1):
+                        cell = detail_sheet.cell(row=row_index, column=column_index, value=value)
+                        cell.alignment = center_alignment if column_index in {4, 6} else wrap_alignment
+                        cell.border = section_border
+
+            detail_sheet.freeze_panes = "A5"
+            detail_sheet.auto_filter.ref = f"A4:H{max(len(details_for_host) + 4, 4)}"
+            autosize_sheet(
+                detail_sheet,
+                get_column_letter,
+                fixed_widths={
+                    "A": 12,
+                    "B": 16,
+                    "C": 16,
+                    "D": 10,
+                    "E": 32,
+                    "F": 12,
+                    "G": 40,
+                    "H": 60,
+                },
+            )
+
+        return workbook
+
+
+REPORT_GENERATORS: dict[str, type[BaseReportGenerator]] = {}
+for generator_class in (DefaultInspectionReportGenerator,):
+    for alias in generator_class.aliases:
+        REPORT_GENERATORS[alias] = generator_class
+
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate an inspection Excel report for a job_id.")
+    parser.add_argument("--job-id", type=int, required=True, help="Target inspection job_id.")
+    parser.add_argument("--report-type", default="default", help="Registered report type. Default: default")
+    parser.add_argument(
+        "--config-file",
+        default=str(DEFAULT_CONFIG_FILE),
+        help=f"INI database config file. Default: {DEFAULT_CONFIG_FILE}",
+    )
+    parser.add_argument("--output-dir", help="Optional output root. A dated directory is created below it.")
+    parser.add_argument("--output-name", default="점검보고서", help="Output filename prefix. Default: 점검보고서")
+    parser.add_argument(
+        "--mock-host-count",
+        type=int,
+        default=0,
+        help="Generate mock data for the given number of hosts instead of querying DB.",
+    )
+    parser.add_argument(
+        "--mock-items-per-host",
+        type=int,
+        default=3,
+        help="Number of mock detail rows to create per host when mock mode is enabled.",
+    )
+    return parser.parse_args(argv)
+
+
+def parse_config_file(path: Path) -> DatabaseConfig:
+    if not path.exists():
+        raise FileNotFoundError(f"config file not found: {path}")
+
+    parser = configparser.ConfigParser(interpolation=None)
+    with path.open("r", encoding="utf-8") as file_handle:
+        parser.read_file(file_handle)
+
+    if not parser.has_section("database"):
+        raise ValueError(f"missing [database] section in config file: {path}")
+
+    host = parser.get("database", "host", fallback="").strip()
+    database = parser.get("database", "database", fallback="").strip()
+    user = parser.get("database", "user", fallback="").strip()
+    password = parser.get("database", "password", fallback="").strip()
+    port = parser.get("database", "port", fallback="").strip()
+
+    missing = [
+        name
+        for name, value in {
+            "database": database,
+            "user": user,
+            "password": password,
+            "host": host,
+            "port": port,
+        }.items()
+        if value in (None, "")
+    ]
+    if missing:
+        raise ValueError(f"missing connection values: {', '.join(missing)}")
+
+    return DatabaseConfig(
+        host=str(host),
+        port=int(port),
+        database=str(database),
+        user=str(user),
+        password=str(password),
+    )
+
+
+def get_report_generator(report_type: str) -> BaseReportGenerator:
+    generator_class = REPORT_GENERATORS.get(report_type)
+    if not generator_class:
+        supported = ", ".join(sorted(REPORT_GENERATORS))
+        raise ValueError(f"unsupported report type: {report_type} (supported: {supported})")
+    return generator_class()
+
+
+def fetch_report_rows(config: DatabaseConfig, job_id: int) -> tuple[list[SummaryRow], list[DetailRow]]:
+    try:
+        import psycopg
+    except ImportError as exc:
+        raise RuntimeError("psycopg is required. Install report/requirements.txt first.") from exc
+
+    connect_kwargs = {
+        "host": config.host,
+        "port": config.port,
+        "dbname": config.database,
+        "user": config.user,
+        "password": config.password,
+        "row_factory": psycopg.rows.dict_row,
+    }
+
+    with psycopg.connect(**connect_kwargs) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(SUMMARY_QUERY, (job_id,))
+            summary_rows = [SummaryRow.from_mapping(row) for row in cursor.fetchall()]
+
+            cursor.execute(DETAIL_QUERY, (job_id,))
+            detail_rows = [DetailRow.from_mapping(row) for row in cursor.fetchall()]
+
+    return summary_rows, detail_rows
+
+
+def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3) -> tuple[list[SummaryRow], list[DetailRow]]:
+    if host_count < 1:
+        raise ValueError("mock_host_count must be greater than 0")
+    if items_per_host < 1:
+        raise ValueError("mock_items_per_host must be greater than 0")
+
+    summary_rows: list[SummaryRow] = []
+    detail_rows: list[DetailRow] = []
+    importance_cycle = ["1", "2", "3"]
+    result_cycle = ["양호", "취약", "미실행"]
+
+    for host_index in range(1, host_count + 1):
+        host_name = f"MOCK-HOST-{host_index:03d}"
+        host_ip = f"10.10.{(host_index - 1) // 250}.{(host_index - 1) % 250 + 1}"
+        summary_rows.append(
+            SummaryRow(
+                job_id=job_id,
+                category_type_name="Mock Linux",
+                run_status="completed",
+                started_time=datetime(2026, 3, 17, 9, 0, 0),
+                finished_time=datetime(2026, 3, 17, 9, 30, 0),
+                host_id=host_index,
+                host_name=host_name,
+                host_ip=host_ip,
+                host_status="success",
+                total_items=items_per_host,
+                vuln_items=max(items_per_host - 2, 0),
+                error_items=1 if items_per_host > 1 else 0,
+                score=max(100 - host_index % 17, 70),
+                host_started=datetime(2026, 3, 17, 9, 0, 0),
+                host_finished=datetime(2026, 3, 17, 9, 5, 0),
+                duration_sec=300,
+                error_message="",
+            )
+        )
+
+        for item_index in range(1, items_per_host + 1):
+            detail_rows.append(
+                DetailRow(
+                    job_id=job_id,
+                    host_id=host_index,
+                    host_name=host_name,
+                    host_ip=host_ip,
+                    inspection_item_name=f"Mock Inspection Item {item_index}",
+                    type_name=f"유형-{(item_index - 1) % 4 + 1}",
+                    category_name=f"구분-{(item_index - 1) % 3 + 1}",
+                    area_name=f"영역-{(item_index - 1) % 5 + 1}",
+                    importance=importance_cycle[(item_index - 1) % len(importance_cycle)],
+                    is_required=True,
+                    application_type_name="mock-app-type",
+                    application_name="mock-app",
+                    application_version="1.0",
+                    result_status=result_cycle[(item_index - 1) % len(result_cycle)],
+                    message=f"Mock message for host {host_index}, item {item_index}",
+                    raw_output=f"Mock raw output for host {host_index}, item {item_index}",
+                    checked_time=datetime(2026, 3, 17, 9, 0, 0),
+                )
+            )
+
+    return summary_rows, detail_rows
+
+
+def compute_overview_metrics(summary_rows: Sequence[SummaryRow]) -> OverviewMetrics:
+    first_row = summary_rows[0]
+    return OverviewMetrics(
+        job_id=first_row.job_id,
+        category_type_name=first_row.category_type_name,
+        average_score=average_or_zero(row.score or 0 for row in summary_rows),
+        average_total_items=average_or_zero(row.total_items for row in summary_rows),
+        average_good_items=average_or_zero(row.good_items for row in summary_rows),
+        average_vuln_items=average_or_zero(row.vulnerable_items for row in summary_rows),
+        average_not_run_items=average_or_zero(row.not_run_items for row in summary_rows),
+    )
+
+
+def build_sheet_name_map(summary_rows: Sequence[SummaryRow]) -> dict[tuple[int, str, str], str]:
+    used_names: set[str] = set()
+    mapping: dict[tuple[int, str, str], str] = {}
+    for index, summary_row in enumerate(unique_summary_rows(summary_rows), start=1):
+        base_name = summary_row.host_name or summary_row.host_ip or f"host_{index}"
+        mapping[summary_row.host_key] = normalize_sheet_name(base_name, used_names)
+    return mapping
+
+
+def unique_summary_rows(summary_rows: Sequence[SummaryRow]) -> list[SummaryRow]:
+    unique_rows: list[SummaryRow] = []
+    seen_host_keys: set[tuple[int, str, str]] = set()
+    for summary_row in summary_rows:
+        if summary_row.host_key in seen_host_keys:
+            continue
+        seen_host_keys.add(summary_row.host_key)
+        unique_rows.append(summary_row)
+    return unique_rows
+
+
+def chunk_sequence(items: Sequence[Any], chunk_size: int) -> list[list[Any]]:
+    return [list(items[index : index + chunk_size]) for index in range(0, len(items), chunk_size)]
+
+
+def normalize_sheet_name(raw_name: str, used_names: set[str] | None = None) -> str:
+    used_names = used_names if used_names is not None else set()
+    cleaned = INVALID_SHEET_CHARS.sub("_", raw_name or "").strip().strip("'")
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    base_name = cleaned or "host"
+    candidate = base_name[:31]
+    suffix = 1
+
+    while any(existing.lower() == candidate.lower() for existing in used_names):
+        suffix_text = f"_{suffix}"
+        candidate = f"{base_name[:31 - len(suffix_text)]}{suffix_text}"
+        suffix += 1
+
+    used_names.add(candidate)
+    return candidate
+
+
+def build_output_path(output_name: str, output_dir: str | None = None) -> Path:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    date_dir = datetime.now().strftime("%Y%m%d")
+    root = Path(output_dir).expanduser() if output_dir else DEFAULT_OUTPUT_ROOT
+    target_dir = root / date_dir
+    target_dir.mkdir(parents=True, exist_ok=True)
+    output_stem = normalize_output_name(output_name)
+    return (target_dir / f"{output_stem}_{timestamp}.xlsx").resolve()
+
+
+def build_split_output_path(output_path: Path, part_index: int, total_parts: int) -> Path:
+    suffix_width = max(2, len(str(total_parts)))
+    return output_path.with_name(
+        f"{output_path.stem}_part{part_index:0{suffix_width}d}{output_path.suffix}"
+    )
+
+
+def build_result_payload(
+    *,
+    result: str,
+    report_path: str | None,
+    msg: str,
+    job_id: int,
+    report_type: str,
+    report_paths: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "result": result,
+        "report_path": report_path,
+        "msg": msg,
+        "job_id": job_id,
+        "report_type": report_type,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    if report_paths is not None:
+        payload["report_paths"] = list(report_paths)
+    return payload
+
+
+def format_metric(value: float) -> str:
+    rounded = round(float(value), 2)
+    return str(int(rounded)) if rounded.is_integer() else f"{rounded:.2f}"
+
+
+def format_datetime(value: Any) -> str:
+    if value in (None, ""):
+        return "-"
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    return str(value)
+
+
+def format_duration(seconds: int | None) -> str:
+    if seconds in (None, ""):
+        return "-"
+    total_seconds = max(int(seconds), 0)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+def autosize_sheet(
+    worksheet: Any,
+    get_column_letter: Any,
+    fixed_widths: Mapping[str, float] | None = None,
+) -> None:
+    fixed_width_map = dict(fixed_widths or {})
+    for column_cells in worksheet.columns:
+        first_cell = column_cells[0]
+        column_letter = get_column_letter(first_cell.column)
+        if column_letter in fixed_width_map:
+            worksheet.column_dimensions[column_letter].width = fixed_width_map[column_letter]
+            continue
+
+        max_length = 0
+        for cell in column_cells:
+            cell_value = "" if cell.value is None else str(cell.value)
+            if len(cell_value) > max_length:
+                max_length = len(cell_value)
+        worksheet.column_dimensions[column_letter].width = min(max(max_length + 2, 10), 30)
+
+
+def write_label_value_pairs_row(
+    worksheet: Any,
+    *,
+    row: int,
+    pairs: Sequence[tuple[int, int, int, str, str]],
+    label_font: Any,
+    value_font: Any,
+    label_fill: Any,
+    value_fill: Any,
+    border: Any,
+    label_alignment: Any,
+    value_alignment: Any,
+) -> None:
+    for label_column, value_start_column, value_end_column, label, value in pairs:
+        label_cell = worksheet.cell(row=row, column=label_column, value=label)
+        label_cell.font = label_font
+        label_cell.fill = label_fill
+        label_cell.border = border
+        label_cell.alignment = label_alignment
+
+        for column_index in range(value_start_column, value_end_column + 1):
+            cell = worksheet.cell(row=row, column=column_index)
+            cell.fill = value_fill
+            cell.border = border
+            cell.alignment = value_alignment
+
+        if value_start_column < value_end_column:
+            worksheet.merge_cells(
+                start_row=row,
+                start_column=value_start_column,
+                end_row=row,
+                end_column=value_end_column,
+            )
+
+        value_cell = worksheet.cell(row=row, column=value_start_column, value=value)
+        value_cell.font = value_font
+        value_cell.fill = value_fill
+        value_cell.border = border
+        value_cell.alignment = value_alignment
+
+
+def average_or_zero(values: Iterable[float | int]) -> float:
+    collected = [float(value) for value in values]
+    return mean(collected) if collected else 0.0
+
+
+def format_importance(value: Any) -> str:
+    if value in (None, ""):
+        return "-"
+
+    if isinstance(value, (int, float)):
+        numeric_value = int(value)
+    else:
+        text = str(value).strip()
+        try:
+            numeric_value = int(float(text))
+        except ValueError:
+            return text or "-"
+
+    return {1: "하", 2: "중", 3: "상"}.get(numeric_value, str(numeric_value))
+
+
+def normalize_output_name(output_name: str) -> str:
+    candidate = Path(output_name).name.strip()
+    if not candidate:
+        return "점검보고서"
+
+    suffix = Path(candidate).suffix
+    if suffix.lower() == ".xlsx":
+        candidate = Path(candidate).stem
+
+    candidate = candidate.strip()
+    return candidate or "점검보고서"
+
+
+def _to_int(value: Any) -> int:
+    if value in (None, ""):
+        return 0
+    return int(value)
+
+
+def _to_optional_int(value: Any) -> int | None:
+    if value in (None, ""):
+        return None
+    return int(value)
+
+
+def _to_float(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    return float(value)
+
+
+def _to_optional_bool(value: Any) -> bool | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.lower()
+        if lowered in {"true", "t", "1", "y", "yes"}:
+            return True
+        if lowered in {"false", "f", "0", "n", "no"}:
+            return False
+    return bool(value)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = parse_args(argv)
+
+    try:
+        if args.mock_host_count > 0:
+            summary_rows, detail_rows = build_mock_report_rows(
+                args.job_id,
+                args.mock_host_count,
+                args.mock_items_per_host,
+            )
+        else:
+            config = parse_config_file(Path(args.config_file))
+            summary_rows, detail_rows = fetch_report_rows(config, args.job_id)
+        if not summary_rows:
+            raise RuntimeError(f"no summary rows found for job_id={args.job_id}")
+
+        generator = get_report_generator(args.report_type)
+        output_path = build_output_path(args.output_name, args.output_dir)
+        saved_paths = generator.save_workbooks(summary_rows, detail_rows, output_path)
+        report_paths = [str(path) for path in saved_paths]
+        msg = "report generated successfully"
+        if len(saved_paths) > 1:
+            msg = f"report generated successfully ({len(saved_paths)} files)"
+
+        payload = build_result_payload(
+            result="success",
+            report_path=str(saved_paths[0]),
+            msg=msg,
+            job_id=args.job_id,
+            report_type=args.report_type,
+            report_paths=report_paths if len(report_paths) > 1 else None,
+        )
+        print(json.dumps(payload, ensure_ascii=False))
+        return 0
+    except Exception as exc:
+        payload = build_result_payload(
+            result="error",
+            report_path=None,
+            msg=str(exc),
+            job_id=args.job_id,
+            report_type=args.report_type,
+        )
+        print(json.dumps(payload, ensure_ascii=False))
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

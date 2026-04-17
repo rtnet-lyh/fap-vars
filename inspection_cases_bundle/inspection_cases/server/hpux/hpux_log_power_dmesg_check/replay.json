@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "regex",
+    "matcher_value": "^dmesg \\| egrep -i .+$",
+    "rc": 1,
+    "stdout_file": "outputs/command_1_dmesg_egrep_i_psu_power_supply_power_fai.stdout",
+    "stderr": ""
+  }
+]

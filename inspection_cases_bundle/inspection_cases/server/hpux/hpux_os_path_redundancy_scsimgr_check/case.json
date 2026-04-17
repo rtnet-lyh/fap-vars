@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 60,
+  "host_id": 339,
+  "job_id": 3129,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-29",
+    "item_id": 93029,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Path 이중화 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "스토리지 디스크 경로 이중화 정상 여부를 점검한다.",
+    "inspection_command": "ioscan -m dsf\nscsimgr get_info -D <ioscan에서 확인한 persistent_dsf>",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "expected_path_count",
+        "value1": "3"
+      },
+      {
+        "name": "required_lun_status",
+        "value1": "OPTIMAL"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "findmnt /run/user/1000",
+    "rc": 0,
+    "stdout_file": "outputs/findmnt_shared.stdout",
+    "stderr": ""
+  }
+]

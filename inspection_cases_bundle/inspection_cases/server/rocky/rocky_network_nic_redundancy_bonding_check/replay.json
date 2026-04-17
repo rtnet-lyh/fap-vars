@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "if ls /proc/net/bonding/* >/dev/null 2>&1; then\n  for b in /proc/net/bonding/*; do\n    echo \"===== $(basename \"$b\") =====\"\n    cat \"$b\"\n  done\nelse\n  echo \"NIC BONDING NOT CONFIGURED\"\nfi",
+    "rc": 0,
+    "stdout": "NIC BONDING NOT CONFIGURED\n",
+    "stderr": ""
+  }
+]

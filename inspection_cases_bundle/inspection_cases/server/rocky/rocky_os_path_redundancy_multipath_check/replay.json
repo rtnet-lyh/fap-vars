@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "bash -lc 'printf '\"'\"'%s\\n'\"'\"' password | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
+    "rc": 0,
+    "stdout_file": "outputs/multipath.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,2 @@
+WARNING: SCSI: Disk queue depth adjusted for /dev/dsk/c2t0d0
+ERROR: fscsi0: I/O error detected on target 0 lun 0

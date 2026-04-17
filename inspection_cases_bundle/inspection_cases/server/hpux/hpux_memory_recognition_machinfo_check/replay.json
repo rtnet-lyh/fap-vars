@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "machinfo",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_machinfo.stdout",
+    "stderr": ""
+  }
+]

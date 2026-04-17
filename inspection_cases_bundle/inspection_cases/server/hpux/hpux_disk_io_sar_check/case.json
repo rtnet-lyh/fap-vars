@@ -1,0 +1,61 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 38,
+  "host_id": 317,
+  "job_id": 3107,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-07",
+    "item_id": 93007,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "디스크 I/O 상태 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "디스크 I/O 지연 및 오류 징후를 점검한다.",
+    "inspection_command": "sar -d 1 3",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "DISK_BUSY_MAX_PCT",
+        "value1": "80"
+      },
+      {
+        "name": "DISK_AVWAIT_MAX_MS",
+        "value1": "50"
+      },
+      {
+        "name": "DISK_AVSERV_MAX_MS",
+        "value1": "50"
+      }
+    ]
+  }
+}

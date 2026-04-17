@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "sar -d 1 3",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_sar_d_1_3.stdout",
+    "stderr": ""
+  }
+]

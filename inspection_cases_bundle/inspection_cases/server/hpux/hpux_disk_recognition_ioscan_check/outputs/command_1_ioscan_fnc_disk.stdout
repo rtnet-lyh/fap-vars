@@ -1,0 +1,6 @@
+Class     I  H/W Path        Driver   S/W State   H/W Type     Description
+=========================================================================
+disk      0  0/1/1/0.0.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME
+          /dev/dsk/c0t0d0    /dev/rdsk/c0t0d0
+disk      1  0/1/1/0.1.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME
+          /dev/dsk/c1t0d0    /dev/rdsk/c1t0d0

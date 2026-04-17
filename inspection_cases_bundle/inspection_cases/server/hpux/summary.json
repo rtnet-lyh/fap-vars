@@ -1,0 +1,217 @@
+{
+  "total_cases": 29,
+  "failed_cases": [
+    "hpux_disk_filesystem_inode_bdf_check",
+    "hpux_disk_filesystem_usage_bdf_check",
+    "hpux_kernel_parameter_kctune_check",
+    "hpux_log_cluster_serviceguard_check",
+    "hpux_log_fan_dmesg_check",
+    "hpux_log_hba_dmesg_check",
+    "hpux_log_io_dmesg_check",
+    "hpux_log_memory_dmesg_check",
+    "hpux_log_nic_dmesg_check",
+    "hpux_log_system_dmesg_check",
+    "hpux_network_link_status_lanscan_check",
+    "hpux_network_nic_redundancy_hpapa_check"
+  ],
+  "cases": [
+    {
+      "case_name": "hpux_cluster_daemon_cmviewcl_check",
+      "result_file": "hpux_cluster_daemon_cmviewcl_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_cluster_shared_volume_mount_check",
+      "result_file": "hpux_cluster_shared_volume_mount_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_cpu_core_ioscan_check",
+      "result_file": "hpux_cpu_core_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_cpu_usage_sar_check",
+      "result_file": "hpux_cpu_usage_sar_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_disk_filesystem_inode_bdf_check",
+      "result_file": "hpux_disk_filesystem_inode_bdf_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-05"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_disk_filesystem_usage_bdf_check",
+      "result_file": "hpux_disk_filesystem_usage_bdf_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-06"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_disk_io_sar_check",
+      "result_file": "hpux_disk_io_sar_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_disk_raid_vgdisplay_check",
+      "result_file": "hpux_disk_raid_vgdisplay_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_disk_recognition_ioscan_check",
+      "result_file": "hpux_disk_recognition_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_disk_swap_swapinfo_check",
+      "result_file": "hpux_disk_swap_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_kernel_parameter_kctune_check",
+      "result_file": "hpux_kernel_parameter_kctune_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-11"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_cluster_serviceguard_check",
+      "result_file": "hpux_log_cluster_serviceguard_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-12"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_cpu_dmesg_check",
+      "result_file": "hpux_log_cpu_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_log_fan_dmesg_check",
+      "result_file": "hpux_log_fan_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-14"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_hba_dmesg_check",
+      "result_file": "hpux_log_hba_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-15"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_io_dmesg_check",
+      "result_file": "hpux_log_io_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-16"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_kernel_dmesg_check",
+      "result_file": "hpux_log_kernel_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_log_memory_dmesg_check",
+      "result_file": "hpux_log_memory_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-18"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_nic_dmesg_check",
+      "result_file": "hpux_log_nic_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-19"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_log_power_dmesg_check",
+      "result_file": "hpux_log_power_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_log_system_dmesg_check",
+      "result_file": "hpux_log_system_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-21"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_memory_recognition_machinfo_check",
+      "result_file": "hpux_memory_recognition_machinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_memory_swap_swapinfo_check",
+      "result_file": "hpux_memory_swap_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_memory_usage_swapinfo_check",
+      "result_file": "hpux_memory_usage_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_network_link_status_lanscan_check",
+      "result_file": "hpux_network_link_status_lanscan_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-25"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_network_nic_redundancy_hpapa_check",
+      "result_file": "hpux_network_nic_redundancy_hpapa_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-26"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "hpux_network_ping_loss_check",
+      "result_file": "hpux_network_ping_loss_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_os_hba_connection_ioscan_check",
+      "result_file": "hpux_os_hba_connection_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "hpux_os_path_redundancy_scsimgr_check",
+      "result_file": "hpux_os_path_redundancy_scsimgr_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

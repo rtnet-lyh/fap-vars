@@ -1,0 +1,2 @@
+/dev/vgshared/lvol1 on /app type vxfs rw,suid,delaylog,largefiles,dev=4000001 on Thu Dec 30 12:10:01 2025
+/dev/vgshared/lvol2 on /data type vxfs rw,suid,delaylog,largefiles,dev=4000002 on Thu Dec 30 12:10:01 2025

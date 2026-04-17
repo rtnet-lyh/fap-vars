@@ -1,0 +1,4 @@
+Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on
+/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /
+/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt
+/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var

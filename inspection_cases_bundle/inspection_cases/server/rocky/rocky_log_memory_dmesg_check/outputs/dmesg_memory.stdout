@@ -1,0 +1,5 @@
+[   12.345678] EDAC MC0: ECC error detected on CPU#0Channel#1_DIMM#0
+[   12.345912] EDAC MC0: Single-bit ECC error corrected on DIMM_A1
+[  128.456789] mce: [Hardware Error]: Memory error detected: Uncorrectable ECC error
+[  128.457103] EDAC MC0: Multi-bit ECC error detected on DIMM_B2
+[  128.457821] EDAC MC0: Uncorrectable ECC error on CPU_SrcID#0_Ha#0_Chan#1_DIMM#1

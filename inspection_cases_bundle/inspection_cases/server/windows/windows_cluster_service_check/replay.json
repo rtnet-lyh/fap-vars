@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $svc = Get-Service -Name ClusSvc -ErrorAction SilentlyContinue; $status = if ($svc) { $svc.Status.ToString() } else { '' }; $startType = if ($svc) { $svc.StartType.ToString() } else { '' }; [pscustomobject]@{ service_exists = [bool]$svc; service_status = $status; service_start_type = $startType } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"service_exists\":true,\"service_status\":\"Running\",\"service_start_type\":\"Automatic\"}\n",
+    "stderr": ""
+  }
+]

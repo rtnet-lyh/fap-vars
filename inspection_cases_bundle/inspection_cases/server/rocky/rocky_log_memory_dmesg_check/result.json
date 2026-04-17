@@ -1,0 +1,236 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-DMESG-MEMORY-01",
+      "item_id": 90015,
+      "application_id": 114,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "A",
+      "application_family_name": "A",
+      "threshold_list": [
+        {
+          "name": "memory_error_keywords",
+          "value1": "ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nDMESG_MEMORY_COMMAND = \"dmesg | grep -Ei 'ecc error|memory error|single-bit error|multi-bit error'\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _split_keywords(self, raw_value):\n        return [\n            token.strip()\n            for token in str(raw_value or '').split('|')\n            if token.strip()\n        ]\n\n    def _find_matches(self, lines, keywords):\n        matches = []\n\n        for line in lines:\n            lowered = line.lower()\n            matched_keywords = [\n                keyword\n                for keyword in keywords\n                if keyword.lower() in lowered\n            ]\n            if not matched_keywords:\n                continue\n            matches.append({\n                'line': line,\n                'matched_keywords': matched_keywords,\n            })\n\n        return matches\n\n    def _count_keywords(self, matches, keywords):\n        counts = {keyword: 0 for keyword in keywords}\n\n        for match in matches:\n            for keyword in match.get('matched_keywords', []):\n                if keyword in counts:\n                    counts[keyword] += 1\n\n        return counts\n\n    def _format_keyword_counts(self, counts):\n        return ', '.join(\n            f'{keyword}={count}건'\n            for keyword, count in counts.items()\n        )\n\n    def run(self):\n        memory_error_keywords = self._split_keywords(\n            self.get_threshold_var(\n                'memory_error_keywords',\n                default='ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error',\n                value_type='str',\n            )\n        )\n        if not memory_error_keywords:\n            return self.fail(\n                '임계치 미정의',\n                message='memory_error_keywords 가 정의되어 있지 않습니다.',\n            )\n\n        rc, out, err = self._ssh(DMESG_MEMORY_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc not in (0, 1):\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='dmesg 메모리 로그 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        lines = [line.strip() for line in (out or '').splitlines() if line.strip()]\n        matches = self._find_matches(lines, memory_error_keywords)\n        keyword_counts = self._count_keywords(matches, memory_error_keywords)\n        threshold_summary = 'memory_error_keywords=' + '|'.join(memory_error_keywords)\n\n        metrics = {\n            'grep_line_count': len(lines),\n            'memory_error_match_count': len(matches),\n            'memory_error_keyword_counts': keyword_counts,\n            'memory_error_matches': matches,\n            'grep_lines': lines,\n        }\n        thresholds = {\n            'memory_error_keywords': '|'.join(memory_error_keywords),\n        }\n\n        if matches:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='메모리 오류 관련 키워드가 확인되었습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),\n                message=(\n                    '메모리 오류 관련 dmesg 로그가 확인되었습니다. '\n                    '키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts) +\n                    '. 임계치: ' + threshold_summary\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='메모리 오류 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),\n            message=(\n                '메모리 로그 점검이 정상 수행되었습니다. '\n                '미검출 키워드 현황: ' + self._format_keyword_counts(keyword_counts) +\n                '. 임계치: ' + threshold_summary\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "DMESG_MEMORY_COMMAND = \"dmesg | grep -Ei 'ecc error|memory error|single-bit error|multi-bit error'\"",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def _split_keywords(self, raw_value):",
+        "        return [",
+        "            token.strip()",
+        "            for token in str(raw_value or '').split('|')",
+        "            if token.strip()",
+        "        ]",
+        "",
+        "    def _find_matches(self, lines, keywords):",
+        "        matches = []",
+        "",
+        "        for line in lines:",
+        "            lowered = line.lower()",
+        "            matched_keywords = [",
+        "                keyword",
+        "                for keyword in keywords",
+        "                if keyword.lower() in lowered",
+        "            ]",
+        "            if not matched_keywords:",
+        "                continue",
+        "            matches.append({",
+        "                'line': line,",
+        "                'matched_keywords': matched_keywords,",
+        "            })",
+        "",
+        "        return matches",
+        "",
+        "    def _count_keywords(self, matches, keywords):",
+        "        counts = {keyword: 0 for keyword in keywords}",
+        "",
+        "        for match in matches:",
+        "            for keyword in match.get('matched_keywords', []):",
+        "                if keyword in counts:",
+        "                    counts[keyword] += 1",
+        "",
+        "        return counts",
+        "",
+        "    def _format_keyword_counts(self, counts):",
+        "        return ', '.join(",
+        "            f'{keyword}={count}건'",
+        "            for keyword, count in counts.items()",
+        "        )",
+        "",
+        "    def run(self):",
+        "        memory_error_keywords = self._split_keywords(",
+        "            self.get_threshold_var(",
+        "                'memory_error_keywords',",
+        "                default='ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error',",
+        "                value_type='str',",
+        "            )",
+        "        )",
+        "        if not memory_error_keywords:",
+        "            return self.fail(",
+        "                '임계치 미정의',",
+        "                message='memory_error_keywords 가 정의되어 있지 않습니다.',",
+        "            )",
+        "",
+        "        rc, out, err = self._ssh(DMESG_MEMORY_COMMAND)",
+        "",
+        "        if self._is_connection_error(rc, err):",
+        "            return self.fail(",
+        "                '호스트 연결 실패',",
+        "                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),",
+        "                stderr=(err or '').strip(),",
+        "            )",
+        "",
+        "        if rc not in (0, 1):",
+        "            return self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='dmesg 메모리 로그 점검 명령 실행에 실패했습니다.',",
+        "                stdout=(out or '').strip(),",
+        "                stderr=(err or '').strip(),",
+        "            )",
+        "",
+        "        lines = [line.strip() for line in (out or '').splitlines() if line.strip()]",
+        "        matches = self._find_matches(lines, memory_error_keywords)",
+        "        keyword_counts = self._count_keywords(matches, memory_error_keywords)",
+        "        threshold_summary = 'memory_error_keywords=' + '|'.join(memory_error_keywords)",
+        "",
+        "        metrics = {",
+        "            'grep_line_count': len(lines),",
+        "            'memory_error_match_count': len(matches),",
+        "            'memory_error_keyword_counts': keyword_counts,",
+        "            'memory_error_matches': matches,",
+        "            'grep_lines': lines,",
+        "        }",
+        "        thresholds = {",
+        "            'memory_error_keywords': '|'.join(memory_error_keywords),",
+        "        }",
+        "",
+        "        if matches:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='메모리 오류 관련 키워드가 확인되었습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),",
+        "                message=(",
+        "                    '메모리 오류 관련 dmesg 로그가 확인되었습니다. '",
+        "                    '키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts) +",
+        "                    '. 임계치: ' + threshold_summary",
+        "                ),",
+        "            )",
+        "",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='메모리 오류 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),",
+        "            message=(",
+        "                '메모리 로그 점검이 정상 수행되었습니다. '",
+        "                '미검출 키워드 현황: ' + self._format_keyword_counts(keyword_counts) +",
+        "                '. 임계치: ' + threshold_summary",
+        "            ),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-DMESG-MEMORY-01",
+      "item_id": 90015,
+      "application_id": 114,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "A",
+      "application_family_name": "A",
+      "threshold_list": [
+        {
+          "name": "memory_error_keywords",
+          "value1": "ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error"
+        }
+      ],
+      "status": "warn",
+      "metrics": {
+        "grep_line_count": 5,
+        "memory_error_match_count": 5,
+        "memory_error_keyword_counts": {
+          "ecc error": 5,
+          "memory error": 1,
+          "single-bit error": 0,
+          "multi-bit error": 0,
+          "uncorrectable ecc error": 2
+        },
+        "memory_error_matches": [
+          {
+            "line": "[   12.345678] EDAC MC0: ECC error detected on CPU#0Channel#1_DIMM#0",
+            "matched_keywords": [
+              "ecc error"
+            ]
+          },
+          {
+            "line": "[   12.345912] EDAC MC0: Single-bit ECC error corrected on DIMM_A1",
+            "matched_keywords": [
+              "ecc error"
+            ]
+          },
+          {
+            "line": "[  128.456789] mce: [Hardware Error]: Memory error detected: Uncorrectable ECC error",
+            "matched_keywords": [
+              "ecc error",
+              "memory error",
+              "uncorrectable ecc error"
+            ]
+          },
+          {
+            "line": "[  128.457103] EDAC MC0: Multi-bit ECC error detected on DIMM_B2",
+            "matched_keywords": [
+              "ecc error"
+            ]
+          },
+          {
+            "line": "[  128.457821] EDAC MC0: Uncorrectable ECC error on CPU_SrcID#0_Ha#0_Chan#1_DIMM#1",
+            "matched_keywords": [
+              "ecc error",
+              "uncorrectable ecc error"
+            ]
+          }
+        ],
+        "grep_lines": [
+          "[   12.345678] EDAC MC0: ECC error detected on CPU#0Channel#1_DIMM#0",
+          "[   12.345912] EDAC MC0: Single-bit ECC error corrected on DIMM_A1",
+          "[  128.456789] mce: [Hardware Error]: Memory error detected: Uncorrectable ECC error",
+          "[  128.457103] EDAC MC0: Multi-bit ECC error detected on DIMM_B2",
+          "[  128.457821] EDAC MC0: Uncorrectable ECC error on CPU_SrcID#0_Ha#0_Chan#1_DIMM#1"
+        ]
+      },
+      "thresholds": {
+        "memory_error_keywords": "ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error"
+      },
+      "reasons": "메모리 오류 관련 키워드가 확인되었습니다. 키워드별 검출 건수: ecc error=5건, memory error=1건, single-bit error=0건, multi-bit error=0건, uncorrectable ecc error=2건",
+      "message": "메모리 오류 관련 dmesg 로그가 확인되었습니다. 키워드별 검출 건수: ecc error=5건, memory error=1건, single-bit error=0건, multi-bit error=0건, uncorrectable ecc error=2건. 임계치: memory_error_keywords=ecc error|memory error|single-bit error|multi-bit error|uncorrectable ecc error",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -Ei 'ecc error|memory error|single-bit error|multi-bit error'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [   12.345678] EDAC MC0: ECC error detected on CPU#0Channel#1_DIMM#0\n[   12.345912] EDAC MC0: Single-bit ECC error corrected on DIMM_A1\n[  128.456789] mce: [Hardware Error]: Memory error detected: Uncorrectable ECC error\n[  128.457103] EDAC MC0: Multi-bit ECC error detected on DIMM_B2\n[  128.457821] EDAC MC0: Uncorrectable ECC error on CPU_SrcID#0_Ha#0_Chan#1_DIMM#1",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: dmesg | grep -Ei 'ecc error|memory error|single-bit error|multi-bit error'",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: [   12.345678] EDAC MC0: ECC error detected on CPU#0Channel#1_DIMM#0",
+        "[   12.345912] EDAC MC0: Single-bit ECC error corrected on DIMM_A1",
+        "[  128.456789] mce: [Hardware Error]: Memory error detected: Uncorrectable ECC error",
+        "[  128.457103] EDAC MC0: Multi-bit ECC error detected on DIMM_B2",
+        "[  128.457821] EDAC MC0: Uncorrectable ECC error on CPU_SrcID#0_Ha#0_Chan#1_DIMM#1"
+      ]
+    }
+  ],
+  "failed_items": []
+}

@@ -1,0 +1,48 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "inspector",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 104,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "APPLICATION",
+        "data": {
+          "become": true,
+          "become_method": "su",
+          "become_user": "root",
+          "become_password": "password"
+        }
+      },
+      {
+        "application_id": 104,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "inspector",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 5,
+  "host_id": 50,
+  "job_id": 500,
+  "item": {
+    "inspection_code": "U-REPLAY-MEM-01",
+    "item_id": 90005,
+    "application_id": 104,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": []
+  }
+}

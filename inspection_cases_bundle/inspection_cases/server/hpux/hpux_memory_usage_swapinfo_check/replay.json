@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "swapinfo -tam",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_swapinfo_tam.stdout",
+    "stderr": ""
+  }
+]

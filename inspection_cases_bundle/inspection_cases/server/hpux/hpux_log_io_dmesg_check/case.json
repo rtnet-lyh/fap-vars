@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 47,
+  "host_id": 326,
+  "job_id": 3116,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-16",
+    "item_id": 93016,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "I/O 에러로그",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "입출력 작동 이상 유무 점검(Timeout, I/O Error, Transport Failed, Media Error)",
+    "inspection_command": "dmesg | egrep -i '\\btimeout\\b|i/o\\s+error|transport\\s+failed|media\\s+error'",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "io_bad_log_keywords",
+        "value1": "\\btimeout\\b|i/o\\s+error|transport\\s+failed|media\\s+error"
+      },
+      {
+        "name": "io_ignore_log_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

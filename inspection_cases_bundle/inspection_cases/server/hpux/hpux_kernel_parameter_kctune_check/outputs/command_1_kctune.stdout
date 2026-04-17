@@ -1,0 +1,5 @@
+Tunable                      Value  Expression  Changes
+max_thread_proc              1024   Default     Immed
+maxfiles                     2048   Default     Immed
+nproc                        4200   Default     Immed
+semmns                       4096   Default     Immed

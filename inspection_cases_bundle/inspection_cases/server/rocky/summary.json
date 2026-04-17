@@ -1,0 +1,199 @@
+{
+  "total_cases": 28,
+  "failed_cases": [
+    "rocky_cpu_usage_procstat_check",
+    "rocky_filesystem_inode_df_check",
+    "rocky_filesystem_usage_df_check",
+    "rocky_log_io_dmesg_check",
+    "rocky_log_kernel_dmesg_check",
+    "rocky_log_system_dmesg_check",
+    "rocky_memory_swap_swapon_check",
+    "rocky_nic_redundancy_bonding_check"
+  ],
+  "cases": [
+    {
+      "case_name": "rocky_cluster_daemon_crm_mon_check",
+      "result_file": "rocky_cluster_daemon_crm_mon_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_cluster_shared_volume_mount_check",
+      "result_file": "rocky_cluster_shared_volume_mount_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_cpu_usage_procstat_check",
+      "result_file": "rocky_cpu_usage_procstat_check/result.json",
+      "failed_items": [
+        "U-REPLAY-CPU-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_disk_io_diskstats_check",
+      "result_file": "rocky_disk_io_diskstats_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_disk_raid_mdadm_check",
+      "result_file": "rocky_disk_raid_mdadm_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_disk_recognition_lsblk_check",
+      "result_file": "rocky_disk_recognition_lsblk_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_filesystem_inode_df_check",
+      "result_file": "rocky_filesystem_inode_df_check/result.json",
+      "failed_items": [
+        "U-REPLAY-INODE-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_filesystem_usage_df_check",
+      "result_file": "rocky_filesystem_usage_df_check/result.json",
+      "failed_items": [
+        "U-REPLAY-DF-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_filesystem_usage_df_exclude_check",
+      "result_file": "rocky_filesystem_usage_df_exclude_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_hba_connection_systool_check",
+      "result_file": "rocky_hba_connection_systool_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_kernel_parameter_sysctl_check",
+      "result_file": "rocky_kernel_parameter_sysctl_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_cluster_dmesg_check",
+      "result_file": "rocky_log_cluster_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_cpu_dmesg_check",
+      "result_file": "rocky_log_cpu_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_fan_dmesg_check",
+      "result_file": "rocky_log_fan_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_hba_dmesg_check",
+      "result_file": "rocky_log_hba_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_io_dmesg_check",
+      "result_file": "rocky_log_io_dmesg_check/result.json",
+      "failed_items": [
+        "U-REPLAY-DMESG-IO-02"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_log_kernel_dmesg_check",
+      "result_file": "rocky_log_kernel_dmesg_check/result.json",
+      "failed_items": [
+        "U-REPLAY-DMESG-PANIC-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_log_memory_dmesg_check",
+      "result_file": "rocky_log_memory_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_nic_dmesg_check",
+      "result_file": "rocky_log_nic_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_power_dmesg_check",
+      "result_file": "rocky_log_power_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_log_system_dmesg_check",
+      "result_file": "rocky_log_system_dmesg_check/result.json",
+      "failed_items": [
+        "U-REPLAY-DMESG-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_memory_recognition_dmidecode_check",
+      "result_file": "rocky_memory_recognition_dmidecode_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_memory_swap_swapon_check",
+      "result_file": "rocky_memory_swap_swapon_check/result.json",
+      "failed_items": [
+        "U-REPLAY-SWAP-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_memory_usage_free_check",
+      "result_file": "rocky_memory_usage_free_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_network_link_status_ip_link_check",
+      "result_file": "rocky_network_link_status_ip_link_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_nic_redundancy_bonding_check",
+      "result_file": "rocky_nic_redundancy_bonding_check/result.json",
+      "failed_items": [
+        "U-REPLAY-NIC-BONDING-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "rocky_path_redundancy_multipath_check",
+      "result_file": "rocky_path_redundancy_multipath_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_ping_loss_check",
+      "result_file": "rocky_ping_loss_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 50,
+  "host_id": 329,
+  "job_id": 3119,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-19",
+    "item_id": 93019,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "NIC 로그",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "NIC 정상 유무 점검(Status Up/Down, Link Down, Failover)",
+    "inspection_command": "dmesg | egrep -i 'link\\s+down|status\\s+down|failover|lan[0-9]+.*down'",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "nic_bad_log_keywords",
+        "value1": "link\\s+down|status\\s+down|failover|lan[0-9]+.*down"
+      },
+      {
+        "name": "nic_ignore_log_keywords",
+        "value1": "link\\s+up|status\\s+up"
+      }
+    ]
+  }
+}

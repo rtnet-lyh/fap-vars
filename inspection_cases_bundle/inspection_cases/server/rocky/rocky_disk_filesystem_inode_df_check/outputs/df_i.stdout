@@ -1,0 +1,19 @@
+Filesystem    512-blocks      Free %Used    Iused %Iused Mounted on
+/dev/hd4        10485760   6886888   35%    30040     4% /
+/dev/hd2        20971520  12360784   42%    87134     6% /usr
+/dev/hd9var     31457280  14136944   56%    13838     1% /var
+/dev/hd3        31457280  19907296   37%     2341     1% /tmp
+/dev/hd1        20971520  19179464    9%     5287     1% /home
+/dev/hd10opt    20971520  19118752    9%    15867     1% /opt
+/dev/nbu_lv     41943040  20571944   51%     7013     1% /netbackup
+/dev/hd11admin    1048576   1046912    1%        7     1% /admin
+/proc                  -         -    -         -     -  /proc
+/dev/livedump    1048576   1047760    1%        4     1% /var/adm/ras/livedump
+/dev/kras_lv   335544320 308189416    9%    41084     1% /kras_home
+/dev/ora_lv    104857600  74727808   29%    16000     1% /oracle10
+/dev/tmax_lv   377487360 246001464   35%  1764105     7% /tmax
+/dev/klissido_lv   25165824  17412576   31%    50619     3% /klissido
+/dev/app_lv     83886080  38536272   55%    34122     1% /app
+/dev/irais_city_lv   20971520  16771752   21%     2074     1% /irais_city
+/dev/landinfo_lv 1258291200 483399400   62%  3899073     7% /landinfo
+/dev/lv_landtest  209715200 149812096   29%   756020     99% /land_test

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ping 192.168.1.1 64 3",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_ping_192_168_1_1_64_3.stdout",
+    "stderr": ""
+  }
+]

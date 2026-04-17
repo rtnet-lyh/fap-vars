@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -Ei 'ecc error|memory error|single-bit error|multi-bit error'",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_memory.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "tail -n 2000 /var/adm/cmcluster/cmcld.log | egrep -i 'status\\s+change.*offline|status\\s+change.*unknown|cluster\\s+error|communication\\s+failure|\\berror\\b'",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_tail_n_2000_var_adm_cmcluster_cmcld_log_.stdout",
+    "stderr": ""
+  }
+]

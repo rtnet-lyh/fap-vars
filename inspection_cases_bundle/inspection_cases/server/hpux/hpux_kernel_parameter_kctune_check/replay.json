@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "kctune",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_kctune.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,5 @@
+Filesystem          kbytes    used   avail %used Mounted on
+/dev/vg00/lvol3   20971520  8300000 12671520  40% /
+/dev/vg00/lvol4   52428800 42000000 10428800  80% /opt
+/dev/vg00/lvol5  104857600 70000000 34857600  67% /var
+tmpfs              8192000        0  8192000   0% /dev/shm

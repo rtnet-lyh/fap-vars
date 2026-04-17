@@ -1,0 +1,5 @@
+TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME
+dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2
+reserve       -       -    2048
+memory    16384    9200    7184   56%
+total     24576   10224   14352   42%

@@ -1,0 +1,4 @@
+Class     I  H/W Path        Driver      S/W State   H/W Type     Description
+===========================================================================
+fc        0  0/2/1/0         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter
+fc        1  0/2/1/1         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter

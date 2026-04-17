@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "bash -lc 'cat /proc/diskstats; printf \"__DISKSTATS_SPLIT__\\n\"; sleep 1; cat /proc/diskstats'",
+    "rc": 0,
+    "stdout_file": "outputs/diskstats.stdout",
+    "stderr": ""
+  }
+]

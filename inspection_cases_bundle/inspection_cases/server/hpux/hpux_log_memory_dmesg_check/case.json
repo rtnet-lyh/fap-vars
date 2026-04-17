@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "HPUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 30,
+        "application_type_name": "HPUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": "",
+          "become": "false",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 49,
+  "host_id": 328,
+  "job_id": 3118,
+  "item": {
+    "inspection_code": "HPUX-REPLAY-18",
+    "item_id": 93018,
+    "application_id": 301,
+    "application_type_id": 30,
+    "application_type_name": "HPUX",
+    "application_name": "HP-UX",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "MEMORY 로그",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "메모리 오류 에러로그 점검(Singlebit/Multibit Errors, Uncorrectable ECC Errors)",
+    "inspection_command": "dmesg | egrep -i 'ecc\\s+error|single[- ]?bit|multi[- ]?bit|uncorrectable'",
+    "is_service_affect": "N",
+    "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "threshold_list": [
+      {
+        "name": "memory_bad_log_keywords",
+        "value1": "ecc\\s+error|single[- ]?bit|multi[- ]?bit|uncorrectable"
+      },
+      {
+        "name": "memory_ignore_log_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

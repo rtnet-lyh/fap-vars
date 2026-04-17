@@ -1,0 +1,16 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "netstat -in",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_netstat_in.stdout",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "lanscan -q",
+    "rc": 0,
+    "stdout_file": "outputs/command_2_lanscan_q.stdout",
+    "stderr": ""
+  }
+]

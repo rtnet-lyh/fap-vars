@@ -1,0 +1,5 @@
+Interface = lan0
+Link status   : Up
+Speed         : 1000 Mbps
+Duplex        : Full
+Autoneg       : On

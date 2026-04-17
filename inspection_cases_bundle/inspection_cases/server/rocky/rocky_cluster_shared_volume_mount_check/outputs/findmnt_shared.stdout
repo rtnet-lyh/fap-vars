@@ -1,0 +1,2 @@
+TARGET         SOURCE FSTYPE OPTIONS
+/run/user/1000 tmpfs  tmpfs  rw,nosuid,nodev,relatime,seclabel,size=1572692k,nr_inodes=393173,mode=700,uid=1000,gid=1000,inode64

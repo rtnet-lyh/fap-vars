@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "mount",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_mount.stdout",
+    "stderr": ""
+  }
+]

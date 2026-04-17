@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ErrorActionPreference = 'Stop'; $available = [bool](Get-Command Get-NetLbfoTeam -ErrorAction SilentlyContinue); $teams = @(); if ($available) { $teams = @(Get-NetLbfoTeam | Select-Object Name, Status, TeamingMode, LoadBalancingAlgorithm) }; [pscustomobject]@{ get_net_lbfo_team_available = $available; team_count = @($teams).Count; teams = $teams } | ConvertTo-Json -Compress -Depth 6",
+    "rc": 0,
+    "stdout": "{\"get_net_lbfo_team_available\":true,\"team_count\":1,\"teams\":[{\"Name\":\"Team1\",\"Status\":\"Up\",\"TeamingMode\":\"SwitchIndependent\",\"LoadBalancingAlgorithm\":\"Dynamic\"}]}\n",
+    "stderr": ""
+  }
+]
