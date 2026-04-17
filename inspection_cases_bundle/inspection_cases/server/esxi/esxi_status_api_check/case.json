@@ -1,0 +1,66 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 85,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-STATUS-API-01",
+    "item_id": 94001,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "ESXi 상태 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "하이퍼바이저 점검",
+    "inspection_command": "POST /sdk SOAP RetrieveServiceContent, Login, RetrievePropertiesEx(HostSystem.summary)",
+    "is_service_affect": "N",
+    "action_content": "CPU 또는 메모리 사용률이 기준을 초과하거나 전원/연결 상태가 비정상인 경우 ESXi 호스트 성능, VM 자원 경합, 관리 연결 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_api_check",
+    "replay_summary_xml_file": "outputs/host_summary.xml",
+    "api_version": "8.0.3.0",
+    "threshold_list": [
+      {
+        "name": "max_cpu_usage_percent",
+        "value1": "80"
+      },
+      {
+        "name": "max_memory_usage_percent",
+        "value1": "80"
+      },
+      {
+        "name": "expected_power_state",
+        "value1": "poweredOn"
+      },
+      {
+        "name": "expected_connection_state",
+        "value1": "connected"
+      }
+    ]
+  }
+}

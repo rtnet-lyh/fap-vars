@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+ xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<soapenv:Body>
+<RetrievePropertiesExResponse xmlns="urn:vim25"><returnval><objects><obj type="HostSystem">ha-host</obj><propSet><name>summary</name><val xsi:type="HostListSummary"><host type="HostSystem">ha-host</host><hardware><vendor>Huawei</vendor><model>RH2288H V3</model><uuid>63ca02ce-3610-11e6-bf03-749d8f88c836</uuid><memorySize>16757735424</memorySize><cpuModel>Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz</cpuModel><cpuMhz>2394</cpuMhz><numCpuPkgs>2</numCpuPkgs><numCpuCores>12</numCpuCores><numCpuThreads>24</numCpuThreads><numNics>4</numNics><numHBAs>3</numHBAs></hardware><runtime><connectionState>connected</connectionState><powerState>poweredOn</powerState><inMaintenanceMode>false</inMaintenanceMode><bootTime>2025-06-26T07:49:10.062584Z</bootTime></runtime><config><name>localhost.rtnet</name><port>902</port><product><name>VMware ESXi</name><fullName>VMware ESXi 8.0.3 build-24022510</fullName><vendor>VMware, Inc.</vendor><version>8.0.3</version><patchLevel>3.0</patchLevel><build>24022510</build><apiType>HostAgent</apiType><apiVersion>8.0.3.0</apiVersion></product><vmotionEnabled>false</vmotionEnabled><faultToleranceEnabled>false</faultToleranceEnabled></config><quickStats><overallCpuUsage>2297</overallCpuUsage><overallMemoryUsage>14850</overallMemoryUsage><uptime>25477694</uptime></quickStats><overallStatus>gray</overallStatus><rebootRequired>false</rebootRequired></val></propSet></objects></returnval></RetrievePropertiesExResponse>
+</soapenv:Body>
+</soapenv:Envelope>
