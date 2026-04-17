@@ -22,12 +22,6 @@ finally:
     disconnect(service_instance)
 ```
 
-ESXi Shell 보조 확인이 필요한 경우 다음 명령 출력과 교차 확인한다.
-
-```sh
-esxcli storage filesystem list
-```
-
 # 출력 결과
 ```json
 {
@@ -63,7 +57,7 @@ esxcli storage filesystem list
 - `accessible`이 `false`인 Datastore는 마운트 또는 스토리지 연결 문제 가능성이 있으므로 점검이 필요하다.
 - `url` 또는 datastore path가 운영 기준과 다르면 잘못된 마운트 또는 재구성 필요 여부를 확인한다.
 - 사용률이 높거나 여유 공간이 부족한 Datastore는 VM 스냅샷, ISO, 로그, 템플릿 정리 또는 용량 증설을 검토한다.
-- ESXi Shell의 `esxcli storage filesystem list` 출력은 API 결과와 경로, Mounted, Size, Free 값을 교차 확인하는 보조 수단으로 사용한다.
+- API에서 확인되는 Datastore `url`, `accessible`, `capacity`, `freeSpace` 값을 기준으로 경로와 용량 상태를 판단한다.
 
 # 임계치
 max_datastore_usage_percent

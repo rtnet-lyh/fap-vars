@@ -25,12 +25,6 @@ finally:
     disconnect(service_instance)
 ```
 
-ESXi Shell 보조 확인이 필요한 경우 다음 명령 출력과 교차 확인한다.
-
-```sh
-esxcli hardware status system ha summary get
-```
-
 # 출력 결과
 ```json
 {

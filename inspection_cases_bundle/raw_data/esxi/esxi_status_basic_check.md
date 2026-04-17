@@ -21,21 +21,7 @@ metrics = helper.host_summary_metrics_from_context(
 )
 ```
 
-output fixture 테스트는 같은 헬퍼가 다음과 같은 `HostSystem.summary` SOAP 응답 XML을 읽어 처리한다.
-
-```http
-POST https://<esxi_host>/sdk
-SOAPAction: urn:vim25
-Request: RetrieveServiceContent
-
-POST https://<esxi_host>/sdk
-SOAPAction: urn:vim25/<api_version>
-Request: Login(SessionManager)
-
-POST https://<esxi_host>/sdk
-SOAPAction: urn:vim25/<api_version>
-Request: RetrievePropertiesEx(HostSystem:ha-host, pathSet=summary)
-```
+output 데이터 테스트는 같은 헬퍼가 `HostSystem.summary` XML fixture를 읽어 처리한다.
 
 # 출력 결과
 ```json

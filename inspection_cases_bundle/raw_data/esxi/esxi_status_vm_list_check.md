@@ -48,7 +48,7 @@ finally:
 ```
 
 # 설명
-- vCenter 기준의 `govc ls /dc1/vm/*` 항목은 ESXi 직접 점검에서는 해당 ESXi 호스트에 등록된 VM 목록 확인으로 바꾼다.
+- vCenter 데이터센터 경로 기준 VM 조회 항목은 ESXi 직접 점검에서는 해당 ESXi 호스트에 등록된 VM 목록 확인으로 바꾼다.
 - `VMwareHelper.vm_summaries()`는 pyVmomi의 `vim.VirtualMachine` 목록에서 VM 이름, UUID, 전원 상태를 수집한다.
 - VM 이름이 비어 있거나 중복되거나 운영 기준상 필요한 VM이 누락되었는지 확인한다.
 - VM 전원 상태는 운영 정책에 따라 해석한다. 운영 중이어야 하는 VM이 `poweredOff`이면 경고로 본다.
