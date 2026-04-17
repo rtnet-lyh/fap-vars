@@ -1,0 +1,20 @@
+{
+  "vm_count": 3,
+  "virtual_machines": [
+    {
+      "name": "app01",
+      "uuid": "421a5a7d-0a1b-4c1d-9a10-000000000001",
+      "power_state": "poweredOn"
+    },
+    {
+      "name": "db01",
+      "uuid": "421a5a7d-0a1b-4c1d-9a10-000000000002",
+      "power_state": "poweredOn"
+    },
+    {
+      "name": "test01",
+      "uuid": "421a5a7d-0a1b-4c1d-9a10-000000000003",
+      "power_state": "poweredOff"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "Rtnettop0!",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host",
+          "disable_ssl_verification": "true"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 86,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-STATUS-AGENT-SERVICE-01",
+    "item_id": 94002,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "ESXi Agent 상태 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "하이퍼바이저와 가상시스템 관리 Agent 상태 확인",
+    "inspection_command": "pyVmomi HostServiceSystem.serviceInfo.service 조회",
+    "is_service_affect": "N",
+    "action_content": "hostd 또는 vCenter 관리 대상의 vpxa가 중지된 경우 ESXi 관리 Agent 상태와 vCenter 연동 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_agent_service_check",
+    "replay_agent_services_json_file": "outputs/agent_services.json",
+    "threshold_list": [
+      {
+        "name": "required_agent_services",
+        "value1": "hostd"
+      },
+      {
+        "name": "require_vpxa_when_managed",
+        "value1": "true"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
+      }
+    ]
+  }
+}

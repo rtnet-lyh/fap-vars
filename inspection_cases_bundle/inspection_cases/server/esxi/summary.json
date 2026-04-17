@@ -1,0 +1,46 @@
+{
+  "total_cases": 6,
+  "failed_cases": [
+    "esxi_status_basic_check"
+  ],
+  "cases": [
+    {
+      "case_name": "esxi_datastore_path_check",
+      "result_file": "esxi_datastore_path_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "esxi_status_agent_service_check",
+      "result_file": "esxi_status_agent_service_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "esxi_status_basic_check",
+      "result_file": "esxi_status_basic_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-API-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "esxi_status_hardware_health_check",
+      "result_file": "esxi_status_hardware_health_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "esxi_status_vcenter_agent_check",
+      "result_file": "esxi_status_vcenter_agent_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "esxi_status_vm_list_check",
+      "result_file": "esxi_status_vm_list_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

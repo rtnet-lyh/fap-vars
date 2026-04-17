@@ -1,0 +1,27 @@
+{
+  "datastore_count": 2,
+  "datastores": [
+    {
+      "name": "datastore1",
+      "type": "VMFS",
+      "url": "/vmfs/volumes/datastore1",
+      "accessible": true,
+      "capacity_bytes": 1099511627776,
+      "free_space_bytes": 549755813888,
+      "capacity_gib": 1024.0,
+      "free_space_gib": 512.0,
+      "usage_percent": 50.0
+    },
+    {
+      "name": "iso-nfs",
+      "type": "NFS",
+      "url": "/vmfs/volumes/iso-nfs",
+      "accessible": true,
+      "capacity_bytes": 214748364800,
+      "free_space_bytes": 161061273600,
+      "capacity_gib": 200.0,
+      "free_space_gib": 150.0,
+      "usage_percent": 25.0
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "host_name": "localhost.rtnet",
+  "overall_status": "green",
+  "hardware_health": {
+    "power_supply": "Normal",
+    "fan": "Normal",
+    "temperature": "Normal",
+    "voltage": "Normal",
+    "battery": "Normal"
+  },
+  "sensors": [
+    {
+      "name": "Power Supply 1",
+      "type": "power",
+      "category": "power_supply",
+      "status": "Normal"
+    },
+    {
+      "name": "Fan 1",
+      "type": "fan",
+      "category": "fan",
+      "status": "Normal"
+    },
+    {
+      "name": "System Board Temp",
+      "type": "temperature",
+      "category": "temperature",
+      "status": "Normal"
+    },
+    {
+      "name": "System Voltage",
+      "type": "voltage",
+      "category": "voltage",
+      "status": "Normal"
+    },
+    {
+      "name": "CMOS Battery",
+      "type": "battery",
+      "category": "battery",
+      "status": "Normal"
+    }
+  ],
+  "warning_sensors": [],
+  "failed_sensors": []
+}

@@ -32,6 +32,36 @@ class Check(BaseCheck):
             '- overall_status: {overall_status}',
         ]).format(**metrics)
 
+    def _build_message(self, metrics, thresholds, failed=None):
+        current_state = ', '.join([
+            'host=%s' % metrics.get('name', ''),
+            'CPU %.2f%% (기준 %.2f%% 이하)' % (
+                metrics['cpu_usage_percent'],
+                thresholds['max_cpu_usage_percent'],
+            ),
+            '메모리 %.2f%% (기준 %.2f%% 이하)' % (
+                metrics['memory_usage_percent'],
+                thresholds['max_memory_usage_percent'],
+            ),
+            '전원 상태 %s (기준 %s)' % (
+                metrics['power_state'],
+                thresholds['expected_power_state'],
+            ),
+            '연결 상태 %s (기준 %s)' % (
+                metrics['connection_state'],
+                thresholds['expected_connection_state'],
+            ),
+        ])
+        if failed:
+            return (
+                'ESXi 상태 기준을 충족하지 못했습니다. '
+                '실패 사유: %s. 현재 상태: %s.'
+            ) % (', '.join(failed), current_state)
+        return (
+            'ESXi 상태 확인이 정상입니다. 현재 상태: %s. '
+            'CPU/메모리 사용률과 전원/연결 상태가 모두 기준을 충족했습니다.'
+        ) % current_state
+
     def _evaluate(self, metrics):
         thresholds = self._thresholds()
         failed = []
@@ -60,7 +90,7 @@ class Check(BaseCheck):
         if failed:
             result = self.fail(
                 'ESXi 상태 기준 미충족',
-                message='ESXi 상태 기준을 충족하지 못했습니다: %s' % ', '.join(failed),
+                message=self._build_message(metrics, thresholds, failed),
                 raw_output=self._raw_output(metrics),
             )
             result['metrics'] = metrics
@@ -73,16 +103,7 @@ class Check(BaseCheck):
             thresholds=thresholds,
             reasons='CPU/Memory 사용률이 기준 이하이고 Power/Connection 상태가 정상입니다.',
             raw_output=self._raw_output(metrics),
-            message=(
-                'ESXi 상태 확인 점검이 정상 수행되었습니다. '
-                'CPU Usage %.2f%%, Memory Usage %.2f%%, Power State %s, Connection State %s.'
-                % (
-                    metrics['cpu_usage_percent'],
-                    metrics['memory_usage_percent'],
-                    metrics['power_state'],
-                    metrics['connection_state'],
-                )
-            ),
+            message=self._build_message(metrics, thresholds),
         )
 
     def run(self):
@@ -94,7 +115,7 @@ class Check(BaseCheck):
         except Exception as exc:
             return self.fail(
                 'ESXi API 점검 실패',
-                message=str(exc),
+                message='VMwareHelper 기반 ESXi 상태 API 조회 중 예외가 발생했습니다: %s' % exc,
                 raw_output='VMwareHelper 기반 ESXi 상태 점검을 완료하지 못했습니다.',
             )
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import ssl
 import xml.etree.ElementTree as ET
@@ -173,6 +174,18 @@ class VMwareHelper(object):
         except Exception:
             return default
 
+    def _safe_bool(self, value, default=False):
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return default
+        text = str(value).strip().lower()
+        if text in ('1', 'true', 'y', 'yes', 'on'):
+            return True
+        if text in ('0', 'false', 'n', 'no', 'off'):
+            return False
+        return default
+
     def _xml_local_name(self, tag):
         return str(tag).rsplit('}', 1)[-1]
 
@@ -197,14 +210,33 @@ class VMwareHelper(object):
         except Exception:
             raise ValueError('%s 값을 정수로 해석할 수 없습니다: %s' % (field_name, value))
 
-    def _read_output_fixture_xml(self):
+    def _should_use_output_fixture(self):
         password = self._source_value(
             'password',
             'login_password',
             default=self.check.get_application_credential_value('password'),
         )
         force_replay = self._threshold_value('force_replay', default=False, value_type='bool')
-        if password and not force_replay:
+        return (not password) or bool(force_replay)
+
+    def _fixture_path_candidates(self, rel_path):
+        base_dir = self._source_value('replay_base_dir', 'output_base_dir', default='')
+        candidates = []
+        if base_dir:
+            candidates.append(os.path.join(str(base_dir), str(rel_path)))
+        candidates.append(str(rel_path))
+        candidates.append(os.path.join(os.getcwd(), str(rel_path)))
+        return candidates
+
+    def _read_fixture_file(self, rel_path, description):
+        for path in self._fixture_path_candidates(rel_path):
+            if os.path.isfile(path):
+                with open(path, 'r', encoding='utf-8') as fh:
+                    return fh.read()
+        raise RuntimeError('%s 파일을 찾지 못했습니다: %s' % (description, rel_path))
+
+    def _read_output_fixture_xml(self):
+        if not self._should_use_output_fixture():
             return ''
 
         inline_xml = self._source_value('replay_summary_xml', 'output_summary_xml', default='')
@@ -215,18 +247,51 @@ class VMwareHelper(object):
         if not rel_path:
             return ''
 
-        base_dir = self._source_value('replay_base_dir', 'output_base_dir', default='')
-        candidates = []
-        if base_dir:
-            candidates.append(os.path.join(str(base_dir), str(rel_path)))
-        candidates.append(str(rel_path))
-        candidates.append(os.path.join(os.getcwd(), str(rel_path)))
+        return self._read_fixture_file(rel_path, 'output summary XML')
 
-        for path in candidates:
-            if os.path.isfile(path):
-                with open(path, 'r', encoding='utf-8') as fh:
-                    return fh.read()
-        raise RuntimeError('output summary XML 파일을 찾지 못했습니다: %s' % rel_path)
+    def _read_output_fixture_json(self, inline_keys=None, file_keys=None):
+        if not self._should_use_output_fixture():
+            return None
+
+        inline_keys = list(inline_keys or []) + ['replay_json', 'output_json']
+        file_keys = list(file_keys or []) + ['replay_json_file', 'output_json_file']
+
+        for key in inline_keys:
+            value = self._source_value(key, default='')
+            if value in (None, ''):
+                continue
+            if isinstance(value, dict):
+                return dict(value)
+            try:
+                decoded = json.loads(str(value))
+            except Exception as exc:
+                raise ValueError('output JSON 파싱 실패(%s): %s' % (key, exc))
+            if not isinstance(decoded, dict):
+                raise ValueError('output JSON은 object 형식이어야 합니다: %s' % key)
+            return decoded
+
+        for key in file_keys:
+            rel_path = self._source_value(key, default='')
+            if not rel_path:
+                continue
+            text = self._read_fixture_file(rel_path, 'output JSON')
+            try:
+                decoded = json.loads(text)
+            except Exception as exc:
+                raise ValueError('output JSON 파일 파싱 실패(%s): %s' % (rel_path, exc))
+            if not isinstance(decoded, dict):
+                raise ValueError('output JSON 파일은 object 형식이어야 합니다: %s' % rel_path)
+            return decoded
+
+        return None
+
+    def _fixture_metrics(self, data, collection_key=None, count_key=None):
+        copied = dict(data or {})
+        copied['source'] = 'output'
+        if collection_key and count_key and count_key not in copied:
+            collection = copied.get(collection_key) or []
+            copied[count_key] = len(collection) if isinstance(collection, list) else 0
+        return copied
 
     def _summary_from_output_xml(self, text):
         try:
@@ -351,6 +416,305 @@ class VMwareHelper(object):
             'source': source,
         }
 
+    def _host_display_name(self, host):
+        summary = getattr(host, 'summary', None)
+        config = getattr(summary, 'config', None)
+        return self._safe_text(getattr(config, 'name', '') or getattr(host, 'name', ''))
+
+    def _host_connection_state(self, host):
+        summary = getattr(host, 'summary', None)
+        runtime = getattr(summary, 'runtime', None)
+        return self._safe_text(getattr(runtime, 'connectionState', ''))
+
+    def _host_management_server_ip(self, host):
+        summary = getattr(host, 'summary', None)
+        return self._safe_text(getattr(summary, 'managementServerIp', ''))
+
+    def _service_rows(self, host):
+        config_manager = getattr(host, 'configManager', None)
+        service_system = getattr(config_manager, 'serviceSystem', None)
+        service_info = getattr(service_system, 'serviceInfo', None)
+        services = getattr(service_info, 'service', None) or []
+
+        rows = []
+        for service in services:
+            key = self._safe_text(getattr(service, 'key', ''))
+            label = self._safe_text(getattr(service, 'label', '') or key)
+            rows.append({
+                'key': key,
+                'label': label,
+                'running': self._safe_bool(getattr(service, 'running', False)),
+                'policy': self._safe_text(getattr(service, 'policy', '')),
+            })
+        if not any(str(row.get('key') or '').lower() == 'hostd' for row in rows):
+            # vSphere API 세션 자체가 hostd를 통해 성립하므로 목록 미노출 시 보정한다.
+            rows.append({
+                'key': 'hostd',
+                'label': 'hostd (vSphere API session)',
+                'running': True,
+                'policy': 'api-session',
+            })
+        rows.sort(key=lambda row: (row.get('key') or row.get('label') or '').lower())
+        return rows
+
+    def agent_services(self, service_instance, host=None, host_moid=None, host_name=None, source='pyvmomi'):
+        if host is None:
+            host = self.select_host(service_instance, host_moid=host_moid, host_name=host_name)
+
+        management_server_ip = self._host_management_server_ip(host)
+        return {
+            'host_name': self._host_display_name(host),
+            'managed_by_vcenter': bool(management_server_ip),
+            'management_server_ip': management_server_ip,
+            'connection_state': self._host_connection_state(host),
+            'services': self._service_rows(host),
+            'source': source,
+        }
+
+    def agent_services_from_context(self, default_host_moid='ha-host', source='pyvmomi'):
+        fixture_json = self._read_output_fixture_json(
+            inline_keys=('replay_agent_services_json', 'output_agent_services_json'),
+            file_keys=('replay_agent_services_json_file', 'output_agent_services_json_file'),
+        )
+        if fixture_json is not None:
+            return self._fixture_metrics(fixture_json, collection_key='services', count_key='service_count')
+
+        service_instance = None
+        disconnect = None
+        try:
+            service_instance, disconnect = self.connect()
+            host_moid = self._source_value('host_moid', default=default_host_moid)
+            host_name = self._source_value('host_name', 'hostname_filter', default='')
+            return self.agent_services(
+                service_instance,
+                host_moid=host_moid,
+                host_name=host_name,
+                source=source,
+            )
+        finally:
+            if service_instance is not None and disconnect is not None:
+                try:
+                    disconnect(service_instance)
+                except Exception:
+                    pass
+
+    def vcenter_agent_status(self, service_instance, host=None, host_moid=None, host_name=None, source='pyvmomi'):
+        metrics = self.agent_services(
+            service_instance,
+            host=host,
+            host_moid=host_moid,
+            host_name=host_name,
+            source=source,
+        )
+        services = metrics.get('services') or []
+        vpxa = None
+        for service in services:
+            if str(service.get('key') or '').lower() == 'vpxa':
+                vpxa = service
+                break
+
+        metrics['vpxa'] = {
+            'exists': vpxa is not None,
+            'running': bool(vpxa and vpxa.get('running')),
+            'policy': self._safe_text((vpxa or {}).get('policy', '')),
+        }
+        return metrics
+
+    def vcenter_agent_status_from_context(self, default_host_moid='ha-host', source='pyvmomi'):
+        fixture_json = self._read_output_fixture_json(
+            inline_keys=('replay_vcenter_agent_json', 'output_vcenter_agent_json'),
+            file_keys=('replay_vcenter_agent_json_file', 'output_vcenter_agent_json_file'),
+        )
+        if fixture_json is not None:
+            return self._fixture_metrics(fixture_json)
+
+        service_instance = None
+        disconnect = None
+        try:
+            service_instance, disconnect = self.connect()
+            host_moid = self._source_value('host_moid', default=default_host_moid)
+            host_name = self._source_value('host_name', 'hostname_filter', default='')
+            return self.vcenter_agent_status(
+                service_instance,
+                host_moid=host_moid,
+                host_name=host_name,
+                source=source,
+            )
+        finally:
+            if service_instance is not None and disconnect is not None:
+                try:
+                    disconnect(service_instance)
+                except Exception:
+                    pass
+
+    def _status_text(self, value):
+        for attr in ('key', 'label', 'summary', 'value'):
+            attr_value = getattr(value, attr, None)
+            if attr_value not in (None, ''):
+                return self._safe_text(attr_value)
+        return self._safe_text(value)
+
+    def _sensor_category(self, sensor):
+        sensor_type = self._safe_text(getattr(sensor, 'sensorType', ''))
+        name = self._safe_text(getattr(sensor, 'name', ''))
+        text = ('%s %s' % (sensor_type, name)).lower()
+        if 'power' in text or 'psu' in text:
+            return 'power_supply'
+        if 'fan' in text:
+            return 'fan'
+        if 'temp' in text or 'thermal' in text:
+            return 'temperature'
+        if 'volt' in text:
+            return 'voltage'
+        if 'battery' in text:
+            return 'battery'
+        return sensor_type.lower().replace(' ', '_') or 'other'
+
+    def _sensor_status_rank(self, status):
+        text = str(status or '').strip().lower()
+        if text in ('red', 'critical', 'failure', 'failed', 'alert'):
+            return 4
+        if text in ('yellow', 'warning', 'degraded'):
+            return 3
+        if text in ('unknown', 'gray', 'grey'):
+            return 2
+        if text in ('green', 'normal', 'ok'):
+            return 1
+        return 2
+
+    def _hardware_sensor_rows(self, host):
+        runtime = getattr(host, 'runtime', None)
+        health_runtime = getattr(runtime, 'healthSystemRuntime', None)
+        health_info = getattr(health_runtime, 'systemHealthInfo', None)
+        sensors = []
+        if health_info is not None:
+            sensors.extend(getattr(health_info, 'numericSensorInfo', None) or [])
+            sensors.extend(getattr(health_info, 'sensorInfo', None) or [])
+
+        rows = []
+        for sensor in sensors:
+            name = self._safe_text(getattr(sensor, 'name', ''))
+            sensor_type = self._safe_text(getattr(sensor, 'sensorType', ''))
+            status = self._status_text(getattr(sensor, 'healthState', ''))
+            rows.append({
+                'name': name,
+                'type': sensor_type,
+                'category': self._sensor_category(sensor),
+                'status': status,
+            })
+        rows.sort(key=lambda row: (row.get('category') or '', row.get('name') or ''))
+        return rows
+
+    def hardware_health(self, service_instance, host=None, host_moid=None, host_name=None, source='pyvmomi'):
+        if host is None:
+            host = self.select_host(service_instance, host_moid=host_moid, host_name=host_name)
+
+        summary = getattr(host, 'summary', None)
+        sensors = self._hardware_sensor_rows(host)
+        hardware_health = {}
+        for sensor in sensors:
+            category = sensor.get('category') or 'other'
+            current = hardware_health.get(category)
+            status = sensor.get('status') or 'unknown'
+            if current is None or self._sensor_status_rank(status) > self._sensor_status_rank(current):
+                hardware_health[category] = status
+
+        failed_sensors = [
+            sensor for sensor in sensors
+            if self._sensor_status_rank(sensor.get('status')) >= 4
+        ]
+        warning_sensors = [
+            sensor for sensor in sensors
+            if self._sensor_status_rank(sensor.get('status')) in (2, 3)
+        ]
+
+        return {
+            'host_name': self._host_display_name(host),
+            'overall_status': self._safe_text(getattr(summary, 'overallStatus', '')),
+            'hardware_health': hardware_health,
+            'sensors': sensors,
+            'warning_sensors': warning_sensors,
+            'failed_sensors': failed_sensors,
+            'source': source,
+        }
+
+    def hardware_health_from_context(self, default_host_moid='ha-host', source='pyvmomi'):
+        fixture_json = self._read_output_fixture_json(
+            inline_keys=('replay_hardware_health_json', 'output_hardware_health_json'),
+            file_keys=('replay_hardware_health_json_file', 'output_hardware_health_json_file'),
+        )
+        if fixture_json is not None:
+            return self._fixture_metrics(fixture_json)
+
+        service_instance = None
+        disconnect = None
+        try:
+            service_instance, disconnect = self.connect()
+            host_moid = self._source_value('host_moid', default=default_host_moid)
+            host_name = self._source_value('host_name', 'hostname_filter', default='')
+            return self.hardware_health(
+                service_instance,
+                host_moid=host_moid,
+                host_name=host_name,
+                source=source,
+            )
+        finally:
+            if service_instance is not None and disconnect is not None:
+                try:
+                    disconnect(service_instance)
+                except Exception:
+                    pass
+
+    def vm_summaries_from_context(self, source='pyvmomi'):
+        fixture_json = self._read_output_fixture_json(
+            inline_keys=('replay_vm_list_json', 'output_vm_list_json'),
+            file_keys=('replay_vm_list_json_file', 'output_vm_list_json_file'),
+        )
+        if fixture_json is not None:
+            return self._fixture_metrics(fixture_json, collection_key='virtual_machines', count_key='vm_count')
+
+        service_instance = None
+        disconnect = None
+        try:
+            service_instance, disconnect = self.connect()
+            rows = self.vm_summaries(service_instance)
+            return {
+                'vm_count': len(rows),
+                'virtual_machines': rows,
+                'source': source,
+            }
+        finally:
+            if service_instance is not None and disconnect is not None:
+                try:
+                    disconnect(service_instance)
+                except Exception:
+                    pass
+
+    def datastore_summaries_from_context(self, source='pyvmomi'):
+        fixture_json = self._read_output_fixture_json(
+            inline_keys=('replay_datastore_json', 'output_datastore_json'),
+            file_keys=('replay_datastore_json_file', 'output_datastore_json_file'),
+        )
+        if fixture_json is not None:
+            return self._fixture_metrics(fixture_json, collection_key='datastores', count_key='datastore_count')
+
+        service_instance = None
+        disconnect = None
+        try:
+            service_instance, disconnect = self.connect()
+            rows = self.datastore_summaries(service_instance)
+            return {
+                'datastore_count': len(rows),
+                'datastores': rows,
+                'source': source,
+            }
+        finally:
+            if service_instance is not None and disconnect is not None:
+                try:
+                    disconnect(service_instance)
+                except Exception:
+                    pass
+
     def vm_summaries(self, service_instance):
         rows = []
         for vm in self.list_vms(service_instance):
@@ -379,6 +743,8 @@ class VMwareHelper(object):
                 'accessible': bool(getattr(summary, 'accessible', False)),
                 'capacity_bytes': capacity,
                 'free_space_bytes': free_space,
+                'capacity_gib': round(capacity / 1024.0 / 1024.0 / 1024.0, 2) if capacity else 0.0,
+                'free_space_gib': round(free_space / 1024.0 / 1024.0 / 1024.0, 2) if free_space else 0.0,
                 'usage_percent': usage_percent,
             })
         return rows

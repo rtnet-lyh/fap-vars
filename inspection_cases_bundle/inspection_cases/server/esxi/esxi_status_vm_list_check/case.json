@@ -1,0 +1,65 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "Rtnettop0!",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 89,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-STATUS-VM-LIST-01",
+    "item_id": 94005,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "ESXi VM 리스트 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "VM(가상서버) 리스트 확인",
+    "inspection_command": "pyVmomi VirtualMachine summary 목록 조회",
+    "is_service_affect": "N",
+    "action_content": "필수 VM이 누락되었거나 VM 전원 상태가 운영 기준과 다르면 ESXi 인벤토리와 VM 운영 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_vm_list_check",
+    "replay_vm_list_json_file": "outputs/vm_list.json",
+    "threshold_list": [
+      {
+        "name": "min_vm_count",
+        "value1": "1"
+      },
+      {
+        "name": "required_vm_names",
+        "value1": ""
+      },
+      {
+        "name": "allowed_power_states",
+        "value1": "poweredOn,poweredOff,suspended"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
+      }
+    ]
+  }
+}

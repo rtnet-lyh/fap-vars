@@ -1,0 +1,70 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "Rtnettop0!",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host",
+          "disable_ssl_verification": "true"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 90,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-DATASTORE-PATH-01",
+    "item_id": 94006,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "데이터스토어 Path 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "하이퍼바이저 연결 Datastore 경로 확인",
+    "inspection_command": "pyVmomi Datastore.summary 목록 조회",
+    "is_service_affect": "N",
+    "action_content": "Datastore 접근 불가, 사용률 초과, 여유 공간 부족, 필수 Datastore 누락 시 스토리지 연결과 용량 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_datastore_path_check",
+    "replay_datastore_json_file": "outputs/datastores.json",
+    "threshold_list": [
+      {
+        "name": "max_datastore_usage_percent",
+        "value1": "85"
+      },
+      {
+        "name": "min_datastore_free_gib",
+        "value1": "10"
+      },
+      {
+        "name": "required_datastore_names",
+        "value1": ""
+      },
+      {
+        "name": "require_accessible",
+        "value1": "true"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
+      }
+    ]
+  }
+}

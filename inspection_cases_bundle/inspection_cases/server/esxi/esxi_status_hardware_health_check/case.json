@@ -1,0 +1,62 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "Rtnettop0!",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host",
+          "disable_ssl_verification": "true"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 88,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-STATUS-HARDWARE-HEALTH-01",
+    "item_id": 94004,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "ESXi 하드웨어 Health 상태 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "ESXi 하드웨어 및 HA 대체 상태 확인",
+    "inspection_command": "pyVmomi HostSystem.summary.overallStatus 및 runtime.healthSystemRuntime.systemHealthInfo 조회",
+    "is_service_affect": "N",
+    "action_content": "overall status 또는 하드웨어 센서 상태가 비정상인 경우 장비 하드웨어와 벤더 관리도구 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_hardware_health_check",
+    "replay_hardware_health_json_file": "outputs/hardware_health.json",
+    "threshold_list": [
+      {
+        "name": "expected_overall_status",
+        "value1": "green"
+      },
+      {
+        "name": "normal_health_states",
+        "value1": "green,normal,ok"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
+      }
+    ]
+  }
+}

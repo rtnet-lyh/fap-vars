@@ -1,0 +1,62 @@
+{
+  "host": "192.168.1.85",
+  "port": 443,
+  "user": "",
+  "password": "",
+  "credentials": {
+    "ESXI": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "ESXI",
+        "credential_type_name": "API",
+        "data": {
+          "username": "rtnsol",
+          "password": "Rtnettop0!",
+          "scheme": "https",
+          "port": 443,
+          "host_moid": "ha-host",
+          "disable_ssl_verification": "true"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 87,
+  "host_id": 85,
+  "job_id": 4085,
+  "item": {
+    "inspection_code": "ESXI-STATUS-VCENTER-AGENT-01",
+    "item_id": 94003,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "ESXI",
+    "application_name": "VMware ESXi",
+    "application_family_name": "VIRTUALIZATION",
+    "inspection_item_name": "ESXi vCenter Agent 통신 상태 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "가상화",
+    "description": "vCenter와 통신하는 Agent 상태 확인",
+    "inspection_command": "pyVmomi HostSystem.summary 및 HostServiceSystem.serviceInfo.service 조회",
+    "is_service_affect": "N",
+    "action_content": "vCenter 관리 대상인데 vpxa 또는 연결 상태가 비정상인 경우 vCenter Agent 통신 상태를 확인합니다.",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
+    "replay_vcenter_agent_json_file": "outputs/vcenter_agent.json",
+    "threshold_list": [
+      {
+        "name": "require_vcenter_connection",
+        "value1": "false"
+      },
+      {
+        "name": "expected_connection_state",
+        "value1": "connected"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
+      }
+    ]
+  }
+}
