@@ -17,15 +17,20 @@ class Check(BaseCheck):
         }
 
     def _raw_output(self, metrics):
-        return (
-            'ESXi HostSystem.summary API 조회 결과: '
-            'source={source}, name={name}, api_version={api_version}, '
-            'cpu_usage_percent={cpu_usage_percent}%, '
-            'memory_usage_percent={memory_usage_percent}%, '
-            'power_state={power_state}, '
-            'connection_state={connection_state}, '
-            'overall_status={overall_status}'
-        ).format(**metrics)
+        return '\n'.join([
+            'ESXi HostSystem.summary API 조회 결과',
+            '- source: {source}',
+            '- name: {name}',
+            '- full_name: {full_name}',
+            '- api_version: {api_version}',
+            '- vendor/model: {vendor} / {model}',
+            '- cpu_model: {cpu_model}',
+            '- cpu_usage: {cpu_usage_percent}% ({cpu_usage_mhz}/{cpu_capacity_mhz} MHz)',
+            '- memory_usage: {memory_usage_percent}% ({memory_usage_mib}/{memory_total_mib} MiB)',
+            '- power_state: {power_state}',
+            '- connection_state: {connection_state}',
+            '- overall_status: {overall_status}',
+        ]).format(**metrics)
 
     def _evaluate(self, metrics):
         thresholds = self._thresholds()
