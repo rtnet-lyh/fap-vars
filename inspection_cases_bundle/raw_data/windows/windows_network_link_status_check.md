@@ -1,33 +1,36 @@
-# 영역
+﻿# 영역
 NETWORK
 
-# 세부 점검항목
-NW 링크 상태 연결속도 설정
+# 세부 점검 항목
+물리 NIC 링크 상태
 
 # 점검 내용
-Windows 네트워크 어댑터 링크 상태와 속도 확인
+Get-NetAdapter 결과를 기준으로 물리 NIC의 링크 Up 상태 개수를 점검합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $adapters = Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, LinkSpeed, MacAddress; $down = @($adapters | Where-Object { $_.Status -ne 'Up' }); [pscustomobject]@{ adapter_count = @($adapters).Count; down_adapter_count = @($down).Count; adapters = $adapters } | ConvertTo-Json -Compress -Depth 6
+Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | Format-Table -AutoSize
 ```
 
 # 출력 결과
-```json
-{"adapter_count":1,"down_adapter_count":0,"adapters":[{"Name":"Ethernet","InterfaceDescription":"Demo NIC","Status":"Up","LinkSpeed":"1 Gbps","MacAddress":"00-11-22-33-44-55"}]}
+```text
+Name      InterfaceDescription              Status  LinkSpeed
+Ethernet  Intel(R) Ethernet Controller     Up      1 Gbps
 ```
 
 # 설명
-- Get-NetAdapter로 네트워크 어댑터 링크 상태, 속도, MAC 주소를 확인한다.
-- Down 상태 어댑터가 있으면 케이블, 스위치 포트, 드라이버, Teaming 구성을 추가 확인한다.
+- 가상/터널류 어댑터를 제외하고 실제 서비스용 물리 NIC의 링크 상태를 확인합니다.
+- 최소 Up NIC 수를 기준으로 네트워크 연결성을 평가합니다.
 
 # 임계치
-없음
+- `min_up_physical_nic_count`: `1`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: 네트워크 어댑터가 확인되고 Down 상태 어댑터가 없는 경우
-- **주의**: Down 상태 어댑터가 하나 이상 확인되는 경우
-- **경고**: 네트워크 어댑터가 확인되지 않는 경우
+- **정상**: Up 상태인 물리 NIC 수가 최소 기준 이상입니다.
+- **경고**: 활성 물리 NIC 수가 기준보다 적습니다.
+
+

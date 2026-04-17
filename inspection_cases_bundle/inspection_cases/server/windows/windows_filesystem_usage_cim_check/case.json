@@ -6,7 +6,7 @@
   "credentials": {
     "WINDOWS": [
       {
-        "application_id": 201,
+        "application_id": 207,
         "application_type_id": 20,
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
@@ -26,29 +26,29 @@
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
   },
-  "execution_id": 2,
-  "host_id": 20,
-  "job_id": 200,
+  "execution_id": 11,
+  "host_id": 110,
+  "job_id": 1100,
   "item": {
-    "inspection_code": "WIN-SRV-STATUS-06",
-    "item_id": 91006,
-    "application_id": 201,
+    "inspection_code": "W-REPLAY-DISK-01",
+    "item_id": 90011,
+    "application_id": 207,
     "application_type_id": 20,
     "application_type_name": "WINDOWS",
-    "application_name": "Windows Server",
-    "application_family_name": "Server OS",
-    "inspection_item_name": "파일시스템 사용량",
-    "type_name": "일상점검",
-    "area_name": "상태점검",
-    "category_name": "서버(OS)",
-    "description": "범정부 정보시스템 예방점검 서버 점검 일지 항목을 Windows Server PowerShell 점검으로 매핑한 항목입니다.",
-    "inspection_command": "$ErrorActionPreference = 'Stop'; $drives = Get-CimInstance Win32_LogicalDisk -Filter \"DriveType=3\" | ForEach-Object { $size = [double]$_.Size; $free = [double]$_.FreeSpace; $usage = if ($size -gt 0) { [math]::Round((($size - $free) / $size) * 100, 2) } else { 0 }; [pscustomobject]@{ device_id = $_.DeviceID; volume_name = $_.VolumeName; size_bytes = [int64]$size; free_bytes = [int64]$free; usage_percent = $usage } }; [pscustomobject]@{ drive_count = @($drives).Count; drives = @($drives) } | ConvertTo-Json -Compress -Depth 6",
-    "is_service_affect": "N",
-    "action_content": "비정상 또는 경고 시 Windows 이벤트 로그, 성능 카운터, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "application_name": "A",
+    "application_family_name": "A",
     "threshold_list": [
       {
-        "name": "max_filesystem_usage_percent",
-        "value1": "80"
+        "name": "max_usage_percent",
+        "value1": "80.0"
+      },
+      {
+        "name": "min_available_percent",
+        "value1": "20.0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
       }
     ]
   }

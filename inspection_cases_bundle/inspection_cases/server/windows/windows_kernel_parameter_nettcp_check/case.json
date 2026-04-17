@@ -6,7 +6,7 @@
   "credentials": {
     "WINDOWS": [
       {
-        "application_id": 201,
+        "application_id": 212,
         "application_type_id": 20,
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
@@ -26,24 +26,30 @@
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
   },
-  "execution_id": 2,
-  "host_id": 20,
-  "job_id": 200,
+  "execution_id": 16,
+  "host_id": 160,
+  "job_id": 1600,
   "item": {
-    "inspection_code": "WIN-SRV-STATUS-12",
-    "item_id": 91012,
-    "application_id": 201,
+    "inspection_code": "W-REPLAY-KERNEL-01",
+    "item_id": 90016,
+    "application_id": 212,
     "application_type_id": 20,
     "application_type_name": "WINDOWS",
-    "application_name": "Windows Server",
-    "application_family_name": "Server OS",
-    "inspection_item_name": "Kernel Parameter Check",
-    "type_name": "일상점검",
-    "area_name": "상태점검",
-    "category_name": "서버(OS)",
-    "description": "범정부 정보시스템 예방점검 서버 점검 일지 항목을 Windows Server PowerShell 점검으로 매핑한 항목입니다.",
-    "inspection_command": "$ErrorActionPreference = 'Stop'; $tcp = @(); $available = [bool](Get-Command Get-NetTCPSetting -ErrorAction SilentlyContinue); if ($available) { $tcp = @(Get-NetTCPSetting | Select-Object SettingName, AutoTuningLevelLocal, CongestionProvider, EcnCapability) }; [pscustomobject]@{ get_net_tcp_setting_available = $available; tcp_settings = $tcp } | ConvertTo-Json -Compress -Depth 6",
-    "is_service_affect": "N",
-    "action_content": "비정상 또는 경고 시 Windows 이벤트 로그, 성능 카운터, 벤더 관리도구 결과를 교차 확인 후 조치합니다."
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "expected_ip_forward",
+        "value1": "0"
+      },
+      {
+        "name": "disallowed_accept_source_route_values",
+        "value1": "0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
   }
 }

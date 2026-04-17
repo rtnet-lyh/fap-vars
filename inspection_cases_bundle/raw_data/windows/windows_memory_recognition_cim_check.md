@@ -1,32 +1,39 @@
-# 영역
+﻿# 영역
 MEMORY
 
-# 세부 점검항목
-메모리 상태 확인
+# 세부 점검 항목
+설치 메모리 용량 및 모듈 상태
 
 # 점검 내용
-Windows CIM 기준 물리 메모리 모듈 및 총 용량 확인
+Win32_PhysicalMemory 정보를 통해 설치된 메모리 모듈 수와 총 물리 메모리 용량을 점검합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $mem = Get-CimInstance Win32_PhysicalMemory | Select-Object BankLabel, DeviceLocator, Capacity, Speed, Manufacturer, PartNumber; $total = ($mem | Measure-Object -Property Capacity -Sum).Sum; [pscustomobject]@{ dimm_count = @($mem).Count; total_physical_memory_bytes = [int64]$total; modules = $mem } | ConvertTo-Json -Compress -Depth 6
+$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;"ARRAY slots=$((($a|Measure-Object -Property MemoryDevices -Sum).Sum)) max={0:N2}GiB" -f ((((($a|Measure-Object -Property MaxCapacityEx -Sum).Sum)*1KB)/1GB));$m|Select-Object DeviceLocator,BankLabel,@{N=\'SizeGiB\';E={[math]::Round($_.Capacity/1GB,2)}},Manufacturer,PartNumber,SerialNumber,ConfiguredClockSpeed,Speed,SMBIOSMemoryType,FormFactor | Format-Table -AutoSize
 ```
 
 # 출력 결과
-```json
-{"dimm_count":2,"total_physical_memory_bytes":17179869184,"modules":[{"BankLabel":"BANK 0","DeviceLocator":"DIMM 0","Capacity":8589934592,"Speed":2666,"Manufacturer":"Demo","PartNumber":"DEMO"}]}
+```text
+BankLabel     : BANK 0
+DeviceLocator : Controller0-ChannelA-DIMM0
+Capacity      : 8589934592
+Speed         : 4800
+Manufacturer  : Samsung
 ```
 
 # 설명
-- Win32_PhysicalMemory로 물리 메모리 모듈과 총 용량을 확인한다.
-- 모듈 수 또는 총 용량이 확인되지 않으면 메모리 인식 상태와 하드웨어 이벤트를 추가 확인한다.
+- DIMM 개수와 총 물리 메모리 용량을 확인해 기본 자원 구성이 기준에 맞는지 봅니다.
+- 용량만 보는 항목이며 사용률은 별도 점검 항목에서 확인합니다.
 
 # 임계치
-없음
+- `min_installed_memory_gib`: `8.0`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: 물리 메모리 모듈과 총 용량이 확인되는 경우
-- **경고**: 모듈 또는 총 용량이 확인되지 않는 경우
+- **정상**: 설치 메모리 총량이 최소 기준 이상입니다.
+- **경고**: 설치 메모리 총량이 최소 기준보다 적습니다.
+
+

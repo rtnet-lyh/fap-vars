@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $svc = Get-Service -Name ClusSvc -ErrorAction SilentlyContinue; $status = if ($svc) { $svc.Status.ToString() } else { '' }; $startType = if ($svc) { $svc.StartType.ToString() } else { '' }; [pscustomobject]@{ service_exists = [bool]$svc; service_status = $status; service_start_type = $startType } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "if(Get-Module -ListAvailable -Name FailoverClusters){Import-Module FailoverClusters -ErrorAction SilentlyContinue; $cl='.'; try{$c=if($cl -eq '.'){Get-Cluster -ErrorAction Stop}else{Get-Cluster -Name $cl -ErrorAction Stop}; $n=Get-ClusterNode -Cluster $cl -ErrorAction Stop; $r=Get-ClusterResource -Cluster $cl -ErrorAction Stop; '==Cluster Summary=='; [pscustomobject]@{Cluster=$c.Name; NodesConfigured=$n.Count; NodesOnline=($n|Where-Object State -eq 'Up').Count; ResourceInstancesConfigured=$r.Count; ResourcesOnline=($r|Where-Object State -eq 'Online').Count}|Format-List; '==Node List=='; $n|Select-Object Name,Id,State|Format-Table -Auto; '==Full List of Resources=='; $r|Select-Object Name,State,ResourceType,OwnerGroup,OwnerNode|Format-Table -Auto; '==Fence History=='; 'N/A (no direct crm_mon-style fencing history field in WSFC PowerShell)'} catch {'Failover cluster not found/reachable. For remote WSFC, change $cl=''.'' to your cluster name.'}} else {'FailoverClusters module not installed. On Windows 11, install RSAT Failover Clustering Tools first.'}",
     "rc": 0,
-    "stdout": "{\"service_exists\":true,\"service_status\":\"Running\",\"service_start_type\":\"Automatic\"}\n",
+    "stdout_file": "outputs/cluster_demon.stdout",
     "stderr": ""
   }
 ]

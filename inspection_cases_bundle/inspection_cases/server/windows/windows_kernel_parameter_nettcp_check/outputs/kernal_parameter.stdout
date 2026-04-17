@@ -1,0 +1,13 @@
+kernel.osrelease                      : 10.0.26200 (Build 26200)
+kernel.ostype                         : Microsoft Windows 11 Pro
+kernel.hostname                       : LAPTOP-CD61PRT2
+kernel.shmmax                         : N/A
+kernel.shmall                         : N/A
+net.ipv4.ip_forward                   : 0
+net.ipv4.conf.all.rp_filter           : N/A
+net.ipv4.conf.all.accept_source_route : NotConfigured
+net.core.somaxconn                    : N/A
+vm.swappiness                         : N/A
+vm.dirty_ratio                        : N/A
+fs.file-max                           : N/A
+fs.aio-max-nr                         : N/A

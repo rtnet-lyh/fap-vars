@@ -1,32 +1,35 @@
-# 영역
-로그
+﻿# 영역
+LOG
 
-# 세부 점검항목
-MEMORY 로그
+# 세부 점검 항목
+메모리 오류 이벤트 로그
 
 # 점검 내용
-최근 24시간 System 이벤트에서 메모리 관련 오류/경고 확인
+메모리 오류, WHEA 메모리, Pagefile 부족 등과 관련된 이벤트를 검색합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'memory|ecc|corrected|uncorrected|pagefile' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'memory|ecc|corrected|uncorrected|pagefile'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6
+$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -eq 'Microsoft-Windows-WHEA-Logger' -or $_.Message -match '(?i)\\becc\\b|memory error|single-bit|multi-bit|uncorrectable' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No ECC/memory-error-like events found in the last 30 days.'}
 ```
 
 # 출력 결과
-```json
-{"lookback_hours":24,"keyword_pattern":"demo","event_count":0,"events":[]}
+```text
+No memory warning or error events found in the last 30 days.
 ```
 
 # 설명
-- 최근 24시간 System 이벤트 로그에서 Level 1, 2, 3 이벤트를 조회하고 항목별 키워드로 필터링한다.
-- 이벤트가 임계치보다 많으면 장애 징후 또는 반복 경고 여부를 확인한다.
+- 메모리 오류, corrected memory error, out of memory 성격의 이벤트를 확인합니다.
+- 실제 메모리 사용률과는 별개로 하드웨어 또는 시스템 이벤트 관점에서 점검합니다.
 
 # 임계치
-max_event_count: 0
+- `max_memory_error_event_count`: `0`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: 이벤트 로그 검출 건수가 임계치 이하인 경우
-- **주의**: 관련 오류/경고 이벤트가 임계치를 초과해 추가 확인이 필요한 경우
+- **정상**: 메모리 관련 오류/경고 이벤트 수가 기준 이내입니다.
+- **경고**: 메모리 하드웨어 또는 메모리 부족 이벤트가 임계치를 초과합니다.
+
+

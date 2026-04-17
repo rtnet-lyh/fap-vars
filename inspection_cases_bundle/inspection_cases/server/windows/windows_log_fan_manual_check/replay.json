@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; if($f){$f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode | Format-Table -Auto} else {'No Win32_Fan data exposed by firmware/driver.'}; if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto} else {'No fan-related warning/error events found in the last 30 days.'}",
+    "rc": 0,
+    "stdout_file": "outputs/log_fan.stdout",
+    "stderr": ""
+  }
+]

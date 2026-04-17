@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $mem = Get-CimInstance Win32_PhysicalMemory | Select-Object BankLabel, DeviceLocator, Capacity, Speed, Manufacturer, PartNumber; $total = ($mem | Measure-Object -Property Capacity -Sum).Sum; [pscustomobject]@{ dimm_count = @($mem).Count; total_physical_memory_bytes = [int64]$total; modules = $mem } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;\"ARRAY slots=$((($a|Measure-Object -Property MemoryDevices -Sum).Sum)) max={0:N2}GiB\" -f ((((($a|Measure-Object -Property MaxCapacityEx -Sum).Sum)*1KB)/1GB));$m|Select-Object DeviceLocator,BankLabel,@{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},Manufacturer,PartNumber,SerialNumber,ConfiguredClockSpeed,Speed,SMBIOSMemoryType,FormFactor | Format-Table -AutoSize",
     "rc": 0,
-    "stdout": "{\"dimm_count\":2,\"total_physical_memory_bytes\":17179869184,\"modules\":[{\"BankLabel\":\"BANK 0\",\"DeviceLocator\":\"DIMM 0\",\"Capacity\":8589934592,\"Speed\":2666,\"Manufacturer\":\"Demo\",\"PartNumber\":\"DEMO\"}]}\n",
+    "stdout_file": "outputs/memory_status.stdout",
     "stderr": ""
   }
 ]

@@ -1,33 +1,36 @@
-# 영역
+﻿# 영역
 MEMORY
 
-# 세부 점검항목
-Paging Space
+# 세부 점검 항목
+PageFile 기반 스왑 사용률
 
 # 점검 내용
-Windows PageFile 사용률 확인
+Win32_PageFileUsage를 조회해 PageFile 총량, 현재 사용량, 최대 사용률을 점검합니다.
 
 # 구분
 권고
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $page = Get-CimInstance Win32_PageFileUsage | Select-Object Name, AllocatedBaseSize, CurrentUsage, PeakUsage; $allocated = ($page | Measure-Object -Property AllocatedBaseSize -Sum).Sum; $current = ($page | Measure-Object -Property CurrentUsage -Sum).Sum; $usage = if ($allocated -gt 0) { [math]::Round(($current / $allocated) * 100, 2) } else { 0 }; [pscustomobject]@{ pagefile_count = @($page).Count; allocated_mb = [int64]$allocated; current_usage_mb = [int64]$current; pagefile_usage_percent = $usage; pagefiles = $page } | ConvertTo-Json -Compress -Depth 6
+Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}
 ```
 
 # 출력 결과
-```json
-{"pagefile_count":1,"allocated_mb":4096,"current_usage_mb":512,"pagefile_usage_percent":12.5,"pagefiles":[{"Name":"C:\\pagefile.sys","AllocatedBaseSize":4096,"CurrentUsage":512,"PeakUsage":1024}]}
+```text
+Name               AllocatedBaseSize  CurrentUsage  PeakUsage
+C:\pagefile.sys  2048               128           256
 ```
 
 # 설명
-- Win32_PageFileUsage로 페이지 파일 할당량과 현재 사용량을 조회한다.
-- 페이지 파일 사용률이 높으면 메모리 부족 또는 과도한 페이징으로 성능 저하가 발생할 수 있다.
+- 메모리 전체가 아닌 PageFile 사용량만 별도로 추적하는 항목입니다.
+- 스왑 사용량이 높으면 메모리 압박 또는 튜닝 이슈 가능성을 의심할 수 있습니다.
 
 # 임계치
-max_pagefile_usage_percent: 50
+- `max_swap_usage_percent`: `50.0`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: PageFile 사용률이 임계치 이하인 경우
-- **주의**: PageFile 항목이 확인되지 않아 운영 정책 확인이 필요한 경우
-- **경고**: PageFile 사용률이 임계치를 초과한 경우
+- **정상**: PageFile 사용률이 임계치 이하입니다.
+- **경고**: PageFile 사용률이 임계치를 초과합니다.
+
+

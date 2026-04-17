@@ -2,7 +2,7 @@
 
 import re
 
-from .helpers import NetworkHelper, WebHelper
+from .helpers import NetworkHelper, VMwareHelper, WebHelper
 
 
 class BaseCheck:
@@ -29,6 +29,7 @@ class BaseCheck:
         self._command_history = []
         self._threshold_list_map_cache = None
         self.network_helper = NetworkHelper(self)
+        self.vmware_helper = VMwareHelper(self)
         self.web_helper = WebHelper(self)
 
     def run(self):

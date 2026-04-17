@@ -1,32 +1,41 @@
-# 영역
-CLUSTER
+﻿# 영역
+DISK
 
-# 세부 점검항목
-공유 볼륨 상태 점검
+# 세부 점검 항목
+클러스터 공유 볼륨 마운트 상태
 
 # 점검 내용
-Failover Cluster Shared Volume 조회 및 상태 확인
+지정한 공유 볼륨 경로가 실제로 마운트되어 있는지, 읽기/쓰기 모드와 볼륨 상태가 정상인지 확인합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $available = [bool](Get-Command Get-ClusterSharedVolume -ErrorAction SilentlyContinue); $csv = @(); if ($available) { $csv = @(Get-ClusterSharedVolume | Select-Object Name, State, OwnerNode) }; [pscustomobject]@{ cluster_shared_volume_available = $available; csv_count = @($csv).Count; csv = $csv } | ConvertTo-Json -Compress -Depth 6
+$p='C:\\mnt\\shared\\'; $pt=Get-Partition | Where-Object { $_.AccessPaths -contains $p -or $_.AccessPaths -contains $p.TrimEnd('\\') }; if($pt){ $v=$pt | Get-Volume; [pscustomobject]@{Device=\"Disk$($pt.DiskNumber)\\Partition$($pt.PartitionNumber)\"; MountedOn=$p.TrimEnd('\\'); FileSystem=$v.FileSystem; Mode=$(if($pt.IsReadOnly){'ro'}else{'rw'}); Status=$pt.OperationalStatus; Health=$v.HealthStatus} | Format-List } else { \"Mount point not found: $p\" }
 ```
 
 # 출력 결과
-```json
-{"cluster_shared_volume_available":true,"csv_count":1,"csv":[{"Name":"Cluster Disk 1","State":"Online","OwnerNode":"WIN-DEMO"}]}
+```text
+Device     : Disk1\\Partition2
+MountedOn  : C:\mnt\shared
+FileSystem : NTFS
+Mode       : rw
+Status     : Online
+Health     : Healthy
 ```
 
 # 설명
-- Get-ClusterSharedVolume으로 CSV 조회 가능 여부와 볼륨 상태를 확인한다.
-- Failover Cluster 모듈 또는 CSV 구성이 없으면 대상미해당으로 처리하고, 클러스터 대상이면 수동 확인한다.
+- 기본 경로는 `C:\mnt\shared\`이며 파티션과 볼륨 정보를 함께 확인합니다.
+- 마운트 경로, 모드, OperationalStatus, HealthStatus를 모두 만족해야 정상으로 판단합니다.
 
 # 임계치
-없음
+- `expected_mount_path`: `C:\mnt\shared\`
+- `expected_mode`: `rw`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: Cluster Shared Volume 조회가 정상 수행되는 경우
-- **대상미해당**: Failover Cluster 모듈 또는 CSV 구성이 없는 경우
+- **정상**: 기대한 경로에 볼륨이 연결되어 있고 모드가 `rw`이며 상태와 헬스가 정상입니다.
+- **경고**: 마운트 지점을 찾지 못했거나 경로, 모드, 상태 값이 기대와 다릅니다.
+
+

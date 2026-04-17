@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'power|thermal|battery|shutdown|restart' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'power|thermal|battery|shutdown|restart'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in @('Microsoft-Windows-Kernel-Power','Microsoft-Windows-WHEA-Logger','Microsoft-Windows-Kernel-Boot','ACPI') -or $_.Message -match '(?i)\\bpsu\\b|power supply|ps failed|failure detected|malfunction|voltage|power fault|power failure' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No PSU/power-failure-like warning or error events found in the last 30 days.'}",
     "rc": 0,
-    "stdout": "{\"lookback_hours\":24,\"keyword_pattern\":\"demo\",\"event_count\":0,\"events\":[]}\n",
+    "stdout_file": "outputs/log_power.stdout",
     "stderr": ""
   }
 ]

@@ -6,7 +6,7 @@
   "credentials": {
     "WINDOWS": [
       {
-        "application_id": 201,
+        "application_id": 227,
         "application_type_id": 20,
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
@@ -26,29 +26,29 @@
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
   },
-  "execution_id": 2,
-  "host_id": 20,
-  "job_id": 200,
+  "execution_id": 31,
+  "host_id": 310,
+  "job_id": 3100,
   "item": {
-    "inspection_code": "WIN-SRV-STATUS-27",
-    "item_id": 91027,
-    "application_id": 201,
+    "inspection_code": "W-REPLAY-GW-PING-01",
+    "item_id": 90031,
+    "application_id": 227,
     "application_type_id": 20,
     "application_type_name": "WINDOWS",
-    "application_name": "Windows Server",
-    "application_family_name": "Server OS",
-    "inspection_item_name": "Ping Loss",
-    "type_name": "일상점검",
-    "area_name": "상태점검",
-    "category_name": "서버(OS)",
-    "description": "범정부 정보시스템 예방점검 서버 점검 일지 항목을 Windows Server PowerShell 점검으로 매핑한 항목입니다.",
-    "inspection_command": "$ErrorActionPreference = 'Stop'; $target = (Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Sort-Object RouteMetric | Select-Object -First 1).NextHop; if (-not $target) { $target = '127.0.0.1' }; $count = 4; $ok = @(Test-Connection -ComputerName $target -Count $count -Quiet:$false -ErrorAction SilentlyContinue); $success = @($ok).Count; [pscustomobject]@{ target = $target; sent_count = $count; success_count = $success; loss_percent = [math]::Round((($count - $success) / $count) * 100, 2) } | ConvertTo-Json -Compress -Depth 6",
-    "is_service_affect": "N",
-    "action_content": "비정상 또는 경고 시 Windows 이벤트 로그, 성능 카운터, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
+    "application_name": "A",
+    "application_family_name": "A",
     "threshold_list": [
       {
-        "name": "max_ping_loss_percent",
+        "name": "max_loss_percent",
         "value1": "0"
+      },
+      {
+        "name": "max_average_time_ms",
+        "value1": "50"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
       }
     ]
   }

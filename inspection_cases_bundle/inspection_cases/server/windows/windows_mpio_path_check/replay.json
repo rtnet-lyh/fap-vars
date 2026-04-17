@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $feature = Get-WindowsFeature Multipath-IO -ErrorAction SilentlyContinue; $claims = ''; if (Get-Command mpclaim.exe -ErrorAction SilentlyContinue) { $claims = (mpclaim.exe -s -d | Out-String) }; $installed = if ($feature) { [bool]$feature.Installed } else { $false }; [pscustomobject]@{ mpio_installed = $installed; mpclaim_available = [bool](Get-Command mpclaim.exe -ErrorAction SilentlyContinue); mpclaim_output = $claims.Trim() } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "if (Get-Command Get-MPIOSetting -ErrorAction SilentlyContinue) { Get-MPIOSetting | Select-Object PathVerificationState,PathVerificationPeriod,RetryCount,RetryInterval,DiskTimeoutValue,@{N='LoadBalancePolicy';E={Get-MSDSMGlobalDefaultLoadBalancePolicy 2>$null}} | Format-List; mpclaim.exe -s -d } else { 'MPIO 미설치 또는 미지원' }",
     "rc": 0,
-    "stdout": "{\"mpio_installed\":true,\"mpclaim_available\":true,\"mpclaim_output\":\"MPIO Disk0 DSM OK\"}\n",
+    "stdout_file": "outputs/os_path_ha.stdout",
     "stderr": ""
   }
 ]

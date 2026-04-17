@@ -6,7 +6,7 @@
   "credentials": {
     "WINDOWS": [
       {
-        "application_id": 201,
+        "application_id": 229,
         "application_type_id": 20,
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
@@ -26,24 +26,26 @@
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
   },
-  "execution_id": 2,
-  "host_id": 20,
-  "job_id": 200,
+  "execution_id": 33,
+  "host_id": 330,
+  "job_id": 3300,
   "item": {
-    "inspection_code": "WIN-SRV-STATUS-29",
-    "item_id": 91029,
-    "application_id": 201,
+    "inspection_code": "W-REPLAY-OS-HBA-LINK-01",
+    "item_id": 90033,
+    "application_id": 229,
     "application_type_id": 20,
     "application_type_name": "WINDOWS",
-    "application_name": "Windows Server",
-    "application_family_name": "Server OS",
-    "inspection_item_name": "HBA 연결상태 점검",
-    "type_name": "일상점검",
-    "area_name": "상태점검",
-    "category_name": "서버(OS)",
-    "description": "범정부 정보시스템 예방점검 서버 점검 일지 항목을 Windows Server PowerShell 점검으로 매핑한 항목입니다.",
-    "inspection_command": "(수동 확인)",
-    "is_service_affect": "N",
-    "action_content": "비정상 또는 경고 시 Windows 이벤트 로그, 성능 카운터, 벤더 관리도구 결과를 교차 확인 후 조치합니다."
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_non_online_port_count",
+        "value1": "0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
   }
 }

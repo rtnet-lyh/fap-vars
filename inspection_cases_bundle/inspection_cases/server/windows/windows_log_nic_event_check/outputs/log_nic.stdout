@@ -1,0 +1,28 @@
+==NIC Status==
+
+Name                                  InterfaceDescription                          Status       LinkSpeed MacAddress        ifIndex
+----                                  --------------------                          ------       --------- ----------        -------
+로컬 영역 연결* 10                    WAN Miniport (Network Monitor)                Up           0 bps                    16
+vEthernet (WSL (Hyper-V firewall))    Hyper-V Virtual Ethernet Adapter              Up           10 Gbps   00-15-5D-11-22-33 74
+이더넷 2                              Fortinet Virtual Ethernet Adapter (NDIS 6.30) Disconnected 100 Mbps  00-09-0F-11-22-33 23
+로컬 영역 연결* 9                     WAN Miniport (IPv6)                           Up           0 bps                    15
+로컬 영역 연결* 3                     WAN Miniport (SSTP)                           Disconnected 0 bps                    9
+이더넷(커널 디버거)                   Microsoft Kernel Debug Network Adapter        Not Present  0 bps                    20
+로컬 영역 연결* 4                     WAN Miniport (IKEv2)                          Disconnected 0 bps                    10
+로컬 영역 연결* 2                     Microsoft Wi-Fi Direct Virtual Adapter #2     Disconnected 0 bps      E6-FD-45-11-22-33 8
+Teredo Tunneling Pseudo-Interface                                                   Not Present  0 bps                    14
+vSwitch (WSL (Hyper-V firewall))      Hyper-V Virtual Switch Extension Adapter      Up           10 Gbps                 73
+로컬 영역 연결* 5                     WAN Miniport (L2TP)                           Disconnected 0 bps                    11
+이더넷 3                              Fortinet SSL VPN Virtual Ethernet Adapter     Disconnected 100 Gbps  00-09-0F-44-55-66 24
+로컬 영역 연결* 8                     WAN Miniport (IP)                             Up           0 bps                    13
+Wi-Fi                                 Intel(R) Wi-Fi 6 AX201 160MHz                 Up           650 Mbps  E4-FD-45-AA-BB-CC 7
+Bluetooth 네트워크 연결               Bluetooth Device (Personal Area Network)      Disconnected 3 Mbps    E4-FD-45-AA-BB-CD 18
+이더넷                                Realtek PCIe GbE Family Controller            Not Present  0 bps      8C-B0-E9-11-22-33 12
+Microsoft IP-HTTPS Platform Interface                                               Not Present  0 bps                    17
+로컬 영역 연결* 1                     Microsoft Wi-Fi Direct Virtual Adapter        Disconnected 0 bps      E4-FD-45-AA-BB-CE 6
+로컬 영역 연결* 6                     WAN Miniport (PPTP)                           Disconnected 0 bps                    19
+로컬 영역 연결* 7                     WAN Miniport (PPPOE)                          Disconnected 0 bps                    21
+6to4 Adapter                                                                        Not Present  0 bps                    22
+
+==Recent NIC Events==
+No NIC link/failover-like warning or error events found in the last 30 days.

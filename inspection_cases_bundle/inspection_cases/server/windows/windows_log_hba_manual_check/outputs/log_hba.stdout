@@ -1,0 +1,6 @@
+==Initiator Ports==
+No HBA initiator ports exposed.
+==FC Port State==
+No FC HBA port-state data exposed by driver.
+==Recent HBA Events==
+No HBA/port offline-online-like events found in the last 30 days.

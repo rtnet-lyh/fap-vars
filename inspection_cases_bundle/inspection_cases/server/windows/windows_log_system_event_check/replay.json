@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'error|fail|critical|bugcheck|unexpected shutdown' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'error|fail|critical|bugcheck|unexpected shutdown'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "Get-WinEvent -FilterHashtable @{LogName=@('System','Application','Security'); StartTime=(Get-Date).AddDays(-7); Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)kernel|hardware|machine check|disk|filesystem|i/o|corrupt|memory|out of memory|driver|module|network|timeout|connection|service|daemon|security|unauthorized|access denied|failed' } | Select-Object -First 300 TimeCreated,LogName,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto",
     "rc": 0,
-    "stdout": "{\"lookback_hours\":24,\"keyword_pattern\":\"demo\",\"event_count\":0,\"events\":[]}\n",
+    "stdout_file": "outputs/log_system.stdout",
     "stderr": ""
   }
 ]

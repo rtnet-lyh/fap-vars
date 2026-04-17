@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import json
-
 from .common._base import BaseCheck
 
 
-CHECK_KIND = 'filesystem_usage'
-ITEM_NAME = '파일시스템 사용량'
-PS_COMMAND = '$ErrorActionPreference = \'Stop\'; $drives = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object { $size = [double]$_.Size; $free = [double]$_.FreeSpace; $usage = if ($size -gt 0) { [math]::Round((($size - $free) / $size) * 100, 2) } else { 0 }; [pscustomobject]@{ device_id = $_.DeviceID; volume_name = $_.VolumeName; size_bytes = [int64]$size; free_bytes = [int64]$free; usage_percent = $usage } }; [pscustomobject]@{ drive_count = @($drives).Count; drives = @($drives) } | ConvertTo-Json -Compress -Depth 6'
-MANUAL_MESSAGE = ''
+DISK_USAGE_COMMAND = (
+    "Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | "
+    "Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},"
+    "@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},"
+    "@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},"
+    "@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},"
+    "@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},"
+    "@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | Format-Table -Auto"
+)
+
+
+def _parse_float(value):
+    return round(float(str(value).strip()), 2)
 
 
 class Check(BaseCheck):
@@ -16,165 +23,154 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'winrm'
     WINRM_SHELL = 'powershell'
 
-    def _thresholds(self):
-        return {
-            'max_cpu_usage_percent': self.get_threshold_var('max_cpu_usage_percent', 80.0, 'float'),
-            'max_memory_usage_percent': self.get_threshold_var('max_memory_usage_percent', 80.0, 'float'),
-            'max_pagefile_usage_percent': self.get_threshold_var('max_pagefile_usage_percent', 50.0, 'float'),
-            'max_filesystem_usage_percent': self.get_threshold_var('max_filesystem_usage_percent', 80.0, 'float'),
-            'max_avg_disk_sec': self.get_threshold_var('max_avg_disk_sec', 0.02, 'float'),
-            'max_ping_loss_percent': self.get_threshold_var('max_ping_loss_percent', 0.0, 'float'),
-            'max_event_count': self.get_threshold_var('max_event_count', 0, 'int'),
-            'require_nic_team': self.get_threshold_var('require_nic_team', False, 'bool'),
-        }
-
-    def _load_json(self, text):
-        parsed = json.loads(text or '{}')
-        if isinstance(parsed, list):
-            return {'items': parsed}
-        return parsed
-
     def run(self):
-        if MANUAL_MESSAGE:
-            return self.not_applicable(MANUAL_MESSAGE, raw_output=MANUAL_MESSAGE)
+        max_usage_percent = self.get_threshold_var('max_usage_percent', default=80.0, value_type='float')
+        min_available_percent = self.get_threshold_var('min_available_percent', default=20.0, value_type='float')
+        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_ps(PS_COMMAND)
+        rc, out, err = self._run_ps(DISK_USAGE_COMMAND)
+
         if self._is_connection_error(rc, err):
-            return self.fail('호스트 연결 실패', message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(), stderr=(err or '').strip())
+            return self.fail(
+                '호스트 연결 실패',
+                message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(),
+                stderr=(err or '').strip(),
+            )
+
         if self._is_not_applicable(rc, err):
-            return self.not_applicable('WinRM 실행 환경을 사용할 수 없습니다.', raw_output=(err or '').strip())
+            return self.not_applicable(
+                'WinRM 실행 환경을 사용할 수 없습니다.',
+                raw_output=(err or '').strip(),
+            )
+
         if rc != 0:
-            return self.fail('점검 명령 실행 실패', message=f'{ITEM_NAME} PowerShell 점검 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())
+            return self.fail(
+                '점검 명령 실행 실패',
+                message='Windows 디스크 사용률 점검 명령 실행에 실패했습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
 
-        try:
-            metrics = self._load_json(out)
-        except Exception:
-            return self.fail('점검 결과 파싱 실패', message='PowerShell JSON 출력 형식을 해석할 수 없습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())
+        text = (out or '').strip()
+        if not text:
+            return self.fail(
+                '디스크 사용량 정보 없음',
+                message='디스크 사용률 결과가 비어 있습니다.',
+                stdout='',
+                stderr=(err or '').strip(),
+            )
 
-        return self._evaluate(metrics)
+        failure_keywords = [
+            keyword.strip()
+            for keyword in failure_keywords_raw.split(',')
+            if keyword.strip()
+        ]
+        matched_failure_keywords = [
+            keyword for keyword in failure_keywords if keyword.lower() in text.lower()
+        ]
+        if matched_failure_keywords:
+            return self.fail(
+                '디스크 점검 실패 키워드 감지',
+                message='디스크 사용률 결과에서 실패 키워드가 확인되었습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
 
-    def _evaluate(self, metrics):
-        thresholds = self._thresholds()
-        kind = CHECK_KIND
+        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
+        if len(lines) < 3:
+            return self.fail(
+                '디스크 사용량 정보 없음',
+                message='디스크 사용률 결과를 해석할 수 없습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
 
-        if kind == 'cpu_usage':
-            value = float(metrics.get('cpu_usage_percent') or 0)
-            if value > thresholds['max_cpu_usage_percent']:
-                return self.fail('CPU 사용률 임계치 초과', message=f'CPU 사용률이 기준치를 초과했습니다: current={value}%, max={thresholds["max_cpu_usage_percent"]}%')
-            return self.ok(metrics=metrics, thresholds={'max_cpu_usage_percent': thresholds['max_cpu_usage_percent']}, reasons='CPU 사용률이 임계치 이하입니다.', message=f'CPU 사용률 점검 정상: {value}%')
+        parsed = []
+        for line in lines[2:]:
+            if line.lstrip().startswith('---'):
+                continue
 
-        if kind == 'memory_usage':
-            value = float(metrics.get('memory_usage_percent') or 0)
-            if value > thresholds['max_memory_usage_percent']:
-                return self.fail('메모리 사용률 임계치 초과', message=f'메모리 사용률이 기준치를 초과했습니다: current={value}%, max={thresholds["max_memory_usage_percent"]}%')
-            return self.ok(metrics=metrics, thresholds={'max_memory_usage_percent': thresholds['max_memory_usage_percent']}, reasons='메모리 사용률이 임계치 이하입니다.', message=f'메모리 사용률 점검 정상: {value}%')
+            parts = line.split()
+            if len(parts) < 6:
+                continue
 
-        if kind in ('pagefile_usage', 'disk_swap'):
-            value = float(metrics.get('pagefile_usage_percent') or 0)
-            if int(metrics.get('pagefile_count') or 0) <= 0:
-                return self.warn(metrics=metrics, thresholds={'max_pagefile_usage_percent': thresholds['max_pagefile_usage_percent']}, reasons='페이지 파일 항목이 확인되지 않아 운영 정책 확인이 필요합니다.', message='페이지 파일 항목이 확인되지 않습니다.')
-            if value > thresholds['max_pagefile_usage_percent']:
-                return self.fail('페이지 파일 사용률 임계치 초과', message=f'페이지 파일 사용률이 기준치를 초과했습니다: current={value}%, max={thresholds["max_pagefile_usage_percent"]}%')
-            return self.ok(metrics=metrics, thresholds={'max_pagefile_usage_percent': thresholds['max_pagefile_usage_percent']}, reasons='페이지 파일 사용률이 임계치 이하입니다.', message=f'페이지 파일 점검 정상: {value}%')
+            try:
+                size_gb = _parse_float(parts[1])
+                used_gb = _parse_float(parts[2])
+                avail_gb = _parse_float(parts[3])
+                usage_percent = _parse_float(parts[4])
+            except ValueError:
+                continue
 
-        if kind == 'filesystem_usage':
-            drives = metrics.get('drives') or []
-            over = [d for d in drives if float(d.get('usage_percent') or 0) > thresholds['max_filesystem_usage_percent']]
-            if not drives:
-                return self.fail('파일시스템 정보 없음', message='고정 디스크 드라이브 정보를 찾지 못했습니다.')
-            if over:
-                return self.fail('파일시스템 사용률 임계치 초과', message='일부 드라이브 사용률이 기준치를 초과했습니다: ' + ', '.join(f"{d.get('device_id')}={d.get('usage_percent')}%" for d in over))
-            return self.ok(metrics=metrics, thresholds={'max_filesystem_usage_percent': thresholds['max_filesystem_usage_percent']}, reasons='모든 드라이브 사용률이 임계치 이하입니다.', message='파일시스템 사용량 점검 정상')
+            available_percent = round((avail_gb / size_gb) * 100, 2) if size_gb > 0 else 0.0
+            parsed.append({
+                'filesystem': parts[0],
+                'size_gb': size_gb,
+                'used_gb': used_gb,
+                'avail_gb': avail_gb,
+                'usage_percent': usage_percent,
+                'available_percent': available_percent,
+                'mount_point': parts[5],
+            })
 
-        if kind == 'disk_io':
-            read = float(metrics.get('avg_disk_sec_read') or 0)
-            write = float(metrics.get('avg_disk_sec_write') or 0)
-            if read > thresholds['max_avg_disk_sec'] or write > thresholds['max_avg_disk_sec']:
-                return self.fail('Disk I/O 지연 임계치 초과', message=f'Disk I/O 지연이 기준치를 초과했습니다: read={read}, write={write}, max={thresholds["max_avg_disk_sec"]}')
-            return self.ok(metrics=metrics, thresholds={'max_avg_disk_sec': thresholds['max_avg_disk_sec']}, reasons='Disk I/O 지연 값이 임계치 이하입니다.', message='Disk I/O 점검 정상')
+        if not parsed:
+            return self.fail(
+                '디스크 사용량 파싱 실패',
+                message='사용률(Use%)이 포함된 볼륨 정보를 찾지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
 
-        if kind.startswith('event_'):
-            count = int(metrics.get('event_count') or 0)
-            if count > thresholds['max_event_count']:
-                return self.warn(metrics=metrics, thresholds={'max_event_count': thresholds['max_event_count']}, reasons=f'최근 이벤트 로그에서 관련 경고/오류 {count}건이 확인되었습니다.', message=f'이벤트 로그 추가 확인 필요: {count}건')
-            return self.ok(metrics=metrics, thresholds={'max_event_count': thresholds['max_event_count']}, reasons='최근 이벤트 로그에서 기준 초과 오류가 확인되지 않았습니다.', message='이벤트 로그 점검 정상')
+        max_usage_entry = max(parsed, key=lambda entry: entry['usage_percent'])
+        min_available_entry = min(parsed, key=lambda entry: entry['available_percent'])
+        over_usage_mounts = [
+            f"{entry['mount_point']}({entry['usage_percent']}%)"
+            for entry in parsed
+            if entry['usage_percent'] >= max_usage_percent
+        ]
+        low_available_mounts = [
+            f"{entry['mount_point']}({entry['available_percent']}%)"
+            for entry in parsed
+            if entry['available_percent'] < min_available_percent
+        ]
 
-        if kind == 'disk_recognition':
-            if int(metrics.get('disk_count') or 0) <= 0:
-                return self.fail('디스크 미인식', message='Windows에서 인식된 디스크가 없습니다.')
-            if int(metrics.get('abnormal_disk_count') or 0) > 0:
-                return self.fail('디스크 상태 비정상', message='Status가 OK가 아닌 디스크가 확인되었습니다.')
-            return self.ok(metrics=metrics, reasons='디스크가 정상 인식되었습니다.', message='디스크 인식 점검 정상')
+        if over_usage_mounts:
+            return self.fail(
+                '디스크 사용률 임계치 초과',
+                message='일부 볼륨 사용률이 기준치를 초과했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
 
-        if kind == 'disk_redundancy':
-            if not metrics.get('storage_module_available'):
-                return self.not_applicable('Storage PowerShell 모듈 또는 지원 장치가 없어 디스크 이중화 상태는 수동 확인이 필요합니다.')
-            bad = []
-            for group in ('physical_disks', 'virtual_disks'):
-                for item in metrics.get(group) or []:
-                    if str(item.get('HealthStatus') or '').lower() not in ('healthy', 'ok'):
-                        bad.append(item.get('FriendlyName') or group)
-            if bad:
-                return self.fail('디스크 이중화 상태 비정상', message='HealthStatus 비정상 디스크가 확인되었습니다: ' + ', '.join(bad))
-            return self.ok(metrics=metrics, reasons='Storage 모듈 기준 디스크 HealthStatus가 정상입니다.', message='디스크 이중화 상태 점검 정상')
+        if low_available_mounts:
+            return self.fail(
+                '디스크 가용 공간 비율 임계치 미달',
+                message='일부 볼륨의 남은 디스크 공간 비율이 기준치 미만입니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
 
-        if kind == 'cpu_core':
-            if int(metrics.get('logical_processor_count') or 0) <= 0:
-                return self.fail('CPU 코어 미인식', message='논리 CPU 수가 0으로 표시됩니다.')
-            if int(metrics.get('abnormal_processor_count') or 0) > 0:
-                return self.warn(metrics=metrics, reasons='Status가 OK가 아닌 프로세서 항목이 확인되었습니다.', message='CPU 코어 상태 추가 확인 필요')
-            return self.ok(metrics=metrics, reasons='CPU 코어 정보가 정상 인식되었습니다.', message='코어별 상태 점검 정상')
-
-        if kind == 'memory_recognition':
-            if int(metrics.get('dimm_count') or 0) <= 0 or int(metrics.get('total_physical_memory_bytes') or 0) <= 0:
-                return self.fail('물리 메모리 미인식', message='물리 메모리 모듈 또는 총 용량이 확인되지 않습니다.')
-            return self.ok(metrics=metrics, reasons='물리 메모리 모듈과 총 용량이 확인되었습니다.', message='메모리 상태 확인 정상')
-
-        if kind == 'kernel_parameter':
-            if not metrics.get('get_net_tcp_setting_available'):
-                return self.not_applicable('Get-NetTCPSetting을 사용할 수 없어 Windows TCP 파라미터는 수동 확인이 필요합니다.')
-            return self.ok(metrics=metrics, reasons='Windows TCP 설정 조회가 정상 수행되었습니다.', message='Kernel Parameter 대체 점검 정상')
-
-        if kind == 'network_link':
-            if int(metrics.get('adapter_count') or 0) <= 0:
-                return self.fail('네트워크 어댑터 미인식', message='네트워크 어댑터가 확인되지 않습니다.')
-            if int(metrics.get('down_adapter_count') or 0) > 0:
-                return self.warn(metrics=metrics, reasons='Down 상태 네트워크 어댑터가 확인되었습니다.', message='네트워크 링크 상태 추가 확인 필요')
-            return self.ok(metrics=metrics, reasons='네트워크 어댑터 링크가 Up 상태입니다.', message='NW 링크 상태 점검 정상')
-
-        if kind == 'nic_teaming':
-            if not metrics.get('get_net_lbfo_team_available'):
-                return self.not_applicable('NIC Teaming cmdlet을 사용할 수 없어 NIC 이중화는 수동 확인이 필요합니다.')
-            if thresholds['require_nic_team'] and int(metrics.get('team_count') or 0) <= 0:
-                return self.fail('NIC 이중화 미구성', message='NIC Team 구성이 확인되지 않습니다.')
-            if int(metrics.get('team_count') or 0) <= 0:
-                return self.warn(metrics=metrics, thresholds={'require_nic_team': thresholds['require_nic_team']}, reasons='NIC Team 구성이 없습니다. 단일 NIC 운영 정책이면 예외 처리 가능합니다.', message='NIC 이중화 구성 없음')
-            return self.ok(metrics=metrics, thresholds={'require_nic_team': thresholds['require_nic_team']}, reasons='NIC Team 구성이 확인되었습니다.', message='NIC 이중화 점검 정상')
-
-        if kind == 'ping_loss':
-            value = float(metrics.get('loss_percent') or 0)
-            if value > thresholds['max_ping_loss_percent']:
-                return self.fail('Ping Loss 임계치 초과', message=f'Ping 손실률이 기준치를 초과했습니다: current={value}%, max={thresholds["max_ping_loss_percent"]}%')
-            return self.ok(metrics=metrics, thresholds={'max_ping_loss_percent': thresholds['max_ping_loss_percent']}, reasons='Ping 손실률이 임계치 이하입니다.', message=f'Ping Loss 점검 정상: {value}%')
-
-        if kind == 'cluster_service':
-            if not metrics.get('service_exists'):
-                return self.not_applicable('Failover Cluster 서비스가 없어 클러스터 데몬 점검은 대상미해당입니다.')
-            if str(metrics.get('service_status') or '').lower() != 'running':
-                return self.fail('Cluster 서비스 중지', message=f'ClusSvc 상태가 Running이 아닙니다: {metrics.get("service_status")}')
-            return self.ok(metrics=metrics, reasons='ClusSvc 서비스가 Running 상태입니다.', message='Cluster 데몬 상태 점검 정상')
-
-        if kind == 'shared_volume':
-            if not metrics.get('cluster_shared_volume_available'):
-                return self.not_applicable('Failover Cluster 모듈 또는 CSV 구성이 없어 공유 볼륨 점검은 대상미해당입니다.')
-            return self.ok(metrics=metrics, reasons='Cluster Shared Volume 조회가 정상 수행되었습니다.', message='공유 볼륨 상태 점검 정상')
-
-        if kind == 'mpio_path':
-            if not metrics.get('mpio_installed'):
-                return self.not_applicable('Multipath-IO 기능이 설치되어 있지 않아 Path 이중화 점검은 대상미해당입니다.')
-            return self.ok(metrics=metrics, reasons='MPIO 기능과 mpclaim 조회가 수행되었습니다.', message='Path 이중화 점검 정상')
-
-        return self.ok(metrics=metrics, reasons='Windows 예방점검 명령이 정상 수행되었습니다.', message=f'{ITEM_NAME} 점검 정상')
+        return self.ok(
+            metrics={
+                'filesystem_count': len(parsed),
+                'max_usage_percent': max_usage_entry['usage_percent'],
+                'max_usage_filesystem': max_usage_entry['filesystem'],
+                'max_usage_mount_point': max_usage_entry['mount_point'],
+                'min_available_percent': min_available_entry['available_percent'],
+                'min_available_filesystem': min_available_entry['filesystem'],
+                'min_available_mount_point': min_available_entry['mount_point'],
+                'over_usage_mounts': over_usage_mounts,
+                'low_available_mounts': low_available_mounts,
+                'matched_failure_keywords': matched_failure_keywords,
+            },
+            thresholds={
+                'max_usage_percent': max_usage_percent,
+                'min_available_percent': min_available_percent,
+                'failure_keywords': failure_keywords,
+            },
+            reasons='모든 볼륨 사용률과 가용 공간 비율이 기준 범위 내입니다.',
+            message='Windows 디스크 사용률 점검이 정상 수행되었습니다.',
+        )
 
 
 CHECK_CLASS = Check

@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $cpus = Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, LoadPercentage, Status; $logical = ($cpus | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum; $physical = ($cpus | Measure-Object -Property NumberOfCores -Sum).Sum; $bad = @($cpus | Where-Object { $_.Status -and $_.Status -ne 'OK' }); [pscustomobject]@{ processor_count = @($cpus).Count; physical_core_count = [int]$physical; logical_processor_count = [int]$logical; abnormal_processor_count = @($bad).Count; processors = $cpus } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
     "rc": 0,
-    "stdout": "{\"processor_count\":1,\"physical_core_count\":4,\"logical_processor_count\":8,\"abnormal_processor_count\":0,\"processors\":[{\"Name\":\"Intel(R) Xeon(R)\",\"NumberOfCores\":4,\"NumberOfLogicalProcessors\":8,\"LoadPercentage\":12,\"Status\":\"OK\"}]}\n",
+    "stdout_file": "outputs/cpu_core.stdout",
     "stderr": ""
   }
 ]

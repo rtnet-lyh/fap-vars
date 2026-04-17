@@ -1,9 +1,0 @@
-[
-  {
-    "matcher_type": "exact",
-    "matcher_value": "Write-Output 'USER=Administrator'; Write-Output 'HOST=WIN-DEMO'",
-    "rc": 0,
-    "stdout": "USER=Administrator\nHOST=WIN-DEMO\n",
-    "stderr": ""
-  }
-]

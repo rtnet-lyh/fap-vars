@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'memory|ecc|corrected|uncorrected|pagefile' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'memory|ecc|corrected|uncorrected|pagefile'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -eq 'Microsoft-Windows-WHEA-Logger' -or $_.Message -match '(?i)\\becc\\b|memory error|single-bit|multi-bit|uncorrectable' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No ECC/memory-error-like events found in the last 30 days.'}",
     "rc": 0,
-    "stdout": "{\"lookback_hours\":24,\"keyword_pattern\":\"demo\",\"event_count\":0,\"events\":[]}\n",
+    "stdout_file": "outputs/log_memory.stdout",
     "stderr": ""
   }
 ]

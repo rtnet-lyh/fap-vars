@@ -1,32 +1,41 @@
-# 영역
-DISK
+﻿# 영역
+STORAGE
 
-# 세부 점검항목
-Path 이중화 점검
+# 세부 점검 항목
+MPIO 경로 HA 및 부하분산 정책
 
 # 점검 내용
-Windows MPIO 기능 및 mpclaim 경로 상태 확인
+Get-MPIOSetting과 mpclaim 결과를 기준으로 MPIO 설정과 경로 상태를 점검합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $feature = Get-WindowsFeature Multipath-IO -ErrorAction SilentlyContinue; $claims = ''; if (Get-Command mpclaim.exe -ErrorAction SilentlyContinue) { $claims = (mpclaim.exe -s -d | Out-String) }; $installed = if ($feature) { [bool]$feature.Installed } else { $false }; [pscustomobject]@{ mpio_installed = $installed; mpclaim_available = [bool](Get-Command mpclaim.exe -ErrorAction SilentlyContinue); mpclaim_output = $claims.Trim() } | ConvertTo-Json -Compress -Depth 6
+if (Get-Command Get-MPIOSetting -ErrorAction SilentlyContinue) { Get-MPIOSetting | Select-Object PathVerificationState,PathVerificationPeriod,RetryCount,RetryInterval,DiskTimeoutValue,@{N='LoadBalancePolicy';E={Get-MSDSMGlobalDefaultLoadBalancePolicy 2>$null}} | Format-List; mpclaim.exe -s -d } else { 'MPIO 誘몄꽕移??먮뒗 誘몄??? }
 ```
 
 # 출력 결과
-```json
-{"mpio_installed":true,"mpclaim_available":true,"mpclaim_output":"MPIO Disk0 DSM OK"}
+```text
+PathVerificationState : Enabled
+PathVerificationPeriod : 30
+RetryCount : 3
+RetryInterval : 1
+DiskTimeoutValue : 60
+LoadBalancePolicy : Round Robin
 ```
 
 # 설명
-- Multipath-IO 기능 설치 여부와 mpclaim 조회 결과를 확인한다.
-- MPIO 기능이 없으면 대상미해당이며, SAN 다중 경로 구성 서버에서는 벤더 DSM 상태를 함께 확인한다.
+- MPIO 설치 여부, 부하분산 정책, failed/offline 경로 흔적을 함께 확인합니다.
+- 일반 Windows 11 환경에서는 MPIO가 설치되지 않아 대상 아님 성격으로 해석될 수 있습니다.
 
 # 임계치
-없음
+- `expected_policy_keyword`: `round`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: MPIO 기능과 mpclaim 조회가 수행되는 경우
-- **대상미해당**: Multipath-IO 기능이 설치되어 있지 않은 경우
+- **정상**: 실패 경로가 없고 부하분산 정책이 기대 키워드를 만족합니다.
+- **대상 아님**: MPIO가 설치되지 않은 일반 환경입니다.
+- **경고**: failed/offline 경로가 감지되거나 정책이 기대와 다릅니다.
+
+

@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.DriveLetter -and $_.FileSystem -eq 'NTFS' } | ForEach-Object { $t=(fsutil fsinfo ntfsinfo $_.DriveLetter 2>$null | Out-String); $m=[regex]::Match($t,'Mft Valid Data Length\\s*:\\s*0x([0-9A-Fa-f]+)').Groups[1].Value; $fr=[regex]::Match($t,'Bytes Per FileRecord Segment\\s*:\\s*([0-9]+)').Groups[1].Value; $bpc=[regex]::Match($t,'Bytes Per Cluster\\s*:\\s*([0-9]+)').Groups[1].Value; $zs=[regex]::Match($t,'Mft Zone Start\\s*:\\s*0x([0-9A-Fa-f]+)').Groups[1].Value; $ze=[regex]::Match($t,'Mft Zone End\\s*:\\s*0x([0-9A-Fa-f]+)').Groups[1].Value; $used=$(if($m -and $fr){[int64](([convert]::ToInt64($m,16))/[int64]$fr)}else{$null}); $total=$(if($zs -and $ze -and $bpc -and $fr){[int64]((([convert]::ToInt64($ze,16)-[convert]::ToInt64($zs,16))*[int64]$bpc)/[int64]$fr)}else{$null}); [pscustomobject]@{Filesystem=$_.FileSystem; 'Inodes(approx)'=$total; 'IUsed(approx)'=$used; 'IFree(approx)'=$(if($total -ne $null -and $used -ne $null){$total-$used}else{$null}); 'IUse%(approx)'=$(if($total -gt 0 -and $used -ne $null){[math]::Round(($used/$total)*100,2)}else{$null}); 'Mounted on'=$_.Name.TrimEnd('\\')} } | Format-Table -Auto",
+    "rc": 0,
+    "stdout_file": "outputs/inode_usage.stdout",
+    "stderr": ""
+  }
+]

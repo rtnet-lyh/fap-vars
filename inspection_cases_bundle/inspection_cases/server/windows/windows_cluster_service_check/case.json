@@ -6,7 +6,7 @@
   "credentials": {
     "WINDOWS": [
       {
-        "application_id": 201,
+        "application_id": 223,
         "application_type_id": 20,
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
@@ -26,24 +26,30 @@
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
   },
-  "execution_id": 2,
-  "host_id": 20,
-  "job_id": 200,
+  "execution_id": 27,
+  "host_id": 270,
+  "job_id": 2700,
   "item": {
-    "inspection_code": "WIN-SRV-STATUS-23",
-    "item_id": 91023,
-    "application_id": 201,
+    "inspection_code": "W-REPLAY-CLUSTER-DAEMON-01",
+    "item_id": 90027,
+    "application_id": 223,
     "application_type_id": 20,
     "application_type_name": "WINDOWS",
-    "application_name": "Windows Server",
-    "application_family_name": "Server OS",
-    "inspection_item_name": "Cluster 데몬 상태",
-    "type_name": "일상점검",
-    "area_name": "상태점검",
-    "category_name": "서버(OS)",
-    "description": "범정부 정보시스템 예방점검 서버 점검 일지 항목을 Windows Server PowerShell 점검으로 매핑한 항목입니다.",
-    "inspection_command": "$ErrorActionPreference = 'Stop'; $svc = Get-Service -Name ClusSvc -ErrorAction SilentlyContinue; $status = if ($svc) { $svc.Status.ToString() } else { '' }; $startType = if ($svc) { $svc.StartType.ToString() } else { '' }; [pscustomobject]@{ service_exists = [bool]$svc; service_status = $status; service_start_type = $startType } | ConvertTo-Json -Compress -Depth 6",
-    "is_service_affect": "N",
-    "action_content": "비정상 또는 경고 시 Windows 이벤트 로그, 성능 카운터, 벤더 관리도구 결과를 교차 확인 후 조치합니다."
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_down_node_count",
+        "value1": "0"
+      },
+      {
+        "name": "max_offline_resource_count",
+        "value1": "0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
   }
 }

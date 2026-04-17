@@ -1,0 +1,5 @@
+TimeCreated             LogName ProviderName                        Id LevelDisplayName Message
+-----------             ------- ------------                        -- ---------------- -------
+2026-04-13 오후 5:49:27 System  Service Control Manager           7034 오류             nProtect Online Security(PFS) 서비스가 예기치 않게 종료되었습니다. 이것이 1번째입니다.
+2026-04-08 오전 9:30:17 System  Microsoft-Windows-DistributedCOM 10016 경고             응용 프로그램별 권한 설정에서 CLSID가 Windows.SecurityCenter.WscDataProtection 이고 APPID가 사용할 수 없음 인 COM 서버 응용 프로그램에 대한 로컬 시작 사용 권한을 응용 프로그램 컨테이너 사용할 수 없음 SID(사용할 수 없음)에서 실행 중인 주소 LocalHost(LRPC 사용)의 사용자 NT AUTHORITY\SYSTEM SID(S-1-5-18)에게 부여하지 않았습니다.
+2026-04-08 오전 9:30:17 System  Microsoft-Windows-DistributedCOM 10016 경고             응용 프로그램별 권한 설정에서 CLSID가 Windows.SecurityCenter.SecurityAppBroker 이고 APPID가 사용할 수 없음 인 COM 서버 응용 프로그램에 대한 로컬 시작 사용 권한을 응용 프로그램 컨테이너 사용할 수 없음 SID(사용할 수 없음)에서 실행 중인 주소 LocalHost(LRPC 사용)의 사용자 NT AUTHORITY\SYSTEM SID(S-1-5-18)에게 부여하지 않았습니다.

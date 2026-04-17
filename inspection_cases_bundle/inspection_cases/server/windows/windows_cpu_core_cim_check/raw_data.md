@@ -1,33 +1,42 @@
-# 영역
+﻿# 영역
 CPU
 
-# 세부 점검항목
-코어별 상태 점검
+# 세부 점검 항목
+CPU 소켓, 코어, 논리 프로세서 수
 
 # 점검 내용
-CPU 코어 및 논리 프로세서 인식 상태 확인
+Win32_Processor 정보를 이용해 CPU 소켓 수, 총 코어 수, 총 논리 프로세서 수를 점검합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $cpus = Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, LoadPercentage, Status; $logical = ($cpus | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum; $physical = ($cpus | Measure-Object -Property NumberOfCores -Sum).Sum; $bad = @($cpus | Where-Object { $_.Status -and $_.Status -ne 'OK' }); [pscustomobject]@{ processor_count = @($cpus).Count; physical_core_count = [int]$physical; logical_processor_count = [int]$logical; abnormal_processor_count = @($bad).Count; processors = $cpus } | ConvertTo-Json -Compress -Depth 6
+Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List
 ```
 
 # 출력 결과
-```json
-{"processor_count":1,"physical_core_count":4,"logical_processor_count":8,"abnormal_processor_count":0,"processors":[{"Name":"Intel(R) Xeon(R)","NumberOfCores":4,"NumberOfLogicalProcessors":8,"LoadPercentage":12,"Status":"OK"}]}
+```text
+Name                      : Intel(R) Core(TM) i7-1360P
+SocketDesignation         : U3E1
+Manufacturer              : GenuineIntel
+MaxClockSpeed             : 2200
+NumberOfCores             : 12
+NumberOfLogicalProcessors : 16
 ```
 
 # 설명
-- Win32_Processor CIM 정보로 물리 코어와 논리 프로세서 수를 확인한다.
-- 논리 프로세서 수가 0이거나 Status가 OK가 아니면 CPU 인식 또는 상태 확인이 필요하다.
+- 장착된 프로세서별 코어 수와 논리 프로세서 수를 합산합니다.
+- 최소 소켓 수, 최소 총 코어 수, 최소 총 논리 프로세서 수를 동시에 확인합니다.
 
 # 임계치
-없음
+- `min_socket_count`: `1`
+- `min_total_core_count`: `4`
+- `min_total_logical_processor_count`: `8`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: CPU 코어와 논리 프로세서가 정상 인식되고 Status가 OK인 경우
-- **주의**: Status가 OK가 아닌 프로세서 항목이 확인되는 경우
-- **경고**: 논리 CPU 수가 0으로 표시되는 경우
+- **정상**: 소켓 수, 코어 수, 논리 프로세서 수가 모두 임계치 이상입니다.
+- **경고**: 필수 수량 중 하나라도 임계치보다 적습니다.
+
+

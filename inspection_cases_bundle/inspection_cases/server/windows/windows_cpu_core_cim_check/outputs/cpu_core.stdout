@@ -1,0 +1,6 @@
+Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+SocketDesignation         : U3E1
+Manufacturer              : GenuineIntel
+MaxClockSpeed             : 2419
+NumberOfCores             : 4
+NumberOfLogicalProcessors : 8

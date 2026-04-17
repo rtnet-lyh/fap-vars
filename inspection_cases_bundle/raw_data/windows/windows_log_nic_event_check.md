@@ -1,32 +1,41 @@
-# 영역
-로그
+﻿# 영역
+NETWORK
 
-# 세부 점검항목
-NIC 로그
+# 세부 점검 항목
+NIC 상태 및 최근 NIC 이벤트 로그
 
 # 점검 내용
-최근 24시간 System 이벤트에서 NIC/네트워크 관련 오류/경고 확인
+현재 NIC 상태를 확인하고 최근 30일간 NIC 링크/미디어/failover 관련 이벤트를 함께 점검합니다.
 
 # 구분
 필수
 
 # 명령어
 ```powershell
-$ErrorActionPreference = 'Stop'; $since = (Get-Date).AddHours(-24); $events = @(Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2,3; StartTime=$since} -ErrorAction SilentlyContinue | Where-Object { ($_.ProviderName + ' ' + $_.Message) -match 'network|adapter|tcpip|link|disconnect' } | Select-Object -First 20 TimeCreated, Id, LevelDisplayName, ProviderName, Message); [pscustomobject]@{ lookback_hours = 24; keyword_pattern = 'network|adapter|tcpip|link|disconnect'; event_count = @($events).Count; events = $events } | ConvertTo-Json -Compress -Depth 6
+'==NIC Status=='; Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | Select-Object Name,InterfaceDescription,Status,LinkSpeed,MacAddress,ifIndex | Format-Table -Auto; '==Recent NIC Events=='; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bnic\\b|network adapter|link down|link up|media disconnected|media connected|status down|status up|failover' }; if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No NIC link/failover-like warning or error events found in the last 30 days.'}
 ```
 
 # 출력 결과
-```json
-{"lookback_hours":24,"keyword_pattern":"demo","event_count":0,"events":[]}
+```text
+==NIC Status==
+Name      InterfaceDescription           Status  LinkSpeed
+Ethernet  Intel(R) Ethernet Controller   Up      1 Gbps
+
+==Recent NIC Events==
+No NIC link/failover-like warning or error events found in the last 30 days.
 ```
 
 # 설명
-- 최근 24시간 System 이벤트 로그에서 Level 1, 2, 3 이벤트를 조회하고 항목별 키워드로 필터링한다.
-- 이벤트가 임계치보다 많으면 장애 징후 또는 반복 경고 여부를 확인한다.
+- 서비스용 NIC 수와 최근 NIC 이벤트 수를 동시에 확인합니다.
+- 가상 어댑터나 보조 인터페이스 일부는 서비스 NIC 판정에서 제외됩니다.
 
 # 임계치
-max_event_count: 0
+- `min_up_nic_count`: `1`
+- `max_nic_event_count`: `0`
+- `failure_keywords`: 없음
 
 # 판단기준
-- **양호**: 이벤트 로그 검출 건수가 임계치 이하인 경우
-- **주의**: 관련 오류/경고 이벤트가 임계치를 초과해 추가 확인이 필요한 경우
+- **정상**: 서비스 NIC 중 Up 상태인 인터페이스 수가 기준 이상이고 최근 이벤트도 허용 범위 이내입니다.
+- **경고**: 활성 NIC 수 부족 또는 NIC 링크/장애조치 관련 이벤트가 임계치를 초과합니다.
+
+

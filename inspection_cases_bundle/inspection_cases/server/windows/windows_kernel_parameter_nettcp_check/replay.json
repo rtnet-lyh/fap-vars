@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $tcp = @(); $available = [bool](Get-Command Get-NetTCPSetting -ErrorAction SilentlyContinue); if ($available) { $tcp = @(Get-NetTCPSetting | Select-Object SettingName, AutoTuningLevelLocal, CongestionProvider, EcnCapability) }; [pscustomobject]@{ get_net_tcp_setting_available = $available; tcp_settings = $tcp } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "$os=Get-CimInstance Win32_OperatingSystem; $tcp=Get-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters' -ErrorAction SilentlyContinue; $if4=Get-NetIPInterface -AddressFamily IPv4 -ErrorAction SilentlyContinue; [pscustomobject]@{'kernel.osrelease'=\"$($os.Version) (Build $($os.BuildNumber))\";'kernel.ostype'=$os.Caption;'kernel.hostname'=$os.CSName;'kernel.shmmax'='N/A';'kernel.shmall'='N/A';'net.ipv4.ip_forward'=$(if($tcp.PSObject.Properties.Name -contains 'IPEnableRouter'){$tcp.IPEnableRouter}else{(@($if4.Forwarding|Select-Object -Unique)-join ',')});'net.ipv4.conf.all.rp_filter'='N/A';'net.ipv4.conf.all.accept_source_route'=$(if($tcp.PSObject.Properties.Name -contains 'DisableIPSourceRouting'){$tcp.DisableIPSourceRouting}else{'NotConfigured'});'net.core.somaxconn'='N/A';'vm.swappiness'='N/A';'vm.dirty_ratio'='N/A';'fs.file-max'=$(if($tcp.PSObject.Properties.Name -contains 'TcpNumConnections'){$tcp.TcpNumConnections}else{'N/A'});'fs.aio-max-nr'='N/A'} | Format-List",
     "rc": 0,
-    "stdout": "{\"get_net_tcp_setting_available\":true,\"tcp_settings\":[{\"SettingName\":\"InternetCustom\",\"AutoTuningLevelLocal\":\"Normal\",\"CongestionProvider\":\"CTCP\",\"EcnCapability\":\"Disabled\"}]}\n",
+    "stdout_file": "outputs/kernal_parameter.stdout",
     "stderr": ""
   }
 ]

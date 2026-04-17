@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $drives = Get-CimInstance Win32_LogicalDisk -Filter \"DriveType=3\" | ForEach-Object { $size = [double]$_.Size; $free = [double]$_.FreeSpace; $usage = if ($size -gt 0) { [math]::Round((($size - $free) / $size) * 100, 2) } else { 0 }; [pscustomobject]@{ device_id = $_.DeviceID; volume_name = $_.VolumeName; size_bytes = [int64]$size; free_bytes = [int64]$free; usage_percent = $usage } }; [pscustomobject]@{ drive_count = @($drives).Count; drives = @($drives) } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | Format-Table -Auto",
     "rc": 0,
-    "stdout": "{\"drive_count\":1,\"drives\":[{\"device_id\":\"C:\",\"volume_name\":\"Windows\",\"size_bytes\":107374182400,\"free_bytes\":53687091200,\"usage_percent\":50.0}]}\n",
+    "stdout_file": "outputs/disk_usage.stdout",
     "stderr": ""
   }
 ]

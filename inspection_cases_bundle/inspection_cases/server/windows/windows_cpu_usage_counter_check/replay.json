@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $sample = Get-Counter '\\Processor(_Total)\\% Processor Time'; $value = [math]::Round($sample.CounterSamples[0].CookedValue, 2); [pscustomobject]@{ cpu_usage_percent = $value } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
     "rc": 0,
-    "stdout": "{\"cpu_usage_percent\":12.5}\n",
+    "stdout_file": "outputs/typeperf.stdout",
     "stderr": ""
   }
 ]

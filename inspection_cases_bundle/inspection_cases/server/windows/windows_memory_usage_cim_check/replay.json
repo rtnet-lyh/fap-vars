@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $os = Get-CimInstance Win32_OperatingSystem; $total = [double]$os.TotalVisibleMemorySize; $free = [double]$os.FreePhysicalMemory; $usedPercent = if ($total -gt 0) { [math]::Round((($total - $free) / $total) * 100, 2) } else { 0 }; [pscustomobject]@{ total_memory_kib = [int64]$total; free_memory_kib = [int64]$free; memory_usage_percent = $usedPercent } | ConvertTo-Json -Compress -Depth 6",
+    "matcher_value": "$os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)",
     "rc": 0,
-    "stdout": "{\"total_memory_kib\":16777216,\"free_memory_kib\":8388608,\"memory_usage_percent\":50.0}\n",
+    "stdout_file": "outputs/memory_usage.stdout",
     "stderr": ""
   }
 ]

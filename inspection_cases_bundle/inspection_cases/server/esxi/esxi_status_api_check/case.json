@@ -12,7 +12,7 @@
         "credential_type_name": "API",
         "data": {
           "username": "rtnsol",
-          "password": "",
+          "password": "Rtnettop0!",
           "scheme": "https",
           "port": 443,
           "host_moid": "ha-host"
@@ -38,7 +38,7 @@
     "area_name": "상태점검",
     "category_name": "가상화",
     "description": "하이퍼바이저 점검",
-    "inspection_command": "POST /sdk SOAP RetrieveServiceContent, Login, RetrievePropertiesEx(HostSystem.summary)",
+    "inspection_command": "pyVmomi HostSystem.summary 조회, 실패 시 POST /sdk SOAP RetrievePropertiesEx fallback",
     "is_service_affect": "N",
     "action_content": "CPU 또는 메모리 사용률이 기준을 초과하거나 전원/연결 상태가 비정상인 경우 ESXi 호스트 성능, VM 자원 경합, 관리 연결 상태를 확인합니다.",
     "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_api_check",
@@ -60,6 +60,10 @@
       {
         "name": "expected_connection_state",
         "value1": "connected"
+      },
+      {
+        "name": "force_replay",
+        "value1": "false"
       }
     ]
   }

@@ -1,0 +1,6 @@
+ARRAY slots=8 max=128.00GiB
+
+DeviceLocator BankLabel SizeGiB Manufacturer PartNumber SerialNumber ConfiguredClockSpeed Speed SMBIOSMemoryType FormFa
+                                                                                                                   ctor
+------------- --------- ------- ------------ ---------- ------------ -------------------- ----- ---------------- ------
+                              8                                                      2667  2667               26     12

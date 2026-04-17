@@ -1,9 +1,0 @@
-[
-  {
-    "matcher_type": "exact",
-    "matcher_value": "$ErrorActionPreference = 'Stop'; $page = Get-CimInstance Win32_PageFileUsage | Select-Object Name, AllocatedBaseSize, CurrentUsage, PeakUsage; $allocated = ($page | Measure-Object -Property AllocatedBaseSize -Sum).Sum; $current = ($page | Measure-Object -Property CurrentUsage -Sum).Sum; $usage = if ($allocated -gt 0) { [math]::Round(($current / $allocated) * 100, 2) } else { 0 }; [pscustomobject]@{ pagefile_count = @($page).Count; allocated_mb = [int64]$allocated; current_usage_mb = [int64]$current; pagefile_usage_percent = $usage; pagefiles = $page } | ConvertTo-Json -Compress -Depth 6",
-    "rc": 0,
-    "stdout": "{\"pagefile_count\":1,\"allocated_mb\":4096,\"current_usage_mb\":512,\"pagefile_usage_percent\":12.5,\"pagefiles\":[{\"Name\":\"C:\\\\pagefile.sys\",\"AllocatedBaseSize\":4096,\"CurrentUsage\":512,\"PeakUsage\":1024}]}\n",
-    "stderr": ""
-  }
-]
