@@ -12,13 +12,12 @@ CPU, WHEA, ECC, Machine Check와 관련된 최근 이벤트를 검색해 하드�
 
 # 명령어
 ```powershell
-$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in @('Microsoft-Windows-WHEA-Logger','Microsoft-Windows-Kernel-Processor-Power') -or $_.Message -match '(?i)\\bECC\\b|uncorrectable|processor|cpu|offline' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No CPU/ECC/offline-like events found in the last 30 days.'}
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in @('Microsoft-Windows-WHEA-Logger','Microsoft-Windows-Kernel-Processor-Power') -or $_.Message -match '(?i)\bECC\b|uncorrectable|processor|cpu|offline' }; if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No CPU/ECC/offline-like events found in the last 30 days.'}
 ```
 
 # 출력 결과
 ```text
-TimeCreated           ProviderName  Id   Level    Message
-2026-04-10 오전 10:21:00  WHEA-Logger   19   Warning  A corrected hardware error has occurred.
+No CPU/ECC/offline-like events found in the last 30 days.
 ```
 
 # 설명

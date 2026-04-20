@@ -12,12 +12,12 @@ LOG
 
 # 명령어
 ```powershell
-$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -eq 'Microsoft-Windows-WHEA-Logger' -or $_.Message -match '(?i)\\becc\\b|memory error|single-bit|multi-bit|uncorrectable' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No ECC/memory-error-like events found in the last 30 days.'}
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -eq 'Microsoft-Windows-WHEA-Logger' -or $_.Message -match '(?i)\becc\b|memory error|single-bit|multi-bit|uncorrectable' }; if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No ECC/memory-error-like events found in the last 30 days.'}
 ```
 
 # 출력 결과
 ```text
-No memory warning or error events found in the last 30 days.
+No ECC/memory-error-like events found in the last 30 days.
 ```
 
 # 설명

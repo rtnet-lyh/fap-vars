@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 DISK_MOUNT_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "$d=Get-Disk -ErrorAction SilentlyContinue; "
     "@(@($d|ForEach-Object{[pscustomobject]@{NAME=\"Disk$($_.Number)\";RM=[int]($_.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='disk';MOUNTPOINT='';STATUS=(@($_.OperationalStatus)-join ',')}}) + "
     "@((Get-Partition -ErrorAction SilentlyContinue)|ForEach-Object{$n=$_.DiskNumber; $dk=$d|Where-Object Number -eq $n; [pscustomobject]@{NAME=\"Disk$($_.DiskNumber)-Part$($_.PartitionNumber)\";RM=[int]($dk.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='part';MOUNTPOINT=(($_.AccessPaths|Where-Object{$_})-join ',').TrimEnd('\\');STATUS=(@($dk.OperationalStatus)-join ',')}}) + "
     "@((Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue)|ForEach-Object{[pscustomobject]@{NAME=$(if($_.Drive){$_.Drive}else{$_.Caption});RM=1;'SIZE(GB)'=$(if($_.Size){[math]::Round([double]$_.Size/1GB,2)}else{$null});RO=1;TYPE='rom';MOUNTPOINT=$_.Drive;STATUS=$(if($_.MediaLoaded){$_.Status}else{'No Media'})}})) | "
-    "Format-Table -Auto"
+    "ConvertTo-Json -Depth 3"
 )
 
 
@@ -20,6 +22,14 @@ def _parse_float(value):
 
 def _parse_int(value):
     return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
 
 
 class Check(BaseCheck):
@@ -42,9 +52,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 디스크 마운트 상태 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -75,48 +87,37 @@ class Check(BaseCheck):
         if matched_failure_keywords:
             return self.fail(
                 '디스크 마운트 실패 키워드 감지',
-                message='디스크 마운트 상태 결과에서 실패 키워드가 확인되었습니다.',
+                message=f'디스크 마운트 상태 결과에서 실패 키워드가 확인되었습니다: {json.dumps(matched_failure_keywords)}',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
-        if len(lines) < 3:
+        try:
+            raw_entries = json.loads(text)
+        except json.JSONDecodeError:
             return self.fail(
-                '디스크 마운트 정보 없음',
-                message='디스크 마운트 상태 결과를 해석할 수 없습니다.',
+                '디스크 마운트 파싱 실패',
+                message='디스크/파티션/ROM 장치 JSON을 해석하지 못했습니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
         parsed = []
-        row_pattern = re.compile(
-            r'^(?P<name>\S+)\s+'
-            r'(?P<rm>[01])\s+'
-            r'(?P<size>[0-9]+(?:\.[0-9]+)?)\s+'
-            r'(?P<ro>[01])\s+'
-            r'(?P<type>disk|part|rom)\s+'
-            r'(?P<mountpoint>.*?)\s+'
-            r'(?P<status>\S.*)$'
-        )
-
-        for line in lines[2:]:
-            if line.lstrip().startswith('---'):
+        for entry in _as_list(raw_entries):
+            if not isinstance(entry, dict):
                 continue
-
-            match = row_pattern.match(line)
-            if not match:
+            try:
+                parsed.append({
+                    'name': str(entry.get('NAME', '')).strip(),
+                    'rm': _parse_int(entry.get('RM', 0)),
+                    'size_gb': _parse_float(entry.get('SIZE(GB)', 0)),
+                    'ro': _parse_int(entry.get('RO', 0)),
+                    'type': str(entry.get('TYPE', '')).strip(),
+                    'mountpoint': str(entry.get('MOUNTPOINT', '')).strip(),
+                    'status': str(entry.get('STATUS', '')).strip(),
+                })
+            except (TypeError, ValueError):
                 continue
-
-            parsed.append({
-                'name': match.group('name'),
-                'rm': _parse_int(match.group('rm')),
-                'size_gb': _parse_float(match.group('size')),
-                'ro': _parse_int(match.group('ro')),
-                'type': match.group('type'),
-                'mountpoint': match.group('mountpoint').strip(),
-                'status': match.group('status').strip(),
-            })
 
         if not parsed:
             return self.fail(
@@ -198,7 +199,13 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='디스크, 파티션, 마운트 상태가 모두 기준 범위 내입니다.',
-            message='Windows 디스크 마운트 상태 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 디스크 마운트 상태 점검이 정상입니다. 현재 상태: '
+                f'디스크 {len(disk_entries)}개 (기준 {min_disk_count}개 이상), '
+                f'파티션 {len(partition_entries)}개 (기준 {min_partition_count}개 이상), '
+                f'마운트된 파티션 {mounted_partition_count}개, 최대 디스크 {largest_disk["name"]} '
+                f'{largest_disk["size_gb"]:.2f}GB.'
+            ),
         )
 
 

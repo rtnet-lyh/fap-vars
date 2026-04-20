@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;\"ARRAY slots=$((($a|Measure-Object -Property MemoryDevices -Sum).Sum)) max={0:N2}GiB\" -f ((((($a|Measure-Object -Property MaxCapacityEx -Sum).Sum)*1KB)/1GB));$m|Select-Object DeviceLocator,BankLabel,@{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},Manufacturer,PartNumber,SerialNumber,ConfiguredClockSpeed,Speed,SMBIOSMemoryType,FormFactor | Format-Table -AutoSize",
+    "matcher_value": "$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4",
     "rc": 0,
     "stdout_file": "outputs/memory_status.stdout",
     "stderr": ""

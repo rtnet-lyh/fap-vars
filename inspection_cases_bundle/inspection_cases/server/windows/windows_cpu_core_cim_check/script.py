@@ -4,6 +4,8 @@ from .common._base import BaseCheck
 
 
 CPU_CORE_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     'Get-CimInstance Win32_Processor | '
     'Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | '
     'Format-List'
@@ -39,9 +41,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows CPU 코어 상태 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -72,7 +76,7 @@ class Check(BaseCheck):
         if matched_failure_keywords:
             return self.fail(
                 'CPU 점검 실패 키워드 감지',
-                message='CPU 코어 상태 결과에서 실패 키워드가 확인되었습니다.',
+                message='CPU 코어 상태 결과에서 실패 키워드가 확인되었습니다.",".join(matched_failure_keywords)',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -151,7 +155,7 @@ class Check(BaseCheck):
         if socket_count < min_socket_count:
             return self.fail(
                 'CPU 소켓 수 기준 미달',
-                message='확인된 물리 CPU 소켓 수가 기준치 미만입니다.',
+                message='확인된 물리 CPU 소켓 수가 기준치 미만입니다. 기준치 {min_socket_count}개 이상 필요하지만 현재 {socket_count}개입니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -159,7 +163,7 @@ class Check(BaseCheck):
         if total_core_count < min_total_core_count:
             return self.fail(
                 'CPU 코어 수 기준 미달',
-                message='확인된 물리 CPU 코어 수가 기준치 미만입니다.',
+                message='확인된 물리 CPU 코어 수가 기준치 미만입니다. 기준치 {min_total_core_count}개 이상 필요하지만 현재 {total_core_count}개입니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -167,7 +171,7 @@ class Check(BaseCheck):
         if total_logical_processor_count < min_total_logical_processor_count:
             return self.fail(
                 'CPU 논리 프로세서 수 기준 미달',
-                message='확인된 논리 CPU 수가 기준치 미만입니다.',
+                message=f'확인된 논리 CPU 수가 기준치 미만입니다. 기준치 {min_total_logical_processor_count} 개 이상 필요하지만 현재 {total_logical_processor_count}개입니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -193,7 +197,14 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='물리 CPU 소켓 수, 물리 코어 수, 논리 프로세서 수가 모두 기준 범위 내입니다.',
-            message='Windows CPU 코어 상태 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows CPU 코어 상태 점검이 정상입니다. 현재 상태: '
+                f'CPU="{primary_processor["name"]}", 소켓 {socket_count}개 (기준 {min_socket_count}개 이상), '
+                f'물리 코어 {total_core_count}개 (기준 {min_total_core_count}개 이상), '
+                f'논리 프로세서 {total_logical_processor_count}개 '
+                f'(기준 {min_total_logical_processor_count}개 이상), '
+                f'스레드/코어 {primary_processor["threads_per_core"]}, 최대 클럭 {max_clock_speed_mhz}MHz.'
+            ),
         )
 
 

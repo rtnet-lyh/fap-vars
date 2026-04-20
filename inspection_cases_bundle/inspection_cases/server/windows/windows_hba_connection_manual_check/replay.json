@@ -1,9 +1,0 @@
-[
-  {
-    "matcher_type": "exact",
-    "matcher_value": "if (Get-CimClass -Namespace root\\WMI -ClassName MSFC_FibrePortHBAAttributes -ErrorAction SilentlyContinue) { Get-CimInstance -Namespace root\\WMI -ClassName MSFC_FibrePortHBAAttributes | Select-Object @{N='fc_portname';E={(($_.Attributes.PortWWN | ForEach-Object { '{0:X2}' -f $_ }) -join '')}}, @{N='fc_node_name';E={(($_.Attributes.NodeWWN | ForEach-Object { '{0:X2}' -f $_ }) -join '')}}, @{N='fc_state';E={switch ($_.Attributes.PortState) { 2 {'Online'} 3 {'Offline'} 6 {'Link Down'} 7 {'Error'} default { \"State:$($_.Attributes.PortState)\" } }}}, @{N='fc_speed';E={switch ($_.Attributes.PortSpeed) { 0 {'Unknown'} 1 {'1 Gbps'} 2 {'2 Gbps'} 4 {'10 Gbps'} 8 {'4 Gbps'} 9 {'Not Negotiated'} default { \"Raw:$($_.Attributes.PortSpeed)\" } }}} | Format-Table -AutoSize } else { 'FC HBA WMI class not found' }",
-    "rc": 0,
-    "stdout_file": "outputs/os_hba_link_status.stdout",
-    "stderr": ""
-  }
-]

@@ -7,6 +7,8 @@ from .common._base import BaseCheck
 
 
 TYPEPERF_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     'typeperf "\\Processor(_Total)\\% User Time" '
     '"\\Processor(_Total)\\% Privileged Time" '
     '"\\Processor(_Total)\\% Idle Time" '
@@ -39,9 +41,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows CPU 사용률 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -202,7 +206,14 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='Windows CPU 사용률 평균, 유휴율 평균, 인터럽트 처리 시간 평균이 모두 기준 범위 내입니다.',
-            message='Windows CPU 사용률 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows CPU 사용률 점검이 정상입니다. 현재 상태: '
+                f'host={host_name or "unknown"}, User {avg_user_percent:.2f}%, '
+                f'Privileged {avg_privileged_percent:.2f}%, User+System {avg_usr_sys_percent:.2f}% '
+                f'(기준 {max_usr_sys_percent:.2f}% 이하), Idle {avg_idle_percent:.2f}% '
+                f'(기준 {min_idle_percent:.2f}% 이상), Interrupt {avg_interrupt_percent:.2f}% '
+                f'(기준 {max_interrupt_percent:.2f}% 이하).'
+            ),
         )
 
 

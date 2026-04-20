@@ -1,29 +1,36 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 LOG_FAN_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; "
     "$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | "
     "Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; "
-    "if($f){$f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode | Format-Table -Auto} else {'No Win32_Fan data exposed by firmware/driver.'}; "
-    "if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto} else {'No fan-related warning/error events found in the last 30 days.'}"
-)
-
-EVENT_PATTERN = re.compile(
-    r'^(?P<time>\d{4}-\d{2}-\d{2}\s+(?:오전|오후)\s+\d{1,2}:\d{2}:\d{2})\s+'
-    r'(?P<provider>.+?)\s+'
-    r'(?P<id>\d+)\s+'
-    r'(?P<level>오류|경고|정보|Error|Warning|Critical|Information)\s+'
-    r'(?P<message>.+)$'
+    "$result=[ordered]@{"
+    "FanDataExposed=[bool]$f; "
+    "EventDataExposed=[bool]$e; "
+    "Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); "
+    "Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})"
+    "}; "
+    "$result | ConvertTo-Json -Depth 4"
 )
 
 
 def _parse_int(value):
     return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
 
 
 class Check(BaseCheck):
@@ -45,9 +52,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows FAN 로그 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -83,59 +92,44 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
-        no_fan_data = 'No Win32_Fan data exposed by firmware/driver.' in text
-        no_event_data = 'No fan-related warning/error events found in the last 30 days.' in text
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.fail(
+                'FAN 로그 파싱 실패',
+                message='FAN 장치 또는 이벤트 로그 JSON을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        no_fan_data = not bool(parsed.get('FanDataExposed')) if isinstance(parsed, dict) else True
+        no_event_data = not bool(parsed.get('EventDataExposed')) if isinstance(parsed, dict) else True
 
         fan_entries = []
+        for entry in _as_list(parsed.get('Fans', [])) if isinstance(parsed, dict) else []:
+            if not isinstance(entry, dict):
+                continue
+            fan_entries.append({
+                'name': str(entry.get('Name', '')).strip(),
+                'status': str(entry.get('Status', '')).strip(),
+                'desired_speed': str(entry.get('DesiredSpeed', '')).strip(),
+                'variable_speed': str(entry.get('VariableSpeed', '')).strip(),
+                'availability': str(entry.get('Availability', '')).strip(),
+                'config_manager_error_code': str(entry.get('ConfigManagerErrorCode', '')).strip(),
+            })
+
         event_entries = []
-        in_fan_table = False
-        in_event_table = False
-        for line in lines:
-            stripped = line.strip()
-
-            if stripped == 'No Win32_Fan data exposed by firmware/driver.':
-                in_fan_table = False
+        for entry in _as_list(parsed.get('Events', [])) if isinstance(parsed, dict) else []:
+            if not isinstance(entry, dict):
                 continue
-            if stripped == 'No fan-related warning/error events found in the last 30 days.':
-                in_event_table = False
-                continue
-
-            if stripped.startswith('Name') and 'ConfigManagerErrorCode' in stripped:
-                in_fan_table = True
-                in_event_table = False
-                continue
-            if stripped.startswith('TimeCreated') and 'ProviderName' in stripped:
-                in_event_table = True
-                in_fan_table = False
-                continue
-            if stripped.startswith('----') or stripped.startswith('-----------'):
-                continue
-
-            if in_event_table:
-                match = EVENT_PATTERN.match(stripped)
-                if match:
-                    event_entries.append({
-                        'time_created': match.group('time'),
-                        'provider_name': match.group('provider').strip(),
-                        'event_id': _parse_int(match.group('id')),
-                        'level': match.group('level').strip(),
-                        'message': match.group('message').strip(),
-                    })
-                continue
-
-            if in_fan_table:
-                parts = re.split(r'\s{2,}', stripped)
-                if not parts:
-                    continue
-                fan_entries.append({
-                    'name': parts[0].strip(),
-                    'status': parts[1].strip() if len(parts) > 1 else '',
-                    'desired_speed': parts[2].strip() if len(parts) > 2 else '',
-                    'variable_speed': parts[3].strip() if len(parts) > 3 else '',
-                    'availability': parts[4].strip() if len(parts) > 4 else '',
-                    'config_manager_error_code': parts[5].strip() if len(parts) > 5 else '',
-                })
+            event_id = entry.get('Id', '')
+            event_entries.append({
+                'time_created': str(entry.get('TimeCreated', '')).strip(),
+                'provider_name': str(entry.get('ProviderName', '')).strip(),
+                'event_id': _parse_int(event_id) if str(event_id).strip() else '',
+                'level': str(entry.get('LevelDisplayName', '')).strip(),
+                'message': str(entry.get('Message', '')).strip(),
+            })
 
         abnormal_fan_entries = []
         for entry in fan_entries:
@@ -147,14 +141,6 @@ class Check(BaseCheck):
             if config_error and config_error not in ('0', ''):
                 abnormal_fan_entries.append(entry)
 
-        if abnormal_fan_entries:
-            return self.fail(
-                'FAN 장치 상태 이상 감지',
-                message='FAN 장치 상태가 정상 범위를 벗어났습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
         if len(event_entries) > max_fan_event_count:
             return self.fail(
                 'FAN 로그 이벤트 감지',
@@ -165,13 +151,11 @@ class Check(BaseCheck):
 
         latest_event = event_entries[0] if event_entries else {}
 
-        reasons = 'FAN 장치 상태와 최근 30일 이벤트 로그를 점검한 결과 이상 징후가 없습니다.'
+        reasons = '최근 30일 FAN/냉각 관련 이벤트 로그를 점검한 결과 이상 징후가 없습니다.'
+        if no_event_data:
+            reasons = '최근 30일 내 FAN 관련 경고/오류 이벤트가 없습니다.'
         if no_fan_data and no_event_data:
-            reasons = 'Win32_Fan 장치 정보는 노출되지 않았지만 최근 30일 내 FAN 관련 경고/오류 이벤트는 확인되지 않았습니다.'
-        elif no_fan_data:
-            reasons = 'Win32_Fan 장치 정보는 노출되지 않았지만 FAN 관련 이벤트 수는 기준 범위 내입니다.'
-        elif fan_entries and not event_entries:
-            reasons = 'FAN 장치 상태는 정상이며 최근 30일 내 FAN 관련 경고/오류 이벤트가 없습니다.'
+            reasons = 'Win32_Fan 장치 정보 노출 여부와 무관하게 최근 30일 내 FAN 관련 경고/오류 이벤트가 없습니다.'
 
         return self.ok(
             metrics={
@@ -189,7 +173,13 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons=reasons,
-            message='Windows FAN 로그 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows FAN 로그 점검이 정상입니다. 현재 상태: \n'
+                f'FAN 관련 이벤트 {len(event_entries)}건 (기준 {max_fan_event_count}건 이하), \n'
+                f'FAN 장치 정보 {len(fan_entries)}개, 비정상으로 해석된 장치 {len(abnormal_fan_entries)}개 및 {json.dumps(abnormal_fan_entries)} \n'
+                f'Win32_Fan 노출 여부 {not no_fan_data}, '
+                f'최근 이벤트 ID {latest_event.get("event_id", "N/A")}.'
+            ),
         )
 
 

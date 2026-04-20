@@ -12,13 +12,12 @@ System, Application, Security 로그에서 주요 오류/경고 메시지를 폭
 
 # 명령어
 ```powershell
-Get-WinEvent -FilterHashtable @{LogName=@('System','Application','Security'); StartTime=(Get-Date).AddDays(-7); Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)kernel|hardware|machine check|disk|filesystem|i/o|corrupt|memory|out of memory|driver|module|network|timeout|connection|service|daemon|security|unauthorized|access denied|failed' } | Select-Object -First 300 TimeCreated,LogName,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-WinEvent -FilterHashtable @{LogName=@('System','Application','Security'); StartTime=(Get-Date).AddDays(-7); Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)kernel|hardware|machine check|disk|filesystem|i/o|corrupt|memory|out of memory|driver|module|network|timeout|connection|service|daemon|security|unauthorized|access denied|failed' } | Select-Object -First 300 TimeCreated,LogName,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}} | ConvertTo-Json -Depth 4
 ```
 
 # 출력 결과
-```text
-TimeCreated           LogName      ProviderName  Id   Level    Message
-2026-04-10 오전 09:33:21  System       Service Control Manager 7031 Error  The service terminated unexpectedly...
+```json
+[]
 ```
 
 # 설명

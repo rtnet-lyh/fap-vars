@@ -12,7 +12,7 @@ typeperf로 3회 샘플링하여 사용자+커널 사용률, Idle 비율, Interr
 
 # 명령어
 ```powershell
-typeperf "\\Processor(_Total)\\% User Time" "\\Processor(_Total)\\% Privileged Time" "\\Processor(_Total)\\% Idle Time" "\\Processor(_Total)\\% Interrupt Time" -sc 3 -si 1
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf "\\Processor(_Total)\\% User Time" "\\Processor(_Total)\\% Privileged Time" "\\Processor(_Total)\\% Idle Time" "\\Processor(_Total)\\% Interrupt Time" -sc 3 -si 1
 ```
 
 # 출력 결과

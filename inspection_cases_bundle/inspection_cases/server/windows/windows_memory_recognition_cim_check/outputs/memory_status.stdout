@@ -1,6 +1,32 @@
-ARRAY slots=8 max=128.00GiB
-
-DeviceLocator BankLabel SizeGiB Manufacturer PartNumber SerialNumber ConfiguredClockSpeed Speed SMBIOSMemoryType FormFa
-                                                                                                                   ctor
-------------- --------- ------- ------------ ---------- ------------ -------------------- ----- ---------------- ------
-                              8                                                      2667  2667               26     12
+{
+  "Array": {
+    "Slots": 4,
+    "MaxCapacityGiB": 64.0
+  },
+  "Modules": [
+    {
+      "DeviceLocator": "DIMM1",
+      "BankLabel": "",
+      "SizeGiB": 4.0,
+      "Manufacturer": "802C0000802C",
+      "PartNumber": "4ATF51264AZ-2G3E1",
+      "SerialNumber": "1F3535E2",
+      "ConfiguredClockSpeed": 2400,
+      "Speed": 2400,
+      "SMBIOSMemoryType": 26,
+      "FormFactor": 12
+    },
+    {
+      "DeviceLocator": "DIMM2",
+      "BankLabel": "",
+      "SizeGiB": 4.0,
+      "Manufacturer": "802C0000802C",
+      "PartNumber": "4ATF51264AZ-2G3E1",
+      "SerialNumber": "1F351D92",
+      "ConfiguredClockSpeed": 2400,
+      "Speed": 2400,
+      "SMBIOSMemoryType": 26,
+      "FormFactor": 12
+    }
+  ]
+}

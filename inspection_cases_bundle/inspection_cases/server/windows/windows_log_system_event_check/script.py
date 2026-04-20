@@ -1,21 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 LOG_SYSTEM_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "Get-WinEvent -FilterHashtable @{LogName=@('System','Application','Security'); "
     "StartTime=(Get-Date).AddDays(-7); Level=@(1,2,3)} -ErrorAction SilentlyContinue | "
     "Where-Object { $_.Message -match '(?i)kernel|hardware|machine check|disk|filesystem|i/o|corrupt|memory|out of memory|driver|module|network|timeout|connection|service|daemon|security|unauthorized|access denied|failed' } | "
     "Select-Object -First 300 TimeCreated,LogName,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | "
-    "Format-Table -Wrap -Auto"
+    "ConvertTo-Json -Depth 4"
 )
 
 
 def _parse_int(value):
     return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
 
 
 class Check(BaseCheck):
@@ -38,9 +48,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 시스템 로그 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -66,7 +78,10 @@ class Check(BaseCheck):
                     'failure_keywords': [],
                 },
                 reasons='최근 시스템 로그에서 점검 대상 오류/경고 이벤트가 확인되지 않았습니다.',
-                message='Windows 시스템 로그 점검이 정상 수행되었습니다.',
+                message=(
+                    'Windows 시스템 로그 점검이 정상입니다. '
+                    '현재 상태: 최근 7일 내 점검 대상 시스템 로그 이벤트가 없어 0건으로 집계했습니다.'
+                ),
             )
 
         failure_keywords = [
@@ -85,37 +100,28 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
-        if len(lines) < 3:
+        try:
+            raw_entries = json.loads(text)
+        except json.JSONDecodeError:
             return self.fail(
-                '시스템 로그 정보 없음',
-                message='시스템 로그 결과를 해석할 수 없습니다.',
+                '시스템 로그 파싱 실패',
+                message='시스템 로그 이벤트 JSON을 해석하지 못했습니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
         entries = []
-        entry_pattern = re.compile(
-            r'^(?P<time>\d{4}-\d{2}-\d{2}\s+(?:오전|오후)\s+\d{1,2}:\d{2}:\d{2})\s+'
-            r'(?P<logname>\S+)\s+'
-            r'(?P<provider>.+?)\s+'
-            r'(?P<id>\d+)\s+'
-            r'(?P<level>오류|경고|정보|Error|Warning|Critical)\s+'
-            r'(?P<message>.+)$'
-        )
-        for line in lines[2:]:
-            if line.lstrip().startswith('---'):
+        for entry in _as_list(raw_entries):
+            if not isinstance(entry, dict):
                 continue
-            match = entry_pattern.match(line)
-            if not match:
-                continue
+            event_id = entry.get('Id', '')
             entries.append({
-                'time_created': match.group('time'),
-                'log_name': match.group('logname'),
-                'provider_name': match.group('provider').strip(),
-                'event_id': _parse_int(match.group('id')),
-                'level': match.group('level').strip(),
-                'message': match.group('message').strip(),
+                'time_created': str(entry.get('TimeCreated', '')).strip(),
+                'log_name': str(entry.get('LogName', '')).strip(),
+                'provider_name': str(entry.get('ProviderName', '')).strip(),
+                'event_id': _parse_int(event_id) if str(event_id).strip() else 0,
+                'level': str(entry.get('LevelDisplayName', '')).strip(),
+                'message': str(entry.get('Message', '')).strip(),
             })
 
         if not entries:
@@ -150,7 +156,13 @@ class Check(BaseCheck):
         if len(critical_error_entries) > max_critical_error_count:
             return self.fail(
                 '시스템 로그 오류 이벤트 임계치 초과',
-                message='Critical 또는 Error 수준의 시스템 로그 이벤트가 기준치를 초과했습니다.',
+                message=(
+                    f'Windows 시스템 로그 점검에 실패했습니다. 현재 상태: '
+                    f'Critical/Error {len(critical_error_entries)}건 '
+                    f'(기준 {max_critical_error_count}건 이하), '
+                    f'Warning {len(warning_entries)}건.'
+                    f'Warning 키워드 {len(warning_entries)}건.: {",".join([entry["message"] for entry in warning_entries])}'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -158,7 +170,13 @@ class Check(BaseCheck):
         if len(warning_entries) > max_warning_count:
             return self.fail(
                 '시스템 로그 경고 이벤트 임계치 초과',
-                message='Warning 수준의 시스템 로그 이벤트가 기준치를 초과했습니다.',
+                message=(
+                    f'Windows 시스템 로그 점검에 실패했습니다. 현재 상태: '
+                    f'Warning {len(warning_entries)}건 (기준 {max_warning_count}건 이하), '
+                    f'Critical/Error {len(critical_error_entries)}건.'
+                    f'Warning 키워드 {len(warning_entries)}건.: {",".join([entry["message"] for entry in warning_entries])}'
+
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -181,7 +199,12 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='최근 시스템 로그의 Error/Critical/Warning 이벤트 수가 기준 범위 내입니다.',
-            message='Windows 시스템 로그 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 시스템 로그 점검이 정상입니다. 현재 상태: '
+                f'이벤트 {len(entries)}건, Critical/Error {len(critical_error_entries)}건 '
+                f'(기준 {max_critical_error_count}건 이하), Warning {len(warning_entries)}건 '
+                f'(기준 {max_warning_count}건 이하), 최신 이벤트 ID {latest_entry["event_id"]}.'
+            ),
         )
 
 

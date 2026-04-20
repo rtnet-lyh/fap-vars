@@ -12,12 +12,26 @@ LOG
 
 # 명령어
 ```powershell
-$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; if($f){$f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode | Format-Table -Auto} else {'No Win32_Fan data exposed by firmware/driver.'}; if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto} else {'No fan-related warning/error events found in the last 30 days.'}
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\bfan\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}})}; $result | ConvertTo-Json -Depth 4
 ```
 
 # 출력 결과
-```text
-No fan or thermal warning/error events found in the last 30 days.
+```json
+{
+  "FanDataExposed": true,
+  "EventDataExposed": false,
+  "Fans": [
+    {
+      "Name": "냉각 장치",
+      "Status": "OK",
+      "DesiredSpeed": null,
+      "VariableSpeed": null,
+      "Availability": 3,
+      "ConfigManagerErrorCode": 0
+    }
+  ],
+  "Events": []
+}
 ```
 
 # 설명

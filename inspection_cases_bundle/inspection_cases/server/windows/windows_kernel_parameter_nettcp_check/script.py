@@ -4,6 +4,8 @@ from .common._base import BaseCheck
 
 
 KERNAL_PARAMETER_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "$os=Get-CimInstance Win32_OperatingSystem; "
     "$tcp=Get-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters' -ErrorAction SilentlyContinue; "
     "$if4=Get-NetIPInterface -AddressFamily IPv4 -ErrorAction SilentlyContinue; "
@@ -47,9 +49,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 커널 파라미터 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -80,7 +84,11 @@ class Check(BaseCheck):
         if matched_failure_keywords:
             return self.fail(
                 '커널 파라미터 실패 키워드 감지',
-                message='커널 파라미터 결과에서 실패 키워드가 확인되었습니다.',
+                message=(
+                    f'Windows 커널 파라미터 점검에 실패했습니다. '
+                    f'현재 상태: 출력 결과에서 실패 키워드 '
+                    f'{", ".join(matched_failure_keywords)}가 감지되었습니다.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -99,10 +107,14 @@ class Check(BaseCheck):
             'net.ipv4.ip_forward',
             'net.ipv4.conf.all.accept_source_route',
         ]
-        if any(key not in result_map for key in required_keys):
+        missing_keys = [key for key in required_keys if key not in result_map]
+        if missing_keys:
             return self.fail(
                 '커널 파라미터 파싱 실패',
-                message='핵심 커널 파라미터 항목을 해석하지 못했습니다.',
+                message=(
+                    f'Windows 커널 파라미터 점검에 실패했습니다. '
+                    f'현재 상태: 핵심 항목 {", ".join(missing_keys)}를 해석하지 못했습니다.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -119,7 +131,11 @@ class Check(BaseCheck):
         if ip_forward_value != expected_ip_forward:
             return self.fail(
                 'IP 포워딩 설정 기준 불일치',
-                message='IP 포워딩 설정값이 기준과 다릅니다.',
+                message=(
+                    f'Windows 커널 파라미터 점검에 실패했습니다. '
+                    f'현재 상태: ip_forward={ip_forward_value}, '
+                    f'기준값={expected_ip_forward}로 기준과 일치하지 않습니다.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -127,7 +143,11 @@ class Check(BaseCheck):
         if accept_source_route_value in disallowed_accept_source_route_values:
             return self.fail(
                 '소스 라우팅 설정 기준 불일치',
-                message='소스 라우팅 관련 설정값이 허용되지 않는 값입니다.',
+                message=(
+                    f'Windows 커널 파라미터 점검에 실패했습니다. '
+                    f'현재 상태: accept_source_route={accept_source_route_value}, '
+                    f'금지값={", ".join(disallowed_accept_source_route_values)}에 해당합니다.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -154,9 +174,23 @@ class Check(BaseCheck):
                 'disallowed_accept_source_route_values': disallowed_accept_source_route_values,
                 'failure_keywords': failure_keywords,
             },
-            reasons='Windows에서 직접 확인 가능한 커널 파라미터 설정값이 기준 범위 내입니다.',
-            message='Windows 커널 파라미터 점검이 정상 수행되었습니다.',
+            reasons=(
+                'Windows 커널 파라미터 점검 결과, 전반적으로 양호하며 '
+                '주요 확인 항목을 정상적으로 수집했습니다.'
+            ),
+            message=(
+                'Windows 커널 파라미터 점검 결과, 전반적으로 양호합니다.\n'
+                '현재 상태:\n'
+                f'- host = {result_map.get("kernel.hostname", "")}\n'
+                f'- os = {result_map.get("kernel.ostype", "")} {result_map.get("kernel.osrelease", "")}\n'
+                f'- ip_forward = {ip_forward_value} → '
+                f'{"일반 호스트 기준 정상" if ip_forward_value == "0" else f"기준값 {expected_ip_forward}와 일치"}\n'
+                f'- accept_source_route = {accept_source_route_value} → '
+                f'{"명시적 정책 미설정으로 확인 필요" if accept_source_route_value == "NotConfigured" else "허용되지 않는 값 아님"}\n'
+                '- Linux 전용 항목(kernel.shmmax, kernel.shmall, net.ipv4.conf.all.rp_filter, '
+                'net.core.somaxconn, vm.swappiness, vm.dirty_ratio, fs.file-max 일부, fs.aio-max-nr)은 '
+                'Windows에서 해당 없음(N/A)'
+            ),
         )
-
 
 CHECK_CLASS = Check

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}",
+    "rc": 0,
+    "stdout_file": "outputs/swapmemory_usage.stdout",
+    "stderr": ""
+  }
+]

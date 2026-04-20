@@ -12,13 +12,12 @@ LOG
 
 # 명령어
 ```powershell
-$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -match 'disk|storport|stornvme|nvme|ntfs|partmgr|iaStor|storahci|mpio' -or $_.Message -match '(?i)i/o error|timeout|timed out|transport failed|media error|reset to device|bad block|fc packet|dropped request|corrupt' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No I/O timeout/transport/media-like warning or error events found in the last 30 days.'}
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -match 'disk|storport|stornvme|nvme|ntfs|partmgr|iaStor|storahci|mpio' -or $_.Message -match '(?i)i/o error|timeout|timed out|transport failed|media error|reset to device|bad block|fc packet|dropped request|corrupt' }; if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No I/O timeout/transport/media-like warning or error events found in the last 30 days.'}
 ```
 
 # 출력 결과
 ```text
-TimeCreated           ProviderName  Id   Level   Message
-2026-04-10 오전 11:42:00  disk          153  Error   The IO operation at logical block address ...
+No I/O timeout/transport/media-like warning or error events found in the last 30 days.
 ```
 
 # 설명

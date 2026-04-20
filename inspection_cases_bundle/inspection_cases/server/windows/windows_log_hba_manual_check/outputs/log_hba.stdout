@@ -1,6 +1,21 @@
-==Initiator Ports==
-No HBA initiator ports exposed.
-==FC Port State==
-No FC HBA port-state data exposed by driver.
-==Recent HBA Events==
-No HBA/port offline-online-like events found in the last 30 days.
+{
+  "InitiatorPortsExposed": true,
+  "FcPortStateExposed": true,
+  "EventDataExposed": false,
+  "InitiatorPorts": [
+    {
+      "InstanceName": "PORT0",
+      "ConnectionType": "Fibre Channel",
+      "NodeAddress": "20000090FA5376EC",
+      "PortAddress": "10000090FA5376EC"
+    }
+  ],
+  "FcPorts": [
+    {
+      "InstanceName": "PORT0",
+      "PortState": "Operational",
+      "HBAStatus": "OK"
+    }
+  ],
+  "Events": []
+}

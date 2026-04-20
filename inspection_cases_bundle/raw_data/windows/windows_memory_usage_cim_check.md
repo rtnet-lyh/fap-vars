@@ -12,7 +12,7 @@ MEMORY
 
 # 명령어
 ```powershell
-$os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)
 ```
 
 # 출력 결과

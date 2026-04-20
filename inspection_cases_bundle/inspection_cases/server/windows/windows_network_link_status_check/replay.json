@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | Format-Table -AutoSize",
+    "matcher_value": "Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3",
     "rc": 0,
     "stdout_file": "outputs/network_link_status.stdout",
     "stderr": ""

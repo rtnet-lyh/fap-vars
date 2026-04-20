@@ -12,13 +12,31 @@ Get-Disk와 Get-Partition 결과를 이용해 디스크 수와 파티션 수가 
 
 # 명령어
 ```powershell
-$d=Get-Disk -ErrorAction SilentlyContinue; @(@($d|ForEach-Object{[pscustomobject]@{NAME=\"Disk$($_.Number)\";RM=[int]($_.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='disk';MOUNTPOINT='';STATUS=(@($_.OperationalStatus)-join ',')}}) + @((Get-Partition -ErrorAction SilentlyContinue)|ForEach-Object{$n=$_.DiskNumber; $dk=$d|Where-Object Number -eq $n; [pscustomobject]@{NAME=\"Disk$($_.DiskNumber)-Part$($_.PartitionNumber)\";RM=[int]($dk.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='part';MOUNTPOINT=(($_.AccessPaths|Where-Object{$_})-join ',').TrimEnd('\\');STATUS=(@($dk.OperationalStatus)-join ',')}}) + @((Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue)|ForEach-Object{[pscustomobject]@{NAME=$(if($_.Drive){$_.Drive}else{$_.Caption});RM=1;'SIZE(GB)'=$(if($_.Size){[math]::Round([double]$_.Size/1GB,2)}else{$null});RO=1;TYPE='rom';MOUNTPOINT=$_.Drive;STATUS=$(if($_.MediaLoaded){$_.Status}else{'No Media'})}})) | Format-Table -Auto
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $d=Get-Disk -ErrorAction SilentlyContinue; @(@($d|ForEach-Object{[pscustomobject]@{NAME="Disk$($_.Number)";RM=[int]($_.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='disk';MOUNTPOINT='';STATUS=(@($_.OperationalStatus)-join ',')}}) + @((Get-Partition -ErrorAction SilentlyContinue)|ForEach-Object{$n=$_.DiskNumber; $dk=$d|Where-Object Number -eq $n; [pscustomobject]@{NAME="Disk$($_.DiskNumber)-Part$($_.PartitionNumber)";RM=[int]($dk.BusType -in @('USB','SD','MMC')); 'SIZE(GB)'=[math]::Round($_.Size/1GB,2);RO=[int]$_.IsReadOnly;TYPE='part';MOUNTPOINT=(($_.AccessPaths|Where-Object{$_})-join ',').TrimEnd('\');STATUS=(@($dk.OperationalStatus)-join ',')}}) + @((Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue)|ForEach-Object{[pscustomobject]@{NAME=$(if($_.Drive){$_.Drive}else{$_.Caption});RM=1;'SIZE(GB)'=$(if($_.Size){[math]::Round([double]$_.Size/1GB,2)}else{$null});RO=1;TYPE='rom';MOUNTPOINT=$_.Drive;STATUS=$(if($_.MediaLoaded){$_.Status}else{'No Media'})}})) | ConvertTo-Json -Depth 3
 ```
 
 # 출력 결과
-```text
-DiskNumber  FriendlyName             PartitionCount
-0           SN530 SDBPNPZ-256G-1004  3
+```json
+[
+  {
+    "NAME": "Disk0",
+    "RM": 0,
+    "SIZE(GB)": 476.94,
+    "RO": 0,
+    "TYPE": "disk",
+    "MOUNTPOINT": "",
+    "STATUS": "Online"
+  },
+  {
+    "NAME": "Disk0-Part1",
+    "RM": 0,
+    "SIZE(GB)": 476.34,
+    "RO": 0,
+    "TYPE": "part",
+    "MOUNTPOINT": "C:",
+    "STATUS": "Online"
+  }
+]
 ```
 
 # 설명

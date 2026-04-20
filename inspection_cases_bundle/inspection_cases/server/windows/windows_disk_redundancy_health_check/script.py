@@ -6,6 +6,8 @@ from .common._base import BaseCheck
 
 
 DISK_HA_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "Get-Disk | ForEach-Object { $d=$_; $vd=Get-VirtualDisk -Disk $d -ErrorAction SilentlyContinue; "
     "if($vd){ $pd=$vd | Get-PhysicalDisk -ErrorAction SilentlyContinue; "
     "\"Disk $($d.Number) [$($d.FriendlyName)] : Storage Spaces RAID device / State=$((@($vd.OperationalStatus) | Sort-Object -Unique) -join ',') / Health=$($vd.HealthStatus) / RaidDevices=$($pd.Count) / ActiveDevices=$(($pd | Where-Object {$_.OperationalStatus -eq 'OK'} | Measure-Object).Count) / WorkingDevices=$(($pd | Where-Object {$_.HealthStatus -eq 'Healthy'} | Measure-Object).Count) / FailedDevices=$(($pd | Where-Object {$_.OperationalStatus -ne 'OK' -or $_.HealthStatus -ne 'Healthy'} | Measure-Object).Count) / SpareDevices=$(try{(($vd | Get-StoragePool | Get-PhysicalDisk | Where-Object {$_.Usage -eq 'HotSpare'} | Measure-Object).Count)}catch{0})\" "
@@ -36,9 +38,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 디스크 HA 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -81,9 +85,11 @@ class Check(BaseCheck):
         raid_lines = [line for line in lines if raid_marker in line]
 
         if not raid_lines:
-            return self.not_applicable(
-                'Storage Spaces RAID 장치를 찾지 못했습니다.',
-                raw_output=text,
+            return self.fail(
+                'Storage Spaces RAID 장치 미검출',
+                message='Windows 디스크 HA 점검에 실패했습니다. 현재 상태: Storage Spaces RAID 장치를 찾지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
             )
 
         parsed = []
@@ -211,7 +217,13 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='Storage Spaces RAID 상태, 헬스 상태, 활성 디스크 수가 모두 기준 범위 내입니다.',
-            message='Windows 디스크 HA 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 디스크 HA 점검이 정상입니다. 현재 상태: '
+                f'Storage Spaces RAID {len(parsed)}개, primary=Disk {primary["disk_number"]} '
+                f'[{primary["friendly_name"]}], state={primary["state"]}, health={primary["health"]}, '
+                f'active/raid={primary["active_devices"]}/{primary["raid_devices"]}, '
+                f'spare={primary["spare_devices"]}.'
+            ),
         )
 
 

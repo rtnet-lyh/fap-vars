@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "Get-CimInstance Win32_PerfFormattedData_PerfDisk_PhysicalDisk | Where-Object { $_.Name -ne '_Total' } | Select-Object @{N='device';E={$_.Name}},@{N='r/s';E={$_.DiskReadsPerSec}},@{N='w/s';E={$_.DiskWritesPerSec}},@{N='kr/s';E={[math]::Round($_.DiskReadBytesPerSec/1KB,2)}},@{N='kw/s';E={[math]::Round($_.DiskWriteBytesPerSec/1KB,2)}},@{N='wait(ms)';E={[math]::Round($_.AvgDiskSecPerTransfer*1000,2)}},@{N='actv';E={[math]::Round($_.AvgDiskQueueLength,2)}},@{N='%b';E={[math]::Round($_.PercentDiskTime,2)}},@{N='idle%';E={[math]::Round($_.PercentIdleTime,2)}} | Format-Table -Auto",
+    "matcher_value": "Get-CimInstance Win32_PerfFormattedData_PerfDisk_PhysicalDisk | Where-Object { $_.Name -ne '_Total' } | Select-Object @{N='device';E={$_.Name}},@{N='r/s';E={$_.DiskReadsPerSec}},@{N='w/s';E={$_.DiskWritesPerSec}},@{N='kr/s';E={[math]::Round($_.DiskReadBytesPerSec/1KB,2)}},@{N='kw/s';E={[math]::Round($_.DiskWriteBytesPerSec/1KB,2)}},@{N='wait(ms)';E={[math]::Round($_.AvgDiskSecPerTransfer*1000,2)}},@{N='actv';E={[math]::Round($_.AvgDiskQueueLength,2)}},@{N='%b';E={[math]::Round($_.PercentDiskTime,2)}},@{N='idle%';E={[math]::Round($_.PercentIdleTime,2)}} | ConvertTo-Json -Depth 3",
     "rc": 0,
     "stdout_file": "outputs/disk_io.stdout",
     "stderr": ""

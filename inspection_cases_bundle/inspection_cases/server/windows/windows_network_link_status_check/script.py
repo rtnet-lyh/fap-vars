@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 NETWORK_LINK_STATUS_COMMAND = (
-    "Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | Format-Table -AutoSize"
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "Get-NetAdapter -Physical | "
+    "Select-Object Name, InterfaceDescription, Status, LinkSpeed | "
+    "ConvertTo-Json -Depth 3"
 )
 
 STATUS_MAP = {
@@ -21,27 +25,17 @@ def _normalize_status(value):
     return STATUS_MAP.get(str(value).strip().lower(), str(value).strip())
 
 
-def _parse_adapter_line(line):
-    parts = [part.strip() for part in re.split(r'\s{2,}', line.strip()) if part.strip()]
-    if not parts:
+def _parse_adapter_entry(entry):
+    if not isinstance(entry, dict):
         return None
 
-    status_index = None
-    for index, part in enumerate(parts):
-        if part.lower() in STATUS_MAP:
-            status_index = index
-            break
+    name = str(entry.get('Name', '')).strip()
+    interface_description = str(entry.get('InterfaceDescription', '')).strip()
+    status = _normalize_status(entry.get('Status', ''))
+    link_speed = str(entry.get('LinkSpeed', '')).strip()
 
-    if status_index is None:
+    if not name and not interface_description and not status and not link_speed:
         return None
-
-    name = parts[0]
-    interface_description = ''
-    if status_index > 1:
-        interface_description = ' '.join(parts[1:status_index])
-
-    status = _normalize_status(parts[status_index])
-    link_speed = parts[status_index + 1] if len(parts) > status_index + 1 else ''
 
     return {
         'name': name,
@@ -70,9 +64,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows NIC 링크 상태 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -108,15 +104,24 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.fail(
+                '물리 NIC 파싱 실패',
+                message='물리 NIC 링크 상태 JSON을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        if isinstance(parsed, dict):
+            parsed = [parsed]
+        elif not isinstance(parsed, list):
+            parsed = []
+
         adapters = []
-        for line in lines:
-            stripped = line.strip()
-            if stripped.startswith('Name') and 'Status' in stripped:
-                continue
-            if stripped.startswith('----') or stripped.startswith('-----------'):
-                continue
-            adapter = _parse_adapter_line(stripped)
+        for entry in parsed:
+            adapter = _parse_adapter_entry(entry)
             if adapter:
                 adapters.append(adapter)
 
@@ -181,7 +186,12 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons=reasons,
-            message='Windows 네트워크 링크 상태 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 네트워크 링크 상태 점검이 정상입니다. 현재 상태: '
+                f'물리 NIC {len(adapters)}개, Up {len(up_adapters)}개 '
+                f'(기준 {min_up_physical_nic_count}개 이상), '
+                f'Not Present {len(not_present_adapters)}개.'
+            ),
         )
 
 

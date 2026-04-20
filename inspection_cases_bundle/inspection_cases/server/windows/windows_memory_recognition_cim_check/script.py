@@ -1,17 +1,34 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 MEMORY_STATUS_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     '$a=Get-CimInstance Win32_PhysicalMemoryArray;'
     '$m=Get-CimInstance Win32_PhysicalMemory;'
-    '"ARRAY slots=$((($a|Measure-Object -Property MemoryDevices -Sum).Sum)) max={0:N2}GiB" -f '
-    '((((($a|Measure-Object -Property MaxCapacityEx -Sum).Sum)*1KB)/1GB));'
-    '$m|Select-Object DeviceLocator,BankLabel,@{N=\'SizeGiB\';E={[math]::Round($_.Capacity/1GB,2)}},Manufacturer,PartNumber,SerialNumber,ConfiguredClockSpeed,Speed,SMBIOSMemoryType,FormFactor | '
-    'Format-Table -AutoSize'
+    '$result = [ordered]@{'
+    '  Array = [ordered]@{'
+    '    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);'
+    '    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)'
+    '  };'
+    '  Modules = @($m | Select-Object '
+    '    DeviceLocator,'
+    '    BankLabel,'
+    '    @{N=\'SizeGiB\';E={[math]::Round($_.Capacity/1GB,2)}},'
+    '    Manufacturer,'
+    '    PartNumber,'
+    '    SerialNumber,'
+    '    ConfiguredClockSpeed,'
+    '    Speed,'
+    '    SMBIOSMemoryType,'
+    '    FormFactor'
+    '  )'
+    '};'
+    '$result | ConvertTo-Json -Depth 4'
 )
 
 
@@ -21,6 +38,14 @@ def _parse_float(value):
 
 def _parse_int(value):
     return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
 
 
 class Check(BaseCheck):
@@ -42,9 +67,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 메모리 인식 상태 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -75,13 +102,28 @@ class Check(BaseCheck):
         if matched_failure_keywords:
             return self.fail(
                 '메모리 점검 실패 키워드 감지',
-                message='메모리 상태 결과에서 실패 키워드가 확인되었습니다.',
+                message=f'메모리 상태 결과에서 실패 키워드가 확인되었습니다.: 실패 키워드: {", ".join(matched_failure_keywords)}',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        array_match = re.search(r'ARRAY slots=(\d+) max=([0-9]+(?:\.[0-9]+)?)GiB', text)
-        if not array_match:
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.fail(
+                '메모리 상태 파싱 실패',
+                message='메모리 상태 JSON을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        array_info = parsed.get('Array', {}) if isinstance(parsed, dict) else {}
+        module_entries = _as_list(parsed.get('Modules', [])) if isinstance(parsed, dict) else []
+
+        try:
+            array_slot_count = _parse_int(array_info.get('Slots', 0))
+            array_max_capacity_gib = _parse_float(array_info.get('MaxCapacityGiB', 0))
+        except (TypeError, ValueError):
             return self.fail(
                 '메모리 배열 정보 파싱 실패',
                 message='메모리 슬롯 수 또는 최대 용량을 해석하지 못했습니다.',
@@ -89,41 +131,19 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        array_slot_count = _parse_int(array_match.group(1))
-        array_max_capacity_gib = _parse_float(array_match.group(2))
-
-        lines = [line.rstrip() for line in text.splitlines()]
-        separator_index = -1
-        for idx, line in enumerate(lines):
-            if line.strip().startswith('---'):
-                separator_index = idx
-                break
-
-        if separator_index < 0:
-            return self.fail(
-                '메모리 모듈 정보 파싱 실패',
-                message='메모리 모듈 표 헤더를 찾지 못했습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
         module_rows = []
-        for line in lines[separator_index + 1:]:
-            if not line.strip():
-                continue
-
-            tokens = line.split()
-            numeric_tokens = [token for token in tokens if re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', token)]
-            if len(numeric_tokens) < 5:
-                continue
-
+        for entry in module_entries:
             try:
-                size_gib = _parse_float(numeric_tokens[0])
-                configured_clock_speed_mhz = _parse_int(numeric_tokens[-4])
-                speed_mhz = _parse_int(numeric_tokens[-3])
-                smbios_memory_type = _parse_int(numeric_tokens[-2])
-                form_factor = _parse_int(numeric_tokens[-1])
-            except ValueError:
+                size_gib = _parse_float(entry.get('SizeGiB', 0))
+                configured_clock_speed_value = entry.get('ConfiguredClockSpeed', '')
+                speed_value = entry.get('Speed', '')
+                smbios_memory_type_value = entry.get('SMBIOSMemoryType', '')
+                form_factor_value = entry.get('FormFactor', '')
+                configured_clock_speed_mhz = _parse_int(configured_clock_speed_value) if str(configured_clock_speed_value).strip() else 0
+                speed_mhz = _parse_int(speed_value) if str(speed_value).strip() else 0
+                smbios_memory_type = _parse_int(smbios_memory_type_value) if str(smbios_memory_type_value).strip() else 0
+                form_factor = _parse_int(form_factor_value) if str(form_factor_value).strip() else 0
+            except (TypeError, ValueError):
                 continue
 
             module_rows.append({
@@ -174,7 +194,12 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='메모리 슬롯 정보와 설치 메모리 용량이 기준 범위 내입니다.',
-            message='Windows 메모리 상태 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 메모리 상태 점검이 정상입니다. 현재 상태: '
+                f'메모리 슬롯 {array_slot_count}개, 최대 용량 {array_max_capacity_gib:.2f}GiB, '
+                f'설치 모듈 {installed_module_count}개, 설치 용량 {installed_memory_total_gib:.2f}GiB '
+                f'(기준 {min_installed_memory_gib:.2f}GiB 이상).'
+            ),
         )
 
 

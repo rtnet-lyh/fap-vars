@@ -6,6 +6,8 @@ from .common._base import BaseCheck
 
 
 MEMORY_USAGE_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     '$os=Get-CimInstance Win32_OperatingSystem;'
     '$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;'
     '$mt=[double]$os.TotalVisibleMemorySize*1KB;'
@@ -46,9 +48,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 메모리 사용률 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -116,7 +120,12 @@ class Check(BaseCheck):
         if memory_usage_percent >= max_memory_usage_percent:
             return self.fail(
                 '메모리 사용률 임계치 초과',
-                message='물리 메모리 사용률이 기준치를 초과했습니다.',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'물리 메모리 사용률 {memory_usage_percent:.2f}% '
+                    f'(기준 {max_memory_usage_percent:.2f}% 미만), '
+                    f'총 {memory_total_gib:.2f}GiB, 사용 {memory_used_gib:.2f}GiB, 여유 {memory_free_gib:.2f}GiB.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -124,7 +133,12 @@ class Check(BaseCheck):
         if memory_free_percent <= min_memory_free_percent:
             return self.fail(
                 '가용 메모리 비율 임계치 미달',
-                message='사용 가능한 물리 메모리 비율이 기준치 이하입니다.',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'가용 메모리 비율 {memory_free_percent:.2f}% '
+                    f'(기준 {min_memory_free_percent:.2f}% 초과), '
+                    f'여유 메모리 {memory_free_gib:.2f}GiB.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -132,7 +146,12 @@ class Check(BaseCheck):
         if swap_usage_percent >= max_swap_usage_percent:
             return self.fail(
                 '스왑 사용률 임계치 초과',
-                message='스왑 사용률이 기준치를 초과했습니다.',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'스왑 사용률 {swap_usage_percent:.2f}% '
+                    f'(기준 {max_swap_usage_percent:.2f}% 미만), '
+                    f'총 {swap_total_gib:.2f}GiB, 사용 {swap_used_gib:.2f}GiB, 여유 {swap_free_gib:.2f}GiB.'
+                ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -157,7 +176,14 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='물리 메모리 사용률, 가용 메모리 비율, 스왑 사용률이 모두 기준 범위 내입니다.',
-            message='Windows 메모리 사용률 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 메모리 사용률 점검이 정상입니다. 현재 상태: '
+                f'물리 메모리 총 {memory_total_gib:.2f}GiB, 사용 {memory_used_gib:.2f}GiB, '
+                f'여유 {memory_free_gib:.2f}GiB, 사용률 {memory_usage_percent:.2f}% '
+                f'(기준 {max_memory_usage_percent:.2f}% 미만), 여유율 {memory_free_percent:.2f}% '
+                f'(기준 {min_memory_free_percent:.2f}% 초과), 스왑 사용률 {swap_usage_percent:.2f}% '
+                f'(기준 {max_swap_usage_percent:.2f}% 미만).'
+            ),
         )
 
 

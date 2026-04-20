@@ -1,29 +1,26 @@
 # -*- coding: utf-8 -*-
 
-import re
+import json
 
 from .common._base import BaseCheck
 
 
 LOG_NIC_COMMAND = (
-    "'==NIC Status=='; "
-    "Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | "
-    "Select-Object Name,InterfaceDescription,Status,LinkSpeed,MacAddress,ifIndex | "
-    "Format-Table -Auto; "
-    "'==Recent NIC Events=='; "
-    "$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} "
-    "-ErrorAction SilentlyContinue | "
-    "Where-Object { $_.Message -match '(?i)\\bnic\\b|network adapter|link down|link up|media disconnected|media connected|status down|status up|failover' }; "
-    "if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No NIC link/failover-like warning or error events found in the last 30 days.'}"
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "$nic=Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | "
+    "Select-Object Name,InterfaceDescription,Status,LinkSpeed,MacAddress,ifIndex; "
+    "$events=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | "
+    "Where-Object { "
+    "$_.ProviderName -match '(?i)ndis|netwtw|e1d|e1iexpress|e1rexpress|b57nd60a|bnx|mlx|netadaptercx|tcpip' -or "
+    "$_.Message -match '(?i)\\bnic\\b|network adapter|link down|link up|media disconnected|media connected|network link is disconnected|network link has been established|disconnected from the network|connected to the network|adapter reset|network interface.*down|network interface.*up|status down|status up|failover' "
+    "} | "
+    "Sort-Object TimeCreated -Descending | "
+    "Select-Object -First 50 @{N='TimeCreated';E={$_.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')}},ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}}; "
+    "$payload=[pscustomobject]@{NicStatus=@($nic);RecentEvents=@($events)}; "
+    "$payload | ConvertTo-Json -Depth 5 -Compress"
 )
 
-EVENT_PATTERN = re.compile(
-    r'^(?P<time>\d{4}-\d{2}-\d{2}\s+(?:오전|오후)\s+\d{1,2}:\d{2}:\d{2})\s+'
-    r'(?P<provider>.+?)\s+'
-    r'(?P<id>\d+)\s+'
-    r'(?P<level>오류|경고|정보|Error|Warning|Critical|Information)\s+'
-    r'(?P<message>.+)$'
-)
 
 STATUS_MAP = {
     'up': 'Up',
@@ -44,21 +41,77 @@ IGNORED_ADAPTER_KEYWORDS = (
     'virtual switch extension adapter',
     'virtual ethernet adapter',
     'hyper-v',
-    'vpn',
+    'vmware',
+    'vpn adapter',
+    'anyconnect',
     'fortinet virtual',
+    'wsl',
 )
 
+NEGATIVE_EVENT_PATTERNS = (
+    'link down',
+    'media disconnected',
+    'network link is disconnected',
+    'disconnected from the network',
+    'status down',
+    'failover',
+    'adapter reset',
+)
 
-def _parse_int(value):
-    return int(str(value).strip())
+POSITIVE_EVENT_PATTERNS = (
+    'link up',
+    'media connected',
+    'network link has been established',
+    'connected to the network',
+    'status up',
+)
 
 
 def _normalize_status(value):
     return STATUS_MAP.get(str(value).strip().lower(), str(value).strip())
 
 
-def _is_mac_address(value):
-    return bool(re.match(r'^[0-9A-Fa-f]{2}(?:-[0-9A-Fa-f]{2}){5}$', str(value).strip()))
+def _normalize_payload(raw_text):
+    try:
+        payload = json.loads(raw_text)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    adapters = []
+    events = []
+
+    for row in payload.get('NicStatus') or []:
+        if not isinstance(row, dict):
+            continue
+        adapters.append({
+            'name': str(row.get('Name', '')).strip(),
+            'interface_description': str(row.get('InterfaceDescription', '')).strip(),
+            'status': _normalize_status(row.get('Status', '')),
+            'link_speed': str(row.get('LinkSpeed', '')).strip(),
+            'mac_address': str(row.get('MacAddress', '')).strip(),
+            'if_index': row.get('ifIndex', ''),
+        })
+
+    for row in payload.get('RecentEvents') or []:
+        if not isinstance(row, dict):
+            continue
+        event_id = row.get('Id', '')
+        try:
+            event_id = int(event_id) if event_id != '' else ''
+        except (TypeError, ValueError):
+            event_id = ''
+        events.append({
+            'time_created': str(row.get('TimeCreated', '')).strip(),
+            'provider_name': str(row.get('ProviderName', '')).strip(),
+            'event_id': event_id,
+            'level': str(row.get('LevelDisplayName', '')).strip(),
+            'message': str(row.get('Message', '')).strip(),
+        })
+
+    return adapters, events
 
 
 def _is_ignored_adapter(adapter):
@@ -69,47 +122,9 @@ def _is_ignored_adapter(adapter):
     return any(keyword in haystack for keyword in IGNORED_ADAPTER_KEYWORDS)
 
 
-def _parse_adapter_line(line):
-    parts = [part.strip() for part in re.split(r'\s{2,}', line.strip()) if part.strip()]
-    if not parts:
-        return None
-
-    status_index = None
-    for index, part in enumerate(parts):
-        if part.lower() in STATUS_MAP:
-            status_index = index
-            break
-
-    if status_index is None:
-        return None
-
-    name = parts[0]
-    interface_description = ''
-    if status_index > 1:
-        interface_description = ' '.join(parts[1:status_index])
-
-    status = _normalize_status(parts[status_index])
-    remaining = parts[status_index + 1:]
-
-    link_speed = remaining[0] if remaining else ''
-    mac_address = ''
-    if_index = ''
-
-    for value in remaining[1:]:
-        if _is_mac_address(value):
-            mac_address = value
-            continue
-        if re.match(r'^\d+$', value):
-            if_index = _parse_int(value)
-
-    return {
-        'name': name,
-        'interface_description': interface_description,
-        'status': status,
-        'link_speed': link_speed,
-        'mac_address': mac_address,
-        'if_index': if_index,
-    }
+def _contains_any(text, patterns):
+    lowered = text.lower()
+    return any(pattern in lowered for pattern in patterns)
 
 
 class Check(BaseCheck):
@@ -132,9 +147,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows NIC 로그 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -154,109 +171,105 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
+        parsed = _normalize_payload(text)
+        if parsed is None:
+            return self.fail(
+                'NIC 로그 파싱 실패',
+                message='NIC 상태 또는 이벤트 JSON 결과를 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        adapters, event_entries = parsed
+        if not adapters:
+            return self.fail(
+                'NIC 상태 파싱 실패',
+                message='NIC 상태 정보를 확인하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
         failure_keywords = [
             keyword.strip()
             for keyword in failure_keywords_raw.split(',')
             if keyword.strip()
         ]
+        serialized_text = json.dumps({
+            'NicStatus': adapters,
+            'RecentEvents': event_entries,
+        }, ensure_ascii=False)
         matched_failure_keywords = [
-            keyword for keyword in failure_keywords if keyword.lower() in text.lower()
+            keyword for keyword in failure_keywords if keyword.lower() in serialized_text.lower()
         ]
         if matched_failure_keywords:
             return self.fail(
                 'NIC 로그 실패 키워드 감지',
-                message='NIC 로그 결과에서 실패 키워드가 확인되었습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        no_nic_events = 'No NIC link/failover-like warning or error events found in the last 30 days.' in text
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
-
-        adapters = []
-        event_entries = []
-        section = None
-
-        for line in lines:
-            stripped = line.strip()
-
-            if stripped == '==NIC Status==':
-                section = 'nic'
-                continue
-            if stripped == '==Recent NIC Events==':
-                section = 'event'
-                continue
-
-            if stripped == 'No NIC link/failover-like warning or error events found in the last 30 days.':
-                continue
-
-            if stripped.startswith('----') or stripped.startswith('-----------'):
-                continue
-
-            if section == 'nic':
-                if stripped.startswith('Name') and 'Status' in stripped:
-                    continue
-                adapter = _parse_adapter_line(stripped)
-                if adapter:
-                    adapters.append(adapter)
-                continue
-
-            if section == 'event':
-                if stripped.startswith('TimeCreated') and 'ProviderName' in stripped:
-                    continue
-                match = EVENT_PATTERN.match(stripped)
-                if match:
-                    event_entries.append({
-                        'time_created': match.group('time'),
-                        'provider_name': match.group('provider').strip(),
-                        'event_id': _parse_int(match.group('id')),
-                        'level': match.group('level').strip(),
-                        'message': match.group('message').strip(),
-                    })
-
-        if not adapters:
-            return self.fail(
-                'NIC 상태 파싱 실패',
-                message='NIC 상태 테이블을 해석하지 못했습니다.',
-                stdout=text,
+                message=f'NIC 로그 결과에서 실패 키워드가 확인되었습니다. 실패 키워드: {json.dumps(matched_failure_keywords)}',
+                stdout=serialized_text,
                 stderr=(err or '').strip(),
             )
 
         service_adapters = [adapter for adapter in adapters if not _is_ignored_adapter(adapter)]
         all_up_adapters = [adapter for adapter in adapters if adapter['status'] == 'Up']
         up_service_adapters = [adapter for adapter in service_adapters if adapter['status'] == 'Up']
-        disconnected_service_adapters = [
+        down_service_adapters = [
             adapter for adapter in service_adapters
             if adapter['status'] in ('Disconnected', 'Disabled', 'Not Present')
         ]
-
         effective_up_adapters = up_service_adapters if service_adapters else all_up_adapters
+
+        negative_event_entries = [
+            entry for entry in event_entries
+            if _contains_any(entry['message'], NEGATIVE_EVENT_PATTERNS)
+        ]
+        positive_event_entries = [
+            entry for entry in event_entries
+            if _contains_any(entry['message'], POSITIVE_EVENT_PATTERNS)
+        ]
+        failover_event_entries = [
+            entry for entry in event_entries
+            if 'failover' in entry['message'].lower()
+        ]
+        disconnect_event_entries = [
+            entry for entry in event_entries
+            if _contains_any(entry['message'], ('link down', 'media disconnected', 'disconnected from the network', 'status down'))
+        ]
 
         if len(effective_up_adapters) < min_up_nic_count:
             return self.fail(
                 '활성 NIC 부족',
-                message='현재 Up 상태의 서비스 NIC 수가 기준치 미만입니다.',
-                stdout=text,
+                message=(
+                    f'Windows NIC 로그 점검에 실패했습니다. 현재 상태: '
+                    f'Up 상태 NIC {len(effective_up_adapters)}개로 기준 {min_up_nic_count}개 미만입니다. '
+                    f'비활성 서비스 NIC: {", ".join(adapter["name"] for adapter in down_service_adapters) if down_service_adapters else "없음"}.'
+                ),
+                stdout=serialized_text,
                 stderr=(err or '').strip(),
             )
 
-        if len(event_entries) > max_nic_event_count:
+        if len(negative_event_entries) > max_nic_event_count:
             return self.fail(
-                'NIC 링크 이벤트 감지',
-                message='최근 30일 내 NIC link/media/failover 관련 경고/오류 이벤트가 기준치를 초과했습니다.',
-                stdout=text,
+                'NIC 링크 이상 이벤트 감지',
+                message=(
+                    f'Windows NIC 로그 점검에 실패했습니다. 현재 상태: '
+                    f'부정 이벤트 {len(negative_event_entries)}건 (기준 {max_nic_event_count}건 이하), '
+                    f'link/media down {len(disconnect_event_entries)}건, failover {len(failover_event_entries)}건. '
+                    f'NIC 링크 및 이중화 구성을 점검해야 합니다.'
+                ),
+                stdout=serialized_text,
                 stderr=(err or '').strip(),
             )
 
         latest_event = event_entries[0] if event_entries else {}
-
-        reasons = '현재 Up 상태의 NIC가 확인되었고 최근 30일 내 NIC link/media/failover 관련 경고/오류 이벤트가 없습니다.'
-        if disconnected_service_adapters and no_nic_events:
-            reasons = '현재 Up 상태의 서비스 NIC가 확인되며, 일부 비활성 NIC가 있으나 최근 30일 내 NIC link/media/failover 관련 경고/오류 이벤트는 없습니다.'
-        elif service_adapters and event_entries:
-            reasons = '현재 Up 상태의 서비스 NIC가 확인되며, 최근 30일 이벤트 수는 기준 범위 내입니다.'
-        elif not service_adapters:
-            reasons = '서비스 NIC 후보는 명확하지 않지만 현재 Up 상태의 NIC가 확인되며 최근 30일 내 관련 경고/오류 이벤트는 없습니다.'
+        reasons = (
+            '서비스 NIC 중 Up 상태 인터페이스가 기준 이상이며, 최근 30일 내 '
+            'NIC link down/media disconnected/failover 같은 장애성 이벤트가 허용 범위 이내입니다.'
+        )
+        if down_service_adapters and not negative_event_entries:
+            reasons = (
+                '서비스 NIC 중 Up 상태 인터페이스가 기준 이상입니다. 일부 비활성 NIC가 있으나 최근 30일 내 '
+                '장애성 NIC 이벤트는 확인되지 않았습니다.'
+            )
 
         return self.ok(
             metrics={
@@ -264,11 +277,15 @@ class Check(BaseCheck):
                 'service_nic_count': len(service_adapters),
                 'up_nic_count': len(all_up_adapters),
                 'up_service_nic_count': len(up_service_adapters),
-                'inactive_service_nic_count': len(disconnected_service_adapters),
+                'inactive_service_nic_count': len(down_service_adapters),
                 'ignored_nic_count': len(adapters) - len(service_adapters),
                 'nic_event_count': len(event_entries),
+                'negative_nic_event_count': len(negative_event_entries),
+                'positive_nic_event_count': len(positive_event_entries),
+                'failover_event_count': len(failover_event_entries),
+                'disconnect_event_count': len(disconnect_event_entries),
                 'active_nic_names': [adapter['name'] for adapter in effective_up_adapters],
-                'inactive_service_nic_names': [adapter['name'] for adapter in disconnected_service_adapters],
+                'inactive_service_nic_names': [adapter['name'] for adapter in down_service_adapters],
                 'latest_event_time': latest_event.get('time_created', ''),
                 'latest_event_provider': latest_event.get('provider_name', ''),
                 'latest_event_id': latest_event.get('event_id', ''),
@@ -280,7 +297,13 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons=reasons,
-            message='Windows NIC 로그 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows NIC 로그 점검이 정상입니다. 현재 상태: '
+                f'NIC {len(adapters)}개, 서비스 NIC {len(service_adapters)}개, '
+                f'Up {len(effective_up_adapters)}개 (기준 {min_up_nic_count}개 이상), '
+                f'부정 이벤트 {len(negative_event_entries)}건 (기준 {max_nic_event_count}건 이하), '
+                f'양호 이벤트 {len(positive_event_entries)}건.'
+            ),
         )
 
 

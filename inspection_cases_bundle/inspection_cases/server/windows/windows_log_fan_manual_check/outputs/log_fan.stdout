@@ -1,2 +1,15 @@
-No Win32_Fan data exposed by firmware/driver.
-No fan-related warning/error events found in the last 30 days.
+{
+  "FanDataExposed": true,
+  "EventDataExposed": false,
+  "Fans": [
+    {
+      "Name": "냉각 장치",
+      "Status": "OK",
+      "DesiredSpeed": null,
+      "VariableSpeed": null,
+      "Availability": 3,
+      "ConfigManagerErrorCode": 0
+    }
+  ],
+  "Events": []
+}

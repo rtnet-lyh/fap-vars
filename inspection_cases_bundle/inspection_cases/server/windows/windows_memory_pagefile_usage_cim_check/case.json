@@ -1,0 +1,51 @@
+{
+  "host": "127.0.0.1",
+  "port": 5985,
+  "user": "Administrator",
+  "password": "",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 206,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "Administrator",
+          "password": "",
+          "port": 5985
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 10,
+  "host_id": 100,
+  "job_id": 1000,
+  "item": {
+    "inspection_code": "W-REPLAY-SWAP-01",
+    "item_id": 90010,
+    "application_id": 206,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_swap_usage_percent",
+        "value1": "50.0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

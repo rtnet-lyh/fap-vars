@@ -1,4 +1,8 @@
-Name   InterfaceDescription               Status      LinkSpeed
-----   --------------------               ------      ---------
-Wi-Fi  Intel(R) Wi-Fi 6 AX201 160MHz      Up          650 Mbps
-이더넷 Realtek PCIe GbE Family Controller Not Present 0 bps
+[
+  {
+    "Name": "이더넷 2",
+    "InterfaceDescription": "Intel(R) Ethernet Connection (5) I219-LM #2",
+    "Status": "Up",
+    "LinkSpeed": "100 Mbps"
+  }
+]

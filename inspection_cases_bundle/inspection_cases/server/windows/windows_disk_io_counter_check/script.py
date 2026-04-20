@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import json
+
 from .common._base import BaseCheck
 
 
 DISK_IO_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "Get-CimInstance Win32_PerfFormattedData_PerfDisk_PhysicalDisk | "
     "Where-Object { $_.Name -ne '_Total' } | "
     "Select-Object @{N='device';E={$_.Name}},@{N='r/s';E={$_.DiskReadsPerSec}},@{N='w/s';E={$_.DiskWritesPerSec}},"
     "@{N='kr/s';E={[math]::Round($_.DiskReadBytesPerSec/1KB,2)}},@{N='kw/s';E={[math]::Round($_.DiskWriteBytesPerSec/1KB,2)}},"
     "@{N='wait(ms)';E={[math]::Round($_.AvgDiskSecPerTransfer*1000,2)}},@{N='actv';E={[math]::Round($_.AvgDiskQueueLength,2)}},"
-    "@{N='%b';E={[math]::Round($_.PercentDiskTime,2)}},@{N='idle%';E={[math]::Round($_.PercentIdleTime,2)}} | Format-Table -Auto"
+    "@{N='%b';E={[math]::Round($_.PercentDiskTime,2)}},@{N='idle%';E={[math]::Round($_.PercentIdleTime,2)}} | ConvertTo-Json -Depth 3"
 )
 
 
@@ -19,6 +23,14 @@ def _parse_float(value):
 
 def _parse_int(value):
     return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
 
 
 class Check(BaseCheck):
@@ -43,9 +55,11 @@ class Check(BaseCheck):
             )
 
         if self._is_not_applicable(rc, err):
-            return self.not_applicable(
+            return self.fail(
                 'WinRM 실행 환경을 사용할 수 없습니다.',
-                raw_output=(err or '').strip(),
+                message='Windows 디스크 I/O 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
             )
 
         if rc != 0:
@@ -81,48 +95,34 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
-        if len(lines) < 3:
+        try:
+            raw_entries = json.loads(text)
+        except json.JSONDecodeError:
             return self.fail(
-                '디스크 I/O 정보 없음',
-                message='디스크 I/O 결과를 해석할 수 없습니다.',
+                '디스크 I/O 파싱 실패',
+                message='디스크 I/O 장치 JSON을 해석하지 못했습니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
         parsed = []
-        for line in lines[2:]:
-            if line.lstrip().startswith('---'):
+        for entry in _as_list(raw_entries):
+            if not isinstance(entry, dict):
                 continue
-
-            parts = line.split()
-            if len(parts) < 9:
-                continue
-
-            device = ' '.join(parts[:-8])
             try:
-                reads_per_sec = _parse_int(parts[-8])
-                writes_per_sec = _parse_int(parts[-7])
-                read_kb_per_sec = _parse_float(parts[-6])
-                write_kb_per_sec = _parse_float(parts[-5])
-                wait_ms = _parse_float(parts[-4])
-                queue_length = _parse_float(parts[-3])
-                busy_percent = _parse_float(parts[-2])
-                idle_percent = _parse_float(parts[-1])
-            except ValueError:
+                parsed.append({
+                    'device': str(entry.get('device', '')).strip(),
+                    'reads_per_sec': _parse_int(entry.get('r/s', 0)),
+                    'writes_per_sec': _parse_int(entry.get('w/s', 0)),
+                    'read_kb_per_sec': _parse_float(entry.get('kr/s', 0)),
+                    'write_kb_per_sec': _parse_float(entry.get('kw/s', 0)),
+                    'wait_ms': _parse_float(entry.get('wait(ms)', 0)),
+                    'queue_length': _parse_float(entry.get('actv', 0)),
+                    'busy_percent': _parse_float(entry.get('%b', 0)),
+                    'idle_percent': _parse_float(entry.get('idle%', 0)),
+                })
+            except (TypeError, ValueError):
                 continue
-
-            parsed.append({
-                'device': device,
-                'reads_per_sec': reads_per_sec,
-                'writes_per_sec': writes_per_sec,
-                'read_kb_per_sec': read_kb_per_sec,
-                'write_kb_per_sec': write_kb_per_sec,
-                'wait_ms': wait_ms,
-                'queue_length': queue_length,
-                'busy_percent': busy_percent,
-                'idle_percent': idle_percent,
-            })
 
         if not parsed:
             return self.fail(
@@ -214,7 +214,14 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons='디스크 Busy 비율, Idle 비율, 대기시간, 큐 길이가 모두 기준 범위 내입니다.',
-            message='Windows 디스크 I/O 점검이 정상 수행되었습니다.',
+            message=(
+                f'Windows 디스크 I/O 점검이 정상입니다. 현재 상태: '
+                f'장치 {len(parsed)}개, 최고 Busy {busiest_device["device"]} '
+                f'{busiest_device["busy_percent"]:.2f}% (기준 {max_busy_percent:.2f}% 미만), '
+                f'최대 대기시간 {slowest_device["device"]} {slowest_device["wait_ms"]:.2f}ms '
+                f'(기준 {max_wait_ms:.2f}ms 이하), 최대 큐 길이 {longest_queue_device["device"]} '
+                f'{longest_queue_device["queue_length"]:.2f} (기준 {max_queue_length:.2f} 이하).'
+            ),
         )
 
 

@@ -12,12 +12,12 @@ LOG
 
 # 명령어
 ```powershell
-$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in @('Microsoft-Windows-Kernel-Power','Microsoft-Windows-WHEA-Logger','Microsoft-Windows-Kernel-Boot','ACPI') -or $_.Message -match '(?i)\\bpsu\\b|power supply|ps failed|failure detected|malfunction|voltage|power fault|power failure' }; if($e){$e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No PSU/power-failure-like warning or error events found in the last 30 days.'}
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in @('Microsoft-Windows-Kernel-Power','Microsoft-Windows-WHEA-Logger','Microsoft-Windows-Kernel-Boot','ACPI') -or $_.Message -match '(?i)\bpsu\b|power supply|ps failed|failure detected|malfunction|voltage|power fault|power failure' }; if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No PSU/power-failure-like warning or error events found in the last 30 days.'}
 ```
 
 # 출력 결과
 ```text
-No power warning or error events found in the last 30 days.
+No PSU/power-failure-like warning or error events found in the last 30 days.
 ```
 
 # 설명
