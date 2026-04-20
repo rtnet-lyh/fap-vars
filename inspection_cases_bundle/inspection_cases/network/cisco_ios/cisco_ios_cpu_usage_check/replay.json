@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show version",
+    "rc": 0,
+    "stdout_file": "outputs/show_version.stdout",
+    "stderr": ""
+  }
+]

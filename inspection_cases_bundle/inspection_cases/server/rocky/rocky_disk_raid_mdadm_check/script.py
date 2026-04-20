@@ -15,19 +15,6 @@ class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
 
-    def _build_no_raid_warn(self, actual_become_user):
-        return self.warn(
-            metrics={
-                'become_user': actual_become_user,
-                'software_raid_configured': False,
-                'raid_array_count': 0,
-                'raid_arrays': [],
-            },
-            thresholds={},
-            reasons='mdadm 소프트웨어 RAID가 구성되어 있지 않습니다.',
-            message='mdadm 소프트웨어 RAID 미구성 상태로 확인되어 경고 처리합니다.',
-        )
-
     def _is_become_enabled(self):
         become_raw = self.get_application_credential_value('become', default=False)
         return str(become_raw).strip().lower() == 'true'
@@ -174,7 +161,12 @@ class Check(BaseCheck):
         detail_blocks = self._parse_detail_blocks(detail_text)
 
         if not mdstat_map and not detail_blocks:
-            return self._build_no_raid_warn(actual_become_user)
+            return self.fail(
+                'mdadm 소프트웨어 RAID 미구성',
+                message='mdadm 소프트웨어 RAID가 구성되어 있지 않습니다.',
+                stdout=output,
+                stderr=(err or '').strip(),
+            )
 
         if not detail_blocks:
             return self.fail(
