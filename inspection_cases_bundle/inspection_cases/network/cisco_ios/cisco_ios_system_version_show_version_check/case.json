@@ -1,8 +1,8 @@
 {
-  "host": "192.0.2.10",
+  "host": "192.168.1.55",
   "port": 22,
   "user": "admin",
-  "password": "",
+  "password": "admin",
   "credentials": {
     "CISCO_IOS": [
       {
@@ -12,13 +12,13 @@
         "credential_type_name": "SSH",
         "data": {
           "username": "admin",
-          "password": ""
+          "password": "admin"
         }
       }
     ]
   },
   "thresholds": {},
-  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o KexAlgorithms=+diffie-hellman-group14-sha1 -o Ciphers=+aes128-cbc -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa",
   "item_sleep_sec": 0,
   "execution_id": 4,
   "host_id": 40,

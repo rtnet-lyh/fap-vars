@@ -11,7 +11,7 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "0.1"
+          "value1": "90"
         }
       ],
       "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCPU_USAGE_COMMAND = (\n    \"bash -lc '\"\n    \"read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; \"\n    \"total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); \"\n    \"idle1=$((idle + iowait)); \"\n    \"sleep 1; \"\n    \"read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; \"\n    \"total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); \"\n    \"idle2=$((idle + iowait)); \"\n    \"total_diff=$((total2 - total1)); \"\n    \"idle_diff=$((idle2 - idle1)); \"\n    \"cpu_usage=$(awk \\\"BEGIN {printf \\\\\\\"%.2f\\\\\\\", (1 - $idle_diff / $total_diff) * 100}\\\"); \"\n    \"echo \\\"CPU Usage: ${cpu_usage}%\\\"\"\n    \"'\"\n)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        max_cpu_usage_percent = self.get_threshold_var('max_cpu_usage_percent', default=80.0, value_type='float')\n        rc, out, err = self._ssh(CPU_USAGE_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='CPU 사용률 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        match = re.search(r'CPU Usage:\\s*([0-9]+(?:\\.[0-9]+)?)%', out or '')\n        if not match:\n            return self.fail(\n                'CPU 사용률 파싱 실패',\n                message='CPU 사용률 출력 형식을 해석할 수 없습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        cpu_usage_percent = round(float(match.group(1)), 2)\n        if cpu_usage_percent > max_cpu_usage_percent:\n            return self.fail(\n                'CPU 사용률 임계치 초과',\n                message=(\n                    'CPU 사용률이 기준치를 초과했습니다. '\n                    f'임계치 정보: max_cpu_usage_percent={max_cpu_usage_percent}%. '\n                    f'판단근거: 측정 CPU 사용률 {cpu_usage_percent}%가 '\n                    f'임계치 {max_cpu_usage_percent}%보다 큽니다.'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        return self.ok(\n            metrics={\n                'cpu_usage_percent': cpu_usage_percent,\n            },\n            thresholds={\n                'max_cpu_usage_percent': max_cpu_usage_percent,\n            },\n            reasons=(\n                f'측정 CPU 사용률 {cpu_usage_percent}%가 '\n                f'임계치 {max_cpu_usage_percent}% 이하입니다.'\n            ),\n            message=(\n                'CPU 사용률 점검이 정상 수행되었습니다. '\n                f'임계치 정보: max_cpu_usage_percent={max_cpu_usage_percent}%. '\n                f'판단근거: 측정 CPU 사용률 {cpu_usage_percent}%가 '\n                f'임계치 {max_cpu_usage_percent}% 이하입니다.'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
@@ -122,24 +122,27 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "0.1"
+          "value1": "90"
         }
       ],
-      "status": "fail",
-      "error": "CPU 사용률 임계치 초과",
-      "message": "CPU 사용률이 기준치를 초과했습니다. 임계치 정보: max_cpu_usage_percent=0.1%. 판단근거: 측정 CPU 사용률 0.21%가 임계치 0.1%보다 큽니다.",
-      "stdout": "CPU Usage: 0.21%",
-      "stderr": "",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CPU Usage: 0.21%",
+      "status": "ok",
+      "metrics": {
+        "cpu_usage_percent": 0.37
+      },
+      "thresholds": {
+        "max_cpu_usage_percent": 90.0
+      },
+      "reasons": "측정 CPU 사용률 0.37%가 임계치 90.0% 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): CPU Usage: 0.37%\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CPU Usage: 0.21%"
-      ]
+        " - 출력 내용(stdout): CPU Usage: 0.37%",
+        " - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts."
+      ],
+      "message": "CPU 사용률 점검이 정상 수행되었습니다. 임계치 정보: max_cpu_usage_percent=90.0%. 판단근거: 측정 CPU 사용률 0.37%가 임계치 90.0% 이하입니다."
     }
   ],
-  "failed_items": [
-    "U-REPLAY-CPU-01"
-  ]
+  "failed_items": []
 }

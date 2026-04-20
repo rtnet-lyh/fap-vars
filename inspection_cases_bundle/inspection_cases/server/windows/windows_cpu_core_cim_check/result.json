@@ -19,7 +19,7 @@
         },
         {
           "name": "min_total_logical_processor_count",
-          "value1": "8"
+          "value1": "4"
         },
         {
           "name": "failure_keywords",
@@ -251,7 +251,7 @@
         },
         {
           "name": "min_total_logical_processor_count",
-          "value1": "8"
+          "value1": "4"
         },
         {
           "name": "failure_keywords",
@@ -262,14 +262,14 @@
       "metrics": {
         "socket_count": 1,
         "total_core_count": 4,
-        "total_logical_processor_count": 8,
-        "threads_per_core": 2.0,
-        "processor_name": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+        "total_logical_processor_count": 4,
+        "threads_per_core": 1.0,
+        "processor_name": "Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz",
         "socket_designation": "U3E1",
         "manufacturer": "GenuineIntel",
-        "max_clock_speed_mhz": 2419,
+        "max_clock_speed_mhz": 3408,
         "processor_names": [
-          "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz"
+          "Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz"
         ],
         "socket_designations": [
           "U3E1"
@@ -279,21 +279,25 @@
       "thresholds": {
         "min_socket_count": 1,
         "min_total_core_count": 4,
-        "min_total_logical_processor_count": 8,
+        "min_total_logical_processor_count": 4,
         "failure_keywords": []
       },
       "reasons": "물리 CPU 소켓 수, 물리 코어 수, 논리 프로세서 수가 모두 기준 범위 내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2419\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 8",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): \n\nName                      : Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 3408\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n - 출력 내용(stderr): #< CLIXML\n<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+        " - 출력 내용(stdout): ",
+        "",
+        "Name                      : Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz",
         "SocketDesignation         : U3E1",
         "Manufacturer              : GenuineIntel",
-        "MaxClockSpeed             : 2419",
+        "MaxClockSpeed             : 3408",
         "NumberOfCores             : 4",
-        "NumberOfLogicalProcessors : 8"
+        "NumberOfLogicalProcessors : 4",
+        " - 출력 내용(stderr): #< CLIXML",
+        "<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>"
       ],
       "message": "Windows CPU 코어 상태 점검이 정상 수행되었습니다."
     }

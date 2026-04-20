@@ -1,6 +1,6 @@
 {
-  "host": "127.0.0.1",
-  "port": 5985,
+  "host": "172.20.2.100",
+  "port": 5986,
   "user": "Administrator",
   "password": "",
   "credentials": {
@@ -11,9 +11,9 @@
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
         "data": {
-          "username": "Administrator",
-          "password": "",
-          "port": 5985
+          "username": "lyh",
+          "password": "f3dtop0!",
+          "port": 5986
         }
       }
     ]
@@ -48,7 +48,7 @@
       },
       {
         "name": "min_total_logical_processor_count",
-        "value1": "8"
+        "value1": "4"
       },
       {
         "name": "failure_keywords",

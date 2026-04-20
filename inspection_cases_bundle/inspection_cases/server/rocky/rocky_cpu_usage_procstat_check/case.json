@@ -1,7 +1,7 @@
 {
-  "host": "127.0.0.1",
+  "host": "192.168.1.123",
   "port": 22,
-  "user": "root",
+  "user": "fap",
   "password": "",
   "credentials": {
     "LINUX": [
@@ -11,8 +11,12 @@
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "root",
-          "password": ""
+          "username": "fap",
+          "password": "",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
         }
       }
     ]
@@ -34,7 +38,7 @@
     "threshold_list": [
       {
         "name": "max_cpu_usage_percent",
-        "value1": "0.1"
+        "value1": "90"
       }
     ]
   }

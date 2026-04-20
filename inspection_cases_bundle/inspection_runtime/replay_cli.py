@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import copy
 import json
 import logging
 import os
@@ -89,25 +90,94 @@ def discover_case_dirs(path):
     return case_dirs, abs_path
 
 
+def load_case_data(case_dir):
+    case_path = os.path.join(case_dir, 'case.json')
+    case_data = load_json(case_path)
+    if not isinstance(case_data, dict):
+        raise ValueError(f'case.json must contain an object: {case_path}')
+    return case_data
+
+
+def load_script_text(case_dir):
+    script_path = os.path.join(case_dir, 'script.py')
+    return read_text(script_path)
+
+
+def load_replay_rules(case_dir):
+    replay_path = os.path.join(case_dir, 'replay.json')
+    return load_json(replay_path)
+
+
+def build_runner_payload(case_data, script_text, case_path):
+    payload = dict(case_data or {})
+    raw_items = payload.pop('items', None)
+    if raw_items is None:
+        item = payload.pop('item', None)
+        if not isinstance(item, dict) or not item:
+            raise ValueError(f'case item is required: {case_path}')
+        raw_items = [item]
+
+    if not isinstance(raw_items, list) or not raw_items:
+        raise ValueError(f'case items are required: {case_path}')
+
+    items = []
+    for idx, item in enumerate(raw_items, 1):
+        if not isinstance(item, dict) or not item:
+            raise ValueError(f'case item #{idx} must be an object: {case_path}')
+        item_payload = dict(item)
+        item_payload['check_script'] = script_text
+        items.append(item_payload)
+
+    payload['items'] = items
+    return payload
+
+
 def load_case_payload(case_dir):
     case_path = os.path.join(case_dir, 'case.json')
-    script_path = os.path.join(case_dir, 'script.py')
-    replay_path = os.path.join(case_dir, 'replay.json')
+    case_data = load_case_data(case_dir)
+    script_text = load_script_text(case_dir)
+    return build_runner_payload(case_data, script_text, case_path)
 
-    case_data = load_json(case_path)
-    script_text = read_text(script_path)
-    replay_rules = load_json(replay_path)
 
-    item = case_data.get('item')
-    if not isinstance(item, dict) or not item:
-        raise ValueError(f'case item is required: {case_path}')
+def deep_merge(base, override):
+    if isinstance(base, dict) and isinstance(override, dict):
+        merged = {key: copy.deepcopy(value) for key, value in base.items()}
+        for key, value in override.items():
+            if key in merged:
+                merged[key] = deep_merge(merged[key], value)
+            else:
+                merged[key] = copy.deepcopy(value)
+        return merged
+    return copy.deepcopy(override)
 
-    payload = dict(case_data)
-    payload.pop('item', None)
-    item_payload = dict(item)
-    item_payload['check_script'] = script_text
-    payload['items'] = [item_payload]
-    return payload, replay_rules
+
+def load_override_data(path):
+    override_data = load_json(path)
+    if not isinstance(override_data, dict):
+        raise ValueError(f'override file must contain an object: {path}')
+    return override_data
+
+
+def has_any_credentials(credentials_map):
+    if not isinstance(credentials_map, dict):
+        return False
+    for entries in credentials_map.values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if isinstance(entry, dict):
+                return True
+    return False
+
+
+def validate_live_payload(payload):
+    host = str(payload.get('host') or '').strip()
+    if not host:
+        raise ValueError('live mode requires host in case.json or override file')
+
+    user = str(payload.get('user') or '').strip()
+    if not user and not has_any_credentials(payload.get('credentials')):
+        raise ValueError('live mode requires credentials or user in case.json or override file')
 
 
 class ReplayCommandExecutor:
@@ -203,10 +273,11 @@ def build_case_logger(case_name):
     return logger
 
 
-def run_case(case_dir, case_name=None):
+def run_case_replay(case_dir, case_name=None):
     if case_name is None:
         case_name = os.path.basename(os.path.abspath(case_dir))
-    payload, replay_rules = load_case_payload(case_dir)
+    payload = load_case_payload(case_dir)
+    replay_rules = load_replay_rules(case_dir)
     executor = ReplayCommandExecutor(case_dir, replay_rules)
     logger = build_case_logger(case_name)
     output = execute_runner(
@@ -217,6 +288,31 @@ def run_case(case_dir, case_name=None):
         skip_precheck=True,
         logger=logger,
     )
+    result_path = os.path.join(case_dir, 'result.json')
+    write_json(result_path, output, readable_multiline=True)
+    return {
+        'case_name': case_name,
+        'result_path': result_path,
+        'output': output,
+    }
+
+
+def run_case_live(case_dir, override_file, case_name=None):
+    if case_name is None:
+        case_name = os.path.basename(os.path.abspath(case_dir))
+
+    case_path = os.path.join(case_dir, 'case.json')
+    case_data = load_case_data(case_dir)
+    merged_case_data = case_data
+    if override_file:
+        override_data = load_override_data(override_file)
+        merged_case_data = deep_merge(case_data, override_data)
+    script_text = load_script_text(case_dir)
+    payload = build_runner_payload(merged_case_data, script_text, case_path)
+    validate_live_payload(payload)
+
+    logger = build_case_logger(case_name)
+    output = execute_runner(payload, logger=logger)
     result_path = os.path.join(case_dir, 'result.json')
     write_json(result_path, output, readable_multiline=True)
     return {
@@ -255,18 +351,31 @@ def build_summary(case_results, root_dir):
     }
 
 
-def run_path(path):
+def run_path(path, mode='replay', override_file=None):
+    if mode not in ('replay', 'live'):
+        raise ValueError(f'unsupported mode: {mode}')
+
+    if mode != 'live' and override_file:
+        raise ValueError('--override-file is only supported in live mode')
+
+    if mode == 'live':
+        case_dir = os.path.abspath(path)
+        if not is_case_dir(case_dir):
+            raise ValueError(f'live mode requires a single case directory: {path}')
+        case_result = run_case_live(case_dir, override_file=override_file)
+        return case_result['output'], 0
+
     case_dirs, root_dir = discover_case_dirs(path)
 
     if len(case_dirs) == 1 and os.path.abspath(case_dirs[0]) == os.path.abspath(root_dir):
-        case_result = run_case(case_dirs[0])
+        case_result = run_case_replay(case_dirs[0])
         return case_result['output'], 0
 
     aggregated = []
     for case_dir in case_dirs:
         case_name = os.path.relpath(case_dir, root_dir)
         try:
-            result = run_case(case_dir, case_name=case_name)
+            result = run_case_replay(case_dir, case_name=case_name)
             failed_items = result['output'].get('failed_items') or []
             aggregated.append({
                 'case_name': case_name,
@@ -294,10 +403,24 @@ def main(argv=None):
         description='Replay inspection runner payloads from local case directories.',
     )
     parser.add_argument('path', help='Case directory or root directory containing case subdirectories')
+    parser.add_argument(
+        '--mode',
+        choices=('replay', 'live'),
+        default='replay',
+        help='Execution mode. replay uses replay.json fixtures, live uses case.json and optionally merges an override JSON file.',
+    )
+    parser.add_argument(
+        '--override-file',
+        help='Optional JSON file containing live-mode overrides for case.json values such as host, credentials, thresholds, and item.',
+    )
     args = parser.parse_args(argv)
 
     try:
-        output, exit_code = run_path(args.path)
+        output, exit_code = run_path(
+            args.path,
+            mode=args.mode,
+            override_file=args.override_file,
+        )
     except Exception as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False))
         return 1
