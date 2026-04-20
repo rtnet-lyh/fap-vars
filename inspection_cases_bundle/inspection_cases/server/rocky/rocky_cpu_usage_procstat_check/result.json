@@ -127,21 +127,21 @@
       ],
       "status": "ok",
       "metrics": {
-        "cpu_usage_percent": 0.37
+        "cpu_usage_percent": 0.42
       },
       "thresholds": {
         "max_cpu_usage_percent": 90.0
       },
-      "reasons": "측정 CPU 사용률 0.37%가 임계치 90.0% 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): CPU Usage: 0.37%\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
+      "reasons": "측정 CPU 사용률 0.42%가 임계치 90.0% 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): CPU Usage: 0.42%\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: bash -lc 'read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total1=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle1=$((idle + iowait)); sleep 1; read cpu user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat; total2=$((user + nice + system + idle + iowait + irq + softirq + steal)); idle2=$((idle + iowait)); total_diff=$((total2 - total1)); idle_diff=$((idle2 - idle1)); cpu_usage=$(awk \"BEGIN {printf \\\"%.2f\\\", (1 - $idle_diff / $total_diff) * 100}\"); echo \"CPU Usage: ${cpu_usage}%\"'",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용(stdout): CPU Usage: 0.37%",
+        " - 출력 내용(stdout): CPU Usage: 0.42%",
         " - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts."
       ],
-      "message": "CPU 사용률 점검이 정상 수행되었습니다. 임계치 정보: max_cpu_usage_percent=90.0%. 판단근거: 측정 CPU 사용률 0.37%가 임계치 90.0% 이하입니다."
+      "message": "CPU 사용률 점검이 정상 수행되었습니다. 임계치 정보: max_cpu_usage_percent=90.0%. 판단근거: 측정 CPU 사용률 0.42%가 임계치 90.0% 이하입니다."
     }
   ],
   "failed_items": []

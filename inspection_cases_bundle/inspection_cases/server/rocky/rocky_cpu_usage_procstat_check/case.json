@@ -12,7 +12,7 @@
         "credential_type_name": "SSH",
         "data": {
           "username": "fap",
-          "password": "",
+          "password": "f3dtop0!",
           "become": "true",
           "become_method": "su -",
           "become_user": "root",

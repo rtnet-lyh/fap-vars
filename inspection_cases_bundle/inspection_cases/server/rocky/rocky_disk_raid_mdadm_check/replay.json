@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "bash -lc 'printf '\"'\"'%s\\n'\"'\"' password | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cat /proc/mdstat; echo \"-----\"; for md in /dev/md*; do [ -e \"$md\" ] && mdadm --detail \"$md\"; done; true'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
+    "matcher_value": "bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'f3dtop0!'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cat /proc/mdstat; echo \"-----\"; for md in /dev/md*; do [ -e \"$md\" ] && mdadm --detail \"$md\"; done; true'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
     "rc": 0,
     "stdout_file": "outputs/mdadm.stdout",
     "stderr": ""

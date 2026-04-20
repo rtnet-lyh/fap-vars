@@ -1,8 +1,8 @@
 {
-  "host": "127.0.0.1",
+  "host": "192.168.1.123",
   "port": 22,
-  "user": "inspector",
-  "password": "",
+  "user": "fap",
+  "password": "f3dtop0!",
   "credentials": {
     "LINUX": [
       {
@@ -11,20 +11,12 @@
         "application_type_name": "LINUX",
         "credential_type_name": "APPLICATION",
         "data": {
-          "become": true,
-          "become_method": "su",
+          "username": "fap",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
           "become_user": "root",
-          "become_password": "password"
-        }
-      },
-      {
-        "application_id": 106,
-        "application_type_id": 10,
-        "application_type_name": "LINUX",
-        "credential_type_name": "SSH",
-        "data": {
-          "username": "inspector",
-          "password": ""
+          "become_password": "f3dtop0!"
         }
       }
     ]
