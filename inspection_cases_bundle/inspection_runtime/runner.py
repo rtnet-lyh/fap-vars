@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import codecs
 import json
 import os
 import subprocess
@@ -58,13 +59,56 @@ DEFAULT_SSH_OPTIONS = (
 )
 DEFAULT_SSH_COMMAND_TIMEOUT_SEC = 600
 SSH_COMMAND_TIMEOUT_RC = 124
+POWERSHELL_UTF8_PREFIX = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+)
+
+
+def decode_stream_bytes(value, preferred_encodings=None):
+    if value is None:
+        return value
+    if not isinstance(value, bytes):
+        return str(value)
+    if not value:
+        return ''
+
+    candidates = []
+    if value.startswith(codecs.BOM_UTF8):
+        candidates.append('utf-8-sig')
+    candidates.append('utf-8')
+
+    if value.startswith(codecs.BOM_UTF16_LE):
+        candidates.append('utf-16-le')
+    elif value.startswith(codecs.BOM_UTF16_BE):
+        candidates.append('utf-16-be')
+    elif b'\x00' in value:
+        candidates.extend(['utf-16-le', 'utf-16-be'])
+
+    for encoding in preferred_encodings or ():
+        if encoding:
+            candidates.append(str(encoding).strip())
+
+    candidates.extend(['cp949', 'euc-kr', 'cp1252'])
+
+    seen = set()
+    for encoding in candidates:
+        if not encoding or encoding in seen:
+            continue
+        seen.add(encoding)
+        try:
+            return value.decode(encoding)
+        except (LookupError, UnicodeDecodeError):
+            continue
+
+    return value.decode('utf-8', 'replace')
 
 
 def coerce_text(value):
     if value is None:
         return value
     if isinstance(value, bytes):
-        return value.decode('utf-8', 'ignore')
+        return decode_stream_bytes(value)
     return str(value)
 
 
@@ -612,9 +656,9 @@ def run_winrm(cmd, host, port, user, password, _ssh_options, winrm_options=None)
         if shell == 'cmd':
             resp = session.run_cmd(cmd)
         else:
-            resp = session.run_ps(cmd)
-        out = strip_runtime_warnings((resp.std_out or b'').decode('utf-8', 'ignore'))
-        err = strip_runtime_warnings((resp.std_err or b'').decode('utf-8', 'ignore'))
+            resp = session.run_ps(POWERSHELL_UTF8_PREFIX + cmd)
+        out = strip_runtime_warnings(decode_stream_bytes(resp.std_out or b''))
+        err = strip_runtime_warnings(decode_stream_bytes(resp.std_err or b''))
         return int(resp.status_code), out, err
     except Exception as exc:
         return 902, '', 'WINRM_EXEC_ERROR: ' + str(exc)
