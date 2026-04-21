@@ -37,11 +37,11 @@
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_value": "show version"
+    "matcher_value": "show processes cpu"
   },
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "show version\r\nCisco IOS Software, 2800 Software (C2800NM-ADVIPSERVICESK9-M), Version 12.4(24)T1, RELEASE SOFTWARE (fc3)\r\nTEST_CISCO_C3650 uptime is 1 year, 21 weeks, 6 days, 3 hours, 37 minutes\r\nSystem image file is \"flash:c2800nm-advipservicesk9-mz.124-24.T1.bin\"\r\nCisco 2821 (revision 53.51) with 196608K/65536K bytes of memory.\r\nConfiguration register is 0x7922\r\nTEST_CISCO_C3650#"
+    "stdout_file": "outputs/show_processes_cpu.stdout"
   }
 ]

@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "inspection_code": "N-REPLAY-CISCO-01",
+      "item_id": 90004,
+      "application_id": 301,
+      "application_type_id": 30,
+      "application_type_name": "CISCO_IOS",
+      "application_name": "SW-ACCESS-01",
+      "application_family_name": "NETWORK",
+      "check_script": "# -*- coding: utf-8 -*-\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        with self._open_terminal() as term:\n            try:\n                # term.use_profile('cisco_ios')\n                # term.enter_privilege(password=enable_password)\n                # term.disable_paging()\n                term.run_command(\"screen-length 0 temp\", timeout_sec=10)\n                term.run_command(\"show processes cpu\", timeout_sec=10)\n            except Exception as exc:\n                return self.fail(\n                    'Interactive terminal 예외',\n                    message=str(exc),\n                    stdout=term.buffer,\n                )\n        return self.ok(\n            metrics={},\n            reasons='CPU 사용률이 정상입니다.',\n            message=f'CPU 사용률이 정상입니다.',\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def run(self):",
+        "        with self._open_terminal() as term:",
+        "            try:",
+        "                # term.use_profile('cisco_ios')",
+        "                # term.enter_privilege(password=enable_password)",
+        "                # term.disable_paging()",
+        "                term.run_command(\"screen-length 0 temp\", timeout_sec=10)",
+        "                term.run_command(\"show processes cpu\", timeout_sec=10)",
+        "            except Exception as exc:",
+        "                return self.fail(",
+        "                    'Interactive terminal 예외',",
+        "                    message=str(exc),",
+        "                    stdout=term.buffer,",
+        "                )",
+        "        return self.ok(",
+        "            metrics={},",
+        "            reasons='CPU 사용률이 정상입니다.',",
+        "            message=f'CPU 사용률이 정상입니다.',",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "N-REPLAY-CISCO-01",
+      "item_id": 90004,
+      "application_id": 301,
+      "application_type_id": 30,
+      "application_type_name": "CISCO_IOS",
+      "application_name": "SW-ACCESS-01",
+      "application_family_name": "NETWORK",
+      "status": "fail",
+      "error": "호스트 연결 실패",
+      "message": "SSH 연결 실패: Warning: Permanently added '172.20.2.1' (RSA) to the list of known hosts.\nUser Authentication\nclient_loop: send disconnect: Broken pipe",
+      "message_lines": [
+        "SSH 연결 실패: Warning: Permanently added '172.20.2.1' (RSA) to the list of known hosts.",
+        "User Authentication",
+        "client_loop: send disconnect: Broken pipe"
+      ],
+      "raw_output": "Warning: Permanently added '172.20.2.1' (RSA) to the list of known hosts.\nUser Authentication\nclient_loop: send disconnect: Broken pipe",
+      "raw_output_lines": [
+        "Warning: Permanently added '172.20.2.1' (RSA) to the list of known hosts.",
+        "User Authentication",
+        "client_loop: send disconnect: Broken pipe"
+      ]
+    }
+  ],
+  "failed_items": [
+    "N-REPLAY-CISCO-01"
+  ]
+}

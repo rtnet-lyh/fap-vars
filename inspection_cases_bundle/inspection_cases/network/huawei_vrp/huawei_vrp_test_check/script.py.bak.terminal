@@ -1,0 +1,153 @@
+# -*- coding: utf-8 -*-
+
+import re
+import json
+from pathlib import Path
+
+from .common._base import BaseCheck
+
+
+def parse_cpu_report(text):
+    result = {
+        "cpu_summary": {},
+        "processes": [],
+        "top_10_by_avg_usage": []
+    }
+
+    # 1) 전체 CPU utilization 추출
+    # 예: CPU utilization for five seconds: 2%/0%; one minute: 1%; five minutes: 1%
+    summary_pattern = re.search(
+        r"CPU utilization for five seconds:\s*([\d.]+)%/([\d.]+)%;\s*one minute:\s*([\d.]+)%;\s*five minutes:\s*([\d.]+)%",
+        text
+    )
+    if summary_pattern:
+        five_sec_total = float(summary_pattern.group(1))
+        five_sec_interrupt = float(summary_pattern.group(2))
+        one_min = float(summary_pattern.group(3))
+        five_min = float(summary_pattern.group(4))
+
+        result["cpu_summary"] = {
+            "five_seconds_total_percent": five_sec_total,
+            "five_seconds_interrupt_percent": five_sec_interrupt,
+            "one_minute_percent": one_min,
+            "five_minutes_percent": five_min,
+            "average_percent": round((five_sec_total + one_min + five_min) / 3, 2)
+        }
+
+    # 2) 프로세스 라인 파싱
+    # 데이터 줄 예시:
+    #  91        1412         282       5007  1.27%  0.43%  0.28% 514 SSH Process
+    #
+    # TTY가 비어있으면 0 또는 공백으로 들어올 수 있음
+    process_pattern = re.compile(
+        r"^\s*"
+        r"(\d+)\s+"              # PID
+        r"(\d+)\s+"              # Runtime(ms)
+        r"(\d+)\s+"              # Invoked
+        r"(\d+)\s+"              # uSecs
+        r"([\d.]+)%\s+"          # 5Sec
+        r"([\d.]+)%\s+"          # 1Min
+        r"([\d.]+)%\s+"          # 5Min
+        r"(\S+)\s+"              # TTY
+        r"(.+?)\s*$"             # Process
+    )
+
+    for line in text.splitlines():
+        line = line.rstrip()
+
+        # 헤더/빈줄 제외
+        if not line.strip():
+            continue
+        if line.strip().startswith("PID Runtime(ms)"):
+            continue
+        if line.strip().startswith("CPU utilization for five seconds:"):
+            continue
+
+        m = process_pattern.match(line)
+        if not m:
+            continue
+
+        pid = int(m.group(1))
+        runtime_ms = int(m.group(2))
+        invoked = int(m.group(3))
+        usecs = int(m.group(4))
+        five_sec = float(m.group(5))
+        one_min = float(m.group(6))
+        five_min = float(m.group(7))
+        tty = m.group(8)
+        process_name = m.group(9).strip()
+
+        avg_usage = round((five_sec + one_min + five_min) / 3, 4)
+
+        result["processes"].append({
+            "pid": pid,
+            "runtime_ms": runtime_ms,
+            "invoked": invoked,
+            "usecs": usecs,
+            "cpu_5sec_percent": five_sec,
+            "cpu_1min_percent": one_min,
+            "cpu_5min_percent": five_min,
+            "avg_cpu_percent": avg_usage,
+            "tty": tty,
+            "process": process_name
+        })
+
+    # 3) 평균 사용률 기준 Top 10
+    top_10 = sorted(
+        result["processes"],
+        key=lambda x: x["avg_cpu_percent"],
+        reverse=True
+    )[:10]
+
+    result["top_10_by_avg_usage"] = top_10
+
+    return result
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        max_cpu_usage_percent = self.get_threshold_var('max_cpu_usage_percent', default=80.0, value_type='float')     
+
+        enable_password = str(self.get_connection_value('en_password', '') or '')
+
+        with self._open_terminal() as term:
+            try:
+                term.use_profile('cisco_ios')
+                term.enter_privilege(password=enable_password)
+                term.disable_paging()
+                result = term.run_command("show processes cpu", timeout_sec=10)
+            except Exception as exc:
+                return self.fail(
+                    'Interactive terminal 예외',
+                    message=str(exc),
+                    stdout=term.buffer,
+                )
+            
+        parsed = parse_cpu_report(result.raw_output)
+        
+        average_percent = parsed["cpu_summary"]["average_percent"]
+        top_10_by_avg_usage = parsed["top_10_by_avg_usage"]
+
+        metrics = {
+            "average_percent": average_percent,
+            "top_10_by_avg_usage": top_10_by_avg_usage,
+        }
+
+        if average_percent > max_cpu_usage_percent:
+            return self.fail(
+                '임계치 초과',
+                message=f"CPU 평균치({average_percent}%)가 임계치({max_cpu_usage_percent}%) 값을 초과했습니다."
+            )
+        
+        else:
+            return self.ok(
+                metrics=metrics,
+                reasons='CPU 사용률이 정상입니다.',
+                message=f'CPU 사용률이 정상입니다. 평균치: {average_percent}, 임계치: {max_cpu_usage_percent}',
+            )
+
+
+CHECK_CLASS = Check

@@ -1,5 +1,5 @@
 {
-  "host": "192.168.1.55",
+  "host": "172.20.2.1",
   "port": 22,
   "user": "admin",
   "password": "admin",
@@ -11,14 +11,15 @@
         "application_type_name": "CISCO_IOS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "admin",
-          "password": "admin"
+          "username": "rtnet",
+          "password": "rtnet@123",
+          "en_password": "admin"
         }
       }
     ]
   },
   "thresholds": {},
-  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o KexAlgorithms=+diffie-hellman-group14-sha1 -o Ciphers=+aes128-cbc -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa",
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o KexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1 -o Ciphers=+aes128-cbc -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa",
   "item_sleep_sec": 0,
   "execution_id": 4,
   "host_id": 40,
