@@ -109,24 +109,24 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'ssh'
 
     def run(self):
+        rc, out, err = self._ssh("show processes cpu")  
         max_cpu_usage_percent = self.get_threshold_var('max_cpu_usage_percent', default=80.0, value_type='float')     
 
-        enable_password = str(self.get_connection_value('en_password', '') or '')
+        if self._is_connection_error(rc, err):
+            return self.fail(
+                '장비 연결 실패',
+                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
+                stderr=(err or '').strip(),
+            )
 
-        with self._open_terminal() as term:
-            try:
-                term.use_profile('cisco_ios')
-                term.enter_privilege(password=enable_password)
-                term.disable_paging()
-                result = term.run_command("show processes cpu", timeout_sec=10)
-            except Exception as exc:
-                return self.fail(
-                    'Interactive terminal 예외',
-                    message=str(exc),
-                    stdout=term.buffer,
-                )
-            
-        parsed = parse_cpu_report(result.raw_output)
+        if rc != 0:
+            return self.fail(
+                '점검 명령 실행 실패',
+                message='show version 명령 실행에 실패했습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+        parsed = parse_cpu_report(out)
         
         average_percent = parsed["cpu_summary"]["average_percent"]
         top_10_by_avg_usage = parsed["top_10_by_avg_usage"]

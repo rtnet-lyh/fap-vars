@@ -16,7 +16,7 @@
       "inspection_command": "pyVmomi HostSystem.summary 및 HostServiceSystem.serviceInfo.service 조회",
       "is_service_affect": "N",
       "action_content": "vCenter 관리 대상인데 vpxa 또는 연결 상태가 비정상인 경우 vCenter Agent 통신 상태를 확인합니다.",
-      "replay_base_dir": "inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
+      "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
       "replay_vcenter_agent_json_file": "outputs/vcenter_agent.json",
       "threshold_list": [
         {
@@ -29,7 +29,7 @@
         },
         {
           "name": "force_replay",
-          "value1": "true"
+          "value1": "false"
         }
       ],
       "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = False\n    APPLICATION_TYPE = 'ESXI'\n\n    def _thresholds(self):\n        return {\n            'require_vcenter_connection': self.get_threshold_var('require_vcenter_connection', True, 'bool'),\n            'expected_connection_state': self.get_threshold_var('expected_connection_state', 'connected', 'str'),\n            'force_replay': self.get_threshold_var('force_replay', False, 'bool'),\n        }\n\n    def _raw_output(self, metrics):\n        vpxa = metrics.get('vpxa') or {}\n        return '\\n'.join([\n            'ESXi vCenter Agent 통신 상태 조회 결과',\n            '- source: %s' % metrics.get('source', ''),\n            '- host_name: %s' % metrics.get('host_name', ''),\n            '- managed_by_vcenter: %s' % metrics.get('managed_by_vcenter', ''),\n            '- management_server_ip: %s' % metrics.get('management_server_ip', ''),\n            '- connection_state: %s' % metrics.get('connection_state', ''),\n            '- vpxa.exists: %s' % vpxa.get('exists', ''),\n            '- vpxa.running: %s' % vpxa.get('running', ''),\n            '- vpxa.policy: %s' % vpxa.get('policy', ''),\n        ])\n\n    def _state_summary(self, metrics, thresholds):\n        vpxa = metrics.get('vpxa') or {}\n        return ', '.join([\n            'host=%s' % metrics.get('host_name', ''),\n            'managed_by_vcenter=%s' % metrics.get('managed_by_vcenter', ''),\n            'management_server_ip=%s' % (metrics.get('management_server_ip') or '없음'),\n            'connection_state=%s (기준 %s)' % (\n                metrics.get('connection_state'),\n                thresholds['expected_connection_state'],\n            ),\n            'vpxa.exists=%s' % vpxa.get('exists', ''),\n            'vpxa.running=%s' % vpxa.get('running', ''),\n        ])\n\n    def _build_message(self, metrics, thresholds, failed=None):\n        current_state = self._state_summary(metrics, thresholds)\n        if failed:\n            return (\n                'ESXi vCenter Agent 통신 상태가 기준을 충족하지 못했습니다. '\n                '실패 사유: %s. 현재 상태: %s.'\n            ) % (', '.join(failed), current_state)\n        return (\n            'ESXi vCenter Agent 통신 상태가 정상입니다. 현재 상태: %s. '\n            'vCenter 관리 정보와 vpxa 서비스 상태가 모두 기준을 충족했습니다.'\n        ) % current_state\n\n    def _evaluate(self, metrics):\n        thresholds = self._thresholds()\n        managed = bool(metrics.get('managed_by_vcenter'))\n        vpxa = metrics.get('vpxa') or {}\n\n        if not managed and not thresholds['require_vcenter_connection']:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='단독 ESXi 운영 정책으로 vCenter 연결 점검 대상이 아닙니다.',\n                raw_output=self._raw_output(metrics),\n                message=(\n                    'ESXi가 vCenter 관리 대상으로 확인되지 않아 대상미해당으로 분류했습니다. '\n                    '현재 상태: %s.'\n                ) % self._state_summary(metrics, thresholds),\n            )\n\n        failed = []\n        if not managed:\n            failed.append('vCenter 관리 서버 정보가 확인되지 않습니다.')\n        if managed and not metrics.get('management_server_ip'):\n            failed.append('management_server_ip가 비어 있습니다.')\n        if metrics.get('connection_state') != thresholds['expected_connection_state']:\n            failed.append('Connection State %s != %s' % (\n                metrics.get('connection_state'),\n                thresholds['expected_connection_state'],\n            ))\n        if not vpxa.get('exists'):\n            failed.append('vpxa 서비스가 존재하지 않습니다.')\n        elif not vpxa.get('running'):\n            failed.append('vpxa 서비스가 실행 중이 아닙니다.')\n\n        if failed:\n            result = self.fail(\n                'ESXi vCenter Agent 기준 미충족',\n                message=self._build_message(metrics, thresholds, failed),\n                raw_output=self._raw_output(metrics),\n            )\n            result['metrics'] = metrics\n            result['thresholds'] = thresholds\n            result['reasons'] = ', '.join(failed)\n            return result\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='vCenter 관리 서버 정보가 확인되고 vpxa 및 관리 연결 상태가 정상입니다.',\n            raw_output=self._raw_output(metrics),\n            message=self._build_message(metrics, thresholds),\n        )\n\n    def run(self):\n        try:\n            metrics = self.vmware_helper.vcenter_agent_status_from_context(\n                default_host_moid='ha-host',\n                source='pyvmomi',\n            )\n        except Exception as exc:\n            return self.fail(\n                'ESXi vCenter Agent 조회 실패',\n                message='VMwareHelper 기반 ESXi vCenter Agent 조회 중 예외가 발생했습니다: %s' % exc,\n                raw_output='VMwareHelper 기반 ESXi vCenter Agent 점검을 완료하지 못했습니다.',\n            )\n\n        return self._evaluate(metrics)\n\n\nCHECK_CLASS = Check\n",
@@ -178,7 +178,7 @@
       "inspection_command": "pyVmomi HostSystem.summary 및 HostServiceSystem.serviceInfo.service 조회",
       "is_service_affect": "N",
       "action_content": "vCenter 관리 대상인데 vpxa 또는 연결 상태가 비정상인 경우 vCenter Agent 통신 상태를 확인합니다.",
-      "replay_base_dir": "inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
+      "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
       "replay_vcenter_agent_json_file": "outputs/vcenter_agent.json",
       "threshold_list": [
         {
@@ -191,45 +191,22 @@
         },
         {
           "name": "force_replay",
-          "value1": "true"
+          "value1": "false"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "host_name": "localhost.rtnet",
-        "managed_by_vcenter": true,
-        "management_server_ip": "192.168.1.10",
-        "connection_state": "connected",
-        "vpxa": {
-          "exists": true,
-          "running": true,
-          "policy": "on"
-        },
-        "source": "output"
-      },
-      "thresholds": {
-        "require_vcenter_connection": false,
-        "expected_connection_state": "connected",
-        "force_replay": true
-      },
-      "reasons": "vCenter 관리 서버 정보가 확인되고 vpxa 및 관리 연결 상태가 정상입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi vCenter Agent 통신 상태 조회 결과\n- source: output\n- host_name: localhost.rtnet\n- managed_by_vcenter: True\n- management_server_ip: 192.168.1.10\n- connection_state: connected\n- vpxa.exists: True\n- vpxa.running: True\n- vpxa.policy: on",
+      "status": "fail",
+      "error": "ESXi vCenter Agent 조회 실패",
+      "message": "VMwareHelper 기반 ESXi vCenter Agent 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi vCenter Agent 점검을 완료하지 못했습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: ESXi vCenter Agent 통신 상태 조회 결과",
-        "- source: output",
-        "- host_name: localhost.rtnet",
-        "- managed_by_vcenter: True",
-        "- management_server_ip: 192.168.1.10",
-        "- connection_state: connected",
-        "- vpxa.exists: True",
-        "- vpxa.running: True",
-        "- vpxa.policy: on"
-      ],
-      "message": "ESXi vCenter Agent 통신 상태가 정상입니다. 현재 상태: host=localhost.rtnet, managed_by_vcenter=True, management_server_ip=192.168.1.10, connection_state=connected (기준 connected), vpxa.exists=True, vpxa.running=True. vCenter 관리 정보와 vpxa 서비스 상태가 모두 기준을 충족했습니다."
+        " - 출력 내용: VMwareHelper 기반 ESXi vCenter Agent 점검을 완료하지 못했습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "ESXI-STATUS-VCENTER-AGENT-01"
+  ]
 }

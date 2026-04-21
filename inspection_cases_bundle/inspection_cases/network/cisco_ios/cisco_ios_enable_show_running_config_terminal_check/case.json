@@ -1,0 +1,36 @@
+{
+  "host": "192.168.1.55",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 302,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "en_password": "admin"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 5,
+  "host_id": 50,
+  "job_id": 500,
+  "item": {
+    "inspection_code": "N-REPLAY-CISCO-TERM-01",
+    "item_id": 90005,
+    "application_id": 302,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "SW-ACCESS-01",
+    "application_family_name": "NETWORK"
+  }
+}

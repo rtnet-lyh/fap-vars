@@ -294,7 +294,11 @@
         "failure_keywords": []
       },
       "reasons": "물리 CPU 소켓 수, 물리 코어 수, 논리 프로세서 수가 모두 기준 범위 내입니다.",
+<<<<<<< HEAD
       "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2419\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 8",
+=======
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2419\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 8",
+>>>>>>> 70c1439 (terminal 기능추가,  스크립트 에러시 상세로그 출력되게 수정)
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",

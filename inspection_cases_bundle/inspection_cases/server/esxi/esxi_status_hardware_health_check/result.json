@@ -212,41 +212,15 @@
         }
       ],
       "status": "fail",
-      "error": "ESXi 하드웨어 Health 기준 미충족",
-      "message": "ESXi 하드웨어 Health 상태가 기준을 충족하지 못했습니다. 실패 사유: overall_status gray != green, 하드웨어 Health 센서 정보가 비어 있습니다.. 현재 상태: host=localhost.rtnet, overall_status=gray (기준 green), 비정상 Health=없음, warning 센서=0건, failed 센서=0건.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi 하드웨어 Health 상태 조회 결과\n- source: pyvmomi\n- host_name: localhost.rtnet\n- overall_status: gray\n- hardware_health:\n- warning_sensors: 0\n- failed_sensors: 0",
+      "error": "ESXi 하드웨어 Health 조회 실패",
+      "message": "VMwareHelper 기반 ESXi 하드웨어 Health 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi 하드웨어 Health 점검을 완료하지 못했습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: ESXi 하드웨어 Health 상태 조회 결과",
-        "- source: pyvmomi",
-        "- host_name: localhost.rtnet",
-        "- overall_status: gray",
-        "- hardware_health:",
-        "- warning_sensors: 0",
-        "- failed_sensors: 0"
-      ],
-      "metrics": {
-        "host_name": "localhost.rtnet",
-        "overall_status": "gray",
-        "hardware_health": {},
-        "sensors": [],
-        "warning_sensors": [],
-        "failed_sensors": [],
-        "source": "pyvmomi",
-        "abnormal_health": {}
-      },
-      "thresholds": {
-        "expected_overall_status": "green",
-        "normal_health_states": [
-          "green",
-          "normal",
-          "ok"
-        ],
-        "force_replay": false
-      },
-      "reasons": "overall_status gray != green, 하드웨어 Health 센서 정보가 비어 있습니다."
+        " - 출력 내용: VMwareHelper 기반 ESXi 하드웨어 Health 점검을 완료하지 못했습니다."
+      ]
     }
   ],
   "failed_items": [

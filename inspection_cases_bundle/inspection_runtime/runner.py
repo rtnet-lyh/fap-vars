@@ -14,7 +14,23 @@ import logging
 import datetime
 import time
 import re
+import traceback
 from functools import lru_cache
+
+try:
+    from .terminal import (
+        DEFAULT_EXPECT_TIMEOUT_SEC,
+        DEFAULT_OPEN_TIMEOUT_SEC,
+        SubprocessSshTerminalTransport,
+        TerminalSession,
+    )
+except ImportError:
+    from terminal import (
+        DEFAULT_EXPECT_TIMEOUT_SEC,
+        DEFAULT_OPEN_TIMEOUT_SEC,
+        SubprocessSshTerminalTransport,
+        TerminalSession,
+    )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ITEMS_DIR = os.path.join(BASE_DIR, 'items')
@@ -199,6 +215,13 @@ def get_inline_script_text(item_payload):
     return None
 
 
+def format_exception_only_text(exc):
+    try:
+        return ''.join(traceback.format_exception_only(type(exc), exc)).strip()
+    except Exception:
+        return str(exc)
+
+
 def normalize_application_token(value):
     text = str(value or '').strip()
     if text in APPLICATION_NAME_ALIASES:
@@ -333,7 +356,7 @@ def resolve_runtime_item_module(available, item_payload, logger=None):
             )
             return mod, module_key, 'db', None
         except Exception as exc:
-            db_error = str(exc)
+            db_error = format_exception_only_text(exc)
             if logger:
                 logger.warning(
                     'db item load failed. fallback to file: inspection_code=%s application_type=%s application=%s family=%s error=%s',
@@ -596,6 +619,37 @@ def run_ssh(cmd, host, port, user, password, ssh_options, timeout_sec=None):
     stdout = strip_runtime_warnings(proc.stdout)
     stderr = strip_runtime_warnings(proc.stderr)
     return proc.returncode, stdout, stderr
+
+
+def open_ssh_terminal(
+    host,
+    port,
+    user,
+    password,
+    ssh_options,
+    history_callback=None,
+    pager_patterns=None,
+    pager_response=' ',
+    preferred_encodings=None,
+    open_timeout_sec=DEFAULT_OPEN_TIMEOUT_SEC,
+    default_timeout_sec=DEFAULT_EXPECT_TIMEOUT_SEC,
+):
+    transport = SubprocessSshTerminalTransport.open(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        ssh_options=ssh_options,
+        open_timeout_sec=open_timeout_sec,
+        preferred_encodings=preferred_encodings,
+    )
+    return TerminalSession(
+        transport=transport,
+        history_callback=history_callback,
+        pager_patterns=pager_patterns,
+        pager_response=pager_response,
+        default_timeout_sec=default_timeout_sec,
+    )
 
 
 def ensure_ssh_options_defaults(ssh_options):
@@ -873,6 +927,7 @@ def execute_runner(
     ssh_executor=None,
     winrm_executor=None,
     no_ssh_executor=None,
+    terminal_opener=None,
     skip_precheck=False,
     logger=None,
 ):
@@ -904,6 +959,7 @@ def execute_runner(
     ssh_executor = ssh_executor or run_ssh
     winrm_executor = winrm_executor or run_winrm
     no_ssh_executor = no_ssh_executor or run_no_ssh
+    terminal_opener = terminal_opener or open_ssh_terminal
 
     logger.info('-----------------------------------------------')
     logger.info('### Runner started.')
@@ -1039,14 +1095,24 @@ def execute_runner(
             continue
         if not mod:
             # 요청한 항목이 없으면 실패로 기록
-            res = {
-                'inspection_code': code,
-                'item_id': item_id,
-                'status': 'fail',
-                'error': '점검 스크립트 없음',
-                'message': '점검 스크립트 없음',
-                'raw_output': '점검 스크립트 없음',
-            }
+            if db_error:
+                res = {
+                    'inspection_code': code,
+                    'item_id': item_id,
+                    'status': 'fail',
+                    'error': 'script_load_error',
+                    'message': db_error,
+                    'raw_output': db_error,
+                }
+            else:
+                res = {
+                    'inspection_code': code,
+                    'item_id': item_id,
+                    'status': 'fail',
+                    'error': '점검 스크립트 없음',
+                    'message': '점검 스크립트 없음',
+                    'raw_output': '점검 스크립트 없음',
+                }
             if result_item_payload:
                 res = {**result_item_payload, **res}
             results.append(res)
@@ -1079,6 +1145,7 @@ def execute_runner(
             'connection_credential_data': connection_values.get('data') or {},
             'application_credential': app_credential or {},
             'application_credential_data': app_credential_data,
+            'open_terminal': None,
         }
         logger.info("created ctx:\n%s", json.dumps(ctx, ensure_ascii=False, indent=2, default=str))
         if needs_host_connection(mod):
@@ -1103,6 +1170,24 @@ def execute_runner(
                     _password,
                     _ssh_options,
                     ssh_command_timeout_sec,
+                )
+                terminal_host = ctx['host']
+                terminal_port = ctx['port']
+                terminal_user = ctx['user']
+                terminal_password = ctx['password']
+                terminal_ssh_options = ctx['ssh_options']
+                ctx['open_terminal'] = lambda **kwargs: terminal_opener(
+                    host=terminal_host,
+                    port=terminal_port,
+                    user=terminal_user,
+                    password=terminal_password,
+                    ssh_options=terminal_ssh_options,
+                    history_callback=kwargs.get('history_callback'),
+                    pager_patterns=kwargs.get('pager_patterns'),
+                    pager_response=kwargs.get('pager_response', ' '),
+                    preferred_encodings=kwargs.get('preferred_encodings'),
+                    open_timeout_sec=kwargs.get('open_timeout_sec', DEFAULT_OPEN_TIMEOUT_SEC),
+                    default_timeout_sec=kwargs.get('default_timeout_sec', DEFAULT_EXPECT_TIMEOUT_SEC),
                 )
         else:
             ctx['connection_method'] = 'none'

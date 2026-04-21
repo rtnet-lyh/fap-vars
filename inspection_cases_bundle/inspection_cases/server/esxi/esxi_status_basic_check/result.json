@@ -214,55 +214,15 @@
         }
       ],
       "status": "fail",
-      "error": "ESXi 상태 기준 미충족",
-      "message": "ESXi 상태 기준을 충족하지 못했습니다. 실패 사유: Memory Usage 93.16% > 80.00%. 현재 상태: host=localhost.rtnet, CPU 7.64% (기준 80.00% 이하), 메모리 93.16% (기준 80.00% 이하), 전원 상태 poweredOn (기준 poweredOn), 연결 상태 connected (기준 connected).",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi HostSystem.summary API 조회 결과\n- source: pyvmomi\n- name: localhost.rtnet\n- full_name: VMware ESXi 8.0.3 build-24022510\n- api_version: 8.0.3.0\n- vendor/model: Huawei / RH2288H V3\n- cpu_model: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz\n- cpu_usage: 7.64% (2195/28728 MHz)\n- memory_usage: 93.16% (14888/15981 MiB)\n- power_state: poweredOn\n- connection_state: connected\n- overall_status: gray",
+      "error": "ESXi API 점검 실패",
+      "message": "VMwareHelper 기반 ESXi 상태 API 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi 상태 점검을 완료하지 못했습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: ESXi HostSystem.summary API 조회 결과",
-        "- source: pyvmomi",
-        "- name: localhost.rtnet",
-        "- full_name: VMware ESXi 8.0.3 build-24022510",
-        "- api_version: 8.0.3.0",
-        "- vendor/model: Huawei / RH2288H V3",
-        "- cpu_model: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz",
-        "- cpu_usage: 7.64% (2195/28728 MHz)",
-        "- memory_usage: 93.16% (14888/15981 MiB)",
-        "- power_state: poweredOn",
-        "- connection_state: connected",
-        "- overall_status: gray"
-      ],
-      "metrics": {
-        "name": "localhost.rtnet",
-        "full_name": "VMware ESXi 8.0.3 build-24022510",
-        "version": "8.0.3",
-        "build": "24022510",
-        "api_version": "8.0.3.0",
-        "uuid": "63ca02ce-3610-11e6-bf03-749d8f88c836",
-        "vendor": "Huawei",
-        "model": "RH2288H V3",
-        "cpu_model": "Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz",
-        "cpu_usage_mhz": 2195,
-        "cpu_capacity_mhz": 28728,
-        "cpu_usage_percent": 7.64,
-        "memory_usage_mib": 14888,
-        "memory_total_mib": 15981,
-        "memory_usage_percent": 93.16,
-        "power_state": "poweredOn",
-        "connection_state": "connected",
-        "overall_status": "gray",
-        "source": "pyvmomi"
-      },
-      "thresholds": {
-        "max_cpu_usage_percent": 80.0,
-        "max_memory_usage_percent": 80.0,
-        "expected_power_state": "poweredOn",
-        "expected_connection_state": "connected",
-        "force_replay": false
-      },
-      "reasons": "Memory Usage 93.16% > 80.00%"
+        " - 출력 내용: VMwareHelper 기반 ESXi 상태 점검을 완료하지 못했습니다."
+      ]
     }
   ],
   "failed_items": [

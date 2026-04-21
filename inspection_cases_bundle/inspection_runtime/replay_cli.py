@@ -11,8 +11,10 @@ import sys
 
 try:
     from .runner import execute_runner, run_no_ssh
+    from .terminal import TerminalSession
 except ImportError:
     from runner import execute_runner, run_no_ssh
+    from terminal import TerminalSession
 
 
 def load_json(path):
@@ -195,6 +197,29 @@ class ReplayCommandExecutor:
             if not isinstance(rule, dict):
                 raise ValueError(f'replay rule #{idx} must be an object')
 
+            channel = str(rule.get('channel') or '').strip().lower()
+            if channel == 'terminal':
+                action = str(rule.get('action') or '').strip().lower()
+                if action not in ('open', 'send', 'recv', 'close'):
+                    raise ValueError(f'invalid terminal action in rule #{idx}: {action}')
+
+                normalized = {
+                    'channel': 'terminal',
+                    'action': action,
+                    'matcher_type': str(rule.get('matcher_type') or 'exact').strip().lower(),
+                    'matcher_value': str(rule.get('matcher_value') or rule.get('value') or ''),
+                    'redacted': bool(rule.get('redacted')),
+                    'stdout': self._resolve_stream(rule, idx, 'stdout'),
+                }
+
+                if action == 'send' and not normalized['redacted'] and not normalized['matcher_value']:
+                    raise ValueError(f'matcher_value is required in terminal send rule #{idx}')
+                if normalized['matcher_type'] not in ('exact', 'contains', 'regex'):
+                    raise ValueError(f'invalid matcher_type in terminal rule #{idx}: {normalized["matcher_type"]}')
+
+                self.rules.append(normalized)
+                continue
+
             matcher_type = str(rule.get('matcher_type') or '').strip().lower()
             matcher_value = str(rule.get('matcher_value') or '')
             if matcher_type not in ('exact', 'contains', 'regex'):
@@ -210,6 +235,11 @@ class ReplayCommandExecutor:
                 'stderr': self._resolve_stream(rule, idx, 'stderr'),
             }
             self.rules.append(normalized)
+
+    def _peek_rule(self):
+        if self.position >= len(self.rules):
+            return None
+        return self.rules[self.position]
 
     def _resolve_stream(self, rule, idx, stream_name):
         if stream_name in rule and rule.get(stream_name) is not None:
@@ -254,6 +284,54 @@ class ReplayCommandExecutor:
         self.position += 1
         return rule['rc'], rule['stdout'], rule['stderr']
 
+    def _consume_terminal_open(self):
+        rule = self._peek_rule()
+        if not rule or rule.get('channel') != 'terminal' or rule.get('action') != 'open':
+            return None
+        self.position += 1
+        return rule.get('stdout', '')
+
+    def _consume_terminal_close(self):
+        rule = self._peek_rule()
+        if not rule or rule.get('channel') != 'terminal' or rule.get('action') != 'close':
+            return
+        self.position += 1
+
+    def _consume_terminal_send(self, text, redacted=False):
+        rule = self._peek_rule()
+        if not rule:
+            raise ValueError(f'REPLAY_MISS: unexpected terminal send: {text}')
+        if rule.get('channel') != 'terminal' or rule.get('action') != 'send':
+            raise ValueError(
+                f'REPLAY_MISS: expected terminal {rule.get("action")} but got terminal send: {text}'
+            )
+        if bool(rule.get('redacted')) != bool(redacted):
+            raise ValueError(
+                f'REPLAY_MISS: terminal send redaction mismatch for: {text}'
+            )
+        if not rule.get('redacted') and not self._matches(rule, text):
+            expected_text = f"{rule['matcher_type']}:{rule['matcher_value']}"
+            raise ValueError(f'REPLAY_MISS: expected terminal send {expected_text} but got: {text}')
+        self.position += 1
+
+    def _consume_terminal_recv(self, allow_no_data=False):
+        rule = self._peek_rule()
+        if not rule:
+            if allow_no_data:
+                return None
+            return ''
+        if rule.get('channel') == 'terminal' and rule.get('action') == 'close':
+            self.position += 1
+            return ''
+        if rule.get('channel') != 'terminal' or rule.get('action') != 'recv':
+            if allow_no_data:
+                return None
+            raise ValueError(
+                f'REPLAY_MISS: expected terminal {rule.get("action")} but got terminal recv'
+            )
+        self.position += 1
+        return rule.get('stdout', '')
+
     def run_ssh(self, cmd, host, port, user, password, ssh_options, timeout_sec=None):
         return self._consume(cmd, 'ssh')
 
@@ -262,6 +340,58 @@ class ReplayCommandExecutor:
 
     def run_no_ssh(self, cmd, host, port, user, password, ssh_options):
         return run_no_ssh(cmd, host, port, user, password, ssh_options)
+
+    def open_terminal(
+        self,
+        host,
+        port,
+        user,
+        password,
+        ssh_options,
+        history_callback=None,
+        pager_patterns=None,
+        pager_response=' ',
+        preferred_encodings=None,
+        open_timeout_sec=None,
+        default_timeout_sec=None,
+    ):
+        transport = ReplayTerminalTransport(self)
+        return TerminalSession(
+            transport=transport,
+            history_callback=history_callback,
+            pager_patterns=pager_patterns,
+            pager_response=pager_response,
+            default_timeout_sec=default_timeout_sec,
+        )
+
+
+class ReplayTerminalTransport:
+    def __init__(self, executor):
+        self.executor = executor
+        self.closed = False
+        self.prefetched = executor._consume_terminal_open()
+
+    def send(self, text, newline=False, redacted=False):
+        del newline
+        self.executor._consume_terminal_send(str(text or ''), redacted=redacted)
+
+    def read_chunk(self, timeout_sec=None):
+        if self.closed:
+            return ''
+        if self.prefetched is not None:
+            data = self.prefetched
+            self.prefetched = None
+            return data
+        data = self.executor._consume_terminal_recv(allow_no_data=timeout_sec is not None)
+        if data == '':
+            self.closed = True
+        return data
+
+    def close(self):
+        if self.closed:
+            return
+        self.closed = True
+        self.executor._consume_terminal_close()
 
 
 def build_case_logger(case_name):
@@ -285,6 +415,7 @@ def run_case_replay(case_dir, case_name=None):
         ssh_executor=executor.run_ssh,
         winrm_executor=executor.run_winrm,
         no_ssh_executor=executor.run_no_ssh,
+        terminal_opener=executor.open_terminal,
         skip_precheck=True,
         logger=logger,
     )

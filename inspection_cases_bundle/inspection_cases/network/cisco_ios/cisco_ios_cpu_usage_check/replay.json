@@ -1,9 +1,9 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "show version",
+    "matcher_value": "show processes cpu",
     "rc": 0,
-    "stdout_file": "outputs/show_version.stdout",
+    "stdout_file": "outputs/show_processes_cpu.stdout",
     "stderr": ""
   }
 ]

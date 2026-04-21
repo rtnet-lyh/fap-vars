@@ -27,6 +27,7 @@ class BaseCheck:
         self.ctx = ctx
         # raw_output 기본값 생성을 위해 명령 실행 이력을 누적한다.
         self._command_history = []
+        self._terminal_history = []
         self._threshold_list_map_cache = None
         self.network_helper = NetworkHelper(self)
         self.vmware_helper = VMwareHelper(self)
@@ -47,6 +48,27 @@ class BaseCheck:
         )
         self._record_command(cmd, rc, out, err)
         return rc, out, err
+
+    def _open_terminal(
+        self,
+        pager_patterns=None,
+        pager_response=' ',
+        preferred_encodings=None,
+        open_timeout_sec=None,
+        default_timeout_sec=None,
+    ):
+        opener = self.ctx.get('open_terminal')
+        if not callable(opener):
+            raise RuntimeError('interactive terminal is not available for this item')
+
+        return opener(
+            history_callback=self._record_terminal_event,
+            pager_patterns=pager_patterns,
+            pager_response=pager_response,
+            preferred_encodings=preferred_encodings,
+            open_timeout_sec=open_timeout_sec,
+            default_timeout_sec=default_timeout_sec,
+        )
 
     # Network helper wrappers
     def _run_show(self, cmd):
@@ -268,6 +290,13 @@ class BaseCheck:
             'stderr': err if err is not None else '',
         })
 
+    def _record_terminal_event(self, event):
+        if not isinstance(event, dict):
+            return
+        copied = dict(event)
+        copied['text'] = copied.get('text') if copied.get('text') is not None else ''
+        self._terminal_history.append(copied)
+
     def get_threshold_list_map(self):
         """item_payload.threshold_list를 {name: value1} 딕셔너리로 변환한다."""
         if self._threshold_list_map_cache is not None:
@@ -485,6 +514,30 @@ class BaseCheck:
 
         return "\n".join(section).rstrip()
 
+    def _build_terminal_history_raw_output(self):
+        if not self._terminal_history:
+            return ""
+
+        parts = []
+        for idx, item in enumerate(self._terminal_history, 1):
+            kind = str(item.get('kind') or '').strip().lower()
+            raw_text = str(item.get('text') or '')
+            text = '<space>' if raw_text == ' ' else raw_text.rstrip()
+            section = [f"[점검 단계 {idx}]"]
+
+            if kind == 'send':
+                send_label = '자동 응답' if item.get('auto') else '터미널 송신'
+                section.append(f" - {send_label}: {text}")
+            elif kind == 'recv':
+                recv_label = '터미널 수신(timeout)' if item.get('timeout') else '터미널 수신'
+                section.append(f" - {recv_label}: {text}")
+            else:
+                section.append(f" - 터미널 이벤트: {text}")
+
+            parts.append("\n".join(section).rstrip())
+
+        return "\n\n".join(parts).strip()
+
     def _resolve_raw_output(self, raw_output=None, stdout=None, stderr=None):
         # 미구현 항목은 사용자 요청에 따라 문자열을 그대로 저장한다.
         if raw_output == '점검 스크립트 없음':
@@ -492,8 +545,13 @@ class BaseCheck:
 
         # 1순위: 실제 명령 이력(점검 단계 포맷)
         history_text = self._build_history_raw_output()
+        terminal_text = self._build_terminal_history_raw_output()
+        if history_text and terminal_text:
+            return f'{history_text}\n\n{terminal_text}'.strip()
         if history_text:
             return history_text
+        if terminal_text:
+            return terminal_text
 
         # 2순위: 명령 이력이 없더라도 동일 포맷으로 fallback
         if raw_output not in (None, '') or stdout not in (None, '') or stderr not in (None, ''):

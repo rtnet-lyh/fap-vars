@@ -46,6 +46,113 @@ class Check(BaseCheck):
 CHECK_CLASS = Check
 """
 
+TERMINAL_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        with self._open_terminal(
+            pager_patterns=[r'--More--'],
+            pager_response=' ',
+        ) as term:
+            prompt = term.expect([r'>\\s*$', r'#\\s*$'])
+            if prompt.index == 0:
+                term.sendline('enable')
+                term.expect([r'Password:\\s*$'])
+                term.sendline(self.get_connection_value('en_password'), redact=True)
+                term.expect([r'#\\s*$'])
+
+            term.sendline('terminal length 0')
+            term.expect([r'#\\s*$'])
+            output = term.run('show running-config', [r'#\\s*$'])
+
+        if 'Current configuration' not in output:
+            return self.fail(
+                'config missing',
+                stdout=output,
+            )
+
+        return self.ok(
+            metrics={'has_config': True},
+            reasons='ok',
+            message='terminal ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+LOOSE_TERMINAL_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        with self._open_terminal(default_timeout_sec=0.01) as term:
+            term.sendline('first')
+            timeout_result = term.expect([r'NEVER_MATCHES'])
+            term.sendline('second')
+            done_result = term.expect([r'DONE'])
+
+        if timeout_result.matched or not timeout_result.timed_out:
+            return self.fail('timeout result mismatch', stdout=timeout_result.text)
+        if not done_result.matched:
+            return self.fail('done missing', stdout=done_result.text)
+
+        return self.ok(
+            metrics={'timeout_continued': True},
+            reasons='ok',
+            message='loose terminal ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+SYNTAX_ERROR_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        result = self._ssh("broken)
+        return self.ok(message='ok')
+
+
+CHECK_CLASS = Check
+"""
+
+IMPORT_ERROR_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+import missing_module_for_live_test
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        return self.ok(message='ok')
+
+
+CHECK_CLASS = Check
+"""
+
 
 class ReplayCliTest(unittest.TestCase):
     def create_case_dir(self, root_dir, name='case_a'):
@@ -101,6 +208,65 @@ class ReplayCliTest(unittest.TestCase):
             fh.write('\n')
         with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
             fh.write(SCRIPT_TEXT)
+        with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+            json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
+            fh.write('\n')
+
+        return case_dir
+
+    def create_terminal_case_dir(self, root_dir, name='terminal_case'):
+        case_dir = os.path.join(root_dir, name)
+        os.makedirs(case_dir, exist_ok=True)
+
+        case_data = {
+            'host': '127.0.0.1',
+            'port': 22,
+            'user': 'admin',
+            'password': 'admin',
+            'credentials': {
+                'NETWORK': [
+                    {
+                        'application_type_name': 'NETWORK',
+                        'credential_type_name': 'NETWORK_DEVICE',
+                        'data': {
+                            'username': 'admin',
+                            'password': 'admin',
+                            'en_password': 'secret',
+                        },
+                    }
+                ]
+            },
+            'thresholds': {},
+            'item_sleep_sec': 0,
+            'execution_id': 2,
+            'host_id': 20,
+            'job_id': 200,
+            'item': {
+                'inspection_code': 'N-TEST-TERM-01',
+                'item_id': 90002,
+                'application_type_name': 'NETWORK',
+                'threshold_list': [],
+            },
+        }
+        replay_rules = [
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'Router>'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'enable'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'Password:'},
+            {'channel': 'terminal', 'action': 'send', 'redacted': True},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'Router#'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'terminal length 0'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'Router#'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'show running-config'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'show running-config\r\nCurrent configuration : 123\r\n--More--'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': ' '},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': '\r\nhostname TEST_ROUTER\r\nRouter#'},
+        ]
+
+        with open(os.path.join(case_dir, 'case.json'), 'w', encoding='utf-8') as fh:
+            json.dump(case_data, fh, ensure_ascii=False, indent=2)
+            fh.write('\n')
+        with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+            fh.write(TERMINAL_SCRIPT_TEXT)
         with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
             json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
             fh.write('\n')
@@ -237,6 +403,36 @@ class ReplayCliTest(unittest.TestCase):
             result_path = os.path.join(case_dir, 'result.json')
             self.assertTrue(os.path.isfile(result_path))
 
+    def test_run_path_live_surfaces_python_syntax_error_text(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_case_dir(tmp_dir, name='syntax_error_case')
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(SYNTAX_ERROR_SCRIPT_TEXT)
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='live')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], ['U-TEST-01'])
+            self.assertEqual(output['results'][0]['status'], 'fail')
+            self.assertEqual(output['results'][0]['error'], 'script_load_error')
+            self.assertIn('SyntaxError:', output['results'][0]['message'])
+            self.assertEqual(output['results'][0]['message'], output['results'][0]['raw_output'])
+
+    def test_run_path_live_surfaces_python_import_error_text(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_case_dir(tmp_dir, name='import_error_case')
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(IMPORT_ERROR_SCRIPT_TEXT)
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='live')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], ['U-TEST-01'])
+            self.assertEqual(output['results'][0]['status'], 'fail')
+            self.assertEqual(output['results'][0]['error'], 'script_load_error')
+            self.assertIn('ModuleNotFoundError:', output['results'][0]['message'])
+            self.assertEqual(output['results'][0]['message'], output['results'][0]['raw_output'])
+
     def test_live_mode_rejects_directory_batch_path(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             self.create_case_dir(tmp_dir, name='case_a')
@@ -266,6 +462,42 @@ class ReplayCliTest(unittest.TestCase):
                     mode='replay',
                     override_file=override_path,
                 )
+
+    def test_run_path_replay_supports_terminal_events(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_terminal_case_dir(tmp_dir)
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            self.assertEqual(output['results'][0]['status'], 'ok')
+            self.assertTrue(output['results'][0]['metrics']['has_config'])
+            self.assertIn('터미널 송신: enable', output['results'][0]['raw_output'])
+            self.assertIn('자동 응답', output['results'][0]['raw_output'])
+
+    def test_run_path_replay_allows_terminal_expect_timeout_between_sends(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_terminal_case_dir(tmp_dir, name='loose_terminal_case')
+            replay_rules = [
+                {'channel': 'terminal', 'action': 'send', 'matcher_value': 'first'},
+                {'channel': 'terminal', 'action': 'send', 'matcher_value': 'second'},
+                {'channel': 'terminal', 'action': 'recv', 'stdout': 'DONE'},
+            ]
+
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(LOOSE_TERMINAL_SCRIPT_TEXT)
+            with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+                json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
+                fh.write('\n')
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            self.assertEqual(output['results'][0]['status'], 'ok')
+            self.assertTrue(output['results'][0]['metrics']['timeout_continued'])
+            self.assertIn('터미널 수신(timeout)', output['results'][0]['raw_output'])
 
 
 if __name__ == '__main__':

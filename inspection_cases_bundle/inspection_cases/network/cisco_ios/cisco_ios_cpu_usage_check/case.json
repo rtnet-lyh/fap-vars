@@ -11,7 +11,7 @@
         "application_type_name": "CISCO_IOS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "admin",
+          "username": "admin1",
           "password": "admin"
         }
       }

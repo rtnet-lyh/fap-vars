@@ -1,20 +1,303 @@
 {
-  "total_cases": 62,
+  "total_cases": 95,
   "failed_cases": [
-    "server/rocky/rocky_cpu_usage_procstat_check",
+    "server/esxi/esxi_datastore_path_check",
+    "server/esxi/esxi_status_agent_service_check",
+    "server/esxi/esxi_status_basic_check",
+    "server/esxi/esxi_status_hardware_health_check",
+    "server/esxi/esxi_status_vcenter_agent_check",
+    "server/esxi/esxi_status_vm_list_check",
+    "server/hpux/hpux_disk_filesystem_inode_bdf_check",
+    "server/hpux/hpux_disk_filesystem_usage_bdf_check",
+    "server/hpux/hpux_kernel_parameter_kctune_check",
+    "server/hpux/hpux_log_cluster_serviceguard_check",
+    "server/hpux/hpux_log_fan_dmesg_check",
+    "server/hpux/hpux_log_hba_dmesg_check",
+    "server/hpux/hpux_log_io_dmesg_check",
+    "server/hpux/hpux_log_memory_dmesg_check",
+    "server/hpux/hpux_log_nic_dmesg_check",
+    "server/hpux/hpux_log_system_dmesg_check",
+    "server/hpux/hpux_network_link_status_lanscan_check",
+    "server/hpux/hpux_network_nic_redundancy_hpapa_check",
+    "server/hpux/hpux_os_path_redundancy_scsimgr_check",
     "server/rocky/rocky_disk_filesystem_inode_df_check",
     "server/rocky/rocky_log_io_dmesg_check",
     "server/rocky/rocky_log_kernel_dmesg_check",
     "server/rocky/rocky_log_system_dmesg_check",
     "server/rocky/rocky_memory_swap_swapon_check",
-    "server/rocky/rocky_network_nic_redundancy_bonding_check"
+    "server/rocky/rocky_network_nic_redundancy_bonding_check",
+    "server/windows/windows_filesystem_usage_cim_check",
+    "server/windows/windows_log_kernel_event_check",
+    "server/windows/windows_log_system_event_check",
+    "server/windows/windows_memory_usage_cim_check",
+    "server/windows/windows_shared_volume_check"
   ],
   "cases": [
+    {
+      "case_name": "network/cisco_ios/cisco_ios_cpu_usage_check",
+      "result_file": "network/cisco_ios/cisco_ios_cpu_usage_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "network/cisco_ios/cisco_ios_enable_show_running_config_terminal_check",
+      "result_file": "network/cisco_ios/cisco_ios_enable_show_running_config_terminal_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
     {
       "case_name": "network/cisco_ios/cisco_ios_system_version_show_version_check",
       "result_file": "network/cisco_ios/cisco_ios_system_version_show_version_check/result.json",
       "failed_items": [],
       "is_success": true
+    },
+    {
+      "case_name": "server/esxi/esxi_datastore_path_check",
+      "result_file": "server/esxi/esxi_datastore_path_check/result.json",
+      "failed_items": [
+        "ESXI-DATASTORE-PATH-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/esxi/esxi_status_agent_service_check",
+      "result_file": "server/esxi/esxi_status_agent_service_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-AGENT-SERVICE-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/esxi/esxi_status_basic_check",
+      "result_file": "server/esxi/esxi_status_basic_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-API-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/esxi/esxi_status_hardware_health_check",
+      "result_file": "server/esxi/esxi_status_hardware_health_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-HARDWARE-HEALTH-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/esxi/esxi_status_vcenter_agent_check",
+      "result_file": "server/esxi/esxi_status_vcenter_agent_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-VCENTER-AGENT-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/esxi/esxi_status_vm_list_check",
+      "result_file": "server/esxi/esxi_status_vm_list_check/result.json",
+      "failed_items": [
+        "ESXI-STATUS-VM-LIST-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_cluster_daemon_cmviewcl_check",
+      "result_file": "server/hpux/hpux_cluster_daemon_cmviewcl_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_cluster_shared_volume_mount_check",
+      "result_file": "server/hpux/hpux_cluster_shared_volume_mount_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_cpu_core_ioscan_check",
+      "result_file": "server/hpux/hpux_cpu_core_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_cpu_usage_sar_check",
+      "result_file": "server/hpux/hpux_cpu_usage_sar_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_filesystem_inode_bdf_check",
+      "result_file": "server/hpux/hpux_disk_filesystem_inode_bdf_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-05"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_filesystem_usage_bdf_check",
+      "result_file": "server/hpux/hpux_disk_filesystem_usage_bdf_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-06"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_io_sar_check",
+      "result_file": "server/hpux/hpux_disk_io_sar_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_raid_vgdisplay_check",
+      "result_file": "server/hpux/hpux_disk_raid_vgdisplay_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_recognition_ioscan_check",
+      "result_file": "server/hpux/hpux_disk_recognition_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_disk_swap_swapinfo_check",
+      "result_file": "server/hpux/hpux_disk_swap_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_kernel_parameter_kctune_check",
+      "result_file": "server/hpux/hpux_kernel_parameter_kctune_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-11"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_cluster_serviceguard_check",
+      "result_file": "server/hpux/hpux_log_cluster_serviceguard_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-12"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_cpu_dmesg_check",
+      "result_file": "server/hpux/hpux_log_cpu_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_log_fan_dmesg_check",
+      "result_file": "server/hpux/hpux_log_fan_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-14"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_hba_dmesg_check",
+      "result_file": "server/hpux/hpux_log_hba_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-15"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_io_dmesg_check",
+      "result_file": "server/hpux/hpux_log_io_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-16"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_kernel_dmesg_check",
+      "result_file": "server/hpux/hpux_log_kernel_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_log_memory_dmesg_check",
+      "result_file": "server/hpux/hpux_log_memory_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-18"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_nic_dmesg_check",
+      "result_file": "server/hpux/hpux_log_nic_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-19"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_log_power_dmesg_check",
+      "result_file": "server/hpux/hpux_log_power_dmesg_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_log_system_dmesg_check",
+      "result_file": "server/hpux/hpux_log_system_dmesg_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-21"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_memory_recognition_machinfo_check",
+      "result_file": "server/hpux/hpux_memory_recognition_machinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_memory_swap_swapinfo_check",
+      "result_file": "server/hpux/hpux_memory_swap_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_memory_usage_swapinfo_check",
+      "result_file": "server/hpux/hpux_memory_usage_swapinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_network_link_status_lanscan_check",
+      "result_file": "server/hpux/hpux_network_link_status_lanscan_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-25"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_network_nic_redundancy_hpapa_check",
+      "result_file": "server/hpux/hpux_network_nic_redundancy_hpapa_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-26"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/hpux/hpux_network_ping_loss_check",
+      "result_file": "server/hpux/hpux_network_ping_loss_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_os_hba_connection_ioscan_check",
+      "result_file": "server/hpux/hpux_os_hba_connection_ioscan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "server/hpux/hpux_os_path_redundancy_scsimgr_check",
+      "result_file": "server/hpux/hpux_os_path_redundancy_scsimgr_check/result.json",
+      "failed_items": [
+        "HPUX-REPLAY-29"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/rocky/rocky_cluster_daemon_crm_mon_check",
@@ -37,10 +320,8 @@
     {
       "case_name": "server/rocky/rocky_cpu_usage_procstat_check",
       "result_file": "server/rocky/rocky_cpu_usage_procstat_check/result.json",
-      "failed_items": [
-        "U-REPLAY-CPU-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "server/rocky/rocky_disk_filesystem_inode_df_check",
@@ -211,12 +492,6 @@
       "is_success": true
     },
     {
-      "case_name": "server/windows/windows_connection_winrm_powershell_check",
-      "result_file": "server/windows/windows_connection_winrm_powershell_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
       "case_name": "server/windows/windows_cpu_core_cim_check",
       "result_file": "server/windows/windows_cpu_core_cim_check/result.json",
       "failed_items": [],
@@ -247,16 +522,12 @@
       "is_success": true
     },
     {
-      "case_name": "server/windows/windows_disk_swap_pagefile_check",
-      "result_file": "server/windows/windows_disk_swap_pagefile_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
       "case_name": "server/windows/windows_filesystem_usage_cim_check",
       "result_file": "server/windows/windows_filesystem_usage_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-DISK-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_hba_connection_manual_check",
@@ -273,12 +544,6 @@
     {
       "case_name": "server/windows/windows_kernel_parameter_nettcp_check",
       "result_file": "server/windows/windows_kernel_parameter_nettcp_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_led_manual_check",
-      "result_file": "server/windows/windows_led_manual_check/result.json",
       "failed_items": [],
       "is_success": true
     },
@@ -315,8 +580,10 @@
     {
       "case_name": "server/windows/windows_log_kernel_event_check",
       "result_file": "server/windows/windows_log_kernel_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-KERNEL-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_memory_event_check",
@@ -339,8 +606,10 @@
     {
       "case_name": "server/windows/windows_log_system_event_check",
       "result_file": "server/windows/windows_log_system_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_memory_recognition_cim_check",
@@ -351,8 +620,10 @@
     {
       "case_name": "server/windows/windows_memory_usage_cim_check",
       "result_file": "server/windows/windows_memory_usage_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-MEM-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_mpio_path_check",
@@ -379,12 +650,6 @@
       "is_success": true
     },
     {
-      "case_name": "server/windows/windows_peripheral_manual_check",
-      "result_file": "server/windows/windows_peripheral_manual_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
       "case_name": "server/windows/windows_ping_loss_check",
       "result_file": "server/windows/windows_ping_loss_check/result.json",
       "failed_items": [],
@@ -393,8 +658,10 @@
     {
       "case_name": "server/windows/windows_shared_volume_check",
       "result_file": "server/windows/windows_shared_volume_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-CLUSTER-MOUNT-01"
+      ],
+      "is_success": false
     }
   ]
 }

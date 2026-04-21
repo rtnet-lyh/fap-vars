@@ -1,7 +1,19 @@
 {
-  "total_cases": 1,
+  "total_cases": 3,
   "failed_cases": [],
   "cases": [
+    {
+      "case_name": "cisco_ios_cpu_usage_check",
+      "result_file": "cisco_ios_cpu_usage_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "cisco_ios_enable_show_running_config_terminal_check",
+      "result_file": "cisco_ios_enable_show_running_config_terminal_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
     {
       "case_name": "cisco_ios_system_version_show_version_check",
       "result_file": "cisco_ios_system_version_show_version_check/result.json",

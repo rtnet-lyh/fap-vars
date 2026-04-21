@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "TEST_CISCO_C3650>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "enable"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Password:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "TEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "terminal length 0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "terminal length 0\r\nTEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show version"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "show version\r\nCisco IOS Software, 2800 Software (C2800NM-ADVIPSERVICESK9-M), Version 12.4(24)T1, RELEASE SOFTWARE (fc3)\r\nTEST_CISCO_C3650 uptime is 1 year, 21 weeks, 6 days, 3 hours, 37 minutes\r\nSystem image file is \"flash:c2800nm-advipservicesk9-mz.124-24.T1.bin\"\r\nCisco 2821 (revision 53.51) with 196608K/65536K bytes of memory.\r\nConfiguration register is 0x7922\r\nTEST_CISCO_C3650#"
+  }
+]
