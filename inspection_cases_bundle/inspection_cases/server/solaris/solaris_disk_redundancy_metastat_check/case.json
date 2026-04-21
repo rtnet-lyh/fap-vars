@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 408,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 48,
+  "host_id": 480,
+  "job_id": 4800,
+  "item": {
+    "inspection_code": "SOL-REPLAY-DISK-03",
+    "item_id": 94008,
+    "application_id": 408,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Disk 이중화 정상 여부",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris metastat 명령으로 mirror, submirror, status 기준의 디스크 이중화 상태를 점검합니다.",
+    "inspection_command": "metastat",
+    "is_service_affect": "N",
+    "action_content": "mirror 상태, submirror 수, submirror 상태, status 문구가 기대와 다르면 디스크 이중화와 복제 상태를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "required_state",
+        "value1": "Okay"
+      },
+      {
+        "name": "min_submirror_count",
+        "value1": "2"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

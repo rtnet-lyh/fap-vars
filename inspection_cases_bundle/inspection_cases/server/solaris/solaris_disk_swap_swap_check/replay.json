@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "swap -l",
+    "rc": 0,
+    "stdout_file": "outputs/swap_l.stdout",
+    "stderr": ""
+  }
+]

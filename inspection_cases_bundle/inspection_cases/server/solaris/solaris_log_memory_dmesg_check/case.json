@@ -1,0 +1,49 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 416,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 56,
+  "host_id": 560,
+  "job_id": 5600,
+  "item": {
+    "inspection_code": "SOL-REPLAY-LOG-04",
+    "item_id": 94016,
+    "application_id": 416,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "메모리 오류 에러 로그 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris dmesg 메모리 ECC 오류 로그에서 module, bank, slot 이상 징후를 점검합니다.",
+    "inspection_command": "dmesg | grep -i 'ecc error|singlebit|multibit|uncorrectable'",
+    "is_service_affect": "N",
+    "action_content": "메모리 ECC, singlebit, multibit, uncorrectable 로그 개수와 첫 번째 메모리 이상 로그가 기대와 다른지 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

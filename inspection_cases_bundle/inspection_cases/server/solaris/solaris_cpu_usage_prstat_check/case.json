@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 401,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 41,
+  "host_id": 410,
+  "job_id": 4100,
+  "item": {
+    "inspection_code": "SOL-REPLAY-CPU-01",
+    "item_id": 94001,
+    "application_id": 401,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "CPU 사용률",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris prstat, mpstat 명령으로 CPU 사용률을 점검합니다.",
+    "inspection_command": "prstat 1",
+    "is_service_affect": "N",
+    "action_content": "CPU 사용률이 기준치를 초과하면 과다 사용 프로세스와 시스템 부하 원인을 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "max_cpu_usage_percent",
+        "value1": "70"
+      },
+      {
+        "name": "max_process_cpu_percent",
+        "value1": "5"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

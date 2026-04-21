@@ -1,0 +1,3 @@
+Filesystem          iused  ifree %iused Mounted on
+/dev/dsk/c0t0d0s0   10234  89765   10%  /
+/dev/dsk/c0t0d0s1    5678  12345   30%  /var

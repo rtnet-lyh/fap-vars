@@ -1,0 +1,3 @@
+CPU minf mjf xcal intr ithr  csw icsw migr smtx  srw syscl  usr sys  wt idl
+  0   20   0    1  150  120  220   15    3    0    0   310   18   6   4  72
+  1   18   0    1  140  110  210   14    4    0    0   300   16   5   3  76

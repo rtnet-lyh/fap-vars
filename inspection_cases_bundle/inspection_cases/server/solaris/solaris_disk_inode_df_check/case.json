@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 411,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 51,
+  "host_id": 510,
+  "job_id": 5100,
+  "item": {
+    "inspection_code": "SOL-REPLAY-DISK-06",
+    "item_id": 94011,
+    "application_id": 411,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "I-Node 사용률 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris df -o i 명령으로 inode 사용률, 잔여 inode, mount point 영향을 점검합니다.",
+    "inspection_command": "df -o i",
+    "is_service_affect": "N",
+    "action_content": "inode 사용률, 잔여 inode 비율, iused, ifree, mount point가 기준이나 기대와 다른 파일시스템이 있는지 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "max_inode_used_percent",
+        "value1": "80"
+      },
+      {
+        "name": "min_inode_free_percent",
+        "value1": "20"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

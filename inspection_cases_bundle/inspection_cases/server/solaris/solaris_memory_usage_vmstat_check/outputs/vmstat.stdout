@@ -1,0 +1,3 @@
+kthr      memory            page            disk          faults      cpu
+r b   swap  free   re mf pi po fr sr  in  sy  cs us sy id
+1 0   1024  2048   0  0  0  0  0  0   10  20  30  5  3 92

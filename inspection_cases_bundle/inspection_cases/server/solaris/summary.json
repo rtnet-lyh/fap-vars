@@ -1,0 +1,185 @@
+{
+  "total_cases": 25,
+  "failed_cases": [
+    "solaris_cluster_daemon_scstat_check",
+    "solaris_disk_inode_df_check",
+    "solaris_disk_io_iostat_check",
+    "solaris_kernal_parameter_sysdef_check",
+    "solaris_log_cluster_clog_check",
+    "solaris_log_cpu_dmesg_check",
+    "solaris_log_fan_dmesg_check",
+    "solaris_log_hba_dmesg_check",
+    "solaris_log_io_dmesg_check",
+    "solaris_log_kernel_dmesg_check",
+    "solaris_log_memory_dmesg_check",
+    "solaris_log_nic_dmesg_check",
+    "solaris_log_power_dmesg_check",
+    "solaris_log_system_dmesg_check"
+  ],
+  "cases": [
+    {
+      "case_name": "solaris_cluster_daemon_scstat_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_cluster_daemon_scstat_check/result.json'"
+    },
+    {
+      "case_name": "solaris_cluster_shared_volume_mount_check",
+      "result_file": "solaris_cluster_shared_volume_mount_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_cpu_core_psrinfo_check",
+      "result_file": "solaris_cpu_core_psrinfo_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_cpu_usage_prstat_check",
+      "result_file": "solaris_cpu_usage_prstat_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_disk_filesystem_usage_df_check",
+      "result_file": "solaris_disk_filesystem_usage_df_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_disk_inode_df_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_disk_inode_df_check/result.json'"
+    },
+    {
+      "case_name": "solaris_disk_io_iostat_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_disk_io_iostat_check/result.json'"
+    },
+    {
+      "case_name": "solaris_disk_recognition_format_check",
+      "result_file": "solaris_disk_recognition_format_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_disk_redundancy_metastat_check",
+      "result_file": "solaris_disk_redundancy_metastat_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_disk_swap_swap_check",
+      "result_file": "solaris_disk_swap_swap_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_kernal_parameter_sysdef_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_kernal_parameter_sysdef_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_cluster_clog_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_cluster_clog_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_cpu_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_cpu_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_fan_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_fan_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_hba_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_hba_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_io_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_io_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_kernel_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_kernel_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_memory_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_memory_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_nic_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_nic_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_power_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_power_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_log_system_dmesg_check",
+      "result_file": "",
+      "failed_items": [],
+      "is_success": false,
+      "error": "[Errno 13] Permission denied: '/home/fap/projects/fap-vars/inspection_cases_bundle/inspection_cases/server/solaris/solaris_log_system_dmesg_check/result.json'"
+    },
+    {
+      "case_name": "solaris_memory_paging_space_swap_check",
+      "result_file": "solaris_memory_paging_space_swap_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_memory_recognition_prtdiag_check",
+      "result_file": "solaris_memory_recognition_prtdiag_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_memory_usage_vmstat_check",
+      "result_file": "solaris_memory_usage_vmstat_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "solaris_network_link_status_dladm_check",
+      "result_file": "solaris_network_link_status_dladm_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

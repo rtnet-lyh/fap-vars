@@ -1,0 +1,4 @@
+LINK     MEDIA      STATE    SPEED   DUPLEX
+e1000g0  1000baseT  up       1000    full
+e1000g1  1000baseT  up       1000    full
+e1000g2  1000baseT  up       1000    full

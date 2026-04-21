@@ -1,0 +1,53 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 422,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 62,
+  "host_id": 620,
+  "job_id": 6200,
+  "item": {
+    "inspection_code": "SOL-REPLAY-CLUSTER-01",
+    "item_id": 94022,
+    "application_id": 422,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "서버 클러스터 노드 상태변경 발생 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris clog에서 클러스터 노드 상태변경과 통신 오류 로그를 점검합니다.",
+    "inspection_command": "clog | grep -i 'status change|offline|online|cluster error'",
+    "is_service_affect": "N",
+    "action_content": "노드 offline 또는 통신 실패 로그가 확인되면 클러스터 상태와 노드 간 연결을 함께 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "bad_log_keywords",
+        "value1": "offline,cluster error,communication failure,failed,failure"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found"
+      }
+    ]
+  }
+}

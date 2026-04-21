@@ -1,0 +1,49 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 421,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "SOL-REPLAY-LOG-09",
+    "item_id": 94021,
+    "application_id": 421,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "입출력 작동 이상 유무 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris dmesg에서 I/O 오류, timeout, transport failed, media error 로그를 점검합니다.",
+    "inspection_command": "dmesg | grep -i 'timeout|i/o error|transport failed|media error'",
+    "is_service_affect": "N",
+    "action_content": "I/O 오류 로그가 확인되면 스토리지 장치 상태와 연결 경로를 함께 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found"
+      }
+    ]
+  }
+}

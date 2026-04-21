@@ -1,0 +1,22 @@
+*Tunable Parameters*
+shmmax: 4294967295
+shminfo_shmmin: 1
+seminfo_semmsl: 256
+seminfo_semmns: 32000
+seminfo_semopm: 32
+
+*File System Parameters*
+maxfiles: 8192
+maxuproc: 512
+
+*Memory Management Parameters*
+maxpgio: 8192
+minfree: 200
+desfree: 400
+lotsfree: 1024
+
+*IPC Parameters*
+msginfo_msgmax: 8192
+msginfo_msgmnb: 16384
+msginfo_msgtql: 40
+msginfo_msgseg: 2048

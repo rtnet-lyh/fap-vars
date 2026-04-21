@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'ecc error|uncorrectable|offline'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

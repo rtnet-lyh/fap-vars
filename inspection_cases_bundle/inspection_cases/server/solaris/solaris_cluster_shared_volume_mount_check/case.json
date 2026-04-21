@@ -1,0 +1,61 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 424,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 64,
+  "host_id": 640,
+  "job_id": 6400,
+  "item": {
+    "inspection_code": "SOL-REPLAY-CLUSTER-03",
+    "item_id": 94024,
+    "application_id": 424,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "공유 볼륨 상태 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris mount 출력에서 공유 볼륨의 마운트 정상 유무와 Read/Write 상태를 점검합니다.",
+    "inspection_command": "mount | grep <mount_point>",
+    "is_service_affect": "N",
+    "action_content": "공유 볼륨이 지정된 mount point에 정상 마운트되었는지, 읽기/쓰기 상태가 rw인지, 파일시스템 유형이 기준과 일치하는지 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "mount_point",
+        "value1": "/mnt/shared"
+      },
+      {
+        "name": "expected_access_mode",
+        "value1": "rw"
+      },
+      {
+        "name": "expected_filesystem_types",
+        "value1": "ufs"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found,no such file"
+      }
+    ]
+  }
+}

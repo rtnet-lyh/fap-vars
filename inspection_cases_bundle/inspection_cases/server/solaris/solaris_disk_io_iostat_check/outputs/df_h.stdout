@@ -1,0 +1,3 @@
+Filesystem      Size Used Avail Use% Mounted on
+/dev/dsk/s1      50G  25G   23G  53% /
+/dev/dsk/s2     100G  60G   35G  66% /var

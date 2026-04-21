@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "scstat",
+    "rc": 0,
+    "stdout": "=== Cluster Nodes ===\nnode1  Online\nnode2  Online\n\n=== Cluster Transport Paths ===\nnode1 -> node2  Path online\nnode2 -> node1  Path online\n\n=== Resource Groups ===\nresource_grp1  node1  Online\nresource_grp2  node2  Online\n\n=== Network Interfaces ===\nnet0  node1  Online\nnet1  node2  Online",
+    "stderr": ""
+  }
+]

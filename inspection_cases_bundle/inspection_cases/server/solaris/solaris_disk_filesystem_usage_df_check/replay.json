@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "df -h",
+    "rc": 0,
+    "stdout_file": "outputs/df_h.stdout",
+    "stderr": ""
+  }
+]

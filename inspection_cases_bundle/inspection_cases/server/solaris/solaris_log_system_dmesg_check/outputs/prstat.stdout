@@ -1,0 +1,5 @@
+   PID USERNAME  SIZE   RSS STATE  PRI NICE      TIME  CPU PROCESS/NLWP
+ 18452 oracle   1536M 1024M sleep   59    0   0:01:12  4.8 dbwriter/12
+ 18460 oracle    640M  512M sleep   59    0   0:00:54  2.1 lgwr/4
+  2331 root      120M   64M sleep   99    0   0:00:08  1.2 sshd/1
+Total: 275 processes, 512 lwps, load averages: 0.42, 0.38, 0.31

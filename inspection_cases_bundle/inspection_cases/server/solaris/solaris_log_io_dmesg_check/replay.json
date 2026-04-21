@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'timeout|i/o error|transport failed|media error'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

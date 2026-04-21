@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'fan|fail'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

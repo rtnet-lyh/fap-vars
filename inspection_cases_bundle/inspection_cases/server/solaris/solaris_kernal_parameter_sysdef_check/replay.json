@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "sysdef",
+    "rc": 0,
+    "stdout_file": "outputs/sysdef.stdout",
+    "stderr": ""
+  }
+]

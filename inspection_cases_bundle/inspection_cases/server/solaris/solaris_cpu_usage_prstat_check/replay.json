@@ -1,0 +1,16 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "prstat 1 1",
+    "rc": 0,
+    "stdout_file": "outputs/prstat.stdout",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "mpstat 1 1",
+    "rc": 0,
+    "stdout_file": "outputs/mpstat.stdout",
+    "stderr": ""
+  }
+]

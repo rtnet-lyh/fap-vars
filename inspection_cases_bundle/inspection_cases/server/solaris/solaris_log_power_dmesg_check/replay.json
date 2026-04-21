@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'psu|power supply|failed'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

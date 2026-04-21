@@ -1,0 +1,53 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 409,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 49,
+  "host_id": 490,
+  "job_id": 4900,
+  "item": {
+    "inspection_code": "SOL-REPLAY-DISK-04",
+    "item_id": 94009,
+    "application_id": 409,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Disk 인식 여부 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris format 명령으로 디스크 목록 표시, 장치 인식 상태, 비정상 문구 여부를 점검합니다.",
+    "inspection_command": "format",
+    "is_service_affect": "N",
+    "action_content": "표시된 디스크 수, 장치명, 디스크 선택 프롬프트, Unknown 또는 Drive not available 같은 비정상 문구를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "expected_disk_count",
+        "value1": "1"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "Unknown,Drive not available,장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

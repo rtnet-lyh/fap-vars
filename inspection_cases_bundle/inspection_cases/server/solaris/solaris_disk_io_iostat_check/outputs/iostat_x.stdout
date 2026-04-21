@@ -1,0 +1,5 @@
+extended device statistics
+device   r/s   w/s   kr/s   kw/s   wait actv svc_t  %w  %b
+sd0     15.0  10.0  150.0  100.0   0.0  1.0  10.5   5  50
+sd1      5.0   3.0   50.0   30.0   0.0  0.5   8.0   0  25
+sd2      0.5   0.2    5.0    2.0   0.0  0.1   7.0   0  10

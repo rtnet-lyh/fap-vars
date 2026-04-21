@@ -1,0 +1,53 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 418,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 58,
+  "host_id": 580,
+  "job_id": 5800,
+  "item": {
+    "inspection_code": "SOL-REPLAY-LOG-06",
+    "item_id": 94018,
+    "application_id": 418,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "전원공급장치 오류 및 이상 유무 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris dmesg 전원공급장치 로그에서 failed, not detected, operational 상태를 점검합니다.",
+    "inspection_command": "dmesg | grep -i 'psu|power supply|failed'",
+    "is_service_affect": "N",
+    "action_content": "PSU 비정상 로그 개수, 첫 번째 비정상 로그, 정상 operational 로그 유무가 기대와 다른지 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "bad_log_keywords",
+        "value1": "failed,not detected,error,fault,failure"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

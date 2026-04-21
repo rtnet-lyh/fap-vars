@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "printf '\\n' | format",
+    "rc": 0,
+    "stdout_file": "outputs/format.stdout",
+    "stderr": ""
+  }
+]

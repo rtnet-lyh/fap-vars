@@ -1,0 +1,13 @@
+d0: Mirror
+    Submirror 0: d10
+      State: Okay
+    Submirror 1: d11
+      State: Okay
+    State: Okay
+    Status: The volume is functioning properly.
+
+d10: Submirror of d0
+    State: Okay
+
+d11: Submirror of d0
+    State: Okay

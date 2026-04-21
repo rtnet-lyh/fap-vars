@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 406,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 46,
+  "host_id": 460,
+  "job_id": 4600,
+  "item": {
+    "inspection_code": "SOL-REPLAY-DISK-01",
+    "item_id": 94006,
+    "application_id": 406,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "파일시스템 사용량",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris df -h 명령으로 파일시스템 사용률, 여유 공간, mount point 영향을 점검합니다.",
+    "inspection_command": "df -h",
+    "is_service_affect": "N",
+    "action_content": "사용률, 여유율, 파일시스템 크기와 mount point가 기대와 다르면 디스크 정리 또는 증설 필요 여부를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "used_max_percent",
+        "value1": "80"
+      },
+      {
+        "name": "avail_min_percent",
+        "value1": "20"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dladm show-phys",
+    "rc": 0,
+    "stdout_file": "outputs/dladm_show_phys.stdout",
+    "stderr": ""
+  }
+]

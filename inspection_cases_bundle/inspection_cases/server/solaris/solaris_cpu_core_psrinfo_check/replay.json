@@ -1,0 +1,16 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "psrinfo -v",
+    "rc": 0,
+    "stdout_file": "outputs/psrinfo_v.stdout",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "psrinfo -pv",
+    "rc": 0,
+    "stdout_file": "outputs/psrinfo_pv.stdout",
+    "stderr": ""
+  }
+]

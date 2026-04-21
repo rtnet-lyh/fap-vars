@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'hba|loop|port|offline|online'",
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  }
+]

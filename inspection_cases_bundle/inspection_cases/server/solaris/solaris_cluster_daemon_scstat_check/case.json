@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 423,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 63,
+  "host_id": 630,
+  "job_id": 6300,
+  "item": {
+    "inspection_code": "SOL-REPLAY-CLUSTER-02",
+    "item_id": 94023,
+    "application_id": 423,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Cluster 정상 유무 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris scstat으로 Cluster Nodes, Transport Paths, Resource Groups, Network Interfaces 상태를 점검합니다.",
+    "inspection_command": "scstat",
+    "is_service_affect": "N",
+    "action_content": "Offline, Maintenance, Path down 상태가 확인되면 즉시 클러스터 구성 상태와 노드 간 연결을 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "bad_status_keywords",
+        "value1": "offline,maintenance,path down"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found"
+      },
+      {
+        "name": "required_sections",
+        "value1": "Cluster Nodes,Cluster Transport Paths,Resource Groups,Network Interfaces"
+      }
+    ]
+  }
+}

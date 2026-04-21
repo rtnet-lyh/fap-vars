@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "iostat -x",
+    "rc": 0,
+    "stdout_file": "outputs/iostat_x.stdout",
+    "stderr": ""
+  }
+]

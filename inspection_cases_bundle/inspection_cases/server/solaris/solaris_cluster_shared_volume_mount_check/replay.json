@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "mount | grep -- '/mnt/shared'",
+    "rc": 0,
+    "stdout_file": "outputs/mount.stdout",
+    "stderr": ""
+  }
+]
