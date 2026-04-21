@@ -1,0 +1,65 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 407,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 47,
+  "host_id": 470,
+  "job_id": 4700,
+  "item": {
+    "inspection_code": "SOL-REPLAY-NET-02",
+    "item_id": 94702,
+    "application_id": 407,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "NIC 이중화(IPMP) 및 Daemon 상태 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris ipmpstat 명령으로 NIC 이중화(IPMP) 상태와 인터페이스 활성 상태를 점검합니다.",
+    "inspection_command": "ipmpstat -i",
+    "is_service_affect": "N",
+    "action_content": "같은 IPMP 그룹 내 인터페이스가 2개 미만이거나 ACTIVE/LINK/STATE 값이 비정상이면 NIC, 케이블, IPMP 그룹 설정과 daemon 상태를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "min_group_interface_count",
+        "value1": "2"
+      },
+      {
+        "name": "expected_active_value",
+        "value1": "yes"
+      },
+      {
+        "name": "expected_link_value",
+        "value1": "up"
+      },
+      {
+        "name": "expected_state_value",
+        "value1": "ok"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

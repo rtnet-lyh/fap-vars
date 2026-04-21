@@ -1,0 +1,14 @@
+# fcinfo hba-port
+HBA Port WWN: 10000000c9612345
+OS Device Name: /dev/cfg/c2
+Manufacturer: Emulex
+Model: LPe12062
+Firmware Version: 2.02a16
+FCode/BIOS Version: 3.33a4
+Serial Number: MY12345
+Driver Name: lpfc
+Driver Version: 9.2.0
+State: online
+Supported Speeds: 2Gb 4Gb 8Gb
+Current Speed: 8Gb
+Node WWN: 20000000c9612345

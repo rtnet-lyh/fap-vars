@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 407,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 48,
+  "host_id": 480,
+  "job_id": 4800,
+  "item": {
+    "inspection_code": "SOL-REPLAY-OS-02",
+    "item_id": 94802,
+    "application_id": 407,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "HBA 연결 정상 유무 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris fcinfo 명령으로 HBA 포트 연결 상태와 현재 링크 속도를 점검합니다.",
+    "inspection_command": "fcinfo hba-port",
+    "is_service_affect": "N",
+    "action_content": "HBA 포트의 State가 offline이거나 Current Speed가 기준보다 낮으면 포트 연결 상태, 광케이블, 스위치 및 설정을 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "expected_state_value",
+        "value1": "online"
+      },
+      {
+        "name": "min_current_speed_gbps",
+        "value1": "8"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

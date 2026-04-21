@@ -1,0 +1,13 @@
+Logical Unit: 600144F0A08A4DB300005E1000000456
+mpath-support: libmpscsi_vhci.so
+Vendor: HITACHI
+Product: OPEN-V
+Revision: 6000
+Stms State: ENABLED
+Available Spare: NO
+Active Spare: NO
+Current Path: /dev/dsk/c0t50060E801049C1F0d0s2
+Path Status: CONNECTED
+Path /dev/dsk/c0t50060E801049C1F1d0s2: CONNECTED
+Path /dev/dsk/c0t50060E801049C1F2d0s2: DISABLED
+Path /dev/dsk/c0t50060E801049C1F3d0s2: CONNECTED

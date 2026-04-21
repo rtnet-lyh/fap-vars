@@ -1,0 +1,3 @@
+INTERFACE ACTIVE GROUP FLAGS  LINK STATE
+net0      yes    ipmp0 ------ up   ok
+net1      yes    ipmp0 ------ up   ok

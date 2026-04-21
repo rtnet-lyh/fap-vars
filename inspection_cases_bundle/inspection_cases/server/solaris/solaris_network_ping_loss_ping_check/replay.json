@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ping 8.8.8.8",
+    "rc": 0,
+    "stdout_file": "outputs/ping.stdout",
+    "stderr": ""
+  }
+]

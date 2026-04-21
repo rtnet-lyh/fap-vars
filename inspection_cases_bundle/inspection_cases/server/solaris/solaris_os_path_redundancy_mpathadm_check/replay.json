@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "mpathadm show lu",
+    "rc": 0,
+    "stdout_file": "outputs/mpathadm.stdout",
+    "stderr": ""
+  }
+]

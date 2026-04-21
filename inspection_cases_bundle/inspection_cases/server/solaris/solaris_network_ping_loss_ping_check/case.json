@@ -1,0 +1,57 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 407,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 48,
+  "host_id": 480,
+  "job_id": 4800,
+  "item": {
+    "inspection_code": "SOL-REPLAY-NET-03",
+    "item_id": 94703,
+    "application_id": 407,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Network 통신 상태 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris ping 명령으로 외부 대상과의 통신 상태, 패킷 손실률, RTT를 점검합니다.",
+    "inspection_command": "ping 8.8.8.8",
+    "is_service_affect": "N",
+    "action_content": "패킷 손실이 발생하거나 평균 RTT가 기준을 초과하면 네트워크 경로, 방화벽, 회선 지연 여부를 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "max_packet_loss_percent",
+        "value1": "0"
+      },
+      {
+        "name": "max_avg_rtt_ms",
+        "value1": "100"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

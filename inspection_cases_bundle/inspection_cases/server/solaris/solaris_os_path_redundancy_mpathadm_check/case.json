@@ -1,0 +1,65 @@
+{
+  "host": "127.0.0.1",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 407,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 81,
+  "host_id": 810,
+  "job_id": 8100,
+  "item": {
+    "inspection_code": "SOL-REPLAY-OS-01",
+    "item_id": 98101,
+    "application_id": 407,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Solaris",
+    "application_family_name": "UNIX",
+    "inspection_item_name": "Multipath 이중화 정상 유무 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "서버(OS)",
+    "description": "Solaris mpathadm 명령으로 Multipath 이중화 경로 상태와 STMS 활성 여부를 점검합니다.",
+    "inspection_command": "mpathadm show lu",
+    "is_service_affect": "N",
+    "action_content": "STMS가 ENABLED가 아니거나 Path Status가 CONNECTED가 아니거나 DISABLED 경로가 확인되면 스토리지 경로, HBA, 케이블, 멀티패스 설정을 점검합니다.",
+    "threshold_list": [
+      {
+        "name": "expected_stms_state",
+        "value1": "ENABLED"
+      },
+      {
+        "name": "expected_path_status",
+        "value1": "CONNECTED"
+      },
+      {
+        "name": "expected_path_state",
+        "value1": "CONNECTED"
+      },
+      {
+        "name": "disallowed_path_states",
+        "value1": "DISABLED"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

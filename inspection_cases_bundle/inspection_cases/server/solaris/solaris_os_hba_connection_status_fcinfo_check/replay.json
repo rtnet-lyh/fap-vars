@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "fcinfo hba-port",
+    "rc": 0,
+    "stdout_file": "outputs/fcinfo.stdout",
+    "stderr": ""
+  }
+]
