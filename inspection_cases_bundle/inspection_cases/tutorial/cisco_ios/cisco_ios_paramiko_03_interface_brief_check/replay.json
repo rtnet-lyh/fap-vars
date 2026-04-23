@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "enable"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Password:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "terminal length 0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "terminal length 0\r\nRouter#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show ip interface brief"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "show ip interface brief\r\nInterface              IP-Address      OK? Method Status                Protocol\r\nGigabitEthernet0/0     192.168.1.55    YES manual up                    up\r\nGigabitEthernet0/1     unassigned      YES unset  administratively down down\r\nVlan1                  192.168.10.1    YES manual up                    up\r\nRouter#"
+  }
+]

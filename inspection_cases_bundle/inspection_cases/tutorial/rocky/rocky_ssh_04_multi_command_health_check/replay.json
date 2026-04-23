@@ -1,0 +1,23 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "nproc",
+    "rc": 0,
+    "stdout": "4\n",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "free -m",
+    "rc": 0,
+    "stdout": "               total        used        free      shared  buff/cache   available\nMem:            7823        1450        4320          80        2052        6010\nSwap:           2047           0        2047\n",
+    "stderr": ""
+  },
+  {
+    "matcher_type": "exact",
+    "matcher_value": "uptime",
+    "rc": 0,
+    "stdout": " 10:14:05 up 12 days,  1:23,  2 users,  load average: 0.03, 0.05, 0.01\n",
+    "stderr": ""
+  }
+]

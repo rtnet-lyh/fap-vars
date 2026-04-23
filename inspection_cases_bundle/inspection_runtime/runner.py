@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import codecs
+import io
 import json
 import os
 import subprocess
@@ -16,21 +17,6 @@ import time
 import re
 import traceback
 from functools import lru_cache
-
-try:
-    from .terminal import (
-        DEFAULT_EXPECT_TIMEOUT_SEC,
-        DEFAULT_OPEN_TIMEOUT_SEC,
-        SubprocessSshTerminalTransport,
-        TerminalSession,
-    )
-except ImportError:
-    from terminal import (
-        DEFAULT_EXPECT_TIMEOUT_SEC,
-        DEFAULT_OPEN_TIMEOUT_SEC,
-        SubprocessSshTerminalTransport,
-        TerminalSession,
-    )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ITEMS_DIR = os.path.join(BASE_DIR, 'items')
@@ -465,6 +451,17 @@ def select_connection_credential(credentials_map, method, item_payload):
             (['WINRM'], ['WINDOWS']),
             (['WINRM'], None),
         ]
+    elif method == 'paramiko':
+        strategies = [
+            (['SSH'], ['LINUX']),
+            (['SSH'], ['UNIX']),
+            (['NETWORK_DEVICE'], ['LINUX']),
+            (['NETWORK_DEVICE'], ['UNIX']),
+            (['NETWORK_DEVICE'], ['NETWORK']),
+            (['SSH'], ['NETWORK']),
+            (['NETWORK_DEVICE'], None),
+            (['SSH'], None),
+        ]
     elif is_network_item(inspection_code):
         strategies = [
             (['NETWORK_DEVICE'], ['NETWORK']),
@@ -621,35 +618,122 @@ def run_ssh(cmd, host, port, user, password, ssh_options, timeout_sec=None):
     return proc.returncode, stdout, stderr
 
 
-def open_ssh_terminal(
-    host,
-    port,
-    user,
-    password,
-    ssh_options,
-    history_callback=None,
-    pager_patterns=None,
-    pager_response=' ',
-    preferred_encodings=None,
-    open_timeout_sec=DEFAULT_OPEN_TIMEOUT_SEC,
-    default_timeout_sec=DEFAULT_EXPECT_TIMEOUT_SEC,
-):
-    transport = SubprocessSshTerminalTransport.open(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        ssh_options=ssh_options,
-        open_timeout_sec=open_timeout_sec,
-        preferred_encodings=preferred_encodings,
-    )
-    return TerminalSession(
-        transport=transport,
-        history_callback=history_callback,
-        pager_patterns=pager_patterns,
-        pager_response=pager_response,
-        default_timeout_sec=default_timeout_sec,
-    )
+def get_check_attr(mod, name, default=None):
+    value = getattr(mod, name, None)
+    if value is None and hasattr(mod, 'CHECK_CLASS'):
+        value = getattr(mod.CHECK_CLASS, name, None)
+    return default if value is None else value
+
+
+def resolve_paramiko_options(mod):
+    return {
+        'auth_method': get_check_attr(mod, 'PARAMIKO_AUTH_METHOD', 'auto'),
+        'key_filename': get_check_attr(mod, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
+        'private_key': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY', None),
+        'private_key_passphrase': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
+        'allow_agent': get_check_attr(mod, 'PARAMIKO_ALLOW_AGENT', False),
+        'look_for_keys': get_check_attr(mod, 'PARAMIKO_LOOK_FOR_KEYS', False),
+        'timeout_sec': get_check_attr(mod, 'PARAMIKO_TIMEOUT_SEC', 10),
+        'banner_timeout_sec': get_check_attr(mod, 'PARAMIKO_BANNER_TIMEOUT_SEC', 10),
+        'auth_timeout_sec': get_check_attr(mod, 'PARAMIKO_AUTH_TIMEOUT_SEC', 10),
+    }
+
+
+def load_paramiko_private_key(private_key, passphrase, paramiko_module):
+    key_stream = io.StringIO(str(private_key))
+    key_classes = [
+        paramiko_module.RSAKey,
+        paramiko_module.ECDSAKey,
+        paramiko_module.Ed25519Key,
+    ]
+    dss_key = getattr(paramiko_module, 'DSSKey', None)
+    if dss_key:
+        key_classes.append(dss_key)
+
+    last_error = None
+    for key_cls in key_classes:
+        key_stream.seek(0)
+        try:
+            return key_cls.from_private_key(key_stream, password=passphrase or None)
+        except Exception as exc:
+            last_error = exc
+    if last_error:
+        raise last_error
+    raise ValueError('unsupported private key')
+
+
+def build_paramiko_connect_kwargs(host, port, user, password, options, auth_attempt, paramiko_module):
+    kwargs = {
+        'hostname': host,
+        'port': int(port or 22),
+        'username': user or None,
+        'timeout': float(options.get('timeout_sec', 10)),
+        'banner_timeout': float(options.get('banner_timeout_sec', 10)),
+        'auth_timeout': float(options.get('auth_timeout_sec', 10)),
+        'allow_agent': bool(options.get('allow_agent', False)),
+        'look_for_keys': bool(options.get('look_for_keys', False)),
+    }
+    if auth_attempt == 'password':
+        kwargs['password'] = password or None
+        kwargs['allow_agent'] = False
+        kwargs['look_for_keys'] = False
+        return kwargs
+
+    passphrase = options.get('private_key_passphrase')
+    private_key = options.get('private_key')
+    if private_key:
+        kwargs['pkey'] = load_paramiko_private_key(private_key, passphrase, paramiko_module)
+    else:
+        kwargs['key_filename'] = os.path.expanduser(str(options.get('key_filename') or '~/.ssh/id_rsa.pub'))
+    if passphrase:
+        kwargs['passphrase'] = passphrase
+    return kwargs
+
+
+def run_paramiko_precheck(host, port, user, password, options, client_factory=None):
+    import paramiko
+
+    auth_method = str((options or {}).get('auth_method') or 'auto').strip().lower()
+    if auth_method not in ('auto', 'key', 'password'):
+        return 255, '', f'PARAMIKO_CONNECTION_ERROR: unsupported auth_method: {auth_method}'
+
+    attempts = []
+    if auth_method in ('auto', 'key'):
+        attempts.append('key')
+    if auth_method in ('auto', 'password'):
+        attempts.append('password')
+
+    last_error = None
+    for attempt in attempts:
+        client = client_factory() if client_factory else paramiko.SSHClient()
+        try:
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(**build_paramiko_connect_kwargs(
+                host,
+                port,
+                user,
+                password,
+                options or {},
+                attempt,
+                paramiko,
+            ))
+            channel = client.invoke_shell()
+            try:
+                channel.close()
+            except Exception:
+                pass
+            client.close()
+            return 0, '', ''
+        except Exception as exc:
+            last_error = exc
+            try:
+                client.close()
+            except Exception:
+                pass
+            if auth_method != 'auto':
+                break
+
+    return 255, '', 'PARAMIKO_CONNECTION_ERROR: ' + str(last_error or 'authentication failed')
 
 
 def ensure_ssh_options_defaults(ssh_options):
@@ -927,7 +1011,7 @@ def execute_runner(
     ssh_executor=None,
     winrm_executor=None,
     no_ssh_executor=None,
-    terminal_opener=None,
+    paramiko_client_factory=None,
     skip_precheck=False,
     logger=None,
 ):
@@ -959,7 +1043,6 @@ def execute_runner(
     ssh_executor = ssh_executor or run_ssh
     winrm_executor = winrm_executor or run_winrm
     no_ssh_executor = no_ssh_executor or run_no_ssh
-    terminal_opener = terminal_opener or open_ssh_terminal
 
     logger.info('-----------------------------------------------')
     logger.info('### Runner started.')
@@ -1019,6 +1102,15 @@ def execute_runner(
                     connection_values.get('password'),
                     ssh_options,
                     wr_opts,
+                )
+            elif method == 'paramiko':
+                rc, out, err = run_paramiko_precheck(
+                    host,
+                    connection_values.get('port'),
+                    connection_values.get('user'),
+                    connection_values.get('password'),
+                    resolve_paramiko_options(mod),
+                    client_factory=paramiko_client_factory,
                 )
             else:
                 rc, out, err = call_ssh_executor(
@@ -1145,7 +1237,7 @@ def execute_runner(
             'connection_credential_data': connection_values.get('data') or {},
             'application_credential': app_credential or {},
             'application_credential_data': app_credential_data,
-            'open_terminal': None,
+            'paramiko_client_factory': paramiko_client_factory,
         }
         logger.info("created ctx:\n%s", json.dumps(ctx, ensure_ascii=False, indent=2, default=str))
         if needs_host_connection(mod):
@@ -1160,6 +1252,12 @@ def execute_runner(
                 ctx['ssh'] = lambda _cmd, _host, _port, _user, _password, _ssh_options: winrm_executor(
                     _cmd, _host, _port, _user, _password, _ssh_options, wr_opts
                 )
+            elif method == 'paramiko':
+                ctx['ssh'] = lambda _cmd, _host, _port, _user, _password, _ssh_options: (
+                    1,
+                    '',
+                    'paramiko connection method does not support _ssh; use _run_paramiko_commands',
+                )
             else:
                 ctx['ssh'] = lambda _cmd, _host, _port, _user, _password, _ssh_options: call_ssh_executor(
                     ssh_executor,
@@ -1170,24 +1268,6 @@ def execute_runner(
                     _password,
                     _ssh_options,
                     ssh_command_timeout_sec,
-                )
-                terminal_host = ctx['host']
-                terminal_port = ctx['port']
-                terminal_user = ctx['user']
-                terminal_password = ctx['password']
-                terminal_ssh_options = ctx['ssh_options']
-                ctx['open_terminal'] = lambda **kwargs: terminal_opener(
-                    host=terminal_host,
-                    port=terminal_port,
-                    user=terminal_user,
-                    password=terminal_password,
-                    ssh_options=terminal_ssh_options,
-                    history_callback=kwargs.get('history_callback'),
-                    pager_patterns=kwargs.get('pager_patterns'),
-                    pager_response=kwargs.get('pager_response', ' '),
-                    preferred_encodings=kwargs.get('preferred_encodings'),
-                    open_timeout_sec=kwargs.get('open_timeout_sec', DEFAULT_OPEN_TIMEOUT_SEC),
-                    default_timeout_sec=kwargs.get('default_timeout_sec', DEFAULT_EXPECT_TIMEOUT_SEC),
                 )
         else:
             ctx['connection_method'] = 'none'

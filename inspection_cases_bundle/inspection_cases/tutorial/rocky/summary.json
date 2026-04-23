@@ -1,0 +1,36 @@
+{
+  "total_cases": 5,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "rocky_ssh_01_basic_identity_check",
+      "result_file": "rocky_ssh_01_basic_identity_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_ssh_02_os_release_check",
+      "result_file": "rocky_ssh_02_os_release_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_ssh_03_root_filesystem_df_check",
+      "result_file": "rocky_ssh_03_root_filesystem_df_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_ssh_04_multi_command_health_check",
+      "result_file": "rocky_ssh_04_multi_command_health_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "rocky_ssh_05_become_root_access_check",
+      "result_file": "rocky_ssh_05_become_root_access_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

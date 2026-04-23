@@ -1,0 +1,36 @@
+{
+  "total_cases": 5,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "cisco_ios_paramiko_01_show_clock_check",
+      "result_file": "cisco_ios_paramiko_01_show_clock_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "cisco_ios_paramiko_02_show_version_check",
+      "result_file": "cisco_ios_paramiko_02_show_version_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "cisco_ios_paramiko_03_interface_brief_check",
+      "result_file": "cisco_ios_paramiko_03_interface_brief_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "cisco_ios_paramiko_04_running_hostname_check",
+      "result_file": "cisco_ios_paramiko_04_running_hostname_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "cisco_ios_paramiko_05_running_config_check",
+      "result_file": "cisco_ios_paramiko_05_running_config_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

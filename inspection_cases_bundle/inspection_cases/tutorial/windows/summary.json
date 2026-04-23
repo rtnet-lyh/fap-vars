@@ -1,0 +1,36 @@
+{
+  "total_cases": 5,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "windows_winrm_01_hostname_check",
+      "result_file": "windows_winrm_01_hostname_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "windows_winrm_02_os_info_check",
+      "result_file": "windows_winrm_02_os_info_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "windows_winrm_03_disk_inventory_check",
+      "result_file": "windows_winrm_03_disk_inventory_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "windows_winrm_04_winrm_service_check",
+      "result_file": "windows_winrm_04_winrm_service_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "windows_winrm_05_system_eventlog_check",
+      "result_file": "windows_winrm_05_system_eventlog_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

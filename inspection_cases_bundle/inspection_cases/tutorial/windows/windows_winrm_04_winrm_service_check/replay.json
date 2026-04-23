@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "Get-Service -Name WinRM",
+    "rc": 0,
+    "stdout": "{\"Name\":\"WinRM\",\"Status\":\"Running\",\"StartType\":\"Automatic\",\"DisplayName\":\"Windows Remote Management (WS-Management)\"}\n",
+    "stderr": ""
+  }
+]

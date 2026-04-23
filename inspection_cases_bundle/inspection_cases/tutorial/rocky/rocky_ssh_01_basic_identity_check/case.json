@@ -1,0 +1,49 @@
+{
+  "host": "192.168.1.123",
+  "port": 22,
+  "user": "fap",
+  "password": "f3dtop0!",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 80100,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "APPLICATION",
+        "data": {
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      },
+      {
+        "application_id": 80100,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "f3dtop0!",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 81101,
+  "host_id": 81101,
+  "job_id": 81101,
+  "item": {
+    "inspection_code": "TUTORIAL-ROCKY-SSH-01",
+    "item_id": 98101,
+    "application_id": 80100,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "ROCKY",
+    "application_family_name": "ROCKY",
+    "threshold_list": []
+  }
+}

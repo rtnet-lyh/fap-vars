@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "ROOT_DIR_ACCESS_OK",
+    "rc": 0,
+    "stdout": "__BECOME_USER__:root\nroot\nROOT_DIR_ACCESS_OK\n",
+    "stderr": ""
+  }
+]

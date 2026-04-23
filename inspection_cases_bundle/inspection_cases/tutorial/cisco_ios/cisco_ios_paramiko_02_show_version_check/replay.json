@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "enable"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Password:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "terminal length 0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "terminal length 0\r\nRouter#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show version"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "show version\r\nCisco IOS XE Software, Version 17.09.04a\r\nRouter uptime is 2 weeks, 3 days\r\nRouter#"
+  }
+]

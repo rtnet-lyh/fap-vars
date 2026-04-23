@@ -36,6 +36,36 @@ class FakeSession:
         return self.response
 
 
+class FakeParamikoChannel:
+    def __init__(self):
+        self.closed = False
+
+    def close(self):
+        self.closed = True
+
+
+class FakeParamikoClient:
+    def __init__(self, connect_error=None):
+        self.connect_error = connect_error
+        self.connect_kwargs = None
+        self.closed = False
+        self.channel = FakeParamikoChannel()
+
+    def set_missing_host_key_policy(self, policy):
+        self.policy = policy
+
+    def connect(self, **kwargs):
+        self.connect_kwargs = kwargs
+        if self.connect_error:
+            raise self.connect_error
+
+    def invoke_shell(self):
+        return self.channel
+
+    def close(self):
+        self.closed = True
+
+
 class RunnerWinrmTest(unittest.TestCase):
     def test_decode_stream_bytes_falls_back_to_cp949(self):
         raw = '한글 경로'.encode('cp949')
@@ -83,6 +113,61 @@ class RunnerWinrmTest(unittest.TestCase):
         self.assertEqual(err, '')
         self.assertEqual(session.run_ps_calls, [])
         self.assertEqual(session.run_cmd_calls, ['dir'])
+
+    def test_run_paramiko_precheck_password_auth(self):
+        client = FakeParamikoClient()
+
+        rc, out, err = runner.run_paramiko_precheck(
+            '10.0.0.1',
+            22,
+            'admin',
+            'secret',
+            {'auth_method': 'password'},
+            client_factory=lambda: client,
+        )
+
+        self.assertEqual((rc, out, err), (0, '', ''))
+        self.assertEqual(client.connect_kwargs['password'], 'secret')
+        self.assertNotIn('key_filename', client.connect_kwargs)
+
+    def test_run_paramiko_precheck_key_auth_uses_default_public_key_path(self):
+        client = FakeParamikoClient()
+
+        rc, out, err = runner.run_paramiko_precheck(
+            '10.0.0.1',
+            22,
+            'admin',
+            '',
+            {'auth_method': 'key'},
+            client_factory=lambda: client,
+        )
+
+        self.assertEqual((rc, out, err), (0, '', ''))
+        self.assertEqual(
+            client.connect_kwargs['key_filename'],
+            os.path.expanduser('~/.ssh/id_rsa.pub'),
+        )
+        self.assertNotIn('password', client.connect_kwargs)
+
+    def test_run_paramiko_precheck_auto_falls_back_to_password(self):
+        clients = [
+            FakeParamikoClient(connect_error=RuntimeError('key rejected')),
+            FakeParamikoClient(),
+        ]
+
+        def factory():
+            return clients.pop(0)
+
+        rc, out, err = runner.run_paramiko_precheck(
+            '10.0.0.1',
+            22,
+            'admin',
+            'secret',
+            {'auth_method': 'auto'},
+            client_factory=factory,
+        )
+
+        self.assertEqual((rc, out, err), (0, '', ''))
 
 
 if __name__ == '__main__':

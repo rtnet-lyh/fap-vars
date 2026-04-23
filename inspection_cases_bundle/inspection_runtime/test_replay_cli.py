@@ -46,78 +46,6 @@ class Check(BaseCheck):
 CHECK_CLASS = Check
 """
 
-TERMINAL_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
-
-from .common._base import BaseCheck
-
-
-class Check(BaseCheck):
-    USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
-
-    def run(self):
-        with self._open_terminal(
-            pager_patterns=[r'--More--'],
-            pager_response=' ',
-        ) as term:
-            prompt = term.expect([r'>\\s*$', r'#\\s*$'])
-            if prompt.index == 0:
-                term.sendline('enable')
-                term.expect([r'Password:\\s*$'])
-                term.sendline(self.get_connection_value('en_password'), redact=True)
-                term.expect([r'#\\s*$'])
-
-            term.sendline('terminal length 0')
-            term.expect([r'#\\s*$'])
-            output = term.run('show running-config', [r'#\\s*$'])
-
-        if 'Current configuration' not in output:
-            return self.fail(
-                'config missing',
-                stdout=output,
-            )
-
-        return self.ok(
-            metrics={'has_config': True},
-            reasons='ok',
-            message='terminal ok',
-        )
-
-
-CHECK_CLASS = Check
-"""
-
-LOOSE_TERMINAL_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
-
-from .common._base import BaseCheck
-
-
-class Check(BaseCheck):
-    USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
-
-    def run(self):
-        with self._open_terminal(default_timeout_sec=0.01) as term:
-            term.sendline('first')
-            timeout_result = term.expect([r'NEVER_MATCHES'])
-            term.sendline('second')
-            done_result = term.expect([r'DONE'])
-
-        if timeout_result.matched or not timeout_result.timed_out:
-            return self.fail('timeout result mismatch', stdout=timeout_result.text)
-        if not done_result.matched:
-            return self.fail('done missing', stdout=done_result.text)
-
-        return self.ok(
-            metrics={'timeout_continued': True},
-            reasons='ok',
-            message='loose terminal ok',
-        )
-
-
-CHECK_CLASS = Check
-"""
-
 SYNTAX_ERROR_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
@@ -148,6 +76,145 @@ class Check(BaseCheck):
 
     def run(self):
         return self.ok(message='ok')
+
+
+CHECK_CLASS = Check
+"""
+
+PARAMIKO_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'cisco_ios'
+    PARAMIKO_ENABLE_MODE = True
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        results = self._run_paramiko_commands([
+            'terminal length 0',
+            'show version',
+        ])
+        failed = [item for item in results if item['rc'] != 0]
+        if failed:
+            return self.fail('paramiko failed', stderr=failed[0]['stderr'])
+        return self.ok(
+            metrics={
+                'commands': [item['command'] for item in results],
+                'show_version': results[1]['stdout'],
+            },
+            reasons='ok',
+            message='paramiko ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+PARAMIKO_TIMEOUT_CONTINUE_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        results = self._run_paramiko_commands([
+            {
+                'command': 'su -',
+                'timeout': 0.05,
+                'ignore_prompt': True,
+            },
+            {
+                'command': 'whoami',
+                'timeout': 0.05,
+            },
+        ])
+        return self.ok(
+            metrics={
+                'commands': [item['command'] for item in results],
+                'rcs': [item['rc'] for item in results],
+                'timed_out_commands': [item['command'] for item in results if item.get('timed_out')],
+                'whoami': results[1]['stdout'],
+            },
+            reasons='ok',
+            message='paramiko continue ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+PARAMIKO_PROFILE_DICT_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = {
+        'prompt_patterns': [r'NEVER_MATCHES'],
+        'pager_patterns': [],
+    }
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        results = self._run_paramiko_commands([
+            'whoami',
+        ])
+        failed = [item for item in results if item['rc'] != 0]
+        if failed:
+            return self.fail('paramiko failed', stderr=failed[0]['stderr'])
+        return self.ok(
+            metrics={
+                'commands': [item['command'] for item in results],
+                'whoami': results[0]['stdout'],
+            },
+            reasons='ok',
+            message='paramiko dict profile ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+PARAMIKO_HIDDEN_COMMAND_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        results = self._run_paramiko_commands([
+            {
+                'command': 'super-secret-password',
+                'hide_command': True,
+            },
+        ])
+        failed = [item for item in results if item['rc'] != 0]
+        if failed:
+            return self.fail('paramiko failed', stderr=failed[0]['stderr'])
+        return self.ok(
+            metrics={
+                'display_command': results[0]['display_command'],
+                'hide_command': results[0]['hide_command'],
+            },
+            reasons='ok',
+            message='paramiko hidden ok',
+        )
 
 
 CHECK_CLASS = Check
@@ -214,7 +281,7 @@ class ReplayCliTest(unittest.TestCase):
 
         return case_dir
 
-    def create_terminal_case_dir(self, root_dir, name='terminal_case'):
+    def create_paramiko_case_dir(self, root_dir, name='paramiko_case'):
         case_dir = os.path.join(root_dir, name)
         os.makedirs(case_dir, exist_ok=True)
 
@@ -242,7 +309,7 @@ class ReplayCliTest(unittest.TestCase):
             'host_id': 20,
             'job_id': 200,
             'item': {
-                'inspection_code': 'N-TEST-TERM-01',
+                'inspection_code': 'N-TEST-PARAMIKO-01',
                 'item_id': 90002,
                 'application_type_name': 'NETWORK',
                 'threshold_list': [],
@@ -255,18 +322,68 @@ class ReplayCliTest(unittest.TestCase):
             {'channel': 'terminal', 'action': 'send', 'redacted': True},
             {'channel': 'terminal', 'action': 'recv', 'stdout': 'Router#'},
             {'channel': 'terminal', 'action': 'send', 'matcher_value': 'terminal length 0'},
-            {'channel': 'terminal', 'action': 'recv', 'stdout': 'Router#'},
-            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'show running-config'},
-            {'channel': 'terminal', 'action': 'recv', 'stdout': 'show running-config\r\nCurrent configuration : 123\r\n--More--'},
-            {'channel': 'terminal', 'action': 'send', 'matcher_value': ' '},
-            {'channel': 'terminal', 'action': 'recv', 'stdout': '\r\nhostname TEST_ROUTER\r\nRouter#'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'terminal length 0\r\nRouter#'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'show version'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'show version\r\nVendor OS\r\nRouter#'},
         ]
 
         with open(os.path.join(case_dir, 'case.json'), 'w', encoding='utf-8') as fh:
             json.dump(case_data, fh, ensure_ascii=False, indent=2)
             fh.write('\n')
         with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
-            fh.write(TERMINAL_SCRIPT_TEXT)
+            fh.write(PARAMIKO_SCRIPT_TEXT)
+        with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+            json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
+            fh.write('\n')
+
+        return case_dir
+
+    def create_paramiko_timeout_continue_case_dir(self, root_dir, name='paramiko_timeout_continue_case'):
+        case_dir = os.path.join(root_dir, name)
+        os.makedirs(case_dir, exist_ok=True)
+
+        case_data = {
+            'host': '127.0.0.1',
+            'port': 22,
+            'user': 'admin',
+            'password': 'admin',
+            'credentials': {
+                'LINUX': [
+                    {
+                        'application_type_name': 'LINUX',
+                        'credential_type_name': 'SSH',
+                        'data': {
+                            'username': 'admin',
+                            'password': 'admin',
+                        },
+                    }
+                ]
+            },
+            'thresholds': {},
+            'item_sleep_sec': 0,
+            'execution_id': 3,
+            'host_id': 30,
+            'job_id': 300,
+            'item': {
+                'inspection_code': 'L-TEST-PARAMIKO-TIMEOUT-01',
+                'item_id': 90003,
+                'application_type_name': 'LINUX',
+                'threshold_list': [],
+            },
+        }
+        replay_rules = [
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'admin@linux:~$'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'su -'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'su -\r\nPassword:'},
+            {'channel': 'terminal', 'action': 'send', 'matcher_value': 'whoami'},
+            {'channel': 'terminal', 'action': 'recv', 'stdout': 'whoami\r\nroot\r\nadmin@linux:~$'},
+        ]
+
+        with open(os.path.join(case_dir, 'case.json'), 'w', encoding='utf-8') as fh:
+            json.dump(case_data, fh, ensure_ascii=False, indent=2)
+            fh.write('\n')
+        with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+            fh.write(PARAMIKO_TIMEOUT_CONTINUE_SCRIPT_TEXT)
         with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
             json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
             fh.write('\n')
@@ -463,32 +580,97 @@ class ReplayCliTest(unittest.TestCase):
                     override_file=override_path,
                 )
 
-    def test_run_path_replay_supports_terminal_events(self):
+    def test_run_path_replay_supports_paramiko_commands(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
-            case_dir = self.create_terminal_case_dir(tmp_dir)
+            case_dir = self.create_paramiko_case_dir(tmp_dir)
 
             output, exit_code = replay_cli.run_path(case_dir, mode='replay')
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(output['failed_items'], [])
             self.assertEqual(output['results'][0]['status'], 'ok')
-            self.assertTrue(output['results'][0]['metrics']['has_config'])
-            self.assertIn('터미널 송신: enable', output['results'][0]['raw_output'])
-            self.assertIn('자동 응답', output['results'][0]['raw_output'])
+            self.assertEqual(
+                output['results'][0]['metrics']['commands'],
+                ['terminal length 0', 'show version'],
+            )
+            self.assertEqual(output['results'][0]['metrics']['show_version'], 'Vendor OS')
 
-    def test_run_path_replay_allows_terminal_expect_timeout_between_sends(self):
+    def test_run_path_replay_paramiko_timeout_can_continue(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
-            case_dir = self.create_terminal_case_dir(tmp_dir, name='loose_terminal_case')
-            replay_rules = [
-                {'channel': 'terminal', 'action': 'send', 'matcher_value': 'first'},
-                {'channel': 'terminal', 'action': 'send', 'matcher_value': 'second'},
-                {'channel': 'terminal', 'action': 'recv', 'stdout': 'DONE'},
-            ]
+            case_dir = self.create_paramiko_timeout_continue_case_dir(tmp_dir)
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            self.assertEqual(output['results'][0]['status'], 'ok')
+            self.assertEqual(
+                output['results'][0]['metrics']['commands'],
+                ['su -', 'whoami'],
+            )
+            self.assertEqual(output['results'][0]['metrics']['rcs'], [124, 0])
+            self.assertEqual(
+                output['results'][0]['metrics']['timed_out_commands'],
+                ['su -'],
+            )
+            self.assertEqual(output['results'][0]['metrics']['whoami'], 'root')
+
+    def test_paramiko_command_dict_validates_invalid_ignore_prompt(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_paramiko_timeout_continue_case_dir(tmp_dir, name='paramiko_invalid_ignore_prompt')
 
             with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
-                fh.write(LOOSE_TERMINAL_SCRIPT_TEXT)
+                fh.write(
+                    """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        self._run_paramiko_commands([
+            {
+                'command': 'whoami',
+                'ignore_prompt': 'maybe',
+            },
+        ])
+        return self.ok(message='unreachable')
+
+
+CHECK_CLASS = Check
+"""
+                )
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], ['L-TEST-PARAMIKO-TIMEOUT-01'])
+            self.assertEqual(output['results'][0]['status'], 'fail')
+            self.assertEqual(output['results'][0]['error'], 'exec_error')
+            self.assertIn('invalid paramiko ignore_prompt', output['results'][0]['message'])
+
+    def test_paramiko_profile_dict_ignores_prompt_patterns(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_paramiko_timeout_continue_case_dir(tmp_dir, name='paramiko_profile_dict_case')
+
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(PARAMIKO_PROFILE_DICT_SCRIPT_TEXT)
             with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
-                json.dump(replay_rules, fh, ensure_ascii=False, indent=2)
+                json.dump(
+                    [
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'admin@linux:~$'},
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'whoami'},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'whoami\r\nadmin\r\nadmin@linux:~$'},
+                    ],
+                    fh,
+                    ensure_ascii=False,
+                    indent=2,
+                )
                 fh.write('\n')
 
             output, exit_code = replay_cli.run_path(case_dir, mode='replay')
@@ -496,8 +678,37 @@ class ReplayCliTest(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertEqual(output['failed_items'], [])
             self.assertEqual(output['results'][0]['status'], 'ok')
-            self.assertTrue(output['results'][0]['metrics']['timeout_continued'])
-            self.assertIn('터미널 수신(timeout)', output['results'][0]['raw_output'])
+            self.assertEqual(output['results'][0]['metrics']['commands'], ['whoami'])
+            self.assertEqual(output['results'][0]['metrics']['whoami'], 'admin')
+
+    def test_paramiko_command_dict_hides_command_in_raw_output(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_paramiko_timeout_continue_case_dir(tmp_dir, name='paramiko_hidden_case')
+
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(PARAMIKO_HIDDEN_COMMAND_SCRIPT_TEXT)
+            with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+                json.dump(
+                    [
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'admin@linux:~$'},
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'super-secret-password'},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'super-secret-password\r\nok\r\nadmin@linux:~$'},
+                    ],
+                    fh,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                fh.write('\n')
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            self.assertEqual(output['results'][0]['status'], 'ok')
+            self.assertEqual(output['results'][0]['metrics']['display_command'], '*******')
+            self.assertTrue(output['results'][0]['metrics']['hide_command'])
+            self.assertIn('실행 명령어: *******', output['results'][0]['raw_output'])
+            self.assertNotIn('super-secret-password', output['results'][0]['raw_output'])
 
 
 if __name__ == '__main__':

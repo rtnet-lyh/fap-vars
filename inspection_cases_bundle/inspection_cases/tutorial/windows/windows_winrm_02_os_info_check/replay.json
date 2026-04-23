@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "Get-CimInstance Win32_OperatingSystem",
+    "rc": 0,
+    "stdout": "{\"Caption\":\"Microsoft Windows Server 2022 Standard\",\"Version\":\"10.0.20348\",\"CSName\":\"WIN-TUTORIAL\",\"LastBootUpTime\":\"2024-01-01T09:00:00.0000000+09:00\"}\n",
+    "stderr": ""
+  }
+]

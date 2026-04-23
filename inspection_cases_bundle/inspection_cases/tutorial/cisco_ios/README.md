@@ -1,0 +1,71 @@
+# Cisco IOS `_run_paramiko_commands` Tutorial Guide
+
+Cisco IOS 튜토리얼은 `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands(...)` 사용 패턴을 단계별로 보여준다.
+
+## 접속 정보
+
+- Host: `192.168.1.55`
+- Protocol: `SSH`
+- Port: `22`
+- User: `admin`
+- Password: `admin`
+- Enable: `true`
+- Enable Password: `admin`
+
+## 예시 목록
+
+1. `cisco_ios_paramiko_01_show_clock_check`
+   `show clock` 기본 수집
+2. `cisco_ios_paramiko_02_show_version_check`
+   `terminal length 0` + `show version`
+3. `cisco_ios_paramiko_03_interface_brief_check`
+   `show ip interface brief` 파싱과 threshold 비교
+4. `cisco_ios_paramiko_04_running_hostname_check`
+   `show running-config | include ^hostname` 파싱
+5. `cisco_ios_paramiko_05_running_config_check`
+   dict command 형식의 `timeout`과 긴 출력 replay 파일 예시
+
+## 실행 예시
+
+플랫폼 전체 replay:
+
+```bash
+python3 inspection_runtime/replay_cli.py inspection_cases/tutorial/cisco_ios
+```
+
+단일 케이스 replay:
+
+```bash
+python3 inspection_runtime/replay_cli.py \
+  inspection_cases/tutorial/cisco_ios/cisco_ios_paramiko_03_interface_brief_check
+```
+
+단일 케이스 live:
+
+```bash
+python3 inspection_runtime/replay_cli.py --mode live \
+  inspection_cases/tutorial/cisco_ios/cisco_ios_paramiko_05_running_config_check
+```
+
+## 작성 포인트
+
+- Cisco IOS 튜토리얼은 모두 `PARAMIKO_PROFILE = 'cisco_ios'`를 사용한다.
+- 튜토리얼은 `PARAMIKO_ENABLE_MODE`와 `PARAMIKO_AUTH_METHOD`를 쓰지 않고, `enable` 진입도 명령 배열로 직접 보여준다.
+- 기본 흐름은 아래 순서다.
+
+```python
+[
+    {'command': 'enable', 'ignore_prompt': True},
+    {'command': enable_password, 'hide_command': True},
+    {'command': 'terminal length 0'},
+    {'command': 'show version'},
+]
+```
+
+- `ignore_prompt`
+  `enable` 직후 장비가 기존 prompt 대신 `Password:`를 내보내므로, 첫 단계 timeout을 허용하고 다음 명령으로 넘길 때 사용한다.
+- `hide_command`
+  enable 비밀번호 입력 단계에서 raw output과 command history에 실제 비밀번호 대신 `*******`를 남길 때 사용한다.
+- 수동 enable 흐름에서는 비밀번호 입력 다음 결과의 `prompt`가 `#`로 끝나는지 확인해서 privileged mode 진입 성공 여부를 판정한다.
+- live 모드의 초기 접속 실패는 runner precheck에서 먼저 걸러지므로, 튜토리얼 스크립트는 명령 결과와 파싱 흐름 설명에 집중한다.
+- 긴 출력은 `terminal length 0`를 먼저 보내고, replay에서는 `stdout_file`로 분리하는 편이 안전하다.

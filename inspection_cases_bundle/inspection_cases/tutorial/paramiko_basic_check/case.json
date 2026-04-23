@@ -1,5 +1,5 @@
 {
-  "host": "192.168.1.123",
+  "host": "192.168.1.1",
   "port": 22,
   "user": "admin",
   "password": "admin",
@@ -9,8 +9,8 @@
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!"
+          "username": "rtnet",
+          "password": "rtnet@123"
         }
       }
     ]

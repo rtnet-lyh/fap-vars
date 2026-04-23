@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "df -h /",
+    "rc": 0,
+    "stdout": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/mapper/rl-root   50G   12G   36G  24% /\n",
+    "stderr": ""
+  }
+]

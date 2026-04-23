@@ -1,0 +1,37 @@
+{
+  "host": "192.168.1.55",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80300,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "en_password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81302,
+  "host_id": 81302,
+  "job_id": 81302,
+  "item": {
+    "inspection_code": "TUTORIAL-CISCO-PARAMIKO-02",
+    "item_id": 98302,
+    "application_id": 80300,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "CISCO_IOS",
+    "application_family_name": "CISCO_IOS",
+    "threshold_list": []
+  }
+}

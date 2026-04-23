@@ -1,8 +1,83 @@
 # -*- coding: utf-8 -*-
 
+import codecs
+import io
+import os
 import re
+import time
 
 from .helpers import NetworkHelper, VMwareHelper, WebHelper
+
+
+ANSI_ESCAPE_RE = re.compile(r'(?:\x1B\[[0-?]*[ -/]*[@-~]|\x1B\][^\x07]*(?:\x07|\x1B\\))')
+DEFAULT_PASSWORD_PROMPT_PATTERNS = [r'(?:[Pp]assword|암호):\s*$']
+PARAMIKO_PROFILES = {
+    'generic_network': {
+        'pager_patterns': [r'--More--', r'--- more ---', r'Press any key', r'More:\s*<space>'],
+        'pager_response': ' ',
+    },
+    'linux': {
+        'pager_patterns': [],
+        'pager_response': ' ',
+    },
+    'cisco_ios': {
+        'pager_patterns': [r'--More--', r'--More--\s*$', r'More:\s*<space>'],
+        'pager_response': ' ',
+    },
+    'junos': {
+        'pager_patterns': [r'---\(more[^\)]*\)---', r'--- more ---', r'--More--'],
+        'pager_response': ' ',
+    },
+    'huawei_vrp': {
+        'pager_patterns': [
+            r'---- More ----',
+            r'--- More ---',
+            r'--More--',
+            r'Press any key',
+        ],
+        'pager_response': ' ',
+    },
+}
+
+
+def decode_paramiko_bytes(value, preferred_encodings=None):
+    if value is None:
+        return value
+    if not isinstance(value, bytes):
+        return str(value)
+    if not value:
+        return ''
+
+    candidates = []
+    if value.startswith(codecs.BOM_UTF8):
+        candidates.append('utf-8-sig')
+    candidates.append('utf-8')
+    if value.startswith(codecs.BOM_UTF16_LE):
+        candidates.append('utf-16-le')
+    elif value.startswith(codecs.BOM_UTF16_BE):
+        candidates.append('utf-16-be')
+    elif b'\x00' in value:
+        candidates.extend(['utf-16-le', 'utf-16-be'])
+    for encoding in preferred_encodings or ():
+        if encoding:
+            candidates.append(str(encoding).strip())
+    candidates.extend(['cp949', 'euc-kr', 'cp1252'])
+
+    seen = set()
+    for encoding in candidates:
+        if not encoding or encoding in seen:
+            continue
+        seen.add(encoding)
+        try:
+            return value.decode(encoding)
+        except (LookupError, UnicodeDecodeError):
+            continue
+    return value.decode('utf-8', 'replace')
+
+
+def normalize_paramiko_text(text):
+    normalized = str(text or '').replace('\r\n', '\n').replace('\r', '\n')
+    return ANSI_ESCAPE_RE.sub('', normalized)
 
 
 class BaseCheck:
@@ -21,6 +96,21 @@ class BaseCheck:
     SSH_COMMAND_TIMEOUT_SEC = None
     # WinRM 사용 시 기본 쉘
     WINRM_SHELL = 'powershell'
+    # Paramiko interactive shell defaults. Override in script.py when needed.
+    PARAMIKO_PROFILE = 'generic_network'
+    PARAMIKO_AUTH_METHOD = 'auto'
+    PARAMIKO_KEY_FILENAME = '~/.ssh/id_rsa.pub'
+    PARAMIKO_PRIVATE_KEY = None
+    PARAMIKO_PRIVATE_KEY_PASSPHRASE = None
+    PARAMIKO_ALLOW_AGENT = False
+    PARAMIKO_LOOK_FOR_KEYS = False
+    PARAMIKO_TIMEOUT_SEC = 5
+    PARAMIKO_BANNER_TIMEOUT_SEC = 10
+    PARAMIKO_AUTH_TIMEOUT_SEC = 10
+    PARAMIKO_READ_TIMEOUT_SEC = 0.5
+    PARAMIKO_ENABLE_MODE = False
+    PARAMIKO_PROBE_PROMPT = True
+    PARAMIKO_CONTINUE_ON_TIMEOUT = False
 
     def __init__(self, ctx):
         # ctx에는 ssh 함수, 접속 정보, 임계치 등이 들어있다.
@@ -48,6 +138,549 @@ class BaseCheck:
         )
         self._record_command(cmd, rc, out, err)
         return rc, out, err
+
+    def _paramiko_options(self):
+        return {
+            'profile': getattr(self, 'PARAMIKO_PROFILE', 'generic_network'),
+            'auth_method': getattr(self, 'PARAMIKO_AUTH_METHOD', 'auto'),
+            'key_filename': getattr(self, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
+            'private_key': getattr(self, 'PARAMIKO_PRIVATE_KEY', None),
+            'private_key_passphrase': getattr(self, 'PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
+            'allow_agent': getattr(self, 'PARAMIKO_ALLOW_AGENT', False),
+            'look_for_keys': getattr(self, 'PARAMIKO_LOOK_FOR_KEYS', False),
+            'timeout_sec': getattr(self, 'PARAMIKO_TIMEOUT_SEC', 10),
+            'banner_timeout_sec': getattr(self, 'PARAMIKO_BANNER_TIMEOUT_SEC', 10),
+            'auth_timeout_sec': getattr(self, 'PARAMIKO_AUTH_TIMEOUT_SEC', 10),
+            'read_timeout_sec': getattr(self, 'PARAMIKO_READ_TIMEOUT_SEC', 0.5),
+            'probe_prompt': getattr(self, 'PARAMIKO_PROBE_PROMPT', True),
+            'continue_on_timeout': getattr(self, 'PARAMIKO_CONTINUE_ON_TIMEOUT', False),
+        }
+
+    def _resolve_paramiko_profile(self, profile=None):
+        raw_profile = profile if profile is not None else getattr(self, 'PARAMIKO_PROFILE', 'generic_network')
+        if isinstance(raw_profile, dict):
+            resolved = dict(raw_profile)
+        else:
+            name = str(raw_profile or 'generic_network').strip().lower().replace('-', '_')
+            if name not in PARAMIKO_PROFILES:
+                raise ValueError(f'unknown paramiko profile: {raw_profile}')
+            resolved = dict(PARAMIKO_PROFILES[name])
+
+        resolved.setdefault('pager_patterns', [])
+        resolved.setdefault('pager_response', ' ')
+        return resolved
+
+    def _normalize_paramiko_commands(self, commands):
+        if isinstance(commands, str):
+            raw_commands = commands.splitlines()
+        elif isinstance(commands, (list, tuple)):
+            raw_commands = commands
+        else:
+            raw_commands = [commands]
+
+        normalized = []
+        for idx, command in enumerate(raw_commands, 1):
+            if isinstance(command, dict):
+                text = str(command.get('command') or '').strip()
+                if not text:
+                    raise ValueError(f'paramiko command #{idx} requires non-empty command')
+
+                item = {
+                    'command': text,
+                    'display_command': text,
+                    'hide_command': False,
+                }
+                if command.get('timeout') is not None:
+                    try:
+                        timeout = float(command.get('timeout'))
+                    except Exception as exc:
+                        raise ValueError(f'invalid paramiko timeout in command #{idx}: {command.get("timeout")}') from exc
+                    if timeout < 0:
+                        raise ValueError(f'invalid paramiko timeout in command #{idx}: {command.get("timeout")}')
+                    item['timeout'] = timeout
+
+                if 'ignore_prompt' in command:
+                    item['ignore_prompt'] = self._parse_paramiko_bool_option(
+                        command.get('ignore_prompt'),
+                        option_name='ignore_prompt',
+                        command_index=idx,
+                    )
+
+                raw_hide_command = command.get('hide_command')
+                if raw_hide_command is not None:
+                    item['hide_command'] = self._parse_paramiko_bool_option(
+                        raw_hide_command,
+                        option_name='hide_command',
+                        command_index=idx,
+                    )
+                    if item['hide_command']:
+                        item['display_command'] = '*******'
+
+                normalized.append(item)
+                continue
+
+            text = str(command or '').strip()
+            if text:
+                normalized.append({
+                    'command': text,
+                    'display_command': text,
+                    'hide_command': False,
+                })
+        return normalized
+
+    def _compile_paramiko_patterns(self, patterns):
+        return [re.compile(str(pattern), re.MULTILINE) for pattern in (patterns or [])]
+
+    def _parse_paramiko_bool_option(self, raw_value, option_name, command_index):
+        if isinstance(raw_value, bool):
+            return raw_value
+
+        text_value = str(raw_value or '').strip().lower()
+        if text_value in ('1', 'true', 'yes', 'y', 'on'):
+            return True
+        if text_value in ('0', 'false', 'no', 'n', 'off'):
+            return False
+        raise ValueError(f'invalid paramiko {option_name} in command #{command_index}: {raw_value}')
+
+    def _paramiko_command_matches_line(self, command, line):
+        command_text = str(command or '').strip()
+        line_text = str(line or '').strip()
+        if not command_text or not line_text:
+            return False
+        return line_text == command_text or line_text.endswith(command_text)
+
+    def _redact_paramiko_command_text(self, text, command, display_command):
+        body = str(text or '')
+        command_text = str(command or '')
+        masked = str(display_command or command or '')
+        if not body or not command_text or command_text == masked:
+            return body
+        return body.replace(command_text, masked)
+
+    def _extract_paramiko_prompt(self, text, command=None):
+        lines = str(text or '').splitlines()
+        for line in reversed(lines):
+            candidate = line.rstrip()
+            if not candidate.strip():
+                continue
+            if self._paramiko_command_matches_line(command, candidate):
+                continue
+            return candidate
+        return ''
+
+    def _paramiko_buffer_endswith_prompt(self, text, prompt):
+        prompt_text = str(prompt or '').rstrip()
+        if not prompt_text:
+            return False
+        return str(text or '').rstrip().endswith(prompt_text)
+
+    def _paramiko_auth_attempts(self, auth_method):
+        method = str(auth_method or 'auto').strip().lower()
+        if method == 'auto':
+            return ['key', 'password']
+        if method in ('key', 'password'):
+            return [method]
+        raise ValueError(f'unsupported paramiko auth_method: {auth_method}')
+
+    def _load_paramiko_private_key(self, private_key, passphrase, paramiko_module):
+        key_stream = io.StringIO(str(private_key))
+        key_classes = [
+            paramiko_module.RSAKey,
+            paramiko_module.ECDSAKey,
+            paramiko_module.Ed25519Key,
+        ]
+        dss_key = getattr(paramiko_module, 'DSSKey', None)
+        if dss_key:
+            key_classes.append(dss_key)
+
+        last_error = None
+        for key_cls in key_classes:
+            key_stream.seek(0)
+            try:
+                return key_cls.from_private_key(key_stream, password=passphrase or None)
+            except Exception as exc:
+                last_error = exc
+        if last_error:
+            raise last_error
+        raise ValueError('unsupported private key')
+
+    def _build_paramiko_connect_kwargs(self, options, auth_attempt, paramiko_module):
+        kwargs = {
+            'hostname': self.ctx.get('host'),
+            'port': int(self.ctx.get('port') or 22),
+            'username': self.ctx.get('user') or None,
+            'timeout': float(options.get('timeout_sec', 10)),
+            'banner_timeout': float(options.get('banner_timeout_sec', 10)),
+            'auth_timeout': float(options.get('auth_timeout_sec', 10)),
+            'allow_agent': bool(options.get('allow_agent', False)),
+            'look_for_keys': bool(options.get('look_for_keys', False)),
+        }
+        if auth_attempt == 'password':
+            kwargs['password'] = self.ctx.get('password') or None
+            kwargs['allow_agent'] = False
+            kwargs['look_for_keys'] = False
+            return kwargs
+
+        passphrase = options.get('private_key_passphrase')
+        private_key = options.get('private_key')
+        if private_key:
+            kwargs['pkey'] = self._load_paramiko_private_key(private_key, passphrase, paramiko_module)
+        else:
+            kwargs['key_filename'] = os.path.expanduser(str(options.get('key_filename') or '~/.ssh/id_rsa.pub'))
+        if passphrase:
+            kwargs['passphrase'] = passphrase
+        return kwargs
+
+    def _open_paramiko_client(self, options):
+        import paramiko
+
+        client_factory = self.ctx.get('paramiko_client_factory')
+        last_error = None
+        for auth_attempt in self._paramiko_auth_attempts(options.get('auth_method')):
+            client = client_factory() if callable(client_factory) else paramiko.SSHClient()
+            try:
+                if hasattr(client, 'set_missing_host_key_policy'):
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.connect(**self._build_paramiko_connect_kwargs(options, auth_attempt, paramiko))
+                return client
+            except Exception as exc:
+                last_error = exc
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                if str(options.get('auth_method') or 'auto').strip().lower() != 'auto':
+                    break
+        if last_error:
+            raise last_error
+        raise RuntimeError('paramiko authentication attempt was not configured')
+
+    def _paramiko_recv_ready(self, channel):
+        try:
+            return bool(channel.recv_ready())
+        except Exception:
+            return False
+
+    def _paramiko_channel_closed(self, channel):
+        return bool(getattr(channel, 'closed', False))
+
+    def _paramiko_sendline(self, channel, text):
+        channel.send(str(text or '') + '\n')
+
+    def _paramiko_expect(
+        self,
+        channel,
+        timeout_sec,
+        profile,
+        prompt=None,
+        extra_patterns=None,
+        settle_timeout_sec=None,
+        command=None,
+    ):
+        compiled_patterns = self._compile_paramiko_patterns(extra_patterns)
+        pager_patterns = self._compile_paramiko_patterns(profile.get('pager_patterns') or [])
+        pager_response = str(profile.get('pager_response', ' '))
+        buffer = ''
+        deadline = None if timeout_sec is None else (time.monotonic() + float(timeout_sec))
+        settle_timeout = 0.5 if settle_timeout_sec is None else max(float(settle_timeout_sec), 0.0)
+        if timeout_sec is not None:
+            settle_timeout = min(settle_timeout, max(float(timeout_sec), 0.0))
+        if settle_timeout <= 0:
+            settle_timeout = 0.02
+        idle_deadline = None
+
+        while True:
+            for pager_pattern in pager_patterns:
+                pager_match = pager_pattern.search(buffer)
+                if not pager_match:
+                    continue
+                buffer = buffer[:pager_match.start()] + buffer[pager_match.end():]
+                if pager_response:
+                    channel.send(pager_response)
+                break
+
+            learned_prompt = self._extract_paramiko_prompt(buffer, command=command)
+            for idx, pattern in enumerate(compiled_patterns):
+                match = pattern.search(buffer)
+                if match:
+                    consumed = buffer[:match.end()]
+                    return {
+                        'matched': True,
+                        'timed_out': False,
+                        'index': idx,
+                        'text': consumed,
+                        'match_text': match.group(0),
+                        'pattern': pattern.pattern,
+                        'match_kind': 'pattern',
+                        'prompt': '',
+                    }
+
+            if prompt and self._paramiko_buffer_endswith_prompt(buffer, prompt):
+                prompt_text = learned_prompt or str(prompt or '').rstrip()
+                return {
+                    'matched': True,
+                    'timed_out': False,
+                    'index': -1,
+                    'text': buffer,
+                    'match_text': prompt_text,
+                    'pattern': '',
+                    'match_kind': 'prompt',
+                    'prompt': prompt_text,
+                }
+
+            if not prompt and idle_deadline is not None and time.monotonic() >= idle_deadline and learned_prompt:
+                return {
+                    'matched': True,
+                    'timed_out': False,
+                    'index': -1,
+                    'text': buffer,
+                    'match_text': learned_prompt,
+                    'pattern': '',
+                    'match_kind': 'prompt',
+                    'prompt': learned_prompt,
+                }
+
+            if deadline is not None and time.monotonic() >= deadline:
+                return {
+                    'matched': False,
+                    'timed_out': True,
+                    'index': -1,
+                    'text': buffer,
+                    'match_text': '',
+                    'pattern': '',
+                    'match_kind': '',
+                    'prompt': '',
+                }
+
+            if self._paramiko_channel_closed(channel):
+                if not prompt and learned_prompt:
+                    return {
+                        'matched': True,
+                        'timed_out': False,
+                        'index': -1,
+                        'text': buffer,
+                        'match_text': learned_prompt,
+                        'pattern': '',
+                        'match_kind': 'prompt',
+                        'prompt': learned_prompt,
+                        'closed': True,
+                    }
+                return {
+                    'matched': False,
+                    'timed_out': False,
+                    'index': -1,
+                    'text': buffer,
+                    'match_text': '',
+                    'pattern': '',
+                    'match_kind': '',
+                    'prompt': '',
+                    'closed': True,
+                }
+
+            if self._paramiko_recv_ready(channel):
+                data = channel.recv(4096)
+                if not data:
+                    return {
+                        'matched': False,
+                        'timed_out': False,
+                        'index': -1,
+                        'text': buffer,
+                        'match_text': '',
+                        'pattern': '',
+                        'match_kind': '',
+                        'prompt': '',
+                        'closed': True,
+                    }
+                buffer += normalize_paramiko_text(decode_paramiko_bytes(data))
+                idle_deadline = time.monotonic() + settle_timeout
+                continue
+
+            time.sleep(0.02)
+
+    def _strip_paramiko_command_output(self, command, text, prompt):
+        body = str(text or '').rstrip()
+        prompt_text = str(prompt or '').rstrip()
+        if prompt_text and body.endswith(prompt_text):
+            body = body[:-len(prompt_text)].rstrip()
+        lines = body.splitlines()
+        while lines and not lines[0].strip():
+            lines = lines[1:]
+        if lines and self._paramiko_command_matches_line(command, lines[0]):
+            lines = lines[1:]
+        return '\n'.join(lines).strip()
+
+    def _build_paramiko_result(
+        self,
+        command,
+        rc,
+        stdout='',
+        stderr='',
+        raw_output='',
+        timed_out=False,
+        prompt='',
+        display_command='',
+        hide_command=False,
+    ):
+        return {
+            'command': command,
+            'display_command': display_command or command,
+            'hide_command': bool(hide_command),
+            'rc': rc,
+            'stdout': stdout or '',
+            'stderr': stderr or '',
+            'raw_output': raw_output or '',
+            'timed_out': bool(timed_out),
+            'prompt': prompt or '',
+        }
+
+    def _run_paramiko_commands(self, commands, profile=None, enable_mode=None, timeout_sec=None):
+        """Paramiko interactive shell로 여러 CLI 명령을 한 세션에서 순차 실행한다."""
+        command_items = self._normalize_paramiko_commands(commands)
+        if not command_items:
+            return []
+        first_command = command_items[0]['command']
+        first_display_command = command_items[0].get('display_command', first_command)
+        first_hide_command = bool(command_items[0].get('hide_command'))
+
+        options = self._paramiko_options()
+        resolved_profile = self._resolve_paramiko_profile(profile)
+        command_timeout = float(timeout_sec if timeout_sec is not None else options.get('timeout_sec', 10))
+        read_timeout = float(options.get('read_timeout_sec', 0.5))
+        continue_on_timeout = bool(options.get('continue_on_timeout', False))
+        enable_required = (
+            bool(getattr(self, 'PARAMIKO_ENABLE_MODE', False))
+            if enable_mode is None
+            else bool(enable_mode)
+        )
+        client = None
+        channel = None
+        current_prompt = ''
+        results = []
+
+        try:
+            client = self._open_paramiko_client(options)
+            channel = client.invoke_shell(term='vt100', width=200, height=1000)
+            if options.get('probe_prompt', True):
+                channel.send('\n')
+            initial = self._paramiko_expect(
+                channel,
+                command_timeout,
+                resolved_profile,
+                settle_timeout_sec=read_timeout,
+            )
+            current_prompt = str(initial.get('prompt') or '').rstrip()
+            if not initial.get('matched') or not current_prompt:
+                raise RuntimeError('prompt was not received after login')
+
+            if enable_required:
+                if not current_prompt.endswith('#'):
+                    privilege_command = 'enable'
+                    self._paramiko_sendline(channel, privilege_command)
+                    enable_result = self._paramiko_expect(
+                        channel,
+                        command_timeout,
+                        resolved_profile,
+                        extra_patterns=DEFAULT_PASSWORD_PROMPT_PATTERNS,
+                        settle_timeout_sec=read_timeout,
+                        command=privilege_command,
+                    )
+                    if enable_result.get('matched') and enable_result.get('match_kind') == 'pattern':
+                        password = self.get_connection_value('en_password', '')
+                        if password in (None, ''):
+                            raise ValueError('privilege password is required')
+                        self._paramiko_sendline(channel, password)
+                        enable_result = self._paramiko_expect(
+                            channel,
+                            command_timeout,
+                            resolved_profile,
+                            settle_timeout_sec=read_timeout,
+                        )
+                    current_prompt = str(enable_result.get('prompt') or '').rstrip()
+                    if not enable_result.get('matched') or not current_prompt:
+                        raise RuntimeError('enable prompt was not received')
+
+            for command_item in command_items:
+                command = command_item['command']
+                display_command = command_item.get('display_command', command)
+                hide_command = bool(command_item.get('hide_command'))
+                item_timeout = command_item.get('timeout', command_timeout)
+                ignore_prompt = command_item.get('ignore_prompt')
+                if ignore_prompt is None:
+                    ignore_prompt = continue_on_timeout
+
+                self._paramiko_sendline(channel, command)
+                received = self._paramiko_expect(
+                    channel,
+                    item_timeout,
+                    resolved_profile,
+                    prompt=(current_prompt or None),
+                    settle_timeout_sec=read_timeout,
+                    command=command,
+                )
+                timed_out = bool(received.get('timed_out', False))
+                rc = 0 if received.get('matched') else 124
+                stderr = ''
+                if rc != 0:
+                    stderr = 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received'
+                item_prompt = str(received.get('prompt') or '').rstrip()
+                output = self._strip_paramiko_command_output(
+                    command,
+                    received.get('text', ''),
+                    item_prompt,
+                )
+                raw_output = received.get('text', '')
+                if hide_command:
+                    raw_output = self._redact_paramiko_command_text(raw_output, command, display_command)
+                item = self._build_paramiko_result(
+                    command,
+                    rc,
+                    stdout=output,
+                    stderr=stderr,
+                    raw_output=raw_output,
+                    timed_out=timed_out,
+                    prompt=item_prompt,
+                    display_command=display_command,
+                    hide_command=hide_command,
+                )
+                results.append(item)
+                self._record_command(display_command, item['rc'], item['stdout'], item['stderr'])
+                if item['rc'] == 0 and item_prompt:
+                    current_prompt = item_prompt
+                elif timed_out and ignore_prompt:
+                    current_prompt = ''
+                if item['rc'] != 0 and not (ignore_prompt and timed_out):
+                    break
+        except Exception as exc:
+            stderr = 'PARAMIKO_CONNECTION_ERROR: ' + str(exc)
+            item = self._build_paramiko_result(
+                first_command,
+                255,
+                stderr=stderr,
+                display_command=first_display_command,
+                hide_command=first_hide_command,
+            )
+            results.append(item)
+            self._record_command(first_display_command, 255, '', stderr)
+        finally:
+            if channel is not None:
+                try:
+                    channel.close()
+                except Exception:
+                    pass
+            if client is not None:
+                try:
+                    client.close()
+                except Exception:
+                    pass
+
+        return results
+
+    def _run_paramiko(self, command, **kwargs):
+        results = self._run_paramiko_commands([command], **kwargs)
+        if not results:
+            return 1, '', 'paramiko command is empty'
+        result = results[0]
+        return result['rc'], result['stdout'], result['stderr']
 
     def _open_terminal(
         self,
@@ -279,6 +912,7 @@ class BaseCheck:
             'sshpass not installed',
             'winrm_unavailable',
             'winrm_exec_error',
+            'paramiko_connection_error',
         )
         return any(marker in text for marker in markers)
 
@@ -448,6 +1082,7 @@ class BaseCheck:
             2: '잘못된 사용/실행 오류',
             126: '권한 없음 또는 실행 불가',
             127: '명령어를 찾을 수 없음',
+            124: '명령 시간 초과',
             130: '사용자 인터럽트(Ctrl+C)',
             255: 'SSH/원격 실행 오류',
         }

@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "hostname",
+    "rc": 0,
+    "stdout": "WIN-TUTORIAL\n",
+    "stderr": ""
+  }
+]

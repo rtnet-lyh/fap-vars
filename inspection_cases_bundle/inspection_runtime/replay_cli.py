@@ -11,10 +11,8 @@ import sys
 
 try:
     from .runner import execute_runner, run_no_ssh
-    from .terminal import TerminalSession
 except ImportError:
     from runner import execute_runner, run_no_ssh
-    from terminal import TerminalSession
 
 
 def load_json(path):
@@ -278,6 +276,8 @@ class ReplayCommandExecutor:
             return self._build_miss(cmd, method)
 
         rule = self.rules[self.position]
+        if rule.get('channel'):
+            return self._build_miss(cmd, method)
         if not self._matches(rule, cmd):
             return self._build_miss(cmd, method)
 
@@ -341,51 +341,68 @@ class ReplayCommandExecutor:
     def run_no_ssh(self, cmd, host, port, user, password, ssh_options):
         return run_no_ssh(cmd, host, port, user, password, ssh_options)
 
-    def open_terminal(
-        self,
-        host,
-        port,
-        user,
-        password,
-        ssh_options,
-        history_callback=None,
-        pager_patterns=None,
-        pager_response=' ',
-        preferred_encodings=None,
-        open_timeout_sec=None,
-        default_timeout_sec=None,
-    ):
-        transport = ReplayTerminalTransport(self)
-        return TerminalSession(
-            transport=transport,
-            history_callback=history_callback,
-            pager_patterns=pager_patterns,
-            pager_response=pager_response,
-            default_timeout_sec=default_timeout_sec,
-        )
+    def new_paramiko_client(self):
+        return ReplayParamikoClient(self)
 
 
-class ReplayTerminalTransport:
+class ReplayParamikoClient:
+    def __init__(self, executor):
+        self.executor = executor
+        self.channel = ReplayParamikoChannel(executor)
+        self.connect_kwargs = None
+        self.closed = False
+
+    def set_missing_host_key_policy(self, policy):
+        self.policy = policy
+
+    def connect(self, **kwargs):
+        self.connect_kwargs = kwargs
+
+    def invoke_shell(self, *args, **kwargs):
+        del args, kwargs
+        return self.channel
+
+    def close(self):
+        self.closed = True
+
+
+class ReplayParamikoChannel:
     def __init__(self, executor):
         self.executor = executor
         self.closed = False
         self.prefetched = executor._consume_terminal_open()
 
-    def send(self, text, newline=False, redacted=False):
-        del newline
-        self.executor._consume_terminal_send(str(text or ''), redacted=redacted)
+    def send(self, text):
+        raw_text = str(text.decode('utf-8') if isinstance(text, bytes) else text or '')
+        send_text = raw_text.rstrip('\r\n')
+        if send_text == '':
+            return 0
+        rule = self.executor._peek_rule()
+        redacted = bool(rule.get('redacted')) if isinstance(rule, dict) else False
+        self.executor._consume_terminal_send(send_text, redacted=redacted)
+        return len(raw_text)
 
-    def read_chunk(self, timeout_sec=None):
+    def recv_ready(self):
         if self.closed:
-            return ''
+            return False
+        if self.prefetched is not None:
+            return True
+        rule = self.executor._peek_rule()
+        return bool(rule and rule.get('channel') == 'terminal' and rule.get('action') in ('recv', 'close'))
+
+    def recv(self, size):
+        del size
+        if self.closed:
+            return b''
         if self.prefetched is not None:
             data = self.prefetched
             self.prefetched = None
-            return data
-        data = self.executor._consume_terminal_recv(allow_no_data=timeout_sec is not None)
+        else:
+            data = self.executor._consume_terminal_recv(allow_no_data=False)
         if data == '':
             self.closed = True
-        return data
+            return b''
+        return str(data).encode('utf-8')
 
     def close(self):
         if self.closed:
@@ -415,7 +432,7 @@ def run_case_replay(case_dir, case_name=None):
         ssh_executor=executor.run_ssh,
         winrm_executor=executor.run_winrm,
         no_ssh_executor=executor.run_no_ssh,
-        terminal_opener=executor.open_terminal,
+        paramiko_client_factory=executor.new_paramiko_client,
         skip_precheck=True,
         logger=logger,
     )

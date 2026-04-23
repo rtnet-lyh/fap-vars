@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "Get-WinEvent -LogName System -MaxEvents 5",
+    "rc": 0,
+    "stdout": "[{\"TimeCreated\":\"2024-01-05T12:00:00\",\"Id\":6005,\"LevelDisplayName\":\"Information\",\"ProviderName\":\"EventLog\"},{\"TimeCreated\":\"2024-01-05T11:58:00\",\"Id\":7040,\"LevelDisplayName\":\"Information\",\"ProviderName\":\"Service Control Manager\"}]\n",
+    "stderr": ""
+  }
+]

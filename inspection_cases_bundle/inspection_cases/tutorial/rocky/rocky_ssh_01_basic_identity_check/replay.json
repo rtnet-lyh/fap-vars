@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "hostname && whoami",
+    "rc": 0,
+    "stdout": "rocky-tutorial\nfap\n",
+    "stderr": ""
+  }
+]

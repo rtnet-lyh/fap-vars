@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "Get-CimInstance Win32_LogicalDisk",
+    "rc": 0,
+    "stdout": "[{\"DeviceID\":\"C:\",\"VolumeName\":\"System\",\"Size\":\"214748364800\",\"FreeSpace\":\"107374182400\"},{\"DeviceID\":\"D:\",\"VolumeName\":\"Data\",\"Size\":\"107374182400\",\"FreeSpace\":\"53687091200\"}]\n",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "host": "172.20.2.100",
+  "port": 5986,
+  "user": "lyh",
+  "password": "f3dtop0!",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 80200,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "lyh",
+          "password": "f3dtop0!",
+          "port": 5986
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 81201,
+  "host_id": 81201,
+  "job_id": 81201,
+  "item": {
+    "inspection_code": "TUTORIAL-WINDOWS-WINRM-01",
+    "item_id": 98201,
+    "application_id": 80200,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "WINDOWS",
+    "application_family_name": "WINDOWS",
+    "threshold_list": []
+  }
+}
