@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "$result = [PSCustomObject]@{",
+    "rc": 0,
+    "stdout": "{\"ComputerName\":\"WIN-TUTORIAL\",\"WinRMStatus\":\"Running\",\"Is64Bit\":true}\n",
+    "stderr": ""
+  }
+]

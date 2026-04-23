@@ -116,13 +116,36 @@
       "application_name": "CISCO_IOS",
       "application_family_name": "CISCO_IOS",
       "threshold_list": [],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "PARAMIKO 연결 실패: PARAMIKO_CONNECTION_ERROR: Authentication failed.",
-      "raw_output": "PARAMIKO_CONNECTION_ERROR: Authentication failed."
+      "status": "ok",
+      "metrics": {
+        "clock_output": "12:34:56.789 KST Wed Jan 10 2024",
+        "commands": [
+          "enable",
+          "*******",
+          "show clock"
+        ]
+      },
+      "thresholds": {},
+      "reasons": "show clock 결과를 정상 수집했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: show clock\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 12:34:56.789 KST Wed Jan 10 2024",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: enable",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: show clock",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 12:34:56.789 KST Wed Jan 10 2024"
+      ],
+      "message": "_run_paramiko_commands 기본 예제가 정상 수행되었습니다. clock=\"12:34:56.789 KST Wed Jan 10 2024\""
     }
   ],
-  "failed_items": [
-    "TUTORIAL-CISCO-PARAMIKO-01"
-  ]
+  "failed_items": []
 }

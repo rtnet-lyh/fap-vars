@@ -2,8 +2,8 @@
 
 이 디렉터리는 연결 방식별 튜토리얼 케이스 모음이다.
 
-- `rocky/`: `CONNECTION_METHOD = 'ssh'`와 `_ssh(...)` 예시 5개
-- `windows/`: `CONNECTION_METHOD = 'winrm'`와 `_run_ps(...)` 예시 5개
+- `rocky/`: `CONNECTION_METHOD = 'ssh'`와 `_ssh(...)` 예시 6개
+- `windows/`: `CONNECTION_METHOD = 'winrm'`와 `_run_ps(...)` 예시 6개
 - `cisco_ios/`: `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands(...)` 예시 5개
 
 플랫폼별 가이드는 아래 문서를 본다.

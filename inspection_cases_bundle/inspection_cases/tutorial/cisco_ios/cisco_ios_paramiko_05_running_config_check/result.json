@@ -152,13 +152,68 @@
           "value1": "20"
         }
       ],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "PARAMIKO 연결 실패: PARAMIKO_CONNECTION_ERROR: Authentication failed.",
-      "raw_output": "PARAMIKO_CONNECTION_ERROR: Authentication failed."
+      "status": "ok",
+      "metrics": {
+        "commands": [
+          "enable",
+          "*******",
+          "terminal length 0",
+          "show running-config"
+        ],
+        "config_line_count": 25,
+        "hostname": "TRAINING-ROUTER"
+      },
+      "thresholds": {
+        "min_config_line_count": 20
+      },
+      "reasons": "긴 running-config 출력과 hostname을 정상 수집했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show running-config\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: version 17.9\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nhostname TRAINING-ROUTER\nenable secret 5 $1$abc$xyz\nusername admin privilege 15 secret 5 $1$def$uvw\nip domain name example.local\ninterface GigabitEthernet0/0\n description Uplink\n ip address 192.168.1.55 255.255.255.0\n no shutdown\ninterface GigabitEthernet0/1\n description UserAccess\n shutdown\ninterface Vlan1\n ip address 192.168.10.1 255.255.255.0\n no shutdown\nline con 0\n login local\nline vty 0 4\n transport input ssh\n login local\nbanner motd ^CUnauthorized access prohibited.^C\nntp server 192.168.10.10\nend",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: enable",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: terminal length 0",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 4]",
+        " - 실행 명령어: show running-config",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: version 17.9",
+        "service timestamps debug datetime msec",
+        "service timestamps log datetime msec",
+        "hostname TRAINING-ROUTER",
+        "enable secret 5 $1$abc$xyz",
+        "username admin privilege 15 secret 5 $1$def$uvw",
+        "ip domain name example.local",
+        "interface GigabitEthernet0/0",
+        " description Uplink",
+        " ip address 192.168.1.55 255.255.255.0",
+        " no shutdown",
+        "interface GigabitEthernet0/1",
+        " description UserAccess",
+        " shutdown",
+        "interface Vlan1",
+        " ip address 192.168.10.1 255.255.255.0",
+        " no shutdown",
+        "line con 0",
+        " login local",
+        "line vty 0 4",
+        " transport input ssh",
+        " login local",
+        "banner motd ^CUnauthorized access prohibited.^C",
+        "ntp server 192.168.10.10",
+        "end"
+      ],
+      "message": "_run_paramiko_commands 고급 예제가 정상 수행되었습니다. hostname=TRAINING-ROUTER, config_line_count=25"
     }
   ],
-  "failed_items": [
-    "TUTORIAL-CISCO-PARAMIKO-05"
-  ]
+  "failed_items": []
 }

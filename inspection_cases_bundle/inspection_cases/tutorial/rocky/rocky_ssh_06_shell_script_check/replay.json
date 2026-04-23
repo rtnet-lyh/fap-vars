@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "contains",
+    "matcher_value": "hostname_value=$(hostname)",
+    "rc": 0,
+    "stdout": "HOSTNAME=rocky-tutorial\nUPTIME= 10:14:05 up 12 days,  1:23,  2 users,  load average: 0.03, 0.05, 0.01\n",
+    "stderr": ""
+  }
+]

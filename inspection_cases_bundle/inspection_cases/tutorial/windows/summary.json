@@ -1,5 +1,5 @@
 {
-  "total_cases": 5,
+  "total_cases": 6,
   "failed_cases": [],
   "cases": [
     {
@@ -29,6 +29,12 @@
     {
       "case_name": "windows_winrm_05_system_eventlog_check",
       "result_file": "windows_winrm_05_system_eventlog_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "windows_winrm_06_powershell_script_check",
+      "result_file": "windows_winrm_06_powershell_script_check/result.json",
       "failed_items": [],
       "is_success": true
     }

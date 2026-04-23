@@ -179,13 +179,68 @@
           "value1": "1"
         }
       ],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "PARAMIKO 연결 실패: PARAMIKO_CONNECTION_ERROR: Authentication failed.",
-      "raw_output": "PARAMIKO_CONNECTION_ERROR: Authentication failed."
+      "status": "ok",
+      "metrics": {
+        "commands": [
+          "enable",
+          "*******",
+          "terminal length 0",
+          "show ip interface brief"
+        ],
+        "interface_count": 3,
+        "up_interface_count": 2,
+        "up_interfaces": [
+          "GigabitEthernet0/0",
+          "Vlan1"
+        ],
+        "interfaces": [
+          {
+            "interface": "GigabitEthernet0/0",
+            "status": "up",
+            "protocol": "up"
+          },
+          {
+            "interface": "GigabitEthernet0/1",
+            "status": "administratively down",
+            "protocol": "down"
+          },
+          {
+            "interface": "Vlan1",
+            "status": "up",
+            "protocol": "up"
+          }
+        ]
+      },
+      "thresholds": {
+        "min_up_interface_count": 1
+      },
+      "reasons": "show ip interface brief 결과를 정상 파싱했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show ip interface brief\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Interface              IP-Address      OK? Method Status                Protocol\nGigabitEthernet0/0     192.168.1.55    YES manual up                    up\nGigabitEthernet0/1     unassigned      YES unset  administratively down down\nVlan1                  192.168.10.1    YES manual up                    up",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: enable",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: terminal length 0",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 4]",
+        " - 실행 명령어: show ip interface brief",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Interface              IP-Address      OK? Method Status                Protocol",
+        "GigabitEthernet0/0     192.168.1.55    YES manual up                    up",
+        "GigabitEthernet0/1     unassigned      YES unset  administratively down down",
+        "Vlan1                  192.168.10.1    YES manual up                    up"
+      ],
+      "message": "_run_paramiko_commands 파싱 예제가 정상 수행되었습니다. up_interface_count=2"
     }
   ],
-  "failed_items": [
-    "TUTORIAL-CISCO-PARAMIKO-03"
-  ]
+  "failed_items": []
 }

@@ -133,21 +133,21 @@
           "terminal length 0",
           "show running-config | include ^hostname"
         ],
-        "hostname": "TEST_CISCO_C3650"
+        "hostname": "TRAINING-ROUTER"
       },
       "thresholds": {},
       "reasons": "실행 중 설정의 hostname 값을 정상 수집했습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: % Bad IP address or host name\n% Unknown command or computer name, or unable to find computer address\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show running-config | include ^hostname\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: hostname TEST_CISCO_C3650",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show running-config | include ^hostname\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: hostname TRAINING-ROUTER",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: enable",
-        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: % Bad IP address or host name",
-        "% Unknown command or computer name, or unable to find computer address",
         "",
         "[점검 단계 3]",
         " - 실행 명령어: terminal length 0",
@@ -156,9 +156,9 @@
         "[점검 단계 4]",
         " - 실행 명령어: show running-config | include ^hostname",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: hostname TEST_CISCO_C3650"
+        " - 출력 내용: hostname TRAINING-ROUTER"
       ],
-      "message": "hostname 파싱 예제가 정상 수행되었습니다. hostname=TEST_CISCO_C3650"
+      "message": "hostname 파싱 예제가 정상 수행되었습니다. hostname=TRAINING-ROUTER"
     }
   ],
   "failed_items": []
