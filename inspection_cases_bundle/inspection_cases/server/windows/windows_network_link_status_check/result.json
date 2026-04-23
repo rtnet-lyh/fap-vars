@@ -218,20 +218,6 @@
         "",
         "",
         "CHECK_CLASS = Check"
-      ],
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [\n  {\n    \"Name\": \"이더넷 2\",\n    \"InterfaceDescription\": \"Intel(R) Ethernet Connection (5) I219-LM #2\",\n    \"Status\": \"Up\",\n    \"LinkSpeed\": \"100 Mbps\"\n  }\n]",
-      "raw_output_lines": [
-        "[점검 단계 1]",
-        " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: [",
-        "  {",
-        "    \"Name\": \"이더넷 2\",",
-        "    \"InterfaceDescription\": \"Intel(R) Ethernet Connection (5) I219-LM #2\",",
-        "    \"Status\": \"Up\",",
-        "    \"LinkSpeed\": \"100 Mbps\"",
-        "  }",
-        "]"
       ]
     }
   ],
@@ -254,43 +240,21 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "physical_nic_count": 1,
-        "up_physical_nic_count": 1,
-        "down_physical_nic_count": 0,
-        "unknown_physical_nic_count": 0,
-        "not_present_physical_nic_count": 0,
-        "up_nic_names": [
-          "Wi-Fi"
-        ],
-        "not_present_nic_names": [],
-        "link_speeds": {
-          "Wi-Fi": "650 Mbps"
-        },
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "min_up_physical_nic_count": 1,
-        "failure_keywords": []
-      },
-      "reasons": "물리 NIC의 링크 상태를 점검한 결과 Up 상태의 어댑터가 확인되었고 비정상 상태는 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [\n  {\n    \"Name\": \"이더넷 2\",\n    \"InterfaceDescription\": \"Intel(R) Ethernet Connection (5) I219-LM #2\",\n    \"Status\": \"Up\",\n    \"LinkSpeed\": \"100 Mbps\"\n  }\n]",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Windows 네트워크 링크 상태 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: [",
-        "  {",
-        "    \"Name\": \"이더넷 2\",",
-        "    \"InterfaceDescription\": \"Intel(R) Ethernet Connection (5) I219-LM #2\",",
-        "    \"Status\": \"Up\",",
-        "    \"LinkSpeed\": \"100 Mbps\"",
-        "  }",
-        "]"
-      ],
-      "message": "Windows 네트워크 링크 상태 점검이 정상입니다. 현재 상태: 물리 NIC 1개, Up 1개 (기준 1개 이상), Not Present 0개."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, Status, LinkSpeed | ConvertTo-Json -Depth 3"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "W-REPLAY-NET-LINK-01"
+  ]
 }

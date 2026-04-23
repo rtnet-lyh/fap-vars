@@ -193,40 +193,21 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "filename": "C:\\pagefile.sys",
-        "swap_type": "file",
-        "swap_size_mb": 19464.0,
-        "swap_used_mb": 4973.0,
-        "swap_free_mb": 14491.0,
-        "swap_usage_percent": 25.55,
-        "peak_usage_mb": 7314.0,
-        "swap_size_gib": 19.01,
-        "swap_used_gib": 4.86,
-        "swap_free_gib": 14.15,
-        "peak_usage_gib": 7.14,
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "max_swap_usage_percent": 50.0,
-        "failure_keywords": []
-      },
-      "reasons": "스왑 메모리 사용률이 기준 범위 내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filename : C:\\pagefile.sys\nType     : file\nSize(MB) : 19464\nUsed(MB) : 4973\nUsage(%) : 25.55\nPeak(MB) : 7314",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Windows 스왑 메모리 사용률 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}} but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}} but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Filename : C:\\pagefile.sys",
-        "Type     : file",
-        "Size(MB) : 19464",
-        "Used(MB) : 4973",
-        "Usage(%) : 25.55",
-        "Peak(MB) : 7314"
-      ],
-      "message": "Windows 스왑 메모리 사용률 점검이 정상입니다. 현재 상태: 파일=C:\\pagefile.sys, 총 19.01GiB, 사용 4.86GiB, 여유 14.15GiB, 사용률 25.55% (기준 50.00% 미만), 피크 7.14GiB."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}} but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_PageFileUsage | Select-Object @{N='Filename';E={$_.Name}},@{N='Type';E={'file'}},@{N='Size(MB)';E={$_.AllocatedBaseSize}},@{N='Used(MB)';E={$_.CurrentUsage}},@{N='Usage(%)';E={if($_.AllocatedBaseSize){[math]::Round(($_.CurrentUsage/$_.AllocatedBaseSize)*100,2)}else{0}}},@{N='Peak(MB)';E={$_.PeakUsage}}"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "W-REPLAY-SWAP-01"
+  ]
 }

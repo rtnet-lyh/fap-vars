@@ -194,19 +194,200 @@
           "value1": "false"
         }
       ],
-      "status": "fail",
-      "error": "ESXi vCenter Agent 조회 실패",
-      "message": "VMwareHelper 기반 ESXi vCenter Agent 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi vCenter Agent 점검을 완료하지 못했습니다.",
+      "status": "warn",
+      "metrics": {
+        "host_name": "localhost.rtnet",
+        "managed_by_vcenter": false,
+        "management_server_ip": "",
+        "connection_state": "connected",
+        "services": [
+          {
+            "key": "apiForwarder",
+            "label": "apiForwarder",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "attestd",
+            "label": "attestd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "DCUI",
+            "label": "Direct Console UI",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "dpd",
+            "label": "dpd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "entropyd",
+            "label": "entropyd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "gpuManager",
+            "label": "gpuManager",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "hbrsrv",
+            "label": "hbrsrv",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "hostd",
+            "label": "hostd (vSphere API session)",
+            "running": true,
+            "policy": "api-session"
+          },
+          {
+            "key": "infravisor",
+            "label": "infravisor",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "kmxd",
+            "label": "kmxd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "lbtd",
+            "label": "Load-Based Teaming Daemon",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "lwsmd",
+            "label": "Active Directory Service",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "ntpd",
+            "label": "NTP Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "nvmf-discoveryd",
+            "label": "nvmf-discoveryd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "pcscd",
+            "label": "PC/SC Smart Card Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "ptpd",
+            "label": "PTP Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "sfcbd-watchdog",
+            "label": "CIM Server",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "slpd",
+            "label": "slpd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "snmpd",
+            "label": "SNMP Server",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "TSM",
+            "label": "ESXi Shell",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "TSM-SSH",
+            "label": "SSH",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "vdtc",
+            "label": "VDTC Service",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "vltd",
+            "label": "vltd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "vmsyslogd",
+            "label": "Syslog Server",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "vpxa",
+            "label": "VMware vCenter Agent",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "xorg",
+            "label": "X.Org Server",
+            "running": false,
+            "policy": "on"
+          }
+        ],
+        "source": "pyvmomi",
+        "vpxa": {
+          "exists": true,
+          "running": true,
+          "policy": "on"
+        }
+      },
+      "thresholds": {
+        "require_vcenter_connection": false,
+        "expected_connection_state": "connected",
+        "force_replay": false
+      },
+      "reasons": "단독 ESXi 운영 정책으로 vCenter 연결 점검 대상이 아닙니다.",
+      "message": "ESXi가 vCenter 관리 대상으로 확인되지 않아 대상미해당으로 분류했습니다. 현재 상태: host=localhost.rtnet, managed_by_vcenter=False, management_server_ip=없음, connection_state=connected (기준 connected), vpxa.exists=True, vpxa.running=True.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi vCenter Agent 통신 상태 조회 결과\n- source: pyvmomi\n- host_name: localhost.rtnet\n- managed_by_vcenter: False\n- management_server_ip: \n- connection_state: connected\n- vpxa.exists: True\n- vpxa.running: True\n- vpxa.policy: on",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: VMwareHelper 기반 ESXi vCenter Agent 점검을 완료하지 못했습니다."
+        " - 출력 내용: ESXi vCenter Agent 통신 상태 조회 결과",
+        "- source: pyvmomi",
+        "- host_name: localhost.rtnet",
+        "- managed_by_vcenter: False",
+        "- management_server_ip: ",
+        "- connection_state: connected",
+        "- vpxa.exists: True",
+        "- vpxa.running: True",
+        "- vpxa.policy: on"
       ]
     }
   ],
-  "failed_items": [
-    "ESXI-STATUS-VCENTER-AGENT-01"
-  ]
+  "failed_items": []
 }

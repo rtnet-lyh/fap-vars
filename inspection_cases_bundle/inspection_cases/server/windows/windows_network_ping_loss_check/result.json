@@ -22,7 +22,7 @@
           "value1": ""
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nNETWORK_GATEWAY_PING_COMMAND = (\n    \"$OutputEncoding = [System.Text.UTF8Encoding]::new($false); \"\n    \"[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); \"\n    'ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | '\n    'Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)'\n)\n\n\ndef _parse_int(value):\n    return int(str(value).strip())\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'winrm'\n    WINRM_SHELL = 'powershell'\n\n    def run(self):\n        max_loss_percent = self.get_threshold_var('max_loss_percent', default=0, value_type='int')\n        max_average_time_ms = self.get_threshold_var('max_average_time_ms', default=50, value_type='int')\n        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')\n\n        rc, out, err = self._run_ps(NETWORK_GATEWAY_PING_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if self._is_not_applicable(rc, err):\n            return self.fail(\n                'WinRM 실행 환경을 사용할 수 없습니다.',\n                message='Windows 기본 게이트웨이 Ping 점검을 수행할 수 없습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Windows 기본 게이트웨이 Ping 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        text = (out or '').strip()\n        if not text:\n            return self.fail(\n                'Ping 결과 없음',\n                message='기본 게이트웨이 Ping 결과가 비어 있습니다.',\n                stdout='',\n                stderr=(err or '').strip(),\n            )\n\n        failure_keywords = [\n            keyword.strip()\n            for keyword in failure_keywords_raw.split(',')\n            if keyword.strip()\n        ]\n        matched_failure_keywords = [\n            keyword for keyword in failure_keywords if keyword.lower() in text.lower()\n        ]\n        if matched_failure_keywords:\n            return self.fail(\n                '게이트웨이 Ping 실패 키워드 감지',\n                message='기본 게이트웨이 Ping 결과에서 실패 키워드가 확인되었습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        target_match = re.search(r'Ping\\s+([0-9.]+)\\s+\\S+', text)\n        packet_match = re.search(\n            r'보냄\\s*=\\s*(\\d+),\\s*받음\\s*=\\s*(\\d+),\\s*손실\\s*=\\s*(\\d+)\\s*\\((\\d+)%\\s*손실\\)',\n            text,\n        )\n        rtt_match = re.search(\n            r'최소\\s*=\\s*(\\d+)ms,\\s*최대\\s*=\\s*(\\d+)ms,\\s*평균\\s*=\\s*(\\d+)ms',\n            text,\n        )\n\n        if not packet_match:\n            return self.fail(\n                'Ping 통계 파싱 실패',\n                message='패킷 송수신 및 손실 통계를 해석하지 못했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        sent = _parse_int(packet_match.group(1))\n        received = _parse_int(packet_match.group(2))\n        lost = _parse_int(packet_match.group(3))\n        loss_percent = _parse_int(packet_match.group(4))\n\n        min_rtt = ''\n        max_rtt = ''\n        avg_rtt = ''\n        if rtt_match:\n            min_rtt = _parse_int(rtt_match.group(1))\n            max_rtt = _parse_int(rtt_match.group(2))\n            avg_rtt = _parse_int(rtt_match.group(3))\n\n        if loss_percent > max_loss_percent:\n            return self.fail(\n                '기본 게이트웨이 Ping 손실 감지',\n                message='기본 게이트웨이 Ping 손실률이 기준치를 초과했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        if avg_rtt != '' and avg_rtt > max_average_time_ms:\n            return self.fail(\n                '기본 게이트웨이 Ping 지연 초과',\n                message='기본 게이트웨이 Ping 평균 응답 시간이 기준치를 초과했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        reasons = '기본 라우터로의 Ping 결과에서 패킷 손실이 없고 응답 시간이 기준 범위 내입니다.'\n\n        return self.ok(\n            metrics={\n                'target_gateway': target_match.group(1) if target_match else '',\n                'sent_packets': sent,\n                'received_packets': received,\n                'lost_packets': lost,\n                'loss_percent': loss_percent,\n                'minimum_time_ms': min_rtt,\n                'maximum_time_ms': max_rtt,\n                'average_time_ms': avg_rtt,\n                'matched_failure_keywords': matched_failure_keywords,\n            },\n            thresholds={\n                'max_loss_percent': max_loss_percent,\n                'max_average_time_ms': max_average_time_ms,\n                'failure_keywords': failure_keywords,\n            },\n            reasons=reasons,\n            message=(\n                f'Windows 기본 게이트웨이 Ping 점검이 정상입니다. 현재 상태: '\n                f'gateway={target_match.group(1) if target_match else \"unknown\"}, '\n                f'sent={sent}, received={received}, lost={lost} ({loss_percent}% 손실, 기준 {max_loss_percent}% 이하), '\n                f'avg={avg_rtt if avg_rtt != \"\" else \"N/A\"}ms (기준 {max_average_time_ms}ms 이하).'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nNETWORK_GATEWAY_PING_COMMAND = (\n    \"$OutputEncoding = [System.Text.UTF8Encoding]::new($false); \"\n    \"[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); \"\n    'ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | '\n    'Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)'\n)\n\n\ndef _parse_int(value):\n    return int(str(value).strip())\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'winrm'\n    WINRM_SHELL = 'powershell'\n\n    def run(self):\n        max_loss_percent = self.get_threshold_var('max_loss_percent', default=0, value_type='int')\n        max_average_time_ms = self.get_threshold_var('max_average_time_ms', default=50, value_type='int')\n        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')\n\n        rc, out, err = self._run_ps(NETWORK_GATEWAY_PING_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if self._is_not_applicable(rc, err):\n            return self.fail(\n                'WinRM 실행 환경을 사용할 수 없습니다.',\n                message='Windows 기본 게이트웨이 Ping 점검을 수행할 수 없습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Windows 기본 게이트웨이 Ping 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        text = (out or '').strip()\n        if not text:\n            return self.fail(\n                'Ping 결과 없음',\n                message='기본 게이트웨이 Ping 결과가 비어 있습니다.',\n                stdout='',\n                stderr=(err or '').strip(),\n            )\n\n        failure_keywords = [\n            keyword.strip()\n            for keyword in failure_keywords_raw.split(',')\n            if keyword.strip()\n        ]\n        matched_failure_keywords = [\n            keyword for keyword in failure_keywords if keyword.lower() in text.lower()\n        ]\n        if matched_failure_keywords:\n            return self.fail(\n                '게이트웨이 Ping 실패 키워드 감지',\n                message='기본 게이트웨이 Ping 결과에서 실패 키워드가 확인되었습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        target_match = re.search(r'Ping(?:ing)?\\s+([0-9.]+)\\b', text, re.IGNORECASE)\n        packet_match = re.search(\n            r'(?:보냄|Sent)\\s*=\\s*(\\d+),\\s*'\n            r'(?:받음|Received)\\s*=\\s*(\\d+),\\s*'\n            r'(?:손실|Lost)\\s*=\\s*(\\d+)\\s*'\n            r'\\((\\d+)%\\s*(?:손실|loss)\\)',\n            text,\n            re.IGNORECASE,\n        )\n        rtt_match = re.search(\n            r'(?:최소|Minimum)\\s*=\\s*(\\d+)ms,\\s*'\n            r'(?:최대|Maximum)\\s*=\\s*(\\d+)ms,\\s*'\n            r'(?:평균|Average)\\s*=\\s*(\\d+)ms',\n            text,\n            re.IGNORECASE,\n        )\n\n        if not packet_match:\n            return self.fail(\n                'Ping 통계 파싱 실패',\n                message='패킷 송수신 및 손실 통계를 해석하지 못했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        sent = _parse_int(packet_match.group(1))\n        received = _parse_int(packet_match.group(2))\n        lost = _parse_int(packet_match.group(3))\n        loss_percent = _parse_int(packet_match.group(4))\n\n        min_rtt = ''\n        max_rtt = ''\n        avg_rtt = ''\n        if rtt_match:\n            min_rtt = _parse_int(rtt_match.group(1))\n            max_rtt = _parse_int(rtt_match.group(2))\n            avg_rtt = _parse_int(rtt_match.group(3))\n\n        if loss_percent > max_loss_percent:\n            return self.fail(\n                '기본 게이트웨이 Ping 손실 감지',\n                message='기본 게이트웨이 Ping 손실률이 기준치를 초과했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        if avg_rtt != '' and avg_rtt > max_average_time_ms:\n            return self.fail(\n                '기본 게이트웨이 Ping 지연 초과',\n                message='기본 게이트웨이 Ping 평균 응답 시간이 기준치를 초과했습니다.',\n                stdout=text,\n                stderr=(err or '').strip(),\n            )\n\n        reasons = '기본 라우터로의 Ping 결과에서 패킷 손실이 없고 응답 시간이 기준 범위 내입니다.'\n\n        return self.ok(\n            metrics={\n                'target_gateway': target_match.group(1) if target_match else '',\n                'sent_packets': sent,\n                'received_packets': received,\n                'lost_packets': lost,\n                'loss_percent': loss_percent,\n                'minimum_time_ms': min_rtt,\n                'maximum_time_ms': max_rtt,\n                'average_time_ms': avg_rtt,\n                'matched_failure_keywords': matched_failure_keywords,\n            },\n            thresholds={\n                'max_loss_percent': max_loss_percent,\n                'max_average_time_ms': max_average_time_ms,\n                'failure_keywords': failure_keywords,\n            },\n            reasons=reasons,\n            message=(\n                f'Windows 기본 게이트웨이 Ping 점검이 정상입니다. 현재 상태: '\n                f'gateway={target_match.group(1) if target_match else \"unknown\"}, '\n                f'sent={sent}, received={received}, lost={lost} ({loss_percent}% 손실, 기준 {max_loss_percent}% 이하), '\n                f'avg={avg_rtt if avg_rtt != \"\" else \"N/A\"}ms (기준 {max_average_time_ms}ms 이하).'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -103,14 +103,21 @@
         "                stderr=(err or '').strip(),",
         "            )",
         "",
-        "        target_match = re.search(r'Ping\\s+([0-9.]+)\\s+\\S+', text)",
+        "        target_match = re.search(r'Ping(?:ing)?\\s+([0-9.]+)\\b', text, re.IGNORECASE)",
         "        packet_match = re.search(",
-        "            r'보냄\\s*=\\s*(\\d+),\\s*받음\\s*=\\s*(\\d+),\\s*손실\\s*=\\s*(\\d+)\\s*\\((\\d+)%\\s*손실\\)',",
+        "            r'(?:보냄|Sent)\\s*=\\s*(\\d+),\\s*'",
+        "            r'(?:받음|Received)\\s*=\\s*(\\d+),\\s*'",
+        "            r'(?:손실|Lost)\\s*=\\s*(\\d+)\\s*'",
+        "            r'\\((\\d+)%\\s*(?:손실|loss)\\)',",
         "            text,",
+        "            re.IGNORECASE,",
         "        )",
         "        rtt_match = re.search(",
-        "            r'최소\\s*=\\s*(\\d+)ms,\\s*최대\\s*=\\s*(\\d+)ms,\\s*평균\\s*=\\s*(\\d+)ms',",
+        "            r'(?:최소|Minimum)\\s*=\\s*(\\d+)ms,\\s*'",
+        "            r'(?:최대|Maximum)\\s*=\\s*(\\d+)ms,\\s*'",
+        "            r'(?:평균|Average)\\s*=\\s*(\\d+)ms',",
         "            text,",
+        "            re.IGNORECASE,",
         "        )",
         "",
         "        if not packet_match:",
@@ -206,48 +213,21 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "target_gateway": "192.168.0.1",
-        "sent_packets": 10,
-        "received_packets": 10,
-        "lost_packets": 0,
-        "loss_percent": 0,
-        "minimum_time_ms": 0,
-        "maximum_time_ms": 50,
-        "average_time_ms": 6,
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "max_loss_percent": 0,
-        "max_average_time_ms": 50,
-        "failure_keywords": []
-      },
-      "reasons": "기본 라우터로의 Ping 결과에서 패킷 손실이 없고 응답 시간이 기준 범위 내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Ping 192.168.0.1 32바이트 데이터 사용:\n192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=50ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간<1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64\n\n192.168.0.1에 대한 Ping 통계:\n    패킷: 보냄 = 10, 받음 = 10, 손실 = 0 (0% 손실),\n왕복 시간(밀리초):\n    최소 = 0ms, 최대 = 50ms, 평균 = 6ms",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Windows 기본 게이트웨이 Ping 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Ping 192.168.0.1 32바이트 데이터 사용:",
-        "192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=50ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간<1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
-        "192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64",
-        "",
-        "192.168.0.1에 대한 Ping 통계:",
-        "    패킷: 보냄 = 10, 받음 = 10, 손실 = 0 (0% 손실),",
-        "왕복 시간(밀리초):",
-        "    최소 = 0ms, 최대 = 50ms, 평균 = 6ms"
-      ],
-      "message": "Windows 기본 게이트웨이 Ping 점검이 정상입니다. 현재 상태: gateway=192.168.0.1, sent=10, received=10, lost=0 (0% 손실, 기준 0% 이하), avg=6ms (기준 50ms 이하)."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "W-REPLAY-GW-PING-01"
+  ]
 }

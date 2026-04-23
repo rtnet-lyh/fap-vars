@@ -233,19 +233,72 @@
           "value1": "false"
         }
       ],
-      "status": "fail",
-      "error": "ESXi VM 목록 조회 실패",
-      "message": "VMwareHelper 기반 ESXi VM 목록 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi VM 리스트 점검을 완료하지 못했습니다.",
+      "status": "ok",
+      "metrics": {
+        "vm_count": 5,
+        "virtual_machines": [
+          {
+            "name": "AGCP1_245",
+            "uuid": "564d4651-c221-9658-5312-d976536de183",
+            "power_state": "poweredOn"
+          },
+          {
+            "name": "AGCP2_174",
+            "uuid": "564dcd3b-0f63-3fbc-3254-f9f5c9c7ddb3",
+            "power_state": "poweredOn"
+          },
+          {
+            "name": "AGCP3_32",
+            "uuid": "564d6f22-d0f2-5396-6c93-5f513fec2108",
+            "power_state": "poweredOn"
+          },
+          {
+            "name": "AGHA1_238",
+            "uuid": "564d2b7d-53dc-bcd7-1734-58e8298261cc",
+            "power_state": "poweredOn"
+          },
+          {
+            "name": "AGWN1_133",
+            "uuid": "564d32d1-801f-d31d-a35a-fdac27c63948",
+            "power_state": "poweredOn"
+          }
+        ],
+        "source": "pyvmomi",
+        "missing_required_vms": [],
+        "abnormal_vms": [],
+        "empty_name_count": 0,
+        "duplicate_names": []
+      },
+      "thresholds": {
+        "min_vm_count": 1,
+        "required_vm_names": [],
+        "allowed_power_states": [
+          "poweredOn",
+          "poweredOff",
+          "suspended"
+        ],
+        "force_replay": false
+      },
+      "reasons": "VM 목록 조회가 성공했고 필수 VM과 전원 상태 기준을 충족합니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi VM 목록 조회 결과\n- source: pyvmomi\n- vm_count: 5\n- virtual_machines:\n  - AGCP1_245: uuid=564d4651-c221-9658-5312-d976536de183, power_state=poweredOn\n  - AGCP2_174: uuid=564dcd3b-0f63-3fbc-3254-f9f5c9c7ddb3, power_state=poweredOn\n  - AGCP3_32: uuid=564d6f22-d0f2-5396-6c93-5f513fec2108, power_state=poweredOn\n  - AGHA1_238: uuid=564d2b7d-53dc-bcd7-1734-58e8298261cc, power_state=poweredOn\n  - AGWN1_133: uuid=564d32d1-801f-d31d-a35a-fdac27c63948, power_state=poweredOn\n- missing_required_vms: \n- abnormal_vms:",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: VMwareHelper 기반 ESXi VM 리스트 점검을 완료하지 못했습니다."
-      ]
+        " - 출력 내용: ESXi VM 목록 조회 결과",
+        "- source: pyvmomi",
+        "- vm_count: 5",
+        "- virtual_machines:",
+        "  - AGCP1_245: uuid=564d4651-c221-9658-5312-d976536de183, power_state=poweredOn",
+        "  - AGCP2_174: uuid=564dcd3b-0f63-3fbc-3254-f9f5c9c7ddb3, power_state=poweredOn",
+        "  - AGCP3_32: uuid=564d6f22-d0f2-5396-6c93-5f513fec2108, power_state=poweredOn",
+        "  - AGHA1_238: uuid=564d2b7d-53dc-bcd7-1734-58e8298261cc, power_state=poweredOn",
+        "  - AGWN1_133: uuid=564d32d1-801f-d31d-a35a-fdac27c63948, power_state=poweredOn",
+        "- missing_required_vms: ",
+        "- abnormal_vms:"
+      ],
+      "message": "ESXi VM 목록 상태가 정상입니다. 현재 상태: vm_count=5 (기준 1 이상), 필수 VM=없음, 누락 VM=없음, 허용 전원 상태=poweredOn, poweredOff, suspended, 비정상 VM=없음, 중복 VM=없음, 이름 없는 VM=0건. VM 수, 필수 VM 목록, 전원 상태 기준이 모두 충족되었습니다."
     }
   ],
-  "failed_items": [
-    "ESXI-STATUS-VM-LIST-01"
-  ]
+  "failed_items": []
 }

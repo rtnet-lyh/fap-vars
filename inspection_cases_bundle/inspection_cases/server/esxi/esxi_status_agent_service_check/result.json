@@ -222,19 +222,226 @@
           "value1": "false"
         }
       ],
-      "status": "fail",
-      "error": "ESXi Agent 서비스 조회 실패",
-      "message": "VMwareHelper 기반 ESXi Agent 서비스 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi Agent 서비스 점검을 완료하지 못했습니다.",
+      "status": "ok",
+      "metrics": {
+        "host_name": "localhost.rtnet",
+        "managed_by_vcenter": false,
+        "management_server_ip": "",
+        "connection_state": "connected",
+        "services": [
+          {
+            "key": "apiForwarder",
+            "label": "apiForwarder",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "attestd",
+            "label": "attestd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "DCUI",
+            "label": "Direct Console UI",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "dpd",
+            "label": "dpd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "entropyd",
+            "label": "entropyd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "gpuManager",
+            "label": "gpuManager",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "hbrsrv",
+            "label": "hbrsrv",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "hostd",
+            "label": "hostd (vSphere API session)",
+            "running": true,
+            "policy": "api-session"
+          },
+          {
+            "key": "infravisor",
+            "label": "infravisor",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "kmxd",
+            "label": "kmxd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "lbtd",
+            "label": "Load-Based Teaming Daemon",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "lwsmd",
+            "label": "Active Directory Service",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "ntpd",
+            "label": "NTP Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "nvmf-discoveryd",
+            "label": "nvmf-discoveryd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "pcscd",
+            "label": "PC/SC Smart Card Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "ptpd",
+            "label": "PTP Daemon",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "sfcbd-watchdog",
+            "label": "CIM Server",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "slpd",
+            "label": "slpd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "snmpd",
+            "label": "SNMP Server",
+            "running": false,
+            "policy": "on"
+          },
+          {
+            "key": "TSM",
+            "label": "ESXi Shell",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "TSM-SSH",
+            "label": "SSH",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "vdtc",
+            "label": "VDTC Service",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "vltd",
+            "label": "vltd",
+            "running": false,
+            "policy": "off"
+          },
+          {
+            "key": "vmsyslogd",
+            "label": "Syslog Server",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "vpxa",
+            "label": "VMware vCenter Agent",
+            "running": true,
+            "policy": "on"
+          },
+          {
+            "key": "xorg",
+            "label": "X.Org Server",
+            "running": false,
+            "policy": "on"
+          }
+        ],
+        "source": "pyvmomi",
+        "service_count": 26,
+        "missing_services": [],
+        "stopped_services": []
+      },
+      "thresholds": {
+        "required_agent_services": [
+          "hostd"
+        ],
+        "require_vpxa_when_managed": true,
+        "force_replay": false
+      },
+      "reasons": "필수 Agent 서비스가 존재하고 실행 중입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi HostServiceSystem Agent 서비스 조회 결과\n- source: pyvmomi\n- host_name: localhost.rtnet\n- managed_by_vcenter: False\n- management_server_ip: \n- connection_state: connected\n- services:\n  - apiForwarder (apiForwarder): running=True, policy=on\n  - attestd (attestd): running=False, policy=off\n  - DCUI (Direct Console UI): running=True, policy=on\n  - dpd (dpd): running=False, policy=off\n  - entropyd (entropyd): running=False, policy=off\n  - gpuManager (gpuManager): running=False, policy=on\n  - hbrsrv (hbrsrv): running=False, policy=off\n  - hostd (hostd (vSphere API session)): running=True, policy=api-session\n  - infravisor (infravisor): running=True, policy=on\n  - kmxd (kmxd): running=False, policy=off\n  - lbtd (Load-Based Teaming Daemon): running=True, policy=on\n  - lwsmd (Active Directory Service): running=False, policy=off\n  - ntpd (NTP Daemon): running=False, policy=off\n  - nvmf-discoveryd (nvmf-discoveryd): running=False, policy=off\n  - pcscd (PC/SC Smart Card Daemon): running=False, policy=off\n  - ptpd (PTP Daemon): running=False, policy=off\n  - sfcbd-watchdog (CIM Server): running=False, policy=on\n  - slpd (slpd): running=False, policy=off\n  - snmpd (SNMP Server): running=False, policy=on\n  - TSM (ESXi Shell): running=False, policy=off\n  - TSM-SSH (SSH): running=False, policy=off\n  - vdtc (VDTC Service): running=True, policy=on\n  - vltd (vltd): running=False, policy=off\n  - vmsyslogd (Syslog Server): running=True, policy=on\n  - vpxa (VMware vCenter Agent): running=True, policy=on\n  - xorg (X.Org Server): running=False, policy=on\n- missing_services: \n- stopped_services:",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: VMwareHelper 기반 ESXi Agent 서비스 점검을 완료하지 못했습니다."
-      ]
+        " - 출력 내용: ESXi HostServiceSystem Agent 서비스 조회 결과",
+        "- source: pyvmomi",
+        "- host_name: localhost.rtnet",
+        "- managed_by_vcenter: False",
+        "- management_server_ip: ",
+        "- connection_state: connected",
+        "- services:",
+        "  - apiForwarder (apiForwarder): running=True, policy=on",
+        "  - attestd (attestd): running=False, policy=off",
+        "  - DCUI (Direct Console UI): running=True, policy=on",
+        "  - dpd (dpd): running=False, policy=off",
+        "  - entropyd (entropyd): running=False, policy=off",
+        "  - gpuManager (gpuManager): running=False, policy=on",
+        "  - hbrsrv (hbrsrv): running=False, policy=off",
+        "  - hostd (hostd (vSphere API session)): running=True, policy=api-session",
+        "  - infravisor (infravisor): running=True, policy=on",
+        "  - kmxd (kmxd): running=False, policy=off",
+        "  - lbtd (Load-Based Teaming Daemon): running=True, policy=on",
+        "  - lwsmd (Active Directory Service): running=False, policy=off",
+        "  - ntpd (NTP Daemon): running=False, policy=off",
+        "  - nvmf-discoveryd (nvmf-discoveryd): running=False, policy=off",
+        "  - pcscd (PC/SC Smart Card Daemon): running=False, policy=off",
+        "  - ptpd (PTP Daemon): running=False, policy=off",
+        "  - sfcbd-watchdog (CIM Server): running=False, policy=on",
+        "  - slpd (slpd): running=False, policy=off",
+        "  - snmpd (SNMP Server): running=False, policy=on",
+        "  - TSM (ESXi Shell): running=False, policy=off",
+        "  - TSM-SSH (SSH): running=False, policy=off",
+        "  - vdtc (VDTC Service): running=True, policy=on",
+        "  - vltd (vltd): running=False, policy=off",
+        "  - vmsyslogd (Syslog Server): running=True, policy=on",
+        "  - vpxa (VMware vCenter Agent): running=True, policy=on",
+        "  - xorg (X.Org Server): running=False, policy=on",
+        "- missing_services: ",
+        "- stopped_services:"
+      ],
+      "message": "ESXi Agent 서비스 상태가 정상입니다. 현재 상태: host=localhost.rtnet, managed_by_vcenter=False, 필수 서비스=hostd, 실행 중 서비스=DCUI, apiForwarder, hostd, infravisor, lbtd, vdtc, vmsyslogd, vpxa. 필수 Agent 서비스가 모두 존재하고 실행 중입니다."
     }
   ],
-  "failed_items": [
-    "ESXI-STATUS-AGENT-SERVICE-01"
-  ]
+  "failed_items": []
 }

@@ -1,12 +1,8 @@
 {
-  "total_cases": 95,
+  "total_cases": 93,
   "failed_cases": [
-    "server/esxi/esxi_datastore_path_check",
-    "server/esxi/esxi_status_agent_service_check",
     "server/esxi/esxi_status_basic_check",
     "server/esxi/esxi_status_hardware_health_check",
-    "server/esxi/esxi_status_vcenter_agent_check",
-    "server/esxi/esxi_status_vm_list_check",
     "server/hpux/hpux_disk_filesystem_inode_bdf_check",
     "server/hpux/hpux_disk_filesystem_usage_bdf_check",
     "server/hpux/hpux_kernel_parameter_kctune_check",
@@ -26,46 +22,48 @@
     "server/rocky/rocky_log_system_dmesg_check",
     "server/rocky/rocky_memory_swap_swapon_check",
     "server/rocky/rocky_network_nic_redundancy_bonding_check",
-    "server/windows/windows_filesystem_usage_cim_check",
+    "server/windows/windows_cluster_daemon_check",
+    "server/windows/windows_cluster_shared_volume_check",
+    "server/windows/windows_cpu_core_cim_check",
+    "server/windows/windows_cpu_usage_counter_check",
+    "server/windows/windows_disk_ swap_usage_check",
+    "server/windows/windows_disk_filesystem_usage_cim_check",
+    "server/windows/windows_disk_inode_not_applicable_check",
+    "server/windows/windows_disk_io_counter_check",
+    "server/windows/windows_disk_recognition_cim_check",
+    "server/windows/windows_disk_redundancy_health_check",
+    "server/windows/windows_kernel_parameter_nettcp_check",
+    "server/windows/windows_log_cluster_event_check",
+    "server/windows/windows_log_cpu_event_check",
+    "server/windows/windows_log_fan_manual_check",
+    "server/windows/windows_log_hba_manual_check",
+    "server/windows/windows_log_io_event_check",
     "server/windows/windows_log_kernel_event_check",
+    "server/windows/windows_log_memory_event_check",
+    "server/windows/windows_log_nic_event_check",
+    "server/windows/windows_log_power_event_check",
     "server/windows/windows_log_system_event_check",
+    "server/windows/windows_memory_pagefile_usage_cim_check",
+    "server/windows/windows_memory_recognition_cim_check",
     "server/windows/windows_memory_usage_cim_check",
-    "server/windows/windows_shared_volume_check"
+    "server/windows/windows_network_link_status_check",
+    "server/windows/windows_network_nic_teaming_check",
+    "server/windows/windows_network_ping_loss_check",
+    "server/windows/windows_os_hba_connection_manual_check",
+    "server/windows/windows_os_mpio_path_check"
   ],
   "cases": [
     {
-      "case_name": "network/cisco_ios/cisco_ios_cpu_usage_check",
-      "result_file": "network/cisco_ios/cisco_ios_cpu_usage_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "network/cisco_ios/cisco_ios_enable_show_running_config_terminal_check",
-      "result_file": "network/cisco_ios/cisco_ios_enable_show_running_config_terminal_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "network/cisco_ios/cisco_ios_system_version_show_version_check",
-      "result_file": "network/cisco_ios/cisco_ios_system_version_show_version_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
       "case_name": "server/esxi/esxi_datastore_path_check",
       "result_file": "server/esxi/esxi_datastore_path_check/result.json",
-      "failed_items": [
-        "ESXI-DATASTORE-PATH-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "server/esxi/esxi_status_agent_service_check",
       "result_file": "server/esxi/esxi_status_agent_service_check/result.json",
-      "failed_items": [
-        "ESXI-STATUS-AGENT-SERVICE-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "server/esxi/esxi_status_basic_check",
@@ -86,18 +84,14 @@
     {
       "case_name": "server/esxi/esxi_status_vcenter_agent_check",
       "result_file": "server/esxi/esxi_status_vcenter_agent_check/result.json",
-      "failed_items": [
-        "ESXI-STATUS-VCENTER-AGENT-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "server/esxi/esxi_status_vm_list_check",
       "result_file": "server/esxi/esxi_status_vm_list_check/result.json",
-      "failed_items": [
-        "ESXI-STATUS-VM-LIST-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "server/hpux/hpux_cluster_daemon_cmviewcl_check",
@@ -486,96 +480,132 @@
       "is_success": true
     },
     {
-      "case_name": "server/windows/windows_cluster_service_check",
-      "result_file": "server/windows/windows_cluster_service_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "case_name": "server/windows/windows_cluster_daemon_check",
+      "result_file": "server/windows/windows_cluster_daemon_check/result.json",
+      "failed_items": [
+        "W-REPLAY-CLUSTER-DAEMON-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_cluster_shared_volume_check",
+      "result_file": "server/windows/windows_cluster_shared_volume_check/result.json",
+      "failed_items": [
+        "W-REPLAY-CLUSTER-MOUNT-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_cpu_core_cim_check",
       "result_file": "server/windows/windows_cpu_core_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-CPU-CORE-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_cpu_usage_counter_check",
       "result_file": "server/windows/windows_cpu_usage_counter_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-CPU-01"
+      ],
+      "is_success": false
     },
     {
-      "case_name": "server/windows/windows_disk_io_counter_check",
-      "result_file": "server/windows/windows_disk_io_counter_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "case_name": "server/windows/windows_disk_ swap_usage_check",
+      "result_file": "server/windows/windows_disk_ swap_usage_check/result.json",
+      "failed_items": [
+        "W-REPLAY-SWAP-01"
+      ],
+      "is_success": false
     },
     {
-      "case_name": "server/windows/windows_disk_recognition_cim_check",
-      "result_file": "server/windows/windows_disk_recognition_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_disk_redundancy_health_check",
-      "result_file": "server/windows/windows_disk_redundancy_health_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_filesystem_usage_cim_check",
-      "result_file": "server/windows/windows_filesystem_usage_cim_check/result.json",
+      "case_name": "server/windows/windows_disk_filesystem_usage_cim_check",
+      "result_file": "server/windows/windows_disk_filesystem_usage_cim_check/result.json",
       "failed_items": [
         "W-REPLAY-DISK-01"
       ],
       "is_success": false
     },
     {
-      "case_name": "server/windows/windows_hba_connection_manual_check",
-      "result_file": "server/windows/windows_hba_connection_manual_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "case_name": "server/windows/windows_disk_inode_not_applicable_check",
+      "result_file": "server/windows/windows_disk_inode_not_applicable_check/result.json",
+      "failed_items": [
+        "W-REPLAY-INODE-01"
+      ],
+      "is_success": false
     },
     {
-      "case_name": "server/windows/windows_inode_not_applicable_check",
-      "result_file": "server/windows/windows_inode_not_applicable_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "case_name": "server/windows/windows_disk_io_counter_check",
+      "result_file": "server/windows/windows_disk_io_counter_check/result.json",
+      "failed_items": [
+        "W-REPLAY-DISK-IO-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_disk_recognition_cim_check",
+      "result_file": "server/windows/windows_disk_recognition_cim_check/result.json",
+      "failed_items": [
+        "W-REPLAY-DISK-MOUNT-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_disk_redundancy_health_check",
+      "result_file": "server/windows/windows_disk_redundancy_health_check/result.json",
+      "failed_items": [
+        "W-REPLAY-DISK-HA-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_kernel_parameter_nettcp_check",
       "result_file": "server/windows/windows_kernel_parameter_nettcp_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-KERNEL-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_cluster_event_check",
       "result_file": "server/windows/windows_log_cluster_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-CLUSTER-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_cpu_event_check",
       "result_file": "server/windows/windows_log_cpu_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-CPU-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_fan_manual_check",
       "result_file": "server/windows/windows_log_fan_manual_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-FAN-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_hba_manual_check",
       "result_file": "server/windows/windows_log_hba_manual_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-HBA-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_io_event_check",
       "result_file": "server/windows/windows_log_io_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-IO-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_kernel_event_check",
@@ -588,20 +618,26 @@
     {
       "case_name": "server/windows/windows_log_memory_event_check",
       "result_file": "server/windows/windows_log_memory_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-MEM-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_nic_event_check",
       "result_file": "server/windows/windows_log_nic_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-NIC-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_power_event_check",
       "result_file": "server/windows/windows_log_power_event_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-POWER-LOG-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_log_system_event_check",
@@ -612,10 +648,20 @@
       "is_success": false
     },
     {
+      "case_name": "server/windows/windows_memory_pagefile_usage_cim_check",
+      "result_file": "server/windows/windows_memory_pagefile_usage_cim_check/result.json",
+      "failed_items": [
+        "W-REPLAY-SWAP-01"
+      ],
+      "is_success": false
+    },
+    {
       "case_name": "server/windows/windows_memory_recognition_cim_check",
       "result_file": "server/windows/windows_memory_recognition_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "W-REPLAY-MEM-STATUS-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/windows/windows_memory_usage_cim_check",
@@ -626,40 +672,42 @@
       "is_success": false
     },
     {
-      "case_name": "server/windows/windows_mpio_path_check",
-      "result_file": "server/windows/windows_mpio_path_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
       "case_name": "server/windows/windows_network_link_status_check",
       "result_file": "server/windows/windows_network_link_status_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_nic_teaming_check",
-      "result_file": "server/windows/windows_nic_teaming_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_pagefile_usage_cim_check",
-      "result_file": "server/windows/windows_pagefile_usage_cim_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_ping_loss_check",
-      "result_file": "server/windows/windows_ping_loss_check/result.json",
-      "failed_items": [],
-      "is_success": true
-    },
-    {
-      "case_name": "server/windows/windows_shared_volume_check",
-      "result_file": "server/windows/windows_shared_volume_check/result.json",
       "failed_items": [
-        "W-REPLAY-CLUSTER-MOUNT-01"
+        "W-REPLAY-NET-LINK-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_network_nic_teaming_check",
+      "result_file": "server/windows/windows_network_nic_teaming_check/result.json",
+      "failed_items": [
+        "W-REPLAY-NIC-HA-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_network_ping_loss_check",
+      "result_file": "server/windows/windows_network_ping_loss_check/result.json",
+      "failed_items": [
+        "W-REPLAY-GW-PING-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_os_hba_connection_manual_check",
+      "result_file": "server/windows/windows_os_hba_connection_manual_check/result.json",
+      "failed_items": [
+        "W-REPLAY-OS-HBA-LINK-01"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "server/windows/windows_os_mpio_path_check",
+      "result_file": "server/windows/windows_os_mpio_path_check/result.json",
+      "failed_items": [
+        "W-REPLAY-OS-PATH-HA-01"
       ],
       "is_success": false
     }

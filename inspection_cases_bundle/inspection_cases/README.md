@@ -50,54 +50,17 @@ Windows 케이스는 `server/windows/windows_<domain>_<detail>_<command>_check/`
 새 케이스는 가장 가까운 기존 케이스를 기준으로 시작한다.
 
 - Linux/Rocky 계열은 `CONNECTION_METHOD = 'ssh'`와 `_ssh("...")` 패턴을 사용한다.
+- 네트워크 장비 중 SSH exec 채널이나 `sshpass` 방식이 맞지 않는 장비는 `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands([...])` 패턴을 사용한다.
+- Paramiko 옵션은 API credential `data`에 넣지 말고 `script.py`의 `PARAMIKO_*` 클래스 속성으로 조정한다.
+- `_run_paramiko_commands()`는 기존처럼 문자열 배열을 그대로 받을 수 있다. 각 항목을 dict로 넘기면 `command`, `timeout`, `ignore_prompt`를 항목별로 조정할 수 있다.
+- `PARAMIKO_CONTINUE_ON_TIMEOUT = True`를 켜면 prompt를 못 받은 입력도 timeout으로 기록한 뒤 다음 입력을 계속 보낼 수 있다. live 세션에서는 다음 입력이 이전 프롬프트 응답으로 소비될 수 있으므로 필요한 케이스에만 제한적으로 사용한다.
+- dict 항목의 `ignore_prompt`가 지정되면 해당 값이 우선이고, 미지정이면 `PARAMIKO_CONTINUE_ON_TIMEOUT` 기본 동작을 따른다.
 - Windows 계열은 `CONNECTION_METHOD = 'winrm'`와 `_run_ps("...")` 패턴을 사용한다.
-- 대화형 SSH 세션이 필요한 장비는 `_open_terminal(...)`로 PTY 세션을 열고 `terminal.py` helper를 우선 사용한다.
-- 네트워크 장비는 `term.use_profile('cisco_ios')`, `term.use_profile('junos')`, `term.use_profile('generic_network')`처럼 profile을 적용한 뒤 `enter_privilege()`, `disable_paging()`, `run_command()`를 조합한다.
-- Linux/Unix 계열에서 interactive `su`가 필요한 경우 `run_su_command()`를 우선 사용한다.
-- `drain()`은 명령 결과 수집보다 배너/잡출력 비우기 용도에 가깝다. 실제 명령 결과는 `run_command()` 또는 `run_su_command()`를 우선 사용한다.
 - 연결 실패는 `_is_connection_error(...)`로 먼저 분기한다.
 - 명령 실행 실패와 출력 파싱 실패는 별도 실패 메시지로 구분한다.
 - 정상 결과는 `metrics`, `thresholds`, `reasons`, `message`를 가능한 한 채운다.
 - 임계치를 쓰는 경우 `case.json`의 `item.threshold_list[].name`과 `script.py`의 `get_threshold_var(...)` 키를 반드시 일치시킨다.
 - 긴 명령 출력은 `replay.json`에 직접 넣지 말고 `outputs/*.stdout` 파일로 분리한다.
-
-## Interactive Terminal Helper
-
-`inspection_runtime/terminal.py`는 대화형 SSH 세션용 공통 helper를 제공한다.
-
-- `term.use_profile('cisco_ios')`: Cisco IOS prompt/pager/enable 규칙 적용
-- `term.use_profile('junos')`: Junos prompt/pager 규칙 적용
-- `term.use_profile('generic_network')`: 프롬프트가 확실하지 않은 네트워크 장비용 기본 규칙 적용
-- `term.use_profile({...})`: prompt/pager 규칙을 케이스에서 직접 override
-- `term.enter_privilege(password=...)`: Cisco `enable` 같은 권한 상승 처리
-- `term.disable_paging()`: profile에 정의된 paging 해제 명령 실행
-- `term.run_command('show version', timeout_sec=30)`: prompt 기준으로 명령 결과 수집
-- `term.run_su_command('cat /etc/passwd', password=..., timeout_sec=30)`: `su - <user> -c ...` 기준으로 명령 결과 수집
-- `term.run_until_marker(...)`: shell 계열에서 marker 기준으로 결과 수집
-- `term.expect(...)`, `term.sendline(...)`, `term.drain(...)`: 세밀한 제어가 필요할 때만 직접 사용
-
-Cisco IOS 예시:
-
-```python
-with self._open_terminal() as term:
-    term.use_profile('cisco_ios')
-    privilege_escalation_used = term.enter_privilege(
-        password=self.get_connection_value('en_password', ''),
-    )
-    term.disable_paging()
-    result = term.run_command('show version', timeout_sec=30)
-```
-
-Linux `su` 예시:
-
-```python
-with self._open_terminal() as term:
-    result = term.run_su_command(
-        'cat /etc/passwd',
-        password=self.get_connection_value('en_password', ''),
-        timeout_sec=30,
-    )
-```
 
 ## `case.json`
 
@@ -166,10 +129,6 @@ with self._open_terminal() as term:
 - 짧은 출력은 `stdout`, 긴 출력은 `stdout_file`을 사용한다.
 - 실패 시나리오는 의도에 맞게 `rc`, `stdout`, `stderr`를 조정한다.
 - 여러 명령을 실행하는 스크립트는 실행 순서대로 replay 엔트리를 나열한다.
-- interactive terminal 케이스는 `channel: terminal` 이벤트를 순서대로 나열한다. `send`는 helper가 실제로 보낸 텍스트, `recv`는 장비가 반환한 prompt/출력을 의미한다.
-- `run_command()`를 쓰는 경우 replay 마지막 `recv`에는 명령 출력과 종료 prompt가 함께 들어가야 한다.
-- `enter_privilege()`를 쓰는 Cisco 케이스는 일반적으로 `recv('>') -> send('enable') -> recv('Password:') -> send(redacted) -> recv('#')` 순서를 가진다.
-- `disable_paging()`를 쓰는 profile은 paging 해제 명령도 replay에 포함해야 한다.
 
 ## 실행 방법
 

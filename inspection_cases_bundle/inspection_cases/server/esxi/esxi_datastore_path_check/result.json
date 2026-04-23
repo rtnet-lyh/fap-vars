@@ -282,19 +282,53 @@
           "value1": "false"
         }
       ],
-      "status": "fail",
-      "error": "ESXi Datastore 목록 조회 실패",
-      "message": "VMwareHelper 기반 ESXi Datastore 조회 중 예외가 발생했습니다: [Errno 1] Operation not permitted",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: VMwareHelper 기반 ESXi Datastore Path 점검을 완료하지 못했습니다.",
+      "status": "ok",
+      "metrics": {
+        "datastore_count": 1,
+        "datastores": [
+          {
+            "name": "datastore1",
+            "type": "VMFS",
+            "url": "/vmfs/volumes/685cfa89-8f2fed90-015f-749d8f0eabb8",
+            "accessible": true,
+            "capacity_bytes": 1058441003008,
+            "free_space_bytes": 712309211136,
+            "capacity_gib": 985.75,
+            "free_space_gib": 663.39,
+            "usage_percent": 32.7
+          }
+        ],
+        "source": "pyvmomi",
+        "missing_required_datastores": [],
+        "inaccessible_datastores": [],
+        "overused_datastores": [],
+        "low_free_datastores": []
+      },
+      "thresholds": {
+        "max_datastore_usage_percent": 85.0,
+        "min_datastore_free_gib": 10.0,
+        "required_datastore_names": [],
+        "require_accessible": true,
+        "force_replay": false
+      },
+      "reasons": "Datastore가 접근 가능하고 사용률, 여유 공간, 필수 목록 기준을 충족합니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)\n - 출력 내용: ESXi Datastore 목록 및 Path 조회 결과\n- source: pyvmomi\n- datastore_count: 1\n- datastores:\n  - datastore1: type=VMFS, accessible=True, usage=32.7%, free=663.39 GiB, url=/vmfs/volumes/685cfa89-8f2fed90-015f-749d8f0eabb8\n- missing_required_datastores: \n- inaccessible_datastores: \n- overused_datastores: \n- low_free_datastores:",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: (명령 이력 없음)",
         " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        " - 출력 내용: VMwareHelper 기반 ESXi Datastore Path 점검을 완료하지 못했습니다."
-      ]
+        " - 출력 내용: ESXi Datastore 목록 및 Path 조회 결과",
+        "- source: pyvmomi",
+        "- datastore_count: 1",
+        "- datastores:",
+        "  - datastore1: type=VMFS, accessible=True, usage=32.7%, free=663.39 GiB, url=/vmfs/volumes/685cfa89-8f2fed90-015f-749d8f0eabb8",
+        "- missing_required_datastores: ",
+        "- inaccessible_datastores: ",
+        "- overused_datastores: ",
+        "- low_free_datastores:"
+      ],
+      "message": "ESXi Datastore Path 상태가 정상입니다. 현재 상태: datastore_count=1, 필수 Datastore=없음, 누락 Datastore=없음, 접근 불가=없음, 사용률 초과=없음, 여유 공간 부족=없음, 사용률 기준=85.00% 이하, 여유 공간 기준=10.00GiB 이상. 모든 Datastore가 접근 가능하고 사용률/여유 공간 기준을 충족했습니다."
     }
   ],
-  "failed_items": [
-    "ESXI-DATASTORE-PATH-01"
-  ]
+  "failed_items": []
 }
