@@ -1,0 +1,55 @@
+{
+  "input_excel": "호스트_파일_다운로드2026-04-21.xlsx",
+  "output_excel": "호스트_파일_다운로드2026-04-21_updated.xlsx",
+  "password_rules": [
+    {
+      "match": {
+        "분야": [
+          "서버"
+        ],
+        "OS/애플리케이션": [
+          "LINUX",
+          "UNIX"
+        ],
+        "계정형식": [
+          "SSH"
+        ],
+        "사용자명": [
+          "sdfsdf"
+        ]
+      },
+      "pattern": {
+        "type": "manager_name",
+        "prefix": "pw_",
+        "start": 1,
+        "end": 5,
+        "suffix": "!"
+      }
+    }
+  ],
+  "become_password_rules": [
+    {
+      "match": {
+        "분야": [
+          "서버"
+        ],
+        "OS/애플리케이션": [
+          "UNIX"
+        ],
+        "계정형식": [
+          "SSH"
+        ],
+        "사용자명": [
+          "sdfsdf"
+        ]
+      },
+      "pattern": {
+        "type": "ip_octet_4_padded",
+        "prefix": "root_",
+        "start": 2,
+        "end": 3,
+        "suffix": "#"
+      }
+    }
+  ]
+}
