@@ -11,8 +11,8 @@
         "application_type_name": "NETWORK",
         "credential_type_name": "NETWORK_DEVICE",
         "data": {
-          "username": "admin",
-          "password": "admin",
+          "username": "test1",
+          "password": "f3dtop0!",
           "en_password": "admin",
           "port": 22
         }
