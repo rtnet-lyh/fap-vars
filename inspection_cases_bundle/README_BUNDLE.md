@@ -19,7 +19,7 @@ python3 inspection_runtime/replay_cli.py inspection_cases/linux_sample
 python3 inspection_runtime/replay_cli.py inspection_cases
 ```
 
-실제 접속 기반 live 실행은 단일 케이스 디렉터리만 지원한다. 기본값은 해당 케이스의 `case.json`을 그대로 사용하고, 필요할 때만 별도 override JSON을 추가로 병합한다.
+실제 접속 기반 live 실행은 단일 케이스 디렉터리만 지원하며, 대상 케이스의 `case.json`을 그대로 사용한다.
 
 ```bash
 cd inspection_cases_bundle
@@ -28,19 +28,7 @@ python3 inspection_runtime/replay_cli.py \
   inspection_cases/server/rocky/rocky_memory_usage_free_check
 ```
 
-```bash
-cd inspection_cases_bundle
-python3 inspection_runtime/replay_cli.py \
-  --mode live \
-  --override-file live_inputs/rocky_memory_usage_free_check.json \
-  inspection_cases/server/rocky/rocky_memory_usage_free_check
-```
-
-override JSON 규칙:
-- 루트 구조는 `case.json`과 동일한 부분 object를 사용한다.
-- `host`, `port`, `user`, `password`, `ssh_options`, `winrm_options`, `credentials`, `thresholds`, `item`을 override할 수 있다.
-- dict는 재귀 병합되고 list는 전체 교체된다.
-- live 실행 결과는 해당 케이스의 `result.json`을 갱신한다.
+live 실행 결과는 해당 케이스의 `result.json`을 갱신한다.
 
 참고 사항
 - `result.json`과 `summary.json`은 실행 시 다시 생성됩니다.

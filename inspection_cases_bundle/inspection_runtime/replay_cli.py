@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import copy
 import json
 import logging
 import os
@@ -139,25 +138,6 @@ def load_case_payload(case_dir):
     return build_runner_payload(case_data, script_text, case_path)
 
 
-def deep_merge(base, override):
-    if isinstance(base, dict) and isinstance(override, dict):
-        merged = {key: copy.deepcopy(value) for key, value in base.items()}
-        for key, value in override.items():
-            if key in merged:
-                merged[key] = deep_merge(merged[key], value)
-            else:
-                merged[key] = copy.deepcopy(value)
-        return merged
-    return copy.deepcopy(override)
-
-
-def load_override_data(path):
-    override_data = load_json(path)
-    if not isinstance(override_data, dict):
-        raise ValueError(f'override file must contain an object: {path}')
-    return override_data
-
-
 def has_any_credentials(credentials_map):
     if not isinstance(credentials_map, dict):
         return False
@@ -173,11 +153,11 @@ def has_any_credentials(credentials_map):
 def validate_live_payload(payload):
     host = str(payload.get('host') or '').strip()
     if not host:
-        raise ValueError('live mode requires host in case.json or override file')
+        raise ValueError('live mode requires host in case.json')
 
     user = str(payload.get('user') or '').strip()
     if not user and not has_any_credentials(payload.get('credentials')):
-        raise ValueError('live mode requires credentials or user in case.json or override file')
+        raise ValueError('live mode requires credentials or user in case.json')
 
 
 class ReplayCommandExecutor:
@@ -445,18 +425,14 @@ def run_case_replay(case_dir, case_name=None):
     }
 
 
-def run_case_live(case_dir, override_file, case_name=None):
+def run_case_live(case_dir, case_name=None):
     if case_name is None:
         case_name = os.path.basename(os.path.abspath(case_dir))
 
     case_path = os.path.join(case_dir, 'case.json')
     case_data = load_case_data(case_dir)
-    merged_case_data = case_data
-    if override_file:
-        override_data = load_override_data(override_file)
-        merged_case_data = deep_merge(case_data, override_data)
     script_text = load_script_text(case_dir)
-    payload = build_runner_payload(merged_case_data, script_text, case_path)
+    payload = build_runner_payload(case_data, script_text, case_path)
     validate_live_payload(payload)
 
     logger = build_case_logger(case_name)
@@ -499,18 +475,15 @@ def build_summary(case_results, root_dir):
     }
 
 
-def run_path(path, mode='replay', override_file=None):
+def run_path(path, mode='replay'):
     if mode not in ('replay', 'live'):
         raise ValueError(f'unsupported mode: {mode}')
-
-    if mode != 'live' and override_file:
-        raise ValueError('--override-file is only supported in live mode')
 
     if mode == 'live':
         case_dir = os.path.abspath(path)
         if not is_case_dir(case_dir):
             raise ValueError(f'live mode requires a single case directory: {path}')
-        case_result = run_case_live(case_dir, override_file=override_file)
+        case_result = run_case_live(case_dir)
         return case_result['output'], 0
 
     case_dirs, root_dir = discover_case_dirs(path)
@@ -555,20 +528,12 @@ def main(argv=None):
         '--mode',
         choices=('replay', 'live'),
         default='replay',
-        help='Execution mode. replay uses replay.json fixtures, live uses case.json and optionally merges an override JSON file.',
-    )
-    parser.add_argument(
-        '--override-file',
-        help='Optional JSON file containing live-mode overrides for case.json values such as host, credentials, thresholds, and item.',
+        help='Execution mode. replay uses replay.json fixtures, live uses case.json for a single case directory.',
     )
     args = parser.parse_args(argv)
 
     try:
-        output, exit_code = run_path(
-            args.path,
-            mode=args.mode,
-            override_file=args.override_file,
-        )
+        output, exit_code = run_path(args.path, mode=args.mode)
     except Exception as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False))
         return 1

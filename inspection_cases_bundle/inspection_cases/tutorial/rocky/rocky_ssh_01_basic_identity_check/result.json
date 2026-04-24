@@ -80,20 +80,21 @@
       "threshold_list": [],
       "status": "ok",
       "metrics": {
-        "hostname": "rocky-tutorial",
+        "hostname": "localhost.localdomain",
         "login_user": "fap"
       },
       "thresholds": {},
       "reasons": "hostname과 로그인 사용자를 정상 수집했습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: hostname && whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: rocky-tutorial\nfap",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: hostname && whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): localhost.localdomain\nfap\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: hostname && whoami",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: rocky-tutorial",
-        "fap"
+        " - 출력 내용(stdout): localhost.localdomain",
+        "fap",
+        " - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts."
       ],
-      "message": "_ssh 기본 예제가 정상 수행되었습니다. hostname=rocky-tutorial, user=fap"
+      "message": "_ssh 기본 예제가 정상 수행되었습니다. hostname=localhost.localdomain, user=fap"
     }
   ],
   "failed_items": []

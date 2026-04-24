@@ -32,6 +32,3 @@ dist/
 .ipynb_checkpoints/
 *.tmp
 *.temp
-
-# Live inspection override inputs
-inspection_cases_bundle/live_inputs/*.json

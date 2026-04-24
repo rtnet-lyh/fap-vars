@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import io
 import os
 import sys
 import tempfile
@@ -442,84 +443,6 @@ class ReplayCliTest(unittest.TestCase):
                 [{'name': 'expected', 'value1': 'base'}],
             )
 
-    def test_run_path_live_merges_override_and_replaces_lists(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            case_dir = self.create_case_dir(tmp_dir)
-            override_path = os.path.join(tmp_dir, 'override.json')
-            with open(override_path, 'w', encoding='utf-8') as fh:
-                json.dump(
-                    {
-                        'host': '10.0.0.10',
-                        'credentials': {
-                            'LINUX': [
-                                {
-                                    'application_type_name': 'LINUX',
-                                    'credential_type_name': 'SSH',
-                                    'data': {
-                                        'username': 'inspector',
-                                        'password': 'secret',
-                                    },
-                                }
-                            ]
-                        },
-                        'item': {
-                            'threshold_list': [
-                                {
-                                    'name': 'expected',
-                                    'value1': 'override',
-                                }
-                            ]
-                        },
-                    },
-                    fh,
-                    ensure_ascii=False,
-                    indent=2,
-                )
-                fh.write('\n')
-
-            captured = {}
-
-            def fake_execute_runner(payload, **kwargs):
-                captured['payload'] = payload
-                return {
-                    'items': payload.get('items', []),
-                    'results': [
-                        {
-                            'inspection_code': payload['items'][0]['inspection_code'],
-                            'status': 'ok',
-                            'metrics': {
-                                'expected': payload['items'][0]['threshold_list'][0]['value1'],
-                            },
-                            'message': 'live ok',
-                            'raw_output': 'live ok',
-                        }
-                    ],
-                    'failed_items': [],
-                }
-
-            with mock.patch.object(replay_cli, 'execute_runner', side_effect=fake_execute_runner):
-                output, exit_code = replay_cli.run_path(
-                    case_dir,
-                    mode='live',
-                    override_file=override_path,
-                )
-
-            self.assertEqual(exit_code, 0)
-            self.assertEqual(output['failed_items'], [])
-            self.assertEqual(captured['payload']['host'], '10.0.0.10')
-            self.assertEqual(
-                captured['payload']['credentials']['LINUX'][0]['data']['username'],
-                'inspector',
-            )
-            self.assertEqual(
-                captured['payload']['items'][0]['threshold_list'],
-                [{'name': 'expected', 'value1': 'override'}],
-            )
-            self.assertIn('check_script', captured['payload']['items'][0])
-
-            result_path = os.path.join(case_dir, 'result.json')
-            self.assertTrue(os.path.isfile(result_path))
-
     def test_run_path_live_surfaces_python_syntax_error_text(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             case_dir = self.create_case_dir(tmp_dir, name='syntax_error_case')
@@ -553,32 +476,17 @@ class ReplayCliTest(unittest.TestCase):
     def test_live_mode_rejects_directory_batch_path(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             self.create_case_dir(tmp_dir, name='case_a')
-            override_path = os.path.join(tmp_dir, 'override.json')
-            with open(override_path, 'w', encoding='utf-8') as fh:
-                json.dump({'host': '10.0.0.10'}, fh, ensure_ascii=False, indent=2)
-                fh.write('\n')
-
             with self.assertRaisesRegex(ValueError, 'single case directory'):
-                replay_cli.run_path(
-                    tmp_dir,
-                    mode='live',
-                    override_file=override_path,
-                )
+                replay_cli.run_path(tmp_dir, mode='live')
 
-    def test_override_file_is_rejected_in_replay_mode(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            case_dir = self.create_case_dir(tmp_dir)
-            override_path = os.path.join(tmp_dir, 'override.json')
-            with open(override_path, 'w', encoding='utf-8') as fh:
-                json.dump({'host': '10.0.0.10'}, fh, ensure_ascii=False, indent=2)
-                fh.write('\n')
+    def test_main_rejects_removed_override_file_argument(self):
+        stderr = io.StringIO()
+        with mock.patch('sys.stderr', stderr):
+            with self.assertRaises(SystemExit) as exc:
+                replay_cli.main(['--override-file', 'override.json', 'case_a'])
 
-            with self.assertRaisesRegex(ValueError, 'only supported in live mode'):
-                replay_cli.run_path(
-                    case_dir,
-                    mode='replay',
-                    override_file=override_path,
-                )
+        self.assertEqual(exc.exception.code, 2)
+        self.assertIn('unrecognized arguments: --override-file', stderr.getvalue())
 
     def test_run_path_replay_supports_paramiko_commands(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

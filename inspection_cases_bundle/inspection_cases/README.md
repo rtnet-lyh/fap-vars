@@ -3,7 +3,7 @@
 이 디렉터리는 점검 항목을 실제 장비에 접속하지 않고 재생 검증하기 위한 케이스 모음이다.
 각 케이스는 입력값(`case.json`), 재생 응답(`replay.json`), 점검 로직(`script.py`), 실행 결과(`result.json`)를 함께 관리한다.
 
-필요하면 동일한 케이스를 `replay_cli.py --mode live`로 실제 접속 기반 실행도 할 수 있다. live 기본값은 케이스의 `case.json`을 그대로 사용하고, 접속 정보나 threshold만 바꾸고 싶을 때만 별도 override JSON을 추가로 준다.
+필요하면 동일한 케이스를 `replay_cli.py --mode live`로 실제 접속 기반 실행도 할 수 있다. live 실행은 해당 케이스의 `case.json`을 그대로 사용한다.
 
 원천 설명 문서는 상위 `inspection_cases_bundle/raw_data/`에서 관리한다. Rocky 케이스 디렉터리에는 `raw_data.md` 사본을 두지 않고, 필요한 설명은 `raw_data/rocky/*.md`를 정본으로 본다.
 
@@ -149,13 +149,6 @@ python3 inspection_cases_bundle/inspection_runtime/replay_cli.py \
   inspection_cases_bundle/inspection_cases/server/rocky/rocky_cpu_core_check
 ```
 
-```bash
-python3 inspection_cases_bundle/inspection_runtime/replay_cli.py \
-  --mode live \
-  --override-file inspection_cases_bundle/live_inputs/rocky_cpu_core_check.json \
-  inspection_cases_bundle/inspection_cases/server/rocky/rocky_cpu_core_check
-```
-
 Rocky 전체 케이스를 실행한다.
 
 ```bash
@@ -177,41 +170,9 @@ python3 inspection_cases_bundle/inspection_runtime/replay_cli.py \
 - 전체 디렉터리 실행: 모든 하위 결과와 최상위 `summary.json` 갱신
 - live 단일 케이스 실행: 해당 케이스의 `result.json`만 갱신
 
-## Live Override JSON
+live 실행 규칙:
 
-live override 파일은 선택 사항이며, 필요할 때만 `case.json`의 부분 object 형식으로 작성한다.
-
-```json
-{
-  "host": "10.10.10.20",
-  "credentials": {
-    "LINUX": [
-      {
-        "application_type_name": "LINUX",
-        "credential_type_name": "SSH",
-        "data": {
-          "username": "inspector",
-          "password": "secret"
-        }
-      }
-    ]
-  },
-  "item": {
-    "threshold_list": [
-      {
-        "name": "max_cpu_usage_percent",
-        "value1": "70"
-      }
-    ]
-  }
-}
-```
-
-규칙:
-
-- dict는 원본 `case.json`과 재귀 병합된다.
-- list는 전체 교체된다. 예를 들어 `item.threshold_list`를 일부만 추가하지 않고 새 목록으로 통째로 넣어야 한다.
-- `host`는 필수다.
+- `host`는 `case.json`에 있어야 한다.
 - `user`를 직접 주거나 `credentials`에 실제 접속용 계정을 넣어야 한다.
 - replay 모드와 달리 `replay.json`은 읽지 않고 실제 SSH, WinRM, VMware API 경로를 탄다.
 - live 모드에서 `script.py`에 문법 오류나 top-level import 오류가 있으면 `점검 스크립트 없음`이 아니라 Python 예외 원문이 그대로 결과 `message`와 `raw_output`에 기록된다.
