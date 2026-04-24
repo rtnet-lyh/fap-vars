@@ -2,7 +2,7 @@
 
 ## 프로젝트 구조 및 모듈 구성
 
-이 저장소는 점검 케이스 원천 데이터를 Markdown 파일로 관리한다. 현재 활성 케이스는 `rocky/` 아래에 있으며, Rocky Linux 점검 항목마다 하나의 파일을 둔다. 예: `rocky/rocky_memory_usage_free_check.md`.
+이 저장소는 점검 케이스 원천 데이터를 Markdown 파일로 관리한다. 원천 케이스는 `server/esxi/`, `server/hpux/`, `server/rocky/`, `server/windows/` 아래에 두며, 각 OS 계열 점검 항목마다 하나의 파일을 둔다. 예: `server/rocky/rocky_memory_usage_free_check.md`.
 
 각 케이스 파일은 다음 한국어 heading 구조를 따른다.
 
@@ -15,14 +15,14 @@
 - `# 임계치`: 필요한 경우 threshold 변수명
 - `# 판단기준`: 판정 방식
 
-이 디렉터리에는 애플리케이션 소스 트리나 생성 asset 디렉터리가 없다. 새 원천 케이스는 OS 계열에 맞춰 배치하고, Rocky Linux 항목은 `rocky/`에 둔다.
+이 디렉터리에는 애플리케이션 소스 트리나 생성 asset 디렉터리가 없다. 새 원천 케이스는 OS 계열에 맞춰 `server/<os>/` 아래에 배치하고, Rocky Linux 항목은 `server/rocky/`에 둔다.
 
 ## 빌드, 테스트, 개발 명령
 
 이 raw data 디렉터리에는 별도 빌드 시스템이 없다. 다음 명령으로 가볍게 검증한다.
 
 ```bash
-rg '^# ' rocky
+rg '^# ' server/rocky
 ```
 
 section heading을 나열해 누락되거나 일관되지 않은 구성을 찾는다.
@@ -34,7 +34,7 @@ git status --short
 편집 전 rename, 삭제, 신규 파일 상태를 확인한다.
 
 ```bash
-sed -n '1,120p' rocky/rocky_memory_usage_free_check.md
+sed -n '1,120p' server/rocky/rocky_memory_usage_free_check.md
 ```
 
 유사 파일을 추가하기 전 기존 케이스 형식을 확인한다.
@@ -44,7 +44,7 @@ sed -n '1,120p' rocky/rocky_memory_usage_free_check.md
 UTF-8 Markdown을 사용한다. 전체 schema 변경 요청이 없다면 기존 한국어 heading을 그대로 유지한다. 파일명은 lowercase snake case로 작성한다.
 
 ```text
-rocky/rocky_<영역>_<detail>_<command>_check.md
+server/rocky/rocky_<영역>_<detail>_<command>_check.md
 ```
 
 표 형태의 명령 출력은 공백 정렬을 보존한다. 출력 모양 자체가 샘플 근거의 일부다.

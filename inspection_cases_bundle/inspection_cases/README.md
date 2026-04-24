@@ -5,7 +5,7 @@
 
 필요하면 동일한 케이스를 `replay_cli.py --mode live`로 실제 접속 기반 실행도 할 수 있다. live 실행은 해당 케이스의 `case.json`을 그대로 사용한다.
 
-원천 설명 문서는 상위 `inspection_cases_bundle/raw_data/`에서 관리한다. Rocky 케이스 디렉터리에는 `raw_data.md` 사본을 두지 않고, 필요한 설명은 `raw_data/rocky/*.md`를 정본으로 본다.
+원천 설명 문서는 상위 `inspection_cases_bundle/raw_data/`에서 관리한다. Rocky 케이스 디렉터리에는 `raw_data.md` 사본을 두지 않고, 필요한 설명은 `raw_data/server/rocky/*.md`를 정본으로 본다.
 
 ## 디렉터리 구조
 
@@ -196,18 +196,21 @@ live 실행 규칙:
 
 ```text
 raw_data/
-├── rocky/
-│   ├── rocky_cpu_core_check.md
-│   ├── rocky_cpu_usage_check.md
-│   └── ...
-└── windows/
-    ├── windows_cpu_core_cim_check.md
-    └── ...
+└── server/
+    ├── esxi/
+    ├── hpux/
+    ├── rocky/
+    │   ├── rocky_cpu_core_check.md
+    │   ├── rocky_cpu_usage_check.md
+    │   └── ...
+    └── windows/
+        ├── windows_cpu_core_cim_check.md
+        └── ...
 ```
 
 원칙:
 
-- Rocky 원천 문서는 `raw_data/rocky/*.md`를 정본으로 본다.
+- Rocky 원천 문서는 `raw_data/server/rocky/*.md`를 정본으로 본다.
 - Rocky replay 케이스 디렉터리에는 `raw_data.md` 사본을 두지 않는다.
 - Windows 쪽에 남아 있는 `raw_data.md`는 호환용 사본일 수 있으므로 정리 범위를 명시적으로 확인하고 수정한다.
 - 원천 문서만 추가하는 작업이면 `inspection_cases/`의 replay 파일을 만들지 않는다.

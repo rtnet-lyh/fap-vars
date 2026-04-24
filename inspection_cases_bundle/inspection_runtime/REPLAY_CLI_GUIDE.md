@@ -30,6 +30,35 @@ python3 inspection_runtime/replay_cli.py \
 
 live 실행 결과는 해당 케이스의 `result.json`을 갱신한다.
 
+Paramiko 장비에서 SSH 접속 후 interactive shell 진입 직후 추가 비밀번호를 한 번 더 요구하는 경우에는 케이스 스크립트에서 첫 command로 해당 값을 보내는 패턴을 사용한다.
+
+```python
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'generic_network'
+    PARAMIKO_PROBE_PROMPT = False
+
+    def run(self):
+        post_login_password = str(self.get_connection_value('post_login_password', '') or '')
+        results = self._run_paramiko_commands([
+            {
+                'command': post_login_password,
+                'hide_command': True,
+                'ignore_prompt': True,
+            },
+            {
+                'command': 'show version',
+            },
+        ])
+```
+
+주의 사항
+- `PARAMIKO_PROBE_PROMPT = False`는 shell 오픈 직후 엔터를 먼저 보내지 않게 해서, 빈 입력이 비밀번호 제출처럼 처리되는 장비에서 안전하다.
+- 첫 비밀번호 입력 단계는 기존 prompt가 `Password:`로 학습되어 있을 수 있으므로 보통 `ignore_prompt: True`를 함께 사용한다.
+- `hide_command: True`를 주면 raw output과 command history에는 실제 비밀번호 대신 `*******`가 기록된다.
+- 이 패턴은 SSH 인증이 끝난 뒤 shell 안에서 추가 입력을 요구하는 경우에만 해당한다. SSH auth 단계의 keyboard-interactive/MFA는 이 방식으로 처리하지 않는다.
+
 참고 사항
 - `result.json`과 `summary.json`은 실행 시 다시 생성됩니다.
 - `result.json`/stdout에는 줄바꿈 문자열을 읽기 쉽게 보조하는 `raw_output_lines`, `check_script_lines` 같은 보기용 필드가 포함될 수 있습니다.
