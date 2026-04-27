@@ -1,0 +1,29 @@
+## CSV Import
+# label: %label%
+# style: rounded=1;whiteSpace=wrap;html=1;fillColor=%fill%;strokeColor=%stroke%;strokeWidth=1.2;
+# namespace: varsdb-
+# width: 260
+# height: auto
+# padding: 20
+# nodespacing: 40
+# levelspacing: 60
+# ignore: refs,fill,stroke
+# layout: auto
+# connect: {"from":"refs","to":"id","invert":true,"style":"endArrow=block;endFill=1;strokeWidth=1.5;html=1;"}
+id,label,refs,fill,stroke
+vars_category_type,"vars_category_type<br>PK id<br>name<br>is_vulnerability<br>is_immutable",,#dae8fc,#6c8ebf
+vars_area,"vars_area<br>PK id<br>name",,#dae8fc,#6c8ebf
+vars_area_category_type_map,"vars_area_category_type_map<br>PK area_id<br>PK category_type_id<br>created_at","vars_category_type,vars_area",#fff2cc,#d6b656
+vars_category,"vars_category<br>PK id<br>type_id<br>area_id<br>name","vars_category_type,vars_area",#d5e8d4,#82b366
+vars_application_type,"vars_application_type<br>PK id<br>name<br>is_deleted",,#f8cecc,#b85450
+vars_application,"vars_application<br>PK id<br>application_type_id<br>name<br>is_deleted","vars_application_type",#f8cecc,#b85450
+vars_application_family,"vars_application_family<br>PK id<br>application_id<br>name<br>is_deleted","vars_application",#f8cecc,#b85450
+vars_application_version,"vars_application_version<br>PK id<br>application_id<br>version","vars_application",#f8cecc,#b85450
+vars_inspection_item,"vars_inspection_item<br>PK id<br>inspection_code<br>inspection_name<br>type_id/type_name<br>area_id/area_name<br>category_id/category_name<br>item_id<br>is_locked<br>is_deleted","vars_category_type,vars_area,vars_category",#e1d5e7,#9673a6
+vars_inspection_item_mapping,"vars_inspection_item_mapping<br>PK id<br>item_id<br>application_type_id<br>application_id<br>application_family_id<br>application_version_id<br>inspection_script<br>revision_num<br>is_fix<br>is_deleted","vars_inspection_item,vars_application_type,vars_application,vars_application_family,vars_application_version",#e1d5e7,#9673a6
+vars_inspection_profile,"vars_inspection_profile<br>PK id<br>name<br>description",,#cce5ff,#4a86e8
+vars_inspection_profile_map,"vars_inspection_profile_map<br>PK id<br>profile_id<br>category_id<br>area_id<br>inventory_id<br>group_id<br>host_id","vars_inspection_profile,vars_category",#cce5ff,#4a86e8
+vars_inspection_items_threshold,"vars_inspection_items_threshold<br>PK id<br>name<br>data_type<br>judge_type<br>op1<br>value1<br>logical_op<br>op2<br>value2",,#ffe6cc,#d79b00
+vars_inspection_item_threshold_map,"vars_inspection_item_threshold_map<br>PK id<br>inspection_item_id<br>threshold_id<br>sort_order<br>is_deleted","vars_inspection_item,vars_inspection_items_threshold",#ffe6cc,#d79b00
+vars_threshold_level,"vars_threshold_level<br>PK code<br>name",,#f5f5f5,#666666
+vars_threshold,"vars_threshold<br>PK id<br>group_code<br>score_range<br>level_code<br>level_name<br>color_hex<br>sort_order<br>is_deleted","vars_threshold_level",#f5f5f5,#666666

@@ -1,0 +1,10 @@
+show processes cpu sorted
+CPU utilization for five seconds: 2%/0%; one minute: 2%; five minutes: 1%
+ PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process 
+ 274    17150928    11694587       1466  0.95%  0.12%  0.08%   0 SNMP ENGINE      
+ 186      284944  2724828251          0  0.31%  0.37%  0.39%   0 HQF Shaper Backg 
+  40       32492    45353675          0  0.15%  0.03%  0.00%   0 TTY Background   
+  19    26831924   261178291        102  0.07%  0.05%  0.07%   0 ARP Input        
+ 121    13091468    84738198        154  0.07%  0.07%  0.03%   0 IP Input         
+ 209     3546604    23284828        152  0.07%  0.01%  0.00%   0 IP SNMP          
+TEST_CISCO_C3650#

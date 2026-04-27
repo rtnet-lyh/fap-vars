@@ -1,0 +1,178 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+
+entity "vars_category_type" as vars_category_type {
+  * id : int
+  --
+  name : varchar
+  is_vulnerability : bool
+  is_immutable : bool
+}
+
+entity "vars_area" as vars_area {
+  * id : int
+  --
+  name : varchar
+}
+
+entity "vars_area_category_type_map" as vars_area_category_type_map {
+  * area_id : int
+  * category_type_id : int
+}
+
+entity "vars_category" as vars_category {
+  * id : int
+  --
+  type_id : int
+  area_id : int
+  name : varchar
+}
+
+entity "vars_application_type" as vars_application_type {
+  * id : int
+  --
+  name : varchar
+  is_deleted : bool
+}
+
+entity "vars_application" as vars_application {
+  * id : int
+  --
+  application_type_id : int
+  name : varchar
+  is_deleted : bool
+}
+
+entity "vars_application_family" as vars_application_family {
+  * id : int
+  --
+  application_id : int
+  name : varchar
+  is_deleted : bool
+}
+
+entity "vars_application_version" as vars_application_version {
+  * id : int
+  --
+  application_id : int
+  version : varchar
+}
+
+entity "vars_inspection_item" as vars_inspection_item {
+  * id : int
+  --
+  inspection_code : varchar
+  inspection_name : varchar
+  type_id : int
+  type_name : varchar
+  area_id : int
+  area_name : varchar
+  category_id : int
+  category_name : varchar
+  item_id : int
+  is_locked : bool
+  is_deleted : bool
+}
+
+entity "vars_inspection_item_mapping" as vars_inspection_item_mapping {
+  * id : int
+  --
+  item_id : int
+  application_type_id : int
+  application_id : int
+  application_family_id : int
+  application_version_id : int
+  inspection_script : text
+  revision_num : int
+  is_fix : bool
+  is_deleted : bool
+}
+
+entity "vars_inspection_profile" as vars_inspection_profile {
+  * id : int
+  --
+  name : varchar
+  description : text
+}
+
+entity "vars_inspection_profile_map" as vars_inspection_profile_map {
+  * id : int
+  --
+  profile_id : int
+  category_id : int
+  area_id : int
+  inventory_id : int
+  group_id : int
+  host_id : int
+}
+
+entity "vars_inspection_items_threshold" as vars_inspection_items_threshold {
+  * id : int
+  --
+  name : varchar
+  data_type : varchar
+  judge_type : varchar
+  op1 : varchar
+  value1 : varchar
+  logical_op : varchar
+  op2 : varchar
+  value2 : varchar
+}
+
+entity "vars_inspection_item_threshold_map" as vars_inspection_item_threshold_map {
+  * id : bigint
+  --
+  inspection_item_id : int
+  threshold_id : int
+  sort_order : int
+  is_deleted : bool
+}
+
+entity "vars_threshold_level" as vars_threshold_level {
+  * code : varchar
+  --
+  name : varchar
+}
+
+entity "vars_threshold" as vars_threshold {
+  * id : int
+  --
+  group_code : varchar
+  score_range : int4range
+  level_code : varchar
+  level_name : varchar
+  color_hex : varchar
+  sort_order : int
+  is_deleted : bool
+}
+
+vars_category_type ||--o{ vars_area_category_type_map : allows
+vars_area ||--o{ vars_area_category_type_map : allows
+
+vars_category_type ||--o{ vars_category : "type_id"
+vars_area ||--o{ vars_category : "area_id"
+
+vars_application_type ||--o{ vars_application : application_type_id
+vars_application ||--o{ vars_application_family : application_id
+vars_application ||--o{ vars_application_version : application_id
+
+vars_category_type ||--o{ vars_inspection_item : "type_id"
+vars_area ||--o{ vars_inspection_item : "area_id"
+vars_category ||--o{ vars_inspection_item : "category_id"
+
+vars_inspection_item ||--o{ vars_inspection_item_mapping : item_id
+vars_application_type ||--o{ vars_inspection_item_mapping : "application_type_id"
+vars_application ||--o{ vars_inspection_item_mapping : "application_id"
+vars_application_family ||--o{ vars_inspection_item_mapping : application_family_id
+vars_application_version ||--o{ vars_inspection_item_mapping : "application_version_id"
+
+vars_inspection_profile ||--o{ vars_inspection_profile_map : profile_id
+vars_category ||--o{ vars_inspection_profile_map : "category_id"
+
+vars_inspection_item ||--o{ vars_inspection_item_threshold_map : inspection_item_id
+vars_inspection_items_threshold ||--o{ vars_inspection_item_threshold_map : threshold_id
+
+vars_threshold_level ||--o{ vars_threshold : "level_code"
+@enduml

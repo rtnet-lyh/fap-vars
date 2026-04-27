@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "TEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "enable"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "enable\nTEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "*******\nTranslating \"*******\"\n\n% Bad IP address or host name\n% Unknown command or computer name, or unable to find computer address\nTEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "terminal length 0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "terminal length 0\nTEST_CISCO_C3650#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show processes cpu sorted"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_processes_cpu_sorted.stdout"
+  }
+]

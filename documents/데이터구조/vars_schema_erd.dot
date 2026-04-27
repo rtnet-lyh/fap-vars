@@ -1,0 +1,257 @@
+digraph vars_schema_erd {
+  graph [
+    rankdir=LR,
+    splines=polyline,
+    nodesep=0.45,
+    ranksep=0.9,
+    pad=0.2,
+    bgcolor="white",
+    fontname="Noto Sans CJK KR"
+  ];
+
+  node [
+    shape=plain,
+    fontname="Noto Sans CJK KR"
+  ];
+
+  edge [
+    fontname="Noto Sans CJK KR",
+    color="#4f4f4f",
+    penwidth=1.3,
+    arrowsize=0.7
+  ];
+
+  vars_category_type [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#6c8ebf">
+        <TR><TD BGCOLOR="#dae8fc"><B>vars_category_type</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">is_vulnerability : bool</TD></TR>
+        <TR><TD ALIGN="LEFT">is_immutable : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_area [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#6c8ebf">
+        <TR><TD BGCOLOR="#dae8fc"><B>vars_area</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_area_category_type_map [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#d6b656">
+        <TR><TD BGCOLOR="#fff2cc"><B>vars_area_category_type_map</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK area_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">PK category_type_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">created_at : timestamptz</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_category [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#82b366">
+        <TR><TD BGCOLOR="#d5e8d4"><B>vars_category</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">type_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">area_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_application_type [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#b85450">
+        <TR><TD BGCOLOR="#f8cecc"><B>vars_application_type</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_application [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#b85450">
+        <TR><TD BGCOLOR="#f8cecc"><B>vars_application</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_type_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_application_family [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#b85450">
+        <TR><TD BGCOLOR="#f8cecc"><B>vars_application_family</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_application_version [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#b85450">
+        <TR><TD BGCOLOR="#f8cecc"><B>vars_application_version</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">version : varchar</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_item [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#9673a6">
+        <TR><TD BGCOLOR="#e1d5e7"><B>vars_inspection_item</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">inspection_code : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">inspection_name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">type_id / type_name</TD></TR>
+        <TR><TD ALIGN="LEFT">area_id / area_name</TD></TR>
+        <TR><TD ALIGN="LEFT">category_id / category_name</TD></TR>
+        <TR><TD ALIGN="LEFT">item_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">is_locked : bool</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_item_mapping [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#9673a6">
+        <TR><TD BGCOLOR="#e1d5e7"><B>vars_inspection_item_mapping</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">item_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_type_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_family_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">application_version_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">inspection_script : text</TD></TR>
+        <TR><TD ALIGN="LEFT">revision_num : int</TD></TR>
+        <TR><TD ALIGN="LEFT">is_fix : bool</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_profile [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#4a86e8">
+        <TR><TD BGCOLOR="#cce5ff"><B>vars_inspection_profile</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">description : text</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_profile_map [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#4a86e8">
+        <TR><TD BGCOLOR="#cce5ff"><B>vars_inspection_profile_map</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">profile_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">category_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">area_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">inventory_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">group_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">host_id : int</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_items_threshold [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#d79b00">
+        <TR><TD BGCOLOR="#ffe6cc"><B>vars_inspection_items_threshold</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">data_type : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">judge_type : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">op1 / value1</TD></TR>
+        <TR><TD ALIGN="LEFT">logical_op</TD></TR>
+        <TR><TD ALIGN="LEFT">op2 / value2</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_inspection_item_threshold_map [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#d79b00">
+        <TR><TD BGCOLOR="#ffe6cc"><B>vars_inspection_item_threshold_map</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : bigint</TD></TR>
+        <TR><TD ALIGN="LEFT">inspection_item_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">threshold_id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">sort_order : int</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_threshold_level [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#666666">
+        <TR><TD BGCOLOR="#f5f5f5"><B>vars_threshold_level</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK code : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">name : varchar</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_threshold [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#666666">
+        <TR><TD BGCOLOR="#f5f5f5"><B>vars_threshold</B></TD></TR>
+        <TR><TD ALIGN="LEFT">PK id : int</TD></TR>
+        <TR><TD ALIGN="LEFT">group_code : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">score_range : int4range</TD></TR>
+        <TR><TD ALIGN="LEFT">level_code : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">level_name : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">color_hex : varchar</TD></TR>
+        <TR><TD ALIGN="LEFT">sort_order : int</TD></TR>
+        <TR><TD ALIGN="LEFT">is_deleted : bool</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  vars_category_type -> vars_area_category_type_map [label="allows", color="#6c8ebf"];
+  vars_area -> vars_area_category_type_map [label="allows", color="#6c8ebf"];
+
+  vars_category_type -> vars_category [label="type_id", color="#82b366", style=dashed];
+  vars_area -> vars_category [label="area_id", color="#82b366", style=dashed];
+
+  vars_application_type -> vars_application [label="application_type_id", color="#b85450"];
+  vars_application -> vars_application_family [label="application_id", color="#b85450"];
+  vars_application -> vars_application_version [label="application_id", color="#b85450"];
+
+  vars_category_type -> vars_inspection_item [label="type_id", color="#9673a6", style=dashed];
+  vars_area -> vars_inspection_item [label="area_id", color="#9673a6", style=dashed];
+  vars_category -> vars_inspection_item [label="category_id", color="#9673a6", style=dashed];
+
+  vars_inspection_item -> vars_inspection_item_mapping [label="item_id", color="#9673a6", style=dashed];
+  vars_application_type -> vars_inspection_item_mapping [label="application_type_id", color="#9673a6", style=dashed];
+  vars_application -> vars_inspection_item_mapping [label="application_id", color="#9673a6", style=dashed];
+  vars_application_family -> vars_inspection_item_mapping [label="application_family_id", color="#9673a6"];
+  vars_application_version -> vars_inspection_item_mapping [label="application_version_id", color="#9673a6", style=dashed];
+
+  vars_inspection_profile -> vars_inspection_profile_map [label="profile_id", color="#4a86e8"];
+  vars_category -> vars_inspection_profile_map [label="category_id", color="#4a86e8", style=dashed];
+
+  vars_inspection_item -> vars_inspection_item_threshold_map [label="inspection_item_id", color="#d79b00"];
+  vars_inspection_items_threshold -> vars_inspection_item_threshold_map [label="threshold_id", color="#d79b00"];
+
+  vars_threshold_level -> vars_threshold [label="level_code", color="#666666", style=dashed];
+}

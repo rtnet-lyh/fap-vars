@@ -1,0 +1,22 @@
+source_db:
+  host: "172.20.2.91"
+  port: 5432
+  dbname: "fap"
+  user: "nds"
+  password: "rt12345%"
+
+target_db:
+  host: "192.168.1.123"
+  port: 25432
+  dbname: "vars_data"
+  user: "nds"
+  password: "rt12345%"
+
+sync:
+  exclude_credential_type_ids:
+    - 3
+  require_same_credential_type: true
+  allowed_area_names:
+    - "서버"
+  modified_by:
+  report_path: "sync_report.json"
