@@ -8,6 +8,8 @@ from .common._base import BaseCheck
 
 SYSCTL_COMMAND = 'sysctl -a'
 BECOME_USER_MARKER = '__BECOME_USER__:'
+DEFAULT_SYSCTL_KEY = 'net.ipv4.ip_forward'
+DEFAULT_SYSCTL_VALUE = '1'
 
 
 class Check(BaseCheck):
@@ -75,13 +77,17 @@ class Check(BaseCheck):
 
         return parsed, skipped_lines
 
-    def run(self):
+    def _get_effective_threshold_map(self):
         threshold_map = self.get_threshold_list_map()
-        if not threshold_map:
-            return self.fail(
-                '임계치 미정의',
-                message='비교할 sysctl 기준값이 threshold_list에 정의되어 있지 않습니다.',
-            )
+        if threshold_map:
+            return dict(threshold_map), 'api'
+
+        return {
+            DEFAULT_SYSCTL_KEY: DEFAULT_SYSCTL_VALUE,
+        }, 'default'
+
+    def run(self):
+        threshold_map, threshold_source = self._get_effective_threshold_map()
 
         try:
             command = self._build_command()
@@ -206,6 +212,7 @@ class Check(BaseCheck):
         return self.ok(
             metrics={
                 'become_user': actual_become_user,
+                'threshold_source': threshold_source,
                 'checked_key_count': len(threshold_map),
                 'matched_key_count': len(matched_items),
                 'matched_items': matched_items,

@@ -155,7 +155,7 @@ class Check(BaseCheck):
         if socket_count < min_socket_count:
             return self.fail(
                 'CPU 소켓 수 기준 미달',
-                message='확인된 물리 CPU 소켓 수가 기준치 미만입니다. 기준치 {min_socket_count}개 이상 필요하지만 현재 {socket_count}개입니다.',
+                message=f'확인된 물리 CPU 소켓 수가 기준치 미만입니다. 기준치 {min_socket_count}개 이상 필요하지만 현재 {socket_count}개입니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
@@ -163,7 +163,7 @@ class Check(BaseCheck):
         if total_core_count < min_total_core_count:
             return self.fail(
                 'CPU 코어 수 기준 미달',
-                message='확인된 물리 CPU 코어 수가 기준치 미만입니다. 기준치 {min_total_core_count}개 이상 필요하지만 현재 {total_core_count}개입니다.',
+                message=f'확인된 물리 CPU 코어 수가 기준치 미만입니다. 기준치 {min_total_core_count}개 이상 필요하지만 현재 {total_core_count}개입니다.',
                 stdout=text,
                 stderr=(err or '').strip(),
             )
