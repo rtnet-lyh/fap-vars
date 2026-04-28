@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T11:37:36.601561+00:00",
+  "generated_at": "2026-04-27T11:44:45.293173+00:00",
   "mode": "apply",
   "blocked": false,
   "settings": {
@@ -8,18 +8,19 @@
     ],
     "require_same_credential_type": true,
     "allowed_area_names": [
-      "서버"
+      "서버",
+      "클라우드"
     ]
   },
   "host_ip_summary": {
-    "source_enabled_hosts": 127,
+    "source_enabled_hosts": 1,
     "target_enabled_hosts": 1,
     "intersection_count": 1,
     "intersections": [
       {
         "ip": "192.168.1.123",
-        "fap_host_id": 141,
-        "fap_host_name": "RTNET_B1_FILESVR",
+        "fap_host_id": 1,
+        "fap_host_name": "test",
         "vars_hosts": [
           {
             "vars_host_id": 1,
@@ -30,22 +31,42 @@
     ]
   },
   "decision_counts": {
-    "matched_hai_rows": 1,
+    "matched_hai_rows": 2,
+    "skip_credential_type_mismatch": 1,
     "eligible_update": 1
   },
-  "matched_hai_rows": 1,
+  "matched_hai_rows": 2,
   "eligible_updates": 1,
   "applied_updates": 1,
   "duplicate_ip_errors": [],
   "updates": [
     {
       "ip": "192.168.1.123",
-      "fap_host_id": 141,
-      "fap_host_name": "RTNET_B1_FILESVR",
-      "source_credential_type_id": 2,
+      "fap_host_id": 1,
+      "fap_host_name": "test",
+      "source_credential_type_id": 5,
       "vars_host_id": 1,
       "vars_host_name": "testrocky",
-      "host_application_id": 2,
+      "host_application_id": 5,
+      "area_id": 1,
+      "area_name": "클라우드",
+      "application_type_id": 1,
+      "application_id": 1,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 5,
+      "decision": "eligible_update"
+    }
+  ],
+  "skipped": [
+    {
+      "ip": "192.168.1.123",
+      "fap_host_id": 1,
+      "fap_host_name": "test",
+      "source_credential_type_id": 5,
+      "vars_host_id": 1,
+      "vars_host_name": "testrocky",
+      "host_application_id": 4,
       "area_id": 2,
       "area_name": "서버",
       "application_type_id": 3,
@@ -53,8 +74,7 @@
       "application_family_id": null,
       "application_version": "8",
       "target_credential_type_id": 2,
-      "decision": "eligible_update"
+      "decision": "skip_credential_type_mismatch"
     }
-  ],
-  "skipped": []
+  ]
 }

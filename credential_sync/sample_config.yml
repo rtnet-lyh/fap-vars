@@ -1,7 +1,6 @@
 source_db:
-  # host: "192.168.1.123"
-  host: "172.20.2.91"
-  port: 5432
+  host: "192.168.1.123"
+  port: 25432
   dbname: "fap"
   user: "nds"
   password: "rt12345%"
@@ -19,5 +18,6 @@ sync:
   require_same_credential_type: true
   allowed_area_names:
     - "서버"
+    - "클라우드"
   modified_by:
   report_path: "sync_report.json"
