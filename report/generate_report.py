@@ -110,6 +110,7 @@ class DetailRow(object):
         host_id,
         host_name,
         host_ip,
+        inspection_code,
         inspection_item_name,
         type_name,
         category_name,
@@ -132,6 +133,7 @@ class DetailRow(object):
         self.host_id = host_id
         self.host_name = host_name
         self.host_ip = host_ip
+        self.inspection_code = inspection_code
         self.inspection_item_name = inspection_item_name
         self.type_name = type_name
         self.category_name = category_name
@@ -161,6 +163,7 @@ class DetailRow(object):
             host_id=_to_int(row.get("host_id")),
             host_name=str(row.get("host_name") or ""),
             host_ip=str(row.get("host_ip") or ""),
+            inspection_code=str(row.get("inspection_code") or ""),
             inspection_item_name=str(row.get("inspection_item_name") or ""),
             type_name=str(row.get("type_name") or ""),
             category_name=str(row.get("category_name") or ""),
@@ -466,9 +469,15 @@ def fetch_report_rows(api_url: str, api_token: str, job_id: int, user_id: Option
         params=params,
     )
 
-    summary_rows = [SummaryRow.from_mapping(row) for row in extract_row_list(summary_payload, "summary")]
+    summary_rows = filter_empty_summary_rows(
+        [SummaryRow.from_mapping(row) for row in extract_row_list(summary_payload, "summary")]
+    )
     detail_rows = [DetailRow.from_mapping(row) for row in extract_row_list(detail_payload, "detail")]
     return summary_rows, detail_rows
+
+
+def filter_empty_summary_rows(summary_rows: Sequence[SummaryRow]) -> List[SummaryRow]:
+    return [row for row in summary_rows if row.total_items > 0]
 
 
 def get_report_generator(report_type: str) -> BaseReportGenerator:
@@ -522,6 +531,7 @@ def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3
                     host_id=host_index,
                     host_name=host_name,
                     host_ip=host_ip,
+                    inspection_code=f"MOCK-{host_index:03d}-{item_index:03d}",
                     inspection_item_name=f"Mock Inspection Item {item_index}",
                     type_name=f"유형-{(item_index - 1) % 4 + 1}",
                     category_name=f"구분-{(item_index - 1) % 3 + 1}",
@@ -891,6 +901,7 @@ def write_detail_sheet_intro(
     summary_row: SummaryRow,
     details_for_host: Sequence[DetailRow],
     styles: Mapping[str, Any],
+    merge_end_column: str = "H",
 ) -> None:
     detail_sheet.sheet_view.showGridLines = False
     detail_sheet["A1"] = "요약으로 돌아가기"
@@ -898,14 +909,14 @@ def write_detail_sheet_intro(
     detail_sheet["A1"].style = "Hyperlink"
     detail_sheet["A1"].font = styles["link_font"]
 
-    detail_sheet.merge_cells("A2:H2")
+    detail_sheet.merge_cells(f"A2:{merge_end_column}2")
     detail_sheet["A2"] = build_detail_title_text(summary_row, details_for_host)
     detail_sheet["A2"].font = styles["section_title_font"]
     detail_sheet["A2"].fill = styles["title_fill"]
     detail_sheet["A2"].alignment = styles["top_alignment"]
     detail_sheet.row_dimensions[2].height = 24
 
-    detail_sheet.merge_cells("A3:H3")
+    detail_sheet.merge_cells(f"A3:{merge_end_column}3")
     detail_sheet["A3"] = build_detail_overview_text(details_for_host)
     detail_sheet["A3"].font = styles["muted_font"]
     detail_sheet["A3"].fill = styles["value_fill"]
@@ -921,9 +932,9 @@ def render_default_detail_sheet(
     styles: Mapping[str, Any],
     get_column_letter: Any,
 ) -> None:
-    write_detail_sheet_intro(detail_sheet, summary_row, details_for_host, styles)
+    write_detail_sheet_intro(detail_sheet, summary_row, details_for_host, styles, merge_end_column="I")
 
-    detail_headers = ["유형", "영역", "구분", "중요도", "항목", "결과", "메세지", "상세"]
+    detail_headers = ["유형", "영역", "구분", "중요도", "점검 코드", "항목", "결과", "메세지", "상세"]
     detail_header_row = 5
     for index, header in enumerate(detail_headers, start=1):
         cell = detail_sheet.cell(row=detail_header_row, column=index, value=header)
@@ -933,7 +944,7 @@ def render_default_detail_sheet(
         cell.border = styles["section_border"]
 
     if not details_for_host:
-        detail_sheet.merge_cells("A6:H6")
+        detail_sheet.merge_cells("A6:I6")
         detail_sheet["A6"] = "상세 데이터가 없습니다."
         detail_sheet["A6"].alignment = styles["left_alignment"]
         detail_sheet["A6"].fill = styles["value_fill"]
@@ -946,6 +957,7 @@ def render_default_detail_sheet(
                 detail_row.area_name,
                 detail_row.category_name,
                 format_importance(detail_row.importance),
+                detail_row.inspection_code,
                 detail_row.inspection_item_name,
                 detail_row.result_status,
                 detail_row.message,
@@ -958,14 +970,14 @@ def render_default_detail_sheet(
                 cell.border = styles["section_border"]
                 if column_index == 4:
                     cell.fill = resolve_importance_fill(str(value), styles)
-                elif column_index == 6:
+                elif column_index == 7:
                     cell.fill = resolve_state_fill(str(value), styles)
                 else:
                     cell.fill = row_fill
             detail_sheet.row_dimensions[row_index].height = 36
 
     detail_sheet.freeze_panes = "A6"
-    detail_sheet.auto_filter.ref = f"A5:H{max(len(details_for_host) + 5, 5)}"
+    detail_sheet.auto_filter.ref = f"A5:I{max(len(details_for_host) + 5, 5)}"
     autosize_sheet(
         detail_sheet,
         get_column_letter,
@@ -974,10 +986,11 @@ def render_default_detail_sheet(
             "B": 16,
             "C": 16,
             "D": 10,
-            "E": 32,
-            "F": 12,
-            "G": 38,
-            "H": 56,
+            "E": 18,
+            "F": 32,
+            "G": 12,
+            "H": 38,
+            "I": 56,
         },
     )
 
@@ -1045,27 +1058,21 @@ def render_preventive_detail_sheet(
             write_label_value_pairs_row(
                 detail_sheet,
                 row=start_row + 2,
-                pairs=[(1, 2, 4, "점검결과", detail_row.result_status)],
+                pairs=[
+                    (1, 2, 3, "점검결과", detail_row.result_status),
+                    (4, 5, 6, "중요도", importance_text),
+                    (7, 8, 8, "점검코드", detail_row.inspection_code),
+                ],
                 label_font=styles["section_label_font"],
                 value_font=styles["body_font"],
                 label_fill=styles["section_fill"],
-                value_fill=resolve_state_fill(detail_row.result_status, styles),
+                value_fill=row_fill,
                 border=styles["section_border"],
                 label_alignment=styles["center_alignment"],
                 value_alignment=styles["center_alignment"],
             )
-            write_label_value_pairs_row(
-                detail_sheet,
-                row=start_row + 2,
-                pairs=[(5, 6, 8, "중요도", importance_text)],
-                label_font=styles["section_label_font"],
-                value_font=styles["body_font"],
-                label_fill=styles["section_fill"],
-                value_fill=resolve_importance_fill(importance_text, styles),
-                border=styles["section_border"],
-                label_alignment=styles["center_alignment"],
-                value_alignment=styles["center_alignment"],
-            )
+            detail_sheet.cell(row=start_row + 2, column=2).fill = resolve_state_fill(detail_row.result_status, styles)
+            detail_sheet.cell(row=start_row + 2, column=5).fill = resolve_importance_fill(importance_text, styles)
             detail_sheet.row_dimensions[start_row + 2].height = 24
 
             for row_offset, label, value, dynamic_height in (
