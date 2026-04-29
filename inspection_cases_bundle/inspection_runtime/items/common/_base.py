@@ -1074,6 +1074,15 @@ class BaseCheck:
                 return default, 'default'
             return default
 
+    def get_host_vars(self):
+        payload = self.ctx.get('item_payload') or {}
+        host_vars = payload.get('host_vars') or {}
+        return host_vars if isinstance(host_vars, dict) else {}
+
+    def get_host_var(self, key, default=None):
+        return self.get_host_vars().get(key, default)
+
+
     def _describe_rc(self, rc):
         # 쉘/SSH에서 자주 쓰이는 종료 코드를 한글 설명으로 매핑한다.
         rc_map = {
