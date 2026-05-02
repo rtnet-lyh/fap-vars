@@ -16,6 +16,7 @@ import datetime
 import time
 import re
 import traceback
+import shlex
 from functools import lru_cache
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -65,6 +66,8 @@ POWERSHELL_UTF8_PREFIX = (
     "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
     "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
 )
+SUPPORTED_BECOME_PRECHECK_METHODS = ('sudo', 'su', 'su -')
+TRUTHY_VALUES = ('1', 'true', 'y', 'yes', 'on')
 
 
 def decode_stream_bytes(value, preferred_encodings=None):
@@ -580,6 +583,123 @@ def resolve_connection_values(base_port, method, credential, fallback_user, fall
     }
 
 
+def is_truthy(value):
+    if isinstance(value, bool):
+        return value
+    return str(value or '').strip().lower() in TRUTHY_VALUES
+
+
+def normalize_become_method(value):
+    return ' '.join(str(value or '').strip().lower().split())
+
+
+def get_credential_data(credential):
+    if not isinstance(credential, dict):
+        return {}
+    data = credential.get('data') or {}
+    if isinstance(data, dict):
+        return data
+    return {}
+
+
+def get_preferred_credential_value(application_credential, connection_credential, key, default=None):
+    for data in (
+        get_credential_data(application_credential),
+        get_credential_data(connection_credential),
+    ):
+        if key not in data:
+            continue
+        value = data.get(key)
+        if value not in (None, ''):
+            return value
+    return default
+
+
+def is_network_check_payload(item_payload):
+    item_payload = item_payload or {}
+    if is_network_item(item_payload.get('inspection_code')):
+        return True
+    app_type = normalize_credential_key(item_payload.get('application_type_name'))
+    category = str(item_payload.get('category_name') or '').strip()
+    category_key = normalize_credential_key(category)
+    return (
+        app_type in ('NETWORK', 'NETWORK_DEVICE')
+        or category_key in ('NETWORK', 'NETWORK_DEVICE')
+        or '네트워크' in category
+    )
+
+
+def build_become_precheck_command(become_method, become_user, become_password):
+    password_arg = shlex.quote(str(become_password or ''))
+    if become_method == 'sudo':
+        return "printf '%s\\n' {password} | sudo -S -p '' -v".format(password=password_arg)
+    if become_method in ('su', 'su -'):
+        user_arg = shlex.quote(str(become_user or 'root').strip() or 'root')
+        return "printf '%s\\n' {password} | su - {user} -c true".format(
+            password=password_arg,
+            user=user_arg,
+        )
+    return None
+
+
+def build_become_precheck_request(
+    method,
+    item_payload,
+    connection_values,
+    connection_credential,
+    application_credential,
+):
+    method = str(method or '').strip().lower()
+    if method not in ('ssh', 'paramiko'):
+        return None
+    if is_network_check_payload(item_payload):
+        return None
+
+    become = get_preferred_credential_value(application_credential, connection_credential, 'become', False)
+    if not is_truthy(become):
+        return None
+
+    become_method = normalize_become_method(
+        get_preferred_credential_value(application_credential, connection_credential, 'become_method', '')
+    )
+    if become_method not in SUPPORTED_BECOME_PRECHECK_METHODS:
+        return None
+
+    become_user_value = get_preferred_credential_value(
+        application_credential,
+        connection_credential,
+        'become_user',
+        'root',
+    )
+    become_password_value = get_preferred_credential_value(
+        application_credential,
+        connection_credential,
+        'become_password',
+        '',
+    )
+    become_user = str(become_user_value or 'root').strip() or 'root'
+    become_password = str(become_password_value or '')
+    command = build_become_precheck_command(become_method, become_user, become_password)
+    if not command:
+        return None
+
+    key = (
+        method,
+        str((connection_values or {}).get('port') or ''),
+        str((connection_values or {}).get('user') or ''),
+        become_method,
+        become_user,
+        become_password,
+    )
+    return {
+        'key': key,
+        'method': method,
+        'become_method': become_method,
+        'become_user': become_user,
+        'command': command,
+    }
+
+
 def run_ssh(cmd, host, port, user, password, ssh_options, timeout_sec=None):
     import shutil
     resolved_timeout_sec = normalize_ssh_command_timeout_sec(timeout_sec, DEFAULT_SSH_COMMAND_TIMEOUT_SEC)
@@ -724,6 +844,56 @@ def run_paramiko_precheck(host, port, user, password, options, client_factory=No
                 pass
             client.close()
             return 0, '', ''
+        except Exception as exc:
+            last_error = exc
+            try:
+                client.close()
+            except Exception:
+                pass
+            if auth_method != 'auto':
+                break
+
+    return 255, '', 'PARAMIKO_CONNECTION_ERROR: ' + str(last_error or 'authentication failed')
+
+
+def run_paramiko_exec_command(host, port, user, password, options, command, client_factory=None):
+    import paramiko
+
+    auth_method = str((options or {}).get('auth_method') or 'auto').strip().lower()
+    if auth_method not in ('auto', 'key', 'password'):
+        return 255, '', f'PARAMIKO_CONNECTION_ERROR: unsupported auth_method: {auth_method}'
+
+    attempts = []
+    if auth_method in ('auto', 'key'):
+        attempts.append('key')
+    if auth_method in ('auto', 'password'):
+        attempts.append('password')
+
+    last_error = None
+    for attempt in attempts:
+        client = client_factory() if client_factory else paramiko.SSHClient()
+        try:
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(**build_paramiko_connect_kwargs(
+                host,
+                port,
+                user,
+                password,
+                options or {},
+                attempt,
+                paramiko,
+            ))
+            timeout_sec = float((options or {}).get('timeout_sec', 10))
+            _, stdout, stderr = client.exec_command(command, timeout=timeout_sec)
+            out = decode_stream_bytes(stdout.read() if stdout is not None else b'')
+            err = decode_stream_bytes(stderr.read() if stderr is not None else b'')
+            channel = getattr(stdout, 'channel', None)
+            if channel is not None and hasattr(channel, 'recv_exit_status'):
+                rc = int(channel.recv_exit_status())
+            else:
+                rc = 0
+            client.close()
+            return rc, out, err
         except Exception as exc:
             last_error = exc
             try:
@@ -961,6 +1131,21 @@ def build_precheck_fail_result(code, item_id, item_payload, method, err_text):
     return res
 
 
+def build_become_precheck_fail_result(code, item_id, item_payload, method, err_text):
+    message = f'{method.upper()} 권한상승 사전 점검 실패: {(err_text or "").strip()}'.strip()
+    res = {
+        'inspection_code': code,
+        'item_id': item_id,
+        'status': 'fail',
+        'error': '권한 상승 실패',
+        'message': message,
+        'raw_output': (err_text or '').strip(),
+    }
+    if item_payload:
+        res = {**sanitize_item_payload(item_payload), **res}
+    return res
+
+
 def normalize_item(it):
     if isinstance(it, dict):
         return it.get('inspection_code'), it.get('item_id'), it
@@ -1075,6 +1260,8 @@ def execute_runner(
 
     precheck_errors = {}
     checked_methods = set()
+    become_precheck_errors = {}
+    checked_become_prechecks = set()
     if not skip_precheck:
         for it in items:
             code, _, item_payload = normalize_item(it)
@@ -1143,6 +1330,73 @@ def execute_runner(
                 module_key[1] if module_key else COMMON_TOKEN,
                 module_key[2] if module_key else COMMON_TOKEN,
             )
+        for it in items:
+            code, _, item_payload = normalize_item(it)
+            lookup_payload = build_lookup_payload(code, item_payload)
+            mod, module_key, module_source, db_error = resolve_runtime_item_module(available, lookup_payload, logger)
+            if not mod or not needs_host_connection(mod):
+                continue
+            method = get_connection_method(mod, lookup_payload)
+            if method in precheck_errors:
+                continue
+            connection_credential = select_connection_credential(credentials, method, lookup_payload)
+            connection_values = resolve_connection_values(port, method, connection_credential, user, password)
+            app_credential = select_application_credential(credentials, lookup_payload)
+            become_request = build_become_precheck_request(
+                method,
+                lookup_payload,
+                connection_values,
+                connection_credential,
+                app_credential,
+            )
+            if not become_request:
+                continue
+            become_key = become_request['key']
+            if become_key in checked_become_prechecks or become_key in become_precheck_errors:
+                continue
+            if method == 'paramiko':
+                rc, out, err = run_paramiko_exec_command(
+                    host,
+                    connection_values.get('port'),
+                    connection_values.get('user'),
+                    connection_values.get('password'),
+                    resolve_paramiko_options(mod),
+                    become_request['command'],
+                    client_factory=paramiko_client_factory,
+                )
+            else:
+                rc, out, err = call_ssh_executor(
+                    ssh_executor,
+                    become_request['command'],
+                    host,
+                    connection_values.get('port'),
+                    connection_values.get('user'),
+                    connection_values.get('password'),
+                    ssh_options,
+                    DEFAULT_SSH_COMMAND_TIMEOUT_SEC,
+                )
+            if rc != 0:
+                become_precheck_errors[become_key] = (err or out or '').strip() or '권한 상승 실패'
+                logger.error(
+                    'become precheck failed: method=%s become_method=%s inspection_code=%s application_type=%s application=%s message=%s',
+                    method,
+                    become_request.get('become_method') or '',
+                    module_key[0] if module_key else code,
+                    module_key[1] if module_key else COMMON_TOKEN,
+                    module_key[2] if module_key else COMMON_TOKEN,
+                    become_precheck_errors[become_key],
+                )
+                continue
+            checked_become_prechecks.add(become_key)
+            logger.info(
+                'become precheck ok: method=%s become_method=%s source=%s inspection_code=%s application_type=%s application=%s',
+                method,
+                become_request.get('become_method') or '',
+                module_source,
+                module_key[0] if module_key else code,
+                module_key[1] if module_key else COMMON_TOKEN,
+                module_key[2] if module_key else COMMON_TOKEN,
+            )
     else:
         logger.info('host precheck skipped.')
 
@@ -1182,6 +1436,26 @@ def execute_runner(
         )
         if method in precheck_errors:
             res = build_precheck_fail_result(code, item_id, item_payload, method, precheck_errors[method])
+            results.append(res)
+            logger.info('    result_json=\n%s', json.dumps(res, ensure_ascii=False, indent=2))
+            continue
+        become_request = None
+        if mod:
+            become_request = build_become_precheck_request(
+                method,
+                lookup_payload,
+                connection_values,
+                connection_credential,
+                app_credential,
+            )
+        if become_request and become_request['key'] in become_precheck_errors:
+            res = build_become_precheck_fail_result(
+                code,
+                item_id,
+                item_payload,
+                method,
+                become_precheck_errors[become_request['key']],
+            )
             results.append(res)
             logger.info('    result_json=\n%s', json.dumps(res, ensure_ascii=False, indent=2))
             continue
