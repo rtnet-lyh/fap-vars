@@ -368,6 +368,50 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
         self.assertEqual(output['results'][0]['status'], 'fail')
         self.assertEqual(output['results'][0]['error'], '권한 상승 실패')
 
+    def test_paramiko_su_precheck_uses_interactive_command_sequence(self):
+        command_results = [
+            {
+                'command': 'su - root',
+                'rc': 124,
+                'stdout': 'Password:',
+                'stderr': 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received',
+                'timed_out': True,
+            },
+            {
+                'command': 'bad-password',
+                'rc': 0,
+                'stdout': '',
+                'stderr': '',
+            },
+            {
+                'command': 'whoami; id -u',
+                'rc': 0,
+                'stdout': 'root\n0\n',
+                'stderr': '',
+            },
+        ]
+
+        with mock.patch('items.common._base.BaseCheck._run_paramiko_commands', return_value=command_results) as run_commands:
+            rc, out, err = runner.run_paramiko_su_precheck(
+                '10.0.0.1',
+                22,
+                'inspector',
+                'ssh-password',
+                {'auth_method': 'password'},
+                'su -',
+                'root',
+                'bad-password',
+                client_factory=lambda: FakeParamikoClient(),
+            )
+
+        self.assertEqual((rc, out, err), (0, 'root\n0\n', ''))
+        commands = run_commands.call_args.args[0]
+        self.assertEqual(commands[0]['command'], 'su - root')
+        self.assertTrue(commands[0]['ignore_prompt'])
+        self.assertEqual(commands[1]['command'], 'bad-password')
+        self.assertTrue(commands[1]['hide_command'])
+        self.assertEqual(commands[2], 'whoami; id -u')
+
     def test_ssh_su_precheck_failure_uses_su_command_once(self):
         calls = []
 
@@ -475,6 +519,55 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
         self.assertEqual(sum(len(client.exec_commands) for client in clients), 0)
         self.assertEqual(sum(client.invoke_shell_calls for client in clients), 1)
         self.assertEqual(output['results'][0]['status'], 'ok')
+
+    def test_network_su_paramiko_item_runs_privilege_precheck(self):
+        payload = {
+            'host': '10.0.0.2',
+            'port': 22,
+            'user': 'admin',
+            'password': 'admin',
+            'credentials': {
+                'NETWORK': [
+                    {
+                        'application_id': 200,
+                        'application_type_id': 30,
+                        'application_type_name': 'NETWORK',
+                        'credential_type_name': 'NETWORK_DEVICE',
+                        'data': {
+                            'username': 'admin',
+                            'password': 'admin',
+                            'become': 'true',
+                            'become_method': 'su -',
+                            'become_user': 'root',
+                            'become_password': 'bad-password',
+                        },
+                    }
+                ]
+            },
+            'items': [
+                {
+                    'inspection_code': 'NETWORK-TEST-02',
+                    'item_id': 2,
+                    'application_id': 200,
+                    'application_type_id': 30,
+                    'application_type_name': 'NETWORK',
+                    'application_name': 'LINUX_NETWORK_APPLIANCE',
+                    'application_family_name': 'LINUX',
+                    'check_script': NETWORK_PARAMIKO_SCRIPT_TEXT,
+                }
+            ],
+            'thresholds': {},
+            'item_sleep_sec': 0,
+        }
+
+        with mock.patch.object(runner, 'run_paramiko_su_precheck', return_value=(1, '', 'su denied')) as precheck:
+            output = self.run_payload(payload, paramiko_client_factory=lambda: FakeParamikoClient())
+
+        self.assertEqual(precheck.call_count, 1)
+        self.assertEqual(precheck.call_args.args[5:8], ('su -', 'root', 'bad-password'))
+        self.assertEqual(output['results'][0]['status'], 'fail')
+        self.assertEqual(output['results'][0]['error'], '권한 상승 실패')
+        self.assertIn('su denied', output['results'][0]['message'])
 
 
 if __name__ == '__main__':

@@ -1,0 +1,37 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[fap@rocky ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "암호:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[root@rocky ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "whoami; id -u; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "whoami; id -u; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK\nroot\n0\nPARAMIKO_ROOT_ACCESS_OK\n[root@rocky ~]#"
+  }
+]

@@ -1,7 +1,13 @@
 {
-  "total_cases": 6,
+  "total_cases": 7,
   "failed_cases": [],
   "cases": [
+    {
+      "case_name": "rocky_paramiko_07_become_root_exec_check",
+      "result_file": "rocky_paramiko_07_become_root_exec_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
     {
       "case_name": "rocky_ssh_01_basic_identity_check",
       "result_file": "rocky_ssh_01_basic_identity_check/result.json",

@@ -1,6 +1,7 @@
-# Rocky `_ssh` Tutorial Guide
+# Rocky SSH/Paramiko Tutorial Guide
 
-Rocky 튜토리얼은 `CONNECTION_METHOD = 'ssh'`와 `_ssh(...)` 사용 패턴을 단계별로 보여준다.
+Rocky 튜토리얼은 `CONNECTION_METHOD = 'ssh'`와 `_ssh(...)` 사용 패턴, 그리고
+`CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands(...)` 사용 패턴을 단계별로 보여준다.
 
 ## 접속 정보
 
@@ -28,6 +29,8 @@ Rocky 튜토리얼은 `CONNECTION_METHOD = 'ssh'`와 `_ssh(...)` 사용 패턴�
    `su -` 권한상승 wrapper, marker 검증, password masking 예시
 6. `rocky_ssh_06_shell_script_check`
    `_ssh(...)`에 `bash -lc` 스크립트를 넘겨 여러 줄 쉘 로직을 한 번에 실행하는 예시
+7. `rocky_paramiko_07_become_root_exec_check`
+   Paramiko 연결에서 runner의 `become` precheck를 거친 뒤 root 권한 확인 명령을 실행하는 예시
 
 ## 실행 예시
 
@@ -48,7 +51,7 @@ python3 inspection_runtime/replay_cli.py \
 
 ```bash
 python3 inspection_runtime/replay_cli.py --mode live \
-  inspection_cases/tutorial/rocky/rocky_ssh_05_become_root_access_check
+  inspection_cases/tutorial/rocky/rocky_paramiko_07_become_root_exec_check
 ```
 
 ## 작성 포인트
@@ -56,6 +59,7 @@ python3 inspection_runtime/replay_cli.py --mode live \
 - `_ssh(...)`는 `rc, out, err`를 직접 받아서 연결 실패와 명령 실패를 분리한다.
 - `become` 정보는 `credentials.LINUX[].credential_type_name == "APPLICATION"` 항목에 둔다.
 - `su -` 예시는 `_ssh` 자체 기능이 아니라 스크립트 안에서 명령 문자열을 조합해 보여준다.
+- Paramiko 예시 7번은 live 실행 시 item 본문 실행 전에 runner가 `su -` precheck를 먼저 수행한다.
 
 ## `_ssh(...)` 사용법
 

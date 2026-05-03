@@ -615,20 +615,6 @@ def get_preferred_credential_value(application_credential, connection_credential
     return default
 
 
-def is_network_check_payload(item_payload):
-    item_payload = item_payload or {}
-    if is_network_item(item_payload.get('inspection_code')):
-        return True
-    app_type = normalize_credential_key(item_payload.get('application_type_name'))
-    category = str(item_payload.get('category_name') or '').strip()
-    category_key = normalize_credential_key(category)
-    return (
-        app_type in ('NETWORK', 'NETWORK_DEVICE')
-        or category_key in ('NETWORK', 'NETWORK_DEVICE')
-        or '네트워크' in category
-    )
-
-
 def build_become_precheck_command(become_method, become_user, become_password):
     password_arg = shlex.quote(str(become_password or ''))
     if become_method == 'sudo':
@@ -651,8 +637,6 @@ def build_become_precheck_request(
 ):
     method = str(method or '').strip().lower()
     if method not in ('ssh', 'paramiko'):
-        return None
-    if is_network_check_payload(item_payload):
         return None
 
     become = get_preferred_credential_value(application_credential, connection_credential, 'become', False)
@@ -696,6 +680,7 @@ def build_become_precheck_request(
         'method': method,
         'become_method': become_method,
         'become_user': become_user,
+        'become_password': become_password,
         'command': command,
     }
 
@@ -904,6 +889,81 @@ def run_paramiko_exec_command(host, port, user, password, options, command, clie
                 break
 
     return 255, '', 'PARAMIKO_CONNECTION_ERROR: ' + str(last_error or 'authentication failed')
+
+
+def run_paramiko_su_precheck(
+    host,
+    port,
+    user,
+    password,
+    options,
+    become_method,
+    become_user,
+    become_password,
+    client_factory=None,
+):
+    from items.common._base import BaseCheck
+
+    method = normalize_become_method(become_method)
+    if method == 'su':
+        su_command = 'su ' + (str(become_user or 'root').strip() or 'root')
+    elif method == 'su -':
+        su_command = 'su - ' + (str(become_user or 'root').strip() or 'root')
+    else:
+        return 255, '', f'PARAMIKO_BECOME_ERROR: unsupported become_method: {become_method}'
+
+    class ParamikoBecomePrecheck(BaseCheck):
+        USE_HOST_CONNECTION = True
+        CONNECTION_METHOD = 'paramiko'
+        PARAMIKO_PROFILE = 'linux'
+
+    check = ParamikoBecomePrecheck({
+        'host': host,
+        'port': port,
+        'user': user,
+        'password': password,
+        'inspection_code': 'PARAMIKO_BECOME_PRECHECK',
+        'item_id': None,
+        'paramiko_client_factory': client_factory,
+    })
+    check.PARAMIKO_AUTH_METHOD = (options or {}).get('auth_method', 'auto')
+    check.PARAMIKO_KEY_FILENAME = (options or {}).get('key_filename', '~/.ssh/id_rsa.pub')
+    check.PARAMIKO_PRIVATE_KEY = (options or {}).get('private_key')
+    check.PARAMIKO_PRIVATE_KEY_PASSPHRASE = (options or {}).get('private_key_passphrase')
+    check.PARAMIKO_ALLOW_AGENT = bool((options or {}).get('allow_agent', False))
+    check.PARAMIKO_LOOK_FOR_KEYS = bool((options or {}).get('look_for_keys', False))
+    check.PARAMIKO_TIMEOUT_SEC = float((options or {}).get('timeout_sec', 10))
+    check.PARAMIKO_BANNER_TIMEOUT_SEC = float((options or {}).get('banner_timeout_sec', 10))
+    check.PARAMIKO_AUTH_TIMEOUT_SEC = float((options or {}).get('auth_timeout_sec', 10))
+
+    verify_command = 'whoami; id -u'
+    results = check._run_paramiko_commands([
+        {
+            'command': su_command,
+            'timeout': 1,
+            'ignore_prompt': True,
+        },
+        {
+            'command': str(become_password or ''),
+            'hide_command': True,
+        },
+        verify_command,
+    ])
+    failed = [
+        item for item in results
+        if item.get('rc') != 0 and not (item.get('command') == su_command and item.get('timed_out'))
+    ]
+    if failed:
+        first = failed[0]
+        return int(first.get('rc') or 1), first.get('stdout') or '', first.get('stderr') or '권한 상승 실패'
+
+    verify_result = next((item for item in reversed(results) if item.get('command') == verify_command), None)
+    verify_output = (verify_result or {}).get('stdout') or ''
+    lines = [line.strip() for line in verify_output.splitlines() if line.strip()]
+    expected_user = str(become_user or 'root').strip() or 'root'
+    if len(lines) >= 2 and lines[0] == expected_user and lines[1] == '0':
+        return 0, verify_output, ''
+    return 1, verify_output, f'권한 상승 사용자 확인 실패: expected={expected_user}, output={verify_output.strip()}'
 
 
 def ensure_ssh_options_defaults(ssh_options):
@@ -1354,7 +1414,19 @@ def execute_runner(
             become_key = become_request['key']
             if become_key in checked_become_prechecks or become_key in become_precheck_errors:
                 continue
-            if method == 'paramiko':
+            if method == 'paramiko' and become_request.get('become_method') in ('su', 'su -'):
+                rc, out, err = run_paramiko_su_precheck(
+                    host,
+                    connection_values.get('port'),
+                    connection_values.get('user'),
+                    connection_values.get('password'),
+                    resolve_paramiko_options(mod),
+                    become_request.get('become_method'),
+                    become_request.get('become_user'),
+                    become_request.get('become_password'),
+                    client_factory=paramiko_client_factory,
+                )
+            elif method == 'paramiko':
                 rc, out, err = run_paramiko_exec_command(
                     host,
                     connection_values.get('port'),
