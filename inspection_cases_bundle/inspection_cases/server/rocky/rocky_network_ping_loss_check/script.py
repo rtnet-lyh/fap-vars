@@ -103,6 +103,15 @@ class Check(BaseCheck):
             **rtt,
         }
 
+    def _build_default_route(self, text):
+        match = re.search(r'^default\s+via\s+(\d{1,3}(?:\.\d{1,3}){3})\b', text, re.MULTILINE)
+
+        if match:
+            gateway_ip = match.group(1)
+            return gateway_ip
+        else:
+            return False 
+
     def run(self):
         ping_count = self.get_threshold_var(
             'ping_count',
@@ -133,6 +142,11 @@ class Check(BaseCheck):
                 '임계치 설정 오류',
                 message='ping_target 이 비어 있습니다.',
             )
+
+        rc, out, err = self._ssh('ip route')
+        default_route = self._build_default_route(out)
+        if default_route:
+            ping_target = default_route
 
         command = self._build_ping_command(ping_count, ping_target)
         rc, out, err = self._ssh(command)
@@ -183,11 +197,12 @@ class Check(BaseCheck):
                 f'target={ping_target}, sent={sent_count}, received={received_count}, '
                 f'loss={loss_percent}%, max={max_ping_loss_percent}%'
             )
-            return self.warn(
+            return self.fail(
                 metrics=metrics,
                 thresholds=thresholds,
                 reasons=reasons,
                 message='Ping Loss 추가 확인 필요',
+                error='Ping Loss 추가 확인 필요'None,
             )
 
         return self.ok(

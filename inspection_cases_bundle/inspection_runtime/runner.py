@@ -891,6 +891,13 @@ def run_paramiko_exec_command(host, port, user, password, options, command, clie
     return 255, '', 'PARAMIKO_CONNECTION_ERROR: ' + str(last_error or 'authentication failed')
 
 
+def parse_unix_id_uid(id_output):
+    match = re.search(r'(?:^|\s)uid=(\d+)(?:\(([^)]*)\))?', str(id_output or ''))
+    if not match:
+        return None, ''
+    return match.group(1), match.group(2) or ''
+
+
 def run_paramiko_su_precheck(
     host,
     port,
@@ -936,7 +943,7 @@ def run_paramiko_su_precheck(
     check.PARAMIKO_BANNER_TIMEOUT_SEC = float((options or {}).get('banner_timeout_sec', 10))
     check.PARAMIKO_AUTH_TIMEOUT_SEC = float((options or {}).get('auth_timeout_sec', 10))
 
-    verify_command = 'whoami; id -u'
+    verify_command = 'id'
     results = check._run_paramiko_commands([
         {
             'command': su_command,
@@ -959,11 +966,16 @@ def run_paramiko_su_precheck(
 
     verify_result = next((item for item in reversed(results) if item.get('command') == verify_command), None)
     verify_output = (verify_result or {}).get('stdout') or ''
-    lines = [line.strip() for line in verify_output.splitlines() if line.strip()]
     expected_user = str(become_user or 'root').strip() or 'root'
-    if len(lines) >= 2 and lines[0] == expected_user and lines[1] == '0':
+    uid, user_name = parse_unix_id_uid(verify_output)
+    if expected_user == 'root' and uid == '0':
         return 0, verify_output, ''
-    return 1, verify_output, f'권한 상승 사용자 확인 실패: expected={expected_user}, output={verify_output.strip()}'
+    if expected_user != 'root' and user_name == expected_user:
+        return 0, verify_output, ''
+    return 1, verify_output, (
+        f'권한 상승 사용자 확인 실패: expected_user={expected_user}, '
+        f'actual_user={user_name}, actual_uid={uid or ""}, output={verify_output.strip()}'
+    )
 
 
 def ensure_ssh_options_defaults(ssh_options):

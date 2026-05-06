@@ -11,18 +11,18 @@
       "threshold_list": [
         {
           "name": "ping_count",
-          "value1": "10"
+          "value1": "1"
         },
         {
           "name": "ping_target",
-          "value1": "8.8.8.8"
+          "value1": "8.8.8.81"
         },
         {
           "name": "max_ping_loss_percent",
           "value1": "0"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\nimport shlex\n\nfrom .common._base import BaseCheck\n\n\nDEFAULT_PING_COUNT = 10\nDEFAULT_PING_TARGET = '8.8.8.8'\nDEFAULT_MAX_PING_LOSS_PERCENT = 0.0\nPING_SUMMARY_PATTERN = re.compile(\n    r'(?P<sent>\\d+)\\s+packets transmitted,\\s+'\n    r'(?P<received>\\d+)(?:\\s+packets)? received,.*?'\n    r'(?P<loss>\\d+(?:\\.\\d+)?)%\\s+packet loss',\n    re.IGNORECASE,\n)\nPING_HEADER_PATTERN = re.compile(\n    r'^PING\\s+(?P<label>\\S+)\\s+\\((?P<resolved>[^\\)]+)\\)',\n    re.IGNORECASE,\n)\nPING_REPLY_PATTERN = re.compile(\n    r'^\\d+\\s+bytes from\\s+(?P<source>[^:]+):.*?\\btime=(?P<time_ms>\\d+(?:\\.\\d+)?)\\s*ms\\b',\n    re.IGNORECASE,\n)\nPING_RTT_PATTERN = re.compile(\n    r'^rtt min/avg/max/(?:mdev|stddev)\\s*=\\s*'\n    r'(?P<min>\\d+(?:\\.\\d+)?)/'\n    r'(?P<avg>\\d+(?:\\.\\d+)?)/'\n    r'(?P<max>\\d+(?:\\.\\d+)?)/'\n    r'(?P<mdev>\\d+(?:\\.\\d+)?)\\s*ms$',\n    re.IGNORECASE,\n)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _build_ping_command(self, ping_count, ping_target):\n        return f'ping -c {ping_count} {shlex.quote(ping_target)}'\n\n    def _parse_ping_output(self, stdout):\n        lines = [\n            line.strip()\n            for line in (stdout or '').splitlines()\n            if line.strip()\n        ]\n        if not lines:\n            raise ValueError('ping 출력이 비어 있습니다.')\n\n        summary_match = None\n        resolved_target = ''\n        header_target = ''\n        reply_sources = []\n        reply_times_ms = []\n        rtt = {}\n\n        for line in lines:\n            header_match = PING_HEADER_PATTERN.match(line)\n            if header_match and not resolved_target:\n                header_target = header_match.group('label').strip()\n                resolved_target = header_match.group('resolved').strip()\n                continue\n\n            reply_match = PING_REPLY_PATTERN.match(line)\n            if reply_match:\n                reply_sources.append(reply_match.group('source').strip())\n                reply_times_ms.append(float(reply_match.group('time_ms')))\n                continue\n\n            current_summary_match = PING_SUMMARY_PATTERN.search(line)\n            if current_summary_match:\n                summary_match = current_summary_match\n                continue\n\n            rtt_match = PING_RTT_PATTERN.match(line)\n            if rtt_match:\n                rtt = {\n                    'rtt_min_ms': float(rtt_match.group('min')),\n                    'rtt_avg_ms': float(rtt_match.group('avg')),\n                    'rtt_max_ms': float(rtt_match.group('max')),\n                    'rtt_mdev_ms': float(rtt_match.group('mdev')),\n                }\n\n        if summary_match is None:\n            raise ValueError('ping 출력에서 packet loss 요약 라인을 찾지 못했습니다.')\n\n        sent_count = int(summary_match.group('sent'))\n        received_count = int(summary_match.group('received'))\n        loss_percent = float(summary_match.group('loss'))\n\n        return {\n            'sent_count': sent_count,\n            'received_count': received_count,\n            'loss_percent': loss_percent,\n            'response_received': received_count > 0,\n            'reply_count': len(reply_sources),\n            'reply_sources': reply_sources,\n            'reply_times_ms': reply_times_ms,\n            'configured_target_from_header': header_target,\n            'resolved_target': resolved_target,\n            **rtt,\n        }\n\n    def run(self):\n        ping_count = self.get_threshold_var(\n            'ping_count',\n            default=DEFAULT_PING_COUNT,\n            value_type='int',\n        )\n        ping_target = str(\n            self.get_threshold_var(\n                'ping_target',\n                default=DEFAULT_PING_TARGET,\n                value_type='str',\n            ) or ''\n        ).strip()\n        max_ping_loss_percent = self.get_threshold_var(\n            'max_ping_loss_percent',\n            default=DEFAULT_MAX_PING_LOSS_PERCENT,\n            value_type='float',\n        )\n\n        if ping_count <= 0:\n            return self.fail(\n                '임계치 설정 오류',\n                message='ping_count 는 1 이상의 정수여야 합니다.',\n            )\n\n        if not ping_target:\n            return self.fail(\n                '임계치 설정 오류',\n                message='ping_target 이 비어 있습니다.',\n            )\n\n        command = self._build_ping_command(ping_count, ping_target)\n        rc, out, err = self._ssh(command)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc not in (0, 1):\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='ping 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        try:\n            parsed = self._parse_ping_output(out)\n        except ValueError as exc:\n            return self.fail(\n                'Ping Loss 파싱 실패',\n                message=str(exc),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        metrics = {\n            'command': command,\n            'target': ping_target,\n            **parsed,\n        }\n        thresholds = {\n            'ping_count': ping_count,\n            'ping_target': ping_target,\n            'max_ping_loss_percent': max_ping_loss_percent,\n        }\n\n        loss_percent = parsed['loss_percent']\n        received_count = parsed['received_count']\n        sent_count = parsed['sent_count']\n\n        if loss_percent > max_ping_loss_percent or received_count == 0:\n            reasons = (\n                'Ping 손실률이 임계치를 초과했거나 응답이 수신되지 않았습니다. '\n                f'target={ping_target}, sent={sent_count}, received={received_count}, '\n                f'loss={loss_percent}%, max={max_ping_loss_percent}%'\n            )\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons=reasons,\n                message='Ping Loss 추가 확인 필요',\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons=(\n                'Ping 응답이 정상 수신되었고 손실률이 임계치 이하입니다. '\n                f'target={ping_target}, sent={sent_count}, received={received_count}, '\n                f'loss={loss_percent}%'\n            ),\n            message='Ping Loss 점검 정상',\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\nimport shlex\n\nfrom .common._base import BaseCheck\n\n\nDEFAULT_PING_COUNT = 10\nDEFAULT_PING_TARGET = '8.8.8.8'\nDEFAULT_MAX_PING_LOSS_PERCENT = 0.0\nPING_SUMMARY_PATTERN = re.compile(\n    r'(?P<sent>\\d+)\\s+packets transmitted,\\s+'\n    r'(?P<received>\\d+)(?:\\s+packets)? received,.*?'\n    r'(?P<loss>\\d+(?:\\.\\d+)?)%\\s+packet loss',\n    re.IGNORECASE,\n)\nPING_HEADER_PATTERN = re.compile(\n    r'^PING\\s+(?P<label>\\S+)\\s+\\((?P<resolved>[^\\)]+)\\)',\n    re.IGNORECASE,\n)\nPING_REPLY_PATTERN = re.compile(\n    r'^\\d+\\s+bytes from\\s+(?P<source>[^:]+):.*?\\btime=(?P<time_ms>\\d+(?:\\.\\d+)?)\\s*ms\\b',\n    re.IGNORECASE,\n)\nPING_RTT_PATTERN = re.compile(\n    r'^rtt min/avg/max/(?:mdev|stddev)\\s*=\\s*'\n    r'(?P<min>\\d+(?:\\.\\d+)?)/'\n    r'(?P<avg>\\d+(?:\\.\\d+)?)/'\n    r'(?P<max>\\d+(?:\\.\\d+)?)/'\n    r'(?P<mdev>\\d+(?:\\.\\d+)?)\\s*ms$',\n    re.IGNORECASE,\n)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _build_ping_command(self, ping_count, ping_target):\n        return f'ping -c {ping_count} {shlex.quote(ping_target)}'\n\n    def _parse_ping_output(self, stdout):\n        lines = [\n            line.strip()\n            for line in (stdout or '').splitlines()\n            if line.strip()\n        ]\n        if not lines:\n            raise ValueError('ping 출력이 비어 있습니다.')\n\n        summary_match = None\n        resolved_target = ''\n        header_target = ''\n        reply_sources = []\n        reply_times_ms = []\n        rtt = {}\n\n        for line in lines:\n            header_match = PING_HEADER_PATTERN.match(line)\n            if header_match and not resolved_target:\n                header_target = header_match.group('label').strip()\n                resolved_target = header_match.group('resolved').strip()\n                continue\n\n            reply_match = PING_REPLY_PATTERN.match(line)\n            if reply_match:\n                reply_sources.append(reply_match.group('source').strip())\n                reply_times_ms.append(float(reply_match.group('time_ms')))\n                continue\n\n            current_summary_match = PING_SUMMARY_PATTERN.search(line)\n            if current_summary_match:\n                summary_match = current_summary_match\n                continue\n\n            rtt_match = PING_RTT_PATTERN.match(line)\n            if rtt_match:\n                rtt = {\n                    'rtt_min_ms': float(rtt_match.group('min')),\n                    'rtt_avg_ms': float(rtt_match.group('avg')),\n                    'rtt_max_ms': float(rtt_match.group('max')),\n                    'rtt_mdev_ms': float(rtt_match.group('mdev')),\n                }\n\n        if summary_match is None:\n            raise ValueError('ping 출력에서 packet loss 요약 라인을 찾지 못했습니다.')\n\n        sent_count = int(summary_match.group('sent'))\n        received_count = int(summary_match.group('received'))\n        loss_percent = float(summary_match.group('loss'))\n\n        return {\n            'sent_count': sent_count,\n            'received_count': received_count,\n            'loss_percent': loss_percent,\n            'response_received': received_count > 0,\n            'reply_count': len(reply_sources),\n            'reply_sources': reply_sources,\n            'reply_times_ms': reply_times_ms,\n            'configured_target_from_header': header_target,\n            'resolved_target': resolved_target,\n            **rtt,\n        }\n\n    def _build_default_route(self, text):\n        match = re.search(r'^default\\s+via\\s+(\\d{1,3}(?:\\.\\d{1,3}){3})\\b', text, re.MULTILINE)\n\n        if match:\n            gateway_ip = match.group(1)\n            return gateway_ip\n        else:\n            return False \n\n    def run(self):\n        ping_count = self.get_threshold_var(\n            'ping_count',\n            default=DEFAULT_PING_COUNT,\n            value_type='int',\n        )\n        ping_target = str(\n            self.get_threshold_var(\n                'ping_target',\n                default=DEFAULT_PING_TARGET,\n                value_type='str',\n            ) or ''\n        ).strip()\n        max_ping_loss_percent = self.get_threshold_var(\n            'max_ping_loss_percent',\n            default=DEFAULT_MAX_PING_LOSS_PERCENT,\n            value_type='float',\n        )\n\n        if ping_count <= 0:\n            return self.fail(\n                '임계치 설정 오류',\n                message='ping_count 는 1 이상의 정수여야 합니다.',\n            )\n\n        if not ping_target:\n            return self.fail(\n                '임계치 설정 오류',\n                message='ping_target 이 비어 있습니다.',\n            )\n\n        # rc, out, err = self._ssh('ip route')\n        # default_route = self._build_default_route(out)\n        # if default_route:\n        #     ping_target = default_route\n\n        command = self._build_ping_command(ping_count, ping_target)\n        rc, out, err = self._ssh(command)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc not in (0, 1):\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='ping 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        try:\n            parsed = self._parse_ping_output(out)\n        except ValueError as exc:\n            return self.fail(\n                'Ping Loss 파싱 실패',\n                message=str(exc),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        metrics = {\n            'command': command,\n            'target': ping_target,\n            **parsed,\n        }\n        thresholds = {\n            'ping_count': ping_count,\n            'ping_target': ping_target,\n            'max_ping_loss_percent': max_ping_loss_percent,\n        }\n\n        loss_percent = parsed['loss_percent']\n        received_count = parsed['received_count']\n        sent_count = parsed['sent_count']\n\n        if loss_percent > max_ping_loss_percent or received_count == 0:\n            reasons = (\n                'Ping 손실률이 임계치를 초과했거나 응답이 수신되지 않았습니다. '\n                f'target={ping_target}, sent={sent_count}, received={received_count}, '\n                f'loss={loss_percent}%, max={max_ping_loss_percent}%'\n            )\n            return self.fail(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons=reasons,\n                message='Ping Loss 추가 확인 필요',\n                error=None,\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons=(\n                'Ping 응답이 정상 수신되었고 손실률이 임계치 이하입니다. '\n                f'target={ping_target}, sent={sent_count}, received={received_count}, '\n                f'loss={loss_percent}%'\n            ),\n            message='Ping Loss 점검 정상',\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -129,6 +129,15 @@
         "            **rtt,",
         "        }",
         "",
+        "    def _build_default_route(self, text):",
+        "        match = re.search(r'^default\\s+via\\s+(\\d{1,3}(?:\\.\\d{1,3}){3})\\b', text, re.MULTILINE)",
+        "",
+        "        if match:",
+        "            gateway_ip = match.group(1)",
+        "            return gateway_ip",
+        "        else:",
+        "            return False ",
+        "",
         "    def run(self):",
         "        ping_count = self.get_threshold_var(",
         "            'ping_count',",
@@ -159,6 +168,11 @@
         "                '임계치 설정 오류',",
         "                message='ping_target 이 비어 있습니다.',",
         "            )",
+        "",
+        "        # rc, out, err = self._ssh('ip route')",
+        "        # default_route = self._build_default_route(out)",
+        "        # if default_route:",
+        "        #     ping_target = default_route",
         "",
         "        command = self._build_ping_command(ping_count, ping_target)",
         "        rc, out, err = self._ssh(command)",
@@ -209,11 +223,12 @@
         "                f'target={ping_target}, sent={sent_count}, received={received_count}, '",
         "                f'loss={loss_percent}%, max={max_ping_loss_percent}%'",
         "            )",
-        "            return self.warn(",
+        "            return self.fail(",
         "                metrics=metrics,",
         "                thresholds=thresholds,",
         "                reasons=reasons,",
         "                message='Ping Loss 추가 확인 필요',",
+        "                error=None,",
         "            )",
         "",
         "        return self.ok(",
@@ -244,56 +259,53 @@
       "threshold_list": [
         {
           "name": "ping_count",
-          "value1": "10"
+          "value1": "1"
         },
         {
           "name": "ping_target",
-          "value1": "8.8.8.8"
+          "value1": "8.8.8.81"
         },
         {
           "name": "max_ping_loss_percent",
           "value1": "0"
         }
       ],
-      "status": "ok",
+      "status": "fail",
+      "error": null,
+      "message": "Ping Loss 추가 확인 필요",
       "metrics": {
-        "command": "ping -c 10 8.8.8.8",
-        "target": "8.8.8.8",
-        "sent_count": 10,
-        "received_count": 10,
-        "loss_percent": 0.0,
-        "response_received": true,
-        "reply_count": 1,
-        "reply_sources": [
-          "8.8.8.8"
-        ],
-        "reply_times_ms": [
-          38.8
-        ],
-        "configured_target_from_header": "",
-        "resolved_target": "",
-        "rtt_min_ms": 38.3,
-        "rtt_avg_ms": 39.6,
-        "rtt_max_ms": 40.6,
-        "rtt_mdev_ms": 0.7
+        "command": "ping -c 1 8.8.8.81",
+        "target": "8.8.8.81",
+        "sent_count": 1,
+        "received_count": 0,
+        "loss_percent": 100.0,
+        "response_received": false,
+        "reply_count": 0,
+        "reply_sources": [],
+        "reply_times_ms": [],
+        "configured_target_from_header": "8.8.8.81",
+        "resolved_target": "8.8.8.81"
       },
       "thresholds": {
-        "ping_count": 10,
-        "ping_target": "8.8.8.8",
+        "ping_count": 1,
+        "ping_target": "8.8.8.81",
         "max_ping_loss_percent": 0.0
       },
-      "reasons": "Ping 응답이 정상 수신되었고 손실률이 임계치 이하입니다. target=8.8.8.8, sent=10, received=10, loss=0.0%",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ping -c 10 8.8.8.8\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 64 bytes from 8.8.8.8: icmp_seq=1 ttl=111 time=38.8 ms\n10 packets transmitted, 10 received, 0% packet loss\nrtt min/avg/max/mdev = 38.3/39.6/40.6/0.7 ms",
+      "reasons": "Ping 손실률이 임계치를 초과했거나 응답이 수신되지 않았습니다. target=8.8.8.81, sent=1, received=0, loss=100.0%, max=0.0%",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ping -c 1 8.8.8.81\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용(stdout): PING 8.8.8.81 (8.8.8.81) 56(84) bytes of data.\n\n--- 8.8.8.81 ping statistics ---\n1 packets transmitted, 0 received, 100% packet loss, time 0ms\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: ping -c 10 8.8.8.8",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: 64 bytes from 8.8.8.8: icmp_seq=1 ttl=111 time=38.8 ms",
-        "10 packets transmitted, 10 received, 0% packet loss",
-        "rtt min/avg/max/mdev = 38.3/39.6/40.6/0.7 ms"
-      ],
-      "message": "Ping Loss 점검 정상"
+        " - 실행 명령어: ping -c 1 8.8.8.81",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용(stdout): PING 8.8.8.81 (8.8.8.81) 56(84) bytes of data.",
+        "",
+        "--- 8.8.8.81 ping statistics ---",
+        "1 packets transmitted, 0 received, 100% packet loss, time 0ms",
+        " - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "U-REPLAY-PING-01"
+  ]
 }

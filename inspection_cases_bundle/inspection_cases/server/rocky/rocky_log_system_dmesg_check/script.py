@@ -51,14 +51,17 @@ class Check(BaseCheck):
             f'{keyword}={count}건'
             for keyword, count in counts.items()
         )
-
+    
     def run(self):
         critical_keywords = self._split_keywords(
-            self.get_threshold_var('critical_log_keywords', default='', value_type='str')
+            self.get_threshold_var('critical_log_keywords', default='error|timeout', value_type='str')
         )
         warning_keywords = self._split_keywords(
-            self.get_threshold_var('warning_log_keywords', default='', value_type='str')
+            self.get_threshold_var('warning_log_keywords', default='warning|out of memory|memory leak|failed|denied', value_type='str')
         )
+
+        ciritical_threshhold = self.get_threshold_var('critical_log_keywords', default='error|timeout', value_type='str')
+        warning_threshhold = self.get_threshold_var('warning_log_keywords', default='warning|out of memory|memory leak|failed|denied', value_type='str')
 
         if not critical_keywords and not warning_keywords:
             return self.fail(
@@ -66,7 +69,7 @@ class Check(BaseCheck):
                 message='critical_log_keywords 또는 warning_log_keywords 가 정의되어 있지 않습니다.',
             )
 
-        rc, out, err = self._ssh(DMESG_COMMAND)
+        rc, out, err = self._ssh(DMESG_COMMAND + f' | grep -E "{ciritical_threshhold}|{warning_threshhold}"')
 
         if self._is_connection_error(rc, err):
             return self.fail(

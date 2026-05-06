@@ -11,9 +11,11 @@
         "application_type_name": "LINUX",
         "credential_type_name": "APPLICATION",
         "data": {
+          "user": "fap",
+          "password": "f3dtop0!",
           "become": true,
           "become_method": "su -",
-          "become_user": "test",
+          "become_user": "root",
           "become_password": "f3dtop0!"
         }
       },
@@ -23,9 +25,12 @@
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "test",
+          "user": "fap",
           "password": "f3dtop0!",
-          "port": 22
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
         }
       }
     ]
@@ -33,12 +38,12 @@
   "thresholds": {},
   "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
   "item_sleep_sec": 0,
-  "execution_id": 81107,
-  "host_id": 81107,
-  "job_id": 81107,
+  "execution_id": 81106,
+  "host_id": 81106,
+  "job_id": 81106,
   "item": {
-    "inspection_code": "TUTORIAL-ROCKY-PARAMIKO-07",
-    "item_id": 98107,
+    "inspection_code": "TUTORIAL-ROCKY-SSH-06",
+    "item_id": 98106,
     "application_id": 80100,
     "application_type_id": 10,
     "application_type_name": "LINUX",

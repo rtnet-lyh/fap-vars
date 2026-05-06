@@ -27,11 +27,11 @@
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_value": "whoami; id -u; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK"
+    "matcher_value": "id; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK"
   },
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "whoami; id -u; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK\nroot\n0\nPARAMIKO_ROOT_ACCESS_OK\n[root@rocky ~]#"
+    "stdout": "id; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK\nuid=0(root) gid=0(root) groups=0(root)\nPARAMIKO_ROOT_ACCESS_OK\n[root@rocky ~]#"
   }
 ]

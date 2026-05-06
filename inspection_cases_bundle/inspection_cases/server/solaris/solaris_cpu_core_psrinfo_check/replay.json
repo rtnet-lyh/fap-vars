@@ -1,16 +1,37 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "psrinfo -v",
-    "rc": 0,
-    "stdout_file": "outputs/psrinfo_v.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "fap@solaris:~$"
   },
   {
-    "matcher_type": "exact",
-    "matcher_value": "psrinfo -pv",
-    "rc": 0,
-    "stdout_file": "outputs/psrinfo_pv.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\r\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "psrinfo"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "psrinfo\r\n0       on-line   since 04/09/2026 03:39:41\r\n#"
   }
 ]

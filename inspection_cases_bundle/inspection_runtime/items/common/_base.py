@@ -1254,7 +1254,7 @@ class BaseCheck:
             raw_output=raw_output,
         )
 
-    def fail(self, error, message=None, stdout=None, stderr=None, raw_output=None):
+    def fail(self, error, message=None, stdout=None, stderr=None, raw_output=None, metrics=None, thresholds=None, reasons=None):
         # 실패 결과 포맷
         data = {
             'inspection_code': self.ctx.get('inspection_code'),
@@ -1267,6 +1267,13 @@ class BaseCheck:
             data['stdout'] = stdout
         if stderr is not None:
             data['stderr'] = stderr
+        if metrics is not None:
+            data['metrics'] = metrics        
+        if thresholds is not None:
+            data['thresholds'] = thresholds
+        if reasons is not None:
+            data['reasons'] = reasons
+            
         data['raw_output'] = self._resolve_raw_output(raw_output=raw_output, stdout=stdout, stderr=stderr)
         if self.ctx.get('item_id') is not None:
             data['item_id'] = self.ctx.get('item_id')

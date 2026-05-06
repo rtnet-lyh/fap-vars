@@ -1,9 +1,37 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "printf '\\n' | format",
-    "rc": 0,
-    "stdout_file": "outputs/format.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "fap@solaris:~$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\r\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "printf '\\n' | format"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "printf '\\n' | format\r\nAVAILABLE DISK SELECTIONS:\r\n0. c0t0d0 <ST3200822AS> (16.8GB)\r\n1. c0t1d0 <ST3200822AS> (16.8GB)\r\n2. c0t2d0 <ST3200822AS> (16.8GB)\r\n3. c0t3d0 <ST3200822AS> (16.8GB)\r\nSpecify disk (enter its number):\r\n#"
   }
 ]

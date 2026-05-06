@@ -6,11 +6,13 @@ from .common._base import BaseCheck
 
 
 IOSTAT_COMMAND = 'iostat -x'
+BECOME_COMMAND_TIMEOUT = 1
 
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_float(self, value):
         try:
@@ -78,16 +80,86 @@ class Check(BaseCheck):
             summaries.append(f"외 {len(rows) - limit}개")
         return ', '.join(summaries)
 
+    def _split_keywords(self, raw_value):
+        return [keyword.strip() for keyword in str(raw_value or '').split(',') if keyword.strip()]
+
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
+
+    def _build_become_command(self):
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
+
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
+
+    def _build_commands(self):
+        if not self._is_become_enabled():
+            return [IOSTAT_COMMAND]
+
+        return [
+            {
+                'command': self._build_become_command(),
+                'timeout': BECOME_COMMAND_TIMEOUT,
+                'ignore_prompt': True,
+            },
+            {
+                'command': str(self.get_connection_value('become_password', default='') or ''),
+                'hide_command': True,
+            },
+            IOSTAT_COMMAND,
+        ]
+
+    def _find_iostat_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == IOSTAT_COMMAND:
+                return item
+        return None
+
     def run(self):
         max_service_time_ms = self.get_threshold_var('max_service_time_ms', default=20, value_type='float')
         max_busy_percent = self.get_threshold_var('max_busy_percent', default=80, value_type='float')
-        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+        failure_keywords = self._split_keywords(
+            self.get_threshold_var('failure_keywords', default='장치를 찾을 수 없습니다,not found,cannot,command not found,module missing', value_type='str')
+        )
 
-        rc, out, err = self._ssh(IOSTAT_COMMAND)
+        try:
+            results = self._run_paramiko_commands(self._build_commands())
+        except ValueError as exc:
+            return self.fail('권한 상승 설정 오류', message=str(exc))
+
+        result = self._find_iostat_result(results)
+        if result is None:
+            failed_result = next((item for item in results if item.get('rc') != 0), None)
+            rc = failed_result.get('rc') if failed_result else 1
+            err = failed_result.get('stderr') if failed_result else ''
+            if self._is_connection_error(rc, err):
+                return self.fail(
+                    '호스트 연결 실패',
+                    message=(err or 'Paramiko 연결 확인에 실패했습니다.').strip(),
+                    stderr=(err or '').strip(),
+                )
+            return self.fail(
+                '점검 결과 없음',
+                message='iostat -x 명령 실행 결과를 찾지 못했습니다.',
+                stdout=(failed_result.get('stdout') or '').strip() if failed_result else '',
+                stderr=(err or '').strip(),
+            )
+
+        rc = result.get('rc')
+        out = result.get('stdout', '')
+        err = result.get('stderr', '')
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
+                message=(err or 'Paramiko 연결 확인에 실패했습니다.').strip(),
                 stderr=(err or '').strip(),
             )
         if rc != 0:
@@ -118,7 +190,6 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
         combined_output = '\n'.join(part for part in (text, (err or '').strip()) if part)
         matched_failure_keywords = [
             keyword for keyword in failure_keywords

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 from .common._base import BaseCheck
 
 
 ROOT_ACCESS_MARKER = 'PARAMIKO_ROOT_ACCESS_OK'
-ROOT_CHECK_COMMAND = 'whoami; id -u; test -r /etc/shadow && echo ' + ROOT_ACCESS_MARKER
+ROOT_CHECK_COMMAND = 'id; test -r /etc/shadow && echo ' + ROOT_ACCESS_MARKER
 
 
 class Check(BaseCheck):
@@ -12,7 +14,8 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_PROFILE = 'linux'
     PARAMIKO_AUTH_METHOD = 'password'
-    PARAMIKO_TIMEOUT_SEC = 10
+    PARAMIKO_TIMEOUT_SEC = 5
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _is_become_enabled(self):
         value = self.get_application_credential_value('become', default=False)
@@ -53,6 +56,12 @@ class Check(BaseCheck):
                 return item
         return None
 
+    def _parse_id_uid(self, output):
+        match = re.search(r'(?:^|\s)uid=(\d+)(?:\(([^)]*)\))?', str(output or ''))
+        if not match:
+            return '', ''
+        return match.group(1), match.group(2) or ''
+
     def run(self):
         try:
             commands = self._build_commands()
@@ -81,10 +90,12 @@ class Check(BaseCheck):
             )
 
         lines = [line.strip() for line in (root_result.get('stdout') or '').splitlines() if line.strip()]
-        if len(lines) < 3:
+        actual_uid, actual_user = self._parse_id_uid(root_result.get('stdout') or '')
+        root_access_ok = ROOT_ACCESS_MARKER in lines
+        if not actual_uid:
             return self.fail(
                 '출력 파싱 실패',
-                message='whoami, id -u, root 접근 marker를 모두 확인하지 못했습니다.',
+                message='id 출력에서 uid 값을 확인하지 못했습니다.',
                 stdout=(root_result.get('stdout') or '').strip(),
                 stderr=(root_result.get('stderr') or '').strip(),
             )
@@ -92,16 +103,18 @@ class Check(BaseCheck):
         expected_user = str(
             self.get_application_credential_value('become_user', default='root') or 'root'
         ).strip() or 'root'
-        actual_user = lines[0]
-        actual_uid = lines[1]
-        root_access_ok = ROOT_ACCESS_MARKER in lines
+        identity_ok = (
+            actual_uid == '0'
+            if expected_user == 'root'
+            else actual_user == expected_user
+        )
 
-        if actual_user != expected_user or actual_uid != '0' or not root_access_ok:
+        if not identity_ok or not root_access_ok:
             return self.fail(
                 'root 권한 확인 실패',
                 message=(
-                    f'expected_user={expected_user}, actual_user={actual_user}, '
-                    f'uid={actual_uid}, marker={root_access_ok}'
+                    f'expected_user={expected_user}, actual_uid={actual_uid}, '
+                    f'actual_user={actual_user or ""}, marker={root_access_ok}'
                 ),
                 stdout=(root_result.get('stdout') or '').strip(),
                 stderr=(root_result.get('stderr') or '').strip(),
@@ -113,13 +126,13 @@ class Check(BaseCheck):
                 'become_enabled': self._is_become_enabled(),
                 'become_method': str(self.get_application_credential_value('become_method', default='su -') or 'su -'),
                 'become_user': expected_user,
-                'root_identity': actual_user,
+                'root_identity': actual_user or expected_user,
                 'root_uid': actual_uid,
                 'root_access_marker': root_access_ok,
             },
             thresholds={},
             reasons='Paramiko 상호작용 입력으로 root 권한상승과 root 전용 파일 접근을 정상 확인했습니다.',
-            message=f'Paramiko root 권한상승 예제가 정상 수행되었습니다. user={actual_user}, uid={actual_uid}',
+            message=f'Paramiko root 권한상승 예제가 정상 수행되었습니다. user={actual_user or expected_user}, uid={actual_uid}',
         )
 
 

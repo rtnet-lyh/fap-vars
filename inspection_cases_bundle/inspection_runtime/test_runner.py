@@ -384,9 +384,9 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
                 'stderr': '',
             },
             {
-                'command': 'whoami; id -u',
+                'command': 'id',
                 'rc': 0,
-                'stdout': 'root\n0\n',
+                'stdout': 'uid=0(root) gid=0(root) groups=0(root)\n',
                 'stderr': '',
             },
         ]
@@ -404,13 +404,91 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
                 client_factory=lambda: FakeParamikoClient(),
             )
 
-        self.assertEqual((rc, out, err), (0, 'root\n0\n', ''))
+        self.assertEqual((rc, out, err), (0, 'uid=0(root) gid=0(root) groups=0(root)\n', ''))
         commands = run_commands.call_args.args[0]
         self.assertEqual(commands[0]['command'], 'su - root')
         self.assertTrue(commands[0]['ignore_prompt'])
         self.assertEqual(commands[1]['command'], 'bad-password')
         self.assertTrue(commands[1]['hide_command'])
-        self.assertEqual(commands[2], 'whoami; id -u')
+        self.assertEqual(commands[2], 'id')
+
+    def test_paramiko_su_precheck_rejects_non_root_id_output(self):
+        command_results = [
+            {
+                'command': 'su - root',
+                'rc': 124,
+                'stdout': 'Password:',
+                'stderr': 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received',
+                'timed_out': True,
+            },
+            {
+                'command': 'bad-password',
+                'rc': 0,
+                'stdout': '',
+                'stderr': '',
+            },
+            {
+                'command': 'id',
+                'rc': 0,
+                'stdout': 'uid=1000(fap) gid=1000(fap)\n',
+                'stderr': '',
+            },
+        ]
+
+        with mock.patch('items.common._base.BaseCheck._run_paramiko_commands', return_value=command_results):
+            rc, out, err = runner.run_paramiko_su_precheck(
+                '10.0.0.1',
+                22,
+                'inspector',
+                'ssh-password',
+                {'auth_method': 'password'},
+                'su -',
+                'root',
+                'bad-password',
+                client_factory=lambda: FakeParamikoClient(),
+            )
+
+        self.assertEqual(rc, 1)
+        self.assertEqual(out, 'uid=1000(fap) gid=1000(fap)\n')
+        self.assertIn('expected_user=root', err)
+
+    def test_paramiko_su_precheck_accepts_expected_non_root_id_user(self):
+        command_results = [
+            {
+                'command': 'su - oracle',
+                'rc': 124,
+                'stdout': 'Password:',
+                'stderr': 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received',
+                'timed_out': True,
+            },
+            {
+                'command': 'oracle-password',
+                'rc': 0,
+                'stdout': '',
+                'stderr': '',
+            },
+            {
+                'command': 'id',
+                'rc': 0,
+                'stdout': 'uid=1001(oracle) gid=1001(oinstall)\n',
+                'stderr': '',
+            },
+        ]
+
+        with mock.patch('items.common._base.BaseCheck._run_paramiko_commands', return_value=command_results):
+            rc, out, err = runner.run_paramiko_su_precheck(
+                '10.0.0.1',
+                22,
+                'inspector',
+                'ssh-password',
+                {'auth_method': 'password'},
+                'su -',
+                'oracle',
+                'oracle-password',
+                client_factory=lambda: FakeParamikoClient(),
+            )
+
+        self.assertEqual((rc, out, err), (0, 'uid=1001(oracle) gid=1001(oinstall)\n', ''))
 
     def test_ssh_su_precheck_failure_uses_su_command_once(self):
         calls = []
