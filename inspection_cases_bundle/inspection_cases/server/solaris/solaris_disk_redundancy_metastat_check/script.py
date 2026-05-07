@@ -10,7 +10,8 @@ METASTAT_COMMAND = 'metastat'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _split_blocks(self, text):
         sections = [section.strip() for section in re.split(r'\n\s*\n', (text or '').strip()) if section.strip()]
@@ -80,7 +81,7 @@ class Check(BaseCheck):
         min_submirror_count = self.get_threshold_var('min_submirror_count', default=2, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(METASTAT_COMMAND)
+        rc, out, err = self._run_paramiko(METASTAT_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

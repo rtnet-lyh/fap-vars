@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "dmesg | grep -i 'error|fail|warning'",
-    "rc": 1,
-    "stdout": "",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "dmesg | grep -i 'error|fail|warning'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | grep -i 'error|fail|warning'\r\n#"
   }
 ]

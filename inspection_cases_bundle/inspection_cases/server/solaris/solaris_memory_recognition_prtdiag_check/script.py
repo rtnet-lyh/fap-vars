@@ -10,7 +10,8 @@ PRTDIAG_COMMAND = 'prtdiag'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _to_memory_mb(self, value, unit):
         try:
@@ -84,7 +85,7 @@ class Check(BaseCheck):
         min_dimm_count = self.get_threshold_var('min_dimm_count', default=1, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(PRTDIAG_COMMAND)
+        rc, out, err = self._run_paramiko(PRTDIAG_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail('호스트 연결 실패', message=(err or 'SSH 연결 확인에 실패했습니다.').strip(), stderr=(err or '').strip())

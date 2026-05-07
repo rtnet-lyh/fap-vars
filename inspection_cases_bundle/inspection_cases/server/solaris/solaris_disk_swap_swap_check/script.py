@@ -10,7 +10,8 @@ SWAP_LIST_COMMAND = 'swap -l'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_int(self, value):
         try:
@@ -84,7 +85,7 @@ class Check(BaseCheck):
         min_swap_device_count = self.get_threshold_var('min_swap_device_count', default=1, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(SWAP_LIST_COMMAND)
+        rc, out, err = self._run_paramiko(SWAP_LIST_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

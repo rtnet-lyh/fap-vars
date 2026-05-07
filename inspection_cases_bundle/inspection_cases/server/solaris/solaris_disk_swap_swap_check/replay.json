@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "swap -l",
-    "rc": 0,
-    "stdout_file": "outputs/swap_l.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "swap -l"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/swap_l.stdout"
   }
 ]

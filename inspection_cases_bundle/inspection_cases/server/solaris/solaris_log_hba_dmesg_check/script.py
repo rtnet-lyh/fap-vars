@@ -8,7 +8,8 @@ LOG_COMMAND = "dmesg | grep -i 'hba|loop|port|offline|online'"
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _split_keywords(self, raw_value):
         return [token.strip() for token in str(raw_value or '').split(',') if token.strip()]
@@ -34,7 +35,7 @@ class Check(BaseCheck):
         bad_log_keywords = self._split_keywords(self.get_threshold_var('bad_log_keywords', default='loop,offline,error,failed,failure', value_type='str'))
         failure_keywords = self._split_keywords(self.get_threshold_var('failure_keywords', default='', value_type='str'))
 
-        rc, out, err = self._ssh(LOG_COMMAND)
+        rc, out, err = self._run_paramiko(LOG_COMMAND)
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',

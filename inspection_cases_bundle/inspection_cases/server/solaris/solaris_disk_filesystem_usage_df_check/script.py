@@ -10,7 +10,8 @@ DF_COMMAND = 'df -h'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _to_bytes(self, value):
         match = re.match(r'^([0-9]+(?:\.[0-9]+)?)([KMGTP]?)(?:i?B?)?$', str(value).strip(), re.IGNORECASE)
@@ -96,7 +97,7 @@ class Check(BaseCheck):
         avail_min_percent = self.get_threshold_var('avail_min_percent', default=20.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(DF_COMMAND)
+        rc, out, err = self._run_paramiko(DF_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "mount | grep -- '/mnt/shared'",
-    "rc": 0,
-    "stdout_file": "outputs/mount.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "mount | grep -- '/mnt/shared'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/mount.stdout"
   }
 ]

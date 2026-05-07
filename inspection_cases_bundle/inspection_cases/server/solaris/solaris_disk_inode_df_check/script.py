@@ -10,7 +10,8 @@ DF_INODE_COMMAND = 'df -o i'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_rows(self, text):
         lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]
@@ -67,7 +68,7 @@ class Check(BaseCheck):
         min_inode_free_percent = self.get_threshold_var('min_inode_free_percent', default=20, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(DF_INODE_COMMAND)
+        rc, out, err = self._run_paramiko(DF_INODE_COMMAND)
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',

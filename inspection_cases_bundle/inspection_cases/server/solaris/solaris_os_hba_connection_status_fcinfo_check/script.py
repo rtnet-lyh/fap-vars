@@ -10,7 +10,8 @@ FCINFO_HBA_PORT_COMMAND = 'fcinfo hba-port'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _normalize(self, value):
         return str(value or '').strip().lower()
@@ -86,7 +87,7 @@ class Check(BaseCheck):
         min_current_speed_gbps = self.get_threshold_var('min_current_speed_gbps', default=8, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(FCINFO_HBA_PORT_COMMAND)
+        rc, out, err = self._run_paramiko(FCINFO_HBA_PORT_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

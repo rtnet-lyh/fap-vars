@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "clog | grep -i 'status change|offline|online|cluster error'",
-    "rc": 1,
-    "stdout": "",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "clog | grep -i 'status change|offline|online|cluster error'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "clog | grep -i 'status change|offline|online|cluster error'\r\n#"
   }
 ]

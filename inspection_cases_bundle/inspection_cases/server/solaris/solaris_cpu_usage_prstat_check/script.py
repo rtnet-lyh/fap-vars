@@ -11,7 +11,8 @@ MPSTAT_CPU_COMMAND = 'mpstat 1 1'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_number(self, value):
         try:
@@ -141,7 +142,7 @@ class Check(BaseCheck):
         max_process_cpu_percent = self.get_threshold_var('max_process_cpu_percent', default=5.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        prstat_rc, prstat_out, prstat_err = self._ssh(PRSTAT_CPU_COMMAND)
+        prstat_rc, prstat_out, prstat_err = self._run_paramiko(PRSTAT_CPU_COMMAND)
 
         if self._is_connection_error(prstat_rc, prstat_err):
             return self.fail(
@@ -174,7 +175,7 @@ class Check(BaseCheck):
                 stderr=(prstat_err or '').strip(),
             )
 
-        mpstat_rc, mpstat_out, mpstat_err = self._ssh(MPSTAT_CPU_COMMAND)
+        mpstat_rc, mpstat_out, mpstat_err = self._run_paramiko(MPSTAT_CPU_COMMAND)
 
         if self._is_connection_error(mpstat_rc, mpstat_err):
             return self.fail(

@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "df -h",
-    "rc": 0,
-    "stdout_file": "outputs/df_h.stdout",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "df -h"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/df_h.stdout"
   }
 ]

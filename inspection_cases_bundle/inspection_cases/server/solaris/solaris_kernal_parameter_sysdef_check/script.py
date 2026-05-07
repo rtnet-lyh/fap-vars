@@ -8,7 +8,8 @@ SYSDEF_COMMAND = 'sysdef'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_parameters(self, text):
         parameter_map = {}
@@ -44,7 +45,7 @@ class Check(BaseCheck):
         required_parameters_raw = self.get_threshold_var('required_parameters', default='shmmax,seminfo_semmsl,maxfiles,maxuproc,minfree,msginfo_msgmax', value_type='str')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(SYSDEF_COMMAND)
+        rc, out, err = self._run_paramiko(SYSDEF_COMMAND)
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',

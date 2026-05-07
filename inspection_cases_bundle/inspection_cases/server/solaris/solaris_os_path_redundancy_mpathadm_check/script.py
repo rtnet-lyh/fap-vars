@@ -8,7 +8,8 @@ MPATHADM_SHOW_LU_COMMAND = 'mpathadm show lu'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _normalize(self, value):
         return str(value or '').strip().lower()
@@ -78,7 +79,7 @@ class Check(BaseCheck):
         disallowed_path_states_raw = self.get_threshold_var('disallowed_path_states', default='DISABLED', value_type='str')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(MPATHADM_SHOW_LU_COMMAND)
+        rc, out, err = self._run_paramiko(MPATHADM_SHOW_LU_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

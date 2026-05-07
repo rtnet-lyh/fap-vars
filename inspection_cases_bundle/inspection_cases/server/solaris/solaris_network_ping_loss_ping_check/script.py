@@ -10,7 +10,8 @@ PING_COMMAND = 'ping 8.8.8.8'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _parse_ping_output(self, text):
         transmitted_match = re.search(
@@ -53,7 +54,7 @@ class Check(BaseCheck):
         max_avg_rtt_ms = self.get_threshold_var('max_avg_rtt_ms', default=100, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(PING_COMMAND)
+        rc, out, err = self._run_paramiko(PING_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(

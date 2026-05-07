@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "dmesg | grep -i 'timeout|i/o error|transport failed|media error'",
-    "rc": 1,
-    "stdout": "",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "dmesg | grep -i 'timeout|i/o error|transport failed|media error'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | grep -i 'timeout|i/o error|transport failed|media error'\r\n#"
   }
 ]

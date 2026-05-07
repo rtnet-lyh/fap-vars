@@ -1,3 +1,4 @@
+metastat
 d0: Mirror
     Submirror 0: d10
       State: Okay
@@ -11,3 +12,4 @@ d10: Submirror of d0
 
 d11: Submirror of d0
     State: Okay
+#

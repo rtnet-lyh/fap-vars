@@ -8,7 +8,8 @@ LOG_COMMAND = "dmesg | grep -i 'ecc error|uncorrectable|offline'"
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _build_log_summary(self, lines, limit=3):
         if not lines:
@@ -22,7 +23,7 @@ class Check(BaseCheck):
     def run(self):
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._ssh(LOG_COMMAND)
+        rc, out, err = self._run_paramiko(LOG_COMMAND)
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',

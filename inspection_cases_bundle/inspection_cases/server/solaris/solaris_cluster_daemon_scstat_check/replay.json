@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "scstat",
-    "rc": 0,
-    "stdout": "=== Cluster Nodes ===\nnode1  Online\nnode2  Online\n\n=== Cluster Transport Paths ===\nnode1 -> node2  Path online\nnode2 -> node1  Path online\n\n=== Resource Groups ===\nresource_grp1  node1  Online\nresource_grp2  node2  Online\n\n=== Network Interfaces ===\nnet0  node1  Online\nnet1  node2  Online",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "scstat"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "scstat\r\n=== Cluster Nodes ===\r\nnode1  Online\r\nnode2  Online\r\n\r\n=== Cluster Transport Paths ===\r\nnode1 -> node2  Path online\r\nnode2 -> node1  Path online\r\n\r\n=== Resource Groups ===\r\nresource_grp1  node1  Online\r\nresource_grp2  node2  Online\r\n\r\n=== Network Interfaces ===\r\nnet0  node1  Online\r\nnet1  node2  Online\r\n#"
   }
 ]

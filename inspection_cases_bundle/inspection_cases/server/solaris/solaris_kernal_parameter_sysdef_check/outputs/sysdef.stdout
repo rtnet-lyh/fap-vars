@@ -1,3 +1,4 @@
+sysdef
 *Tunable Parameters*
 shmmax: 4294967295
 shminfo_shmmin: 1
@@ -20,3 +21,4 @@ msginfo_msgmax: 8192
 msginfo_msgmnb: 16384
 msginfo_msgtql: 40
 msginfo_msgseg: 2048
+#

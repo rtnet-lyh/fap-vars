@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "dmesg | grep -i 'panic|kernel panic'",
-    "rc": 1,
-    "stdout": "",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "dmesg | grep -i 'panic|kernel panic'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | grep -i 'panic|kernel panic'\r\n#"
   }
 ]

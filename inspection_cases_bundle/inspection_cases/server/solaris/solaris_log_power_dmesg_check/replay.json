@@ -1,9 +1,17 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "dmesg | grep -i 'psu|power supply|failed'",
-    "rc": 1,
-    "stdout": "",
-    "stderr": ""
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "dmesg | grep -i 'psu|power supply|failed'"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | grep -i 'psu|power supply|failed'\r\n#"
   }
 ]

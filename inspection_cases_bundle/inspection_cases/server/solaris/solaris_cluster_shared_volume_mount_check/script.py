@@ -10,7 +10,8 @@ MOUNT_COMMAND_TEMPLATE = 'mount | grep -- {mount_point}'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _split_keywords(self, raw_value):
         return [token.strip() for token in str(raw_value or '').split(',') if token.strip()]
@@ -92,7 +93,7 @@ class Check(BaseCheck):
             )
 
         command = MOUNT_COMMAND_TEMPLATE.format(mount_point=self._quote_for_shell(mount_point))
-        rc, out, err = self._ssh(command)
+        rc, out, err = self._run_paramiko(command)
 
         if self._is_connection_error(rc, err):
             return self.fail(

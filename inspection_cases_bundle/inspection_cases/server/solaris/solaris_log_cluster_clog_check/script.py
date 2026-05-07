@@ -15,7 +15,8 @@ LOG_PATTERNS = (
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _split_keywords(self, raw_value):
         return [token.strip() for token in str(raw_value or '').split(',') if token.strip()]
@@ -62,7 +63,7 @@ class Check(BaseCheck):
             )
         )
 
-        rc, out, err = self._ssh(LOG_COMMAND)
+        rc, out, err = self._run_paramiko(LOG_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(
