@@ -379,53 +379,53 @@
       "status": "ok",
       "metrics": {
         "device_count": 3,
-        "worst_service_device": "sd0",
-        "worst_service_time_ms": 10.5,
-        "worst_busy_device": "sd0",
-        "worst_busy_percent": 50.0,
-        "highest_wait_device": "sd0",
+        "worst_service_device": "cmdk0",
+        "worst_service_time_ms": 5.0,
+        "worst_busy_device": "cmdk0",
+        "worst_busy_percent": 0.0,
+        "highest_wait_device": "cmdk0",
         "highest_wait_value": 0.0,
-        "highest_active_device": "sd0",
-        "highest_active_value": 1.0,
+        "highest_active_device": "cmdk0",
+        "highest_active_value": 0.0,
         "rows": [
           {
             "line_number": 3,
-            "device": "sd0",
-            "read_per_sec": 15.0,
-            "write_per_sec": 10.0,
-            "read_kb_per_sec": 150.0,
-            "write_kb_per_sec": 100.0,
+            "device": "cmdk0",
+            "read_per_sec": 0.0,
+            "write_per_sec": 0.4,
+            "read_kb_per_sec": 0.1,
+            "write_kb_per_sec": 0.6,
             "wait": 0.0,
-            "active": 1.0,
-            "service_time_ms": 10.5,
-            "wait_percent": 5.0,
-            "busy_percent": 50.0
+            "active": 0.0,
+            "service_time_ms": 5.0,
+            "wait_percent": 0.0,
+            "busy_percent": 0.0
           },
           {
             "line_number": 4,
-            "device": "sd1",
-            "read_per_sec": 5.0,
-            "write_per_sec": 3.0,
-            "read_kb_per_sec": 50.0,
-            "write_kb_per_sec": 30.0,
+            "device": "sd0",
+            "read_per_sec": 0.0,
+            "write_per_sec": 0.0,
+            "read_kb_per_sec": 0.0,
+            "write_kb_per_sec": 0.0,
             "wait": 0.0,
-            "active": 0.5,
-            "service_time_ms": 8.0,
+            "active": 0.0,
+            "service_time_ms": 0.5,
             "wait_percent": 0.0,
-            "busy_percent": 25.0
+            "busy_percent": 0.0
           },
           {
             "line_number": 5,
-            "device": "sd2",
-            "read_per_sec": 0.5,
-            "write_per_sec": 0.2,
-            "read_kb_per_sec": 5.0,
-            "write_kb_per_sec": 2.0,
+            "device": "nfs1",
+            "read_per_sec": 0.0,
+            "write_per_sec": 0.0,
+            "read_kb_per_sec": 0.0,
+            "write_kb_per_sec": 0.0,
             "wait": 0.0,
-            "active": 0.1,
-            "service_time_ms": 7.0,
+            "active": 0.0,
+            "service_time_ms": 0.0,
             "wait_percent": 0.0,
-            "busy_percent": 10.0
+            "busy_percent": 0.0
           }
         ],
         "matched_failure_keywords": []
@@ -441,8 +441,8 @@
           "module missing"
         ]
       },
-      "reasons": "모든 디스크의 svc_t와 %b가 기준 이내입니다. 최대 svc_t는 sd0 10.50ms, 최대 %b는 sd0 50.00%입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: iostat -x\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: extended device statistics\ndevice   r/s   w/s   kr/s   kw/s   wait actv svc_t  %w  %b\nsd0     15.0  10.0  150.0  100.0   0.0  1.0  10.5   5  50\nsd1      5.0   3.0   50.0   30.0   0.0  0.5   8.0   0  25\nsd2      0.5   0.2    5.0    2.0   0.0  0.1   7.0   0  10",
+      "reasons": "모든 디스크의 svc_t와 %b가 기준 이내입니다. 최대 svc_t는 cmdk0 5.00ms, 최대 %b는 cmdk0 0.00%입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: iostat -x\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: extended device statistics                 \ndevice    r/s    w/s   kr/s   kw/s wait actv  svc_t  %w  %b \ncmdk0     0.0    0.4    0.1    0.6  0.0  0.0    5.0   0   0 \nsd0       0.0    0.0    0.0    0.0  0.0  0.0    0.5   0   0 \nnfs1      0.0    0.0    0.0    0.0  0.0  0.0    0.0   0   0",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
@@ -453,17 +453,18 @@
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
         "",
         "[점검 단계 3]",
         " - 실행 명령어: iostat -x",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: extended device statistics",
-        "device   r/s   w/s   kr/s   kw/s   wait actv svc_t  %w  %b",
-        "sd0     15.0  10.0  150.0  100.0   0.0  1.0  10.5   5  50",
-        "sd1      5.0   3.0   50.0   30.0   0.0  0.5   8.0   0  25",
-        "sd2      0.5   0.2    5.0    2.0   0.0  0.1   7.0   0  10"
+        " - 출력 내용: extended device statistics                 ",
+        "device    r/s    w/s   kr/s   kw/s wait actv  svc_t  %w  %b ",
+        "cmdk0     0.0    0.4    0.1    0.6  0.0  0.0    5.0   0   0 ",
+        "sd0       0.0    0.0    0.0    0.0  0.0  0.0    0.5   0   0 ",
+        "nfs1      0.0    0.0    0.0    0.0  0.0  0.0    0.0   0   0"
       ],
-      "message": "Solaris Disk I/O가 정상입니다. 현재 상태: 디스크 3개, 최대 svc_t sd0 10.50ms (기준 20.00ms 미만), 최대 %b sd0 50.00% (기준 80.00% 미만), 최대 wait sd0 0.00, 최대 actv sd0 1.00, 장치 요약: sd0 svc_t 10.50ms, %b 50.00%, wait 0.00, actv 1.00, sd1 svc_t 8.00ms, %b 25.00%, wait 0.00, actv 0.50, sd2 svc_t 7.00ms, %b 10.00%, wait 0.00, actv 0.10."
+      "message": "Solaris Disk I/O가 정상입니다. 현재 상태: 디스크 3개, 최대 svc_t cmdk0 5.00ms (기준 20.00ms 미만), 최대 %b cmdk0 0.00% (기준 80.00% 미만), 최대 wait cmdk0 0.00, 최대 actv cmdk0 0.00, 장치 요약: cmdk0 svc_t 5.00ms, %b 0.00%, wait 0.00, actv 0.00, sd0 svc_t 0.50ms, %b 0.00%, wait 0.00, actv 0.00, nfs1 svc_t 0.00ms, %b 0.00%, wait 0.00, actv 0.00."
     }
   ],
   "failed_items": []

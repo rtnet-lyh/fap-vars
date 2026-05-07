@@ -15,18 +15,26 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
-    def _build_become_command(self):
-        become = self.get_connection_value('become', default=False)
-        become_method = self.get_connection_value('become_method', default='su -')
-        become_user = self.get_connection_value('become_user', default='root')        
 
-        if become_method not in ['su', 'su -', 'sudo']:
-            ValueError(f'unsupported become_method: {become_method}')
-        
-        if become:
-            return f'{become_method} {become_user}'
-                
-        return ''
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
+
+    def _build_become_command(self):
+        if not self._is_become_enabled():
+            return ''
+
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
+
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
 
     def _build_check_command(self, become_command):
 

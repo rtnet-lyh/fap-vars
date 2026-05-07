@@ -1,0 +1,8 @@
+printf '%s\n' shmmax/D seminfo_semmsl/D maxfiles/D maxuproc/D minfree/D msginfo_msgmax/D '$q' | mdb -k
+shmmax: 0t4294967295
+seminfo_semmsl: 0t256
+maxfiles: 0t8192
+maxuproc: 0t512
+minfree: 0t200
+msginfo_msgmax: 0t8192
+#

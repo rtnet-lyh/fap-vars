@@ -14,6 +14,56 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
+
+    def _build_become_command(self):
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
+
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
+
+    def _build_paramiko_commands(self, command):
+        if not self._is_become_enabled():
+            return [command]
+
+        return [
+            {
+                'command': self._build_become_command(),
+                'timeout': 1,
+                'ignore_prompt': True,
+            },
+            {
+                'command': str(self.get_connection_value('become_password', default='') or ''),
+                'hide_command': True,
+            },
+            command,
+        ]
+
+    def _run_check_command(self, command):
+        try:
+            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
+        except ValueError as exc:
+            return 1, '', str(exc)
+
+        for item in reversed(results):
+            if item.get('command') == command:
+                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
+
+        failed_result = next((item for item in results if item.get('rc') != 0), None)
+        if failed_result:
+            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
+        return 1, '', 'paramiko command result not found'
+
+
     def _parse_number(self, value):
         try:
             return float(str(value).strip().rstrip('%'))
@@ -142,7 +192,7 @@ class Check(BaseCheck):
         max_process_cpu_percent = self.get_threshold_var('max_process_cpu_percent', default=5.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        prstat_rc, prstat_out, prstat_err = self._run_paramiko(PRSTAT_CPU_COMMAND)
+        prstat_rc, prstat_out, prstat_err = self._run_check_command(PRSTAT_CPU_COMMAND)
 
         if self._is_connection_error(prstat_rc, prstat_err):
             return self.fail(
@@ -175,7 +225,7 @@ class Check(BaseCheck):
                 stderr=(prstat_err or '').strip(),
             )
 
-        mpstat_rc, mpstat_out, mpstat_err = self._run_paramiko(MPSTAT_CPU_COMMAND)
+        mpstat_rc, mpstat_out, mpstat_err = self._run_check_command(MPSTAT_CPU_COMMAND)
 
         if self._is_connection_error(mpstat_rc, mpstat_err):
             return self.fail(

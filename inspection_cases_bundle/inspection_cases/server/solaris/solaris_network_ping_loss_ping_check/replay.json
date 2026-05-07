@@ -2,12 +2,67 @@
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "#"
+    "stdout": "fap@solaris:~$"
   },
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_value": "ping 8.8.8.8"
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\r\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "netstat -rn"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/netstat_rn.stdout"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "fap@solaris:~$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\r\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "ping 192.168.1.1"
   },
   {
     "channel": "terminal",

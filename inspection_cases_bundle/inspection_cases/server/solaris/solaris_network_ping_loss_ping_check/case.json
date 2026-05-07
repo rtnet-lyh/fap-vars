@@ -1,5 +1,5 @@
 {
-  "host": "127.0.0.1",
+  "host": "192.168.1.163",
   "port": 22,
   "user": "root",
   "password": "",
@@ -11,8 +11,12 @@
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "root",
-          "password": ""
+          "username": "fap",
+          "password": "f3dtop0!",
+          "become": "True",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
         }
       }
     ]
@@ -35,10 +39,10 @@
     "type_name": "일상점검",
     "area_name": "상태점검",
     "category_name": "서버(OS)",
-    "description": "Solaris ping 명령으로 외부 대상과의 통신 상태, 패킷 손실률, RTT를 점검합니다.",
-    "inspection_command": "ping 8.8.8.8",
+    "description": "Solaris netstat -rn 명령으로 default gateway를 찾고 해당 gateway ping 응답 상태를 점검합니다.",
+    "inspection_command": "netstat -rn; ping <default_gateway>",
     "is_service_affect": "N",
-    "action_content": "패킷 손실이 발생하거나 평균 RTT가 기준을 초과하면 네트워크 경로, 방화벽, 회선 지연 여부를 점검합니다.",
+    "action_content": "default gateway를 찾지 못하거나 gateway ping 응답이 없으면 네트워크 경로, 방화벽, 회선 지연 여부를 점검합니다.",
     "threshold_list": [
       {
         "name": "max_packet_loss_percent",

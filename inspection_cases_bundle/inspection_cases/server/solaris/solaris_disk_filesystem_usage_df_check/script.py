@@ -13,6 +13,56 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
+
+    def _build_become_command(self):
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
+
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
+
+    def _build_paramiko_commands(self, command):
+        if not self._is_become_enabled():
+            return [command]
+
+        return [
+            {
+                'command': self._build_become_command(),
+                'timeout': 1,
+                'ignore_prompt': True,
+            },
+            {
+                'command': str(self.get_connection_value('become_password', default='') or ''),
+                'hide_command': True,
+            },
+            command,
+        ]
+
+    def _run_check_command(self, command):
+        try:
+            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
+        except ValueError as exc:
+            return 1, '', str(exc)
+
+        for item in reversed(results):
+            if item.get('command') == command:
+                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
+
+        failed_result = next((item for item in results if item.get('rc') != 0), None)
+        if failed_result:
+            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
+        return 1, '', 'paramiko command result not found'
+
+
     def _to_bytes(self, value):
         match = re.match(r'^([0-9]+(?:\.[0-9]+)?)([KMGTP]?)(?:i?B?)?$', str(value).strip(), re.IGNORECASE)
         if not match:
@@ -97,7 +147,7 @@ class Check(BaseCheck):
         avail_min_percent = self.get_threshold_var('avail_min_percent', default=20.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_paramiko(DF_COMMAND)
+        rc, out, err = self._run_check_command(DF_COMMAND)
 
         if self._is_connection_error(rc, err):
             return self.fail(
@@ -175,8 +225,39 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        invalid_rows = [
+        ignored_zero_usage_rows = [
             row for row in rows
+            if row['used_percent'] == 0
+        ]
+        check_rows = [
+            row for row in rows
+            if row['used_percent'] != 0
+        ]
+        if not check_rows:
+            return self.ok(
+                metrics={
+                    'filesystem_count': 0,
+                    'total_filesystem_count': len(rows),
+                    'ignored_zero_usage_count': len(ignored_zero_usage_rows),
+                    'ignored_zero_usage_rows': ignored_zero_usage_rows,
+                    'rows': [],
+                    'matched_failure_keywords': matched_failure_keywords,
+                },
+                thresholds={
+                    'used_max_percent': used_max_percent,
+                    'avail_min_percent': avail_min_percent,
+                    'failure_keywords': failure_keywords,
+                },
+                reasons='used 0% 파일시스템은 점검 대상에서 제외되었고 남은 점검 대상이 없습니다.',
+                message=(
+                    'Solaris 파일시스템 사용량 점검 대상이 없습니다. '
+                    f'현재 상태: 전체 파일시스템 {len(rows)}개 중 used 0% 항목 '
+                    f'{len(ignored_zero_usage_rows)}개를 제외했습니다.'
+                ),
+            )
+
+        invalid_rows = [
+            row for row in check_rows
             if row['size_bytes'] <= 0
             or row['used_bytes'] < 0
             or row['avail_bytes'] < 0
@@ -199,11 +280,11 @@ class Check(BaseCheck):
             )
 
         threshold_rows = [
-            row for row in rows
+            row for row in check_rows
             if row['used_percent'] >= used_max_percent or row['avail_percent'] < avail_min_percent
         ]
         threshold_rows.sort(key=lambda row: (row['used_percent'], -row['avail_percent']), reverse=True)
-        affected_summary = self._build_mount_summary(threshold_rows or sorted(rows, key=lambda row: row['used_percent'], reverse=True))
+        affected_summary = self._build_mount_summary(threshold_rows or sorted(check_rows, key=lambda row: row['used_percent'], reverse=True))
         if threshold_rows:
             top = threshold_rows[0]
             return self.fail(
@@ -218,16 +299,19 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        max_row = max(rows, key=lambda item: item['used_percent'])
-        min_avail_row = min(rows, key=lambda item: item['avail_percent'])
+        max_row = max(check_rows, key=lambda item: item['used_percent'])
+        min_avail_row = min(check_rows, key=lambda item: item['avail_percent'])
         return self.ok(
             metrics={
-                'filesystem_count': len(rows),
+                'filesystem_count': len(check_rows),
+                'total_filesystem_count': len(rows),
+                'ignored_zero_usage_count': len(ignored_zero_usage_rows),
+                'ignored_zero_usage_rows': ignored_zero_usage_rows,
                 'max_usage_mount_point': max_row['mount_point'],
                 'max_usage_percent': max_row['used_percent'],
                 'lowest_avail_mount_point': min_avail_row['mount_point'],
                 'lowest_avail_percent': min_avail_row['avail_percent'],
-                'rows': rows,
+                'rows': check_rows,
                 'matched_failure_keywords': matched_failure_keywords,
             },
             thresholds={
@@ -236,12 +320,13 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons=(
-                f'모든 파일시스템 {len(rows)}개가 정상 해석되었고 최대 사용률 {max_row["used_percent"]:.2f}%와 '
-                f'최소 여유율 {min_avail_row["avail_percent"]:.2f}%가 모두 기준 이내입니다.'
+                f'used 0% 항목 {len(ignored_zero_usage_rows)}개를 제외한 파일시스템 {len(check_rows)}개가 정상 해석되었고 '
+                f'최대 사용률 {max_row["used_percent"]:.2f}%와 최소 여유율 {min_avail_row["avail_percent"]:.2f}%가 모두 기준 이내입니다.'
             ),
             message=(
                 'Solaris 파일시스템 사용량이 정상입니다. '
-                f'현재 상태: 파일시스템 {len(rows)}개, 최대 사용률 {max_row["mount_point"]} {max_row["used_percent"]:.2f}% '
+                f'현재 상태: 점검 대상 파일시스템 {len(check_rows)}개, used 0% 제외 {len(ignored_zero_usage_rows)}개, '
+                f'최대 사용률 {max_row["mount_point"]} {max_row["used_percent"]:.2f}% '
                 f'(기준 {used_max_percent:.2f}% 미만), 최소 여유율 {min_avail_row["mount_point"]} {min_avail_row["avail_percent"]:.2f}% '
                 f'(기준 {avail_min_percent:.2f}% 이상), 영향 mount 요약: {affected_summary}.'
             ),

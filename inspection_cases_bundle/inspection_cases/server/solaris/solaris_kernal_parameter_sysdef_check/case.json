@@ -1,5 +1,5 @@
 {
-  "host": "127.0.0.1",
+  "host": "192.168.1.163",
   "port": 22,
   "user": "root",
   "password": "",
@@ -11,8 +11,12 @@
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "root",
-          "password": ""
+          "username": "fap",
+          "password": "f3dtop0!",
+          "become": "True",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
         }
       }
     ]
@@ -35,18 +39,26 @@
     "type_name": "일상점검",
     "area_name": "상태점검",
     "category_name": "서버(OS)",
-    "description": "Solaris sysdef 명령으로 커널 파라미터 섹션과 핵심 파라미터 조회 상태를 점검합니다.",
-    "inspection_command": "sysdef",
+    "description": "Solaris mdb -k, ndd -get, ulimit -n 명령으로 커널 파라미터와 파일 디스크립터 제한 조회 상태를 점검합니다.",
+    "inspection_command": "mdb -k; ndd -get; ulimit -n",
     "is_service_affect": "N",
-    "action_content": "핵심 커널 파라미터, 주요 섹션 헤더, 파라미터 조회 수가 기대와 다른지 확인합니다.",
+    "action_content": "정의된 mdb 커널 심볼, ndd 네트워크 파라미터, ulimit -n 값이 조회되고 기준값이 있는 항목은 일치하는지 확인합니다.",
     "threshold_list": [
       {
         "name": "required_parameters",
         "value1": "shmmax,seminfo_semmsl,maxfiles,maxuproc,minfree,msginfo_msgmax"
       },
       {
+        "name": "required_ndd_parameters",
+        "value1": "/dev/tcp:tcp_conn_req_max_q,/dev/tcp:tcp_conn_req_max_q0,/dev/tcp:tcp_keepalive_interval,/dev/tcp:tcp_time_wait_interval,/dev/ip:ip_forwarding"
+      },
+      {
+        "name": "ulimit_n",
+        "value1": ""
+      },
+      {
         "name": "failure_keywords",
-        "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
+        "value1": "장치를 찾을 수 없습니다,not found,cannot,unknown,command not found,module missing,invalid argument"
       }
     ]
   }

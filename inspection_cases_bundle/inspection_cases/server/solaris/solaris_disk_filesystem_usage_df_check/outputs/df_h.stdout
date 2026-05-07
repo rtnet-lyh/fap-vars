@@ -1,5 +1,9 @@
 df -h
-Filesystem      Size Used Avail Use% Mounted on
-/dev/dsk/s1      50G  25G   23G  53% /
-/dev/dsk/s2     100G  60G   35G  66% /var
+Filesystem             size   used  avail capacity  Mounted on
+/dev/dsk/c0d0s0        8.1G   3.9G   4.1G    49%    /
+/devices                 0K     0K     0K     0%    /devices
+ctfs                     0K     0K     0K     0%    /system/contract
+proc                     0K     0K     0K     0%    /proc
+swap                   1.7G  1008K   1.7G     1%    /etc/svc/volatile
+/dev/dsk/c0d0s7         50G    51M    50G     1%    /export/home
 #

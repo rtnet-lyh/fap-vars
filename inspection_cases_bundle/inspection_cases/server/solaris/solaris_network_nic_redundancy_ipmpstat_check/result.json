@@ -38,7 +38,7 @@
           "value1": ""
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\nfrom collections import defaultdict\n\nfrom .common._base import BaseCheck\n\n\nIPMPSTAT_INTERFACE_COMMAND = 'ipmpstat -i'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_AUTH_TIMEOUT_SEC = 30\n\n    def _normalize(self, value):\n        return str(value or '').strip().lower()\n\n    def _parse_ipmp_interfaces(self, text):\n        lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]\n        header = None\n        rows = []\n\n        for line in lines:\n            tokens = re.split(r'\\s+', line.strip())\n            lowered = [token.lower() for token in tokens]\n            if 'interface' in lowered and 'active' in lowered and 'group' in lowered and 'link' in lowered and 'state' in lowered:\n                header = lowered\n                continue\n\n            if not header:\n                continue\n\n            if len(tokens) < len(header):\n                continue\n\n            row = {header[idx]: tokens[idx] for idx in range(len(header))}\n            interface = row.get('interface', '')\n            group_name = row.get('group', '')\n            if not interface or not group_name:\n                continue\n\n            rows.append({\n                'interface': interface,\n                'active': row.get('active', ''),\n                'group': group_name,\n                'flags': row.get('flags', ''),\n                'link': row.get('link', ''),\n                'state': row.get('state', ''),\n            })\n\n        if not rows:\n            return None\n\n        groups = defaultdict(list)\n        for row in rows:\n            groups[row['group']].append(row)\n\n        group_summaries = []\n        for group_name in sorted(groups.keys()):\n            members = groups[group_name]\n            group_summaries.append({\n                'group': group_name,\n                'interface_count': len(members),\n                'interfaces': [member['interface'] for member in members],\n            })\n\n        return {\n            'rows': rows,\n            'group_count': len(groups),\n            'group_summaries': group_summaries,\n        }\n\n    def run(self):\n        min_group_interface_count = self.get_threshold_var('min_group_interface_count', default=2, value_type='int')\n        expected_active_value = self.get_threshold_var('expected_active_value', default='yes', value_type='str')\n        expected_link_value = self.get_threshold_var('expected_link_value', default='up', value_type='str')\n        expected_state_value = self.get_threshold_var('expected_state_value', default='ok', value_type='str')\n        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')\n\n        rc, out, err = self._run_paramiko(IPMPSTAT_INTERFACE_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Solaris NIC 이중화(IPMP) 점검에 실패했습니다. 현재 상태: ipmpstat 명령을 정상적으로 실행하지 못했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        command_error = self._detect_command_error(\n            out,\n            err,\n            extra_patterns=[\n                'permission denied',\n                'not supported',\n                'unknown userland error',\n                'no such file or directory',\n                'cannot find',\n                'not found',\n            ],\n        )\n        if command_error:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: ipmpstat 출력에서 실행 오류가 확인되었습니다: {command_error}'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        failure_keywords = [\n            keyword.strip()\n            for keyword in failure_keywords_raw.split(',')\n            if keyword.strip()\n        ]\n        matched_failure_keywords = [\n            keyword for keyword in failure_keywords\n            if keyword.lower() in (out or '').lower()\n        ]\n        if matched_failure_keywords:\n            return self.fail(\n                'NIC 이중화 실패 키워드 감지',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        parsed = self._parse_ipmp_interfaces(out)\n        if not parsed:\n            return self.fail(\n                'NIC 이중화 파싱 실패',\n                message='Solaris NIC 이중화(IPMP) 점검에 실패했습니다. 현재 상태: ipmpstat 출력에서 인터페이스 상태를 해석하지 못했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        expected_active_norm = self._normalize(expected_active_value)\n        expected_link_norm = self._normalize(expected_link_value)\n        expected_state_norm = self._normalize(expected_state_value)\n\n        inactive_interfaces = []\n        link_issue_interfaces = []\n        state_issue_interfaces = []\n        insufficient_groups = []\n        active_interface_count = 0\n\n        for row in parsed['rows']:\n            if self._normalize(row['active']) == expected_active_norm:\n                active_interface_count += 1\n            else:\n                inactive_interfaces.append(row['interface'])\n\n            if self._normalize(row['link']) != expected_link_norm:\n                link_issue_interfaces.append(row['interface'])\n\n            if self._normalize(row['state']) != expected_state_norm:\n                state_issue_interfaces.append(row['interface'])\n\n        for summary in parsed['group_summaries']:\n            if summary['interface_count'] < min_group_interface_count:\n                insufficient_groups.append(summary)\n\n        metrics = {\n            'group_count': parsed['group_count'],\n            'interface_count': len(parsed['rows']),\n            'active_interface_count': active_interface_count,\n            'group_summaries': parsed['group_summaries'],\n            'inactive_interfaces': inactive_interfaces,\n            'link_issue_interfaces': link_issue_interfaces,\n            'state_issue_interfaces': state_issue_interfaces,\n            'matched_failure_keywords': matched_failure_keywords,\n        }\n        thresholds = {\n            'min_group_interface_count': min_group_interface_count,\n            'expected_active_value': expected_active_value,\n            'expected_link_value': expected_link_value,\n            'expected_state_value': expected_state_value,\n            'failure_keywords': failure_keywords,\n        }\n\n        if insufficient_groups:\n            group_text = ', '.join(\n                f\"{item['group']}={item['interface_count']}개\"\n                for item in insufficient_groups\n            )\n            return self.fail(\n                'IPMP 그룹 인터페이스 수 부족',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: 같은 IPMP 그룹 내 인터페이스 수가 부족합니다. {group_text} '\n                    f'(기준 그룹당 {min_group_interface_count}개 이상).'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if inactive_interfaces or link_issue_interfaces or state_issue_interfaces:\n            problem_parts = []\n            if inactive_interfaces:\n                problem_parts.append(f'ACTIVE 비정상={inactive_interfaces}')\n            if link_issue_interfaces:\n                problem_parts.append(f'LINK 비정상={link_issue_interfaces}')\n            if state_issue_interfaces:\n                problem_parts.append(f'STATE 비정상={state_issue_interfaces}')\n            return self.fail(\n                'NIC 이중화 상태 비정상',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    '현재 상태: ' + ', '.join(problem_parts) + '. '\n                    f\"기준 ACTIVE={expected_active_value}, LINK={expected_link_value}, STATE={expected_state_value}.\"\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        group_names = ', '.join(summary['group'] for summary in parsed['group_summaries'])\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons=(\n                f'모든 인터페이스가 ACTIVE={expected_active_value}, LINK={expected_link_value}, '\n                f'STATE={expected_state_value}이며 각 IPMP 그룹이 {min_group_interface_count}개 이상 인터페이스를 가집니다.'\n            ),\n            message=(\n                'Solaris NIC 이중화(IPMP) 상태가 정상입니다. '\n                f'현재 상태: 그룹 {group_names}, 총 인터페이스 {len(parsed[\"rows\"])}개, '\n                f'ACTIVE 정상 {active_interface_count}개, '\n                f'LINK={expected_link_value} / STATE={expected_state_value} 확인, '\n                f'그룹당 인터페이스 수 기준 {min_group_interface_count}개 이상 충족.'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\nfrom collections import defaultdict\n\nfrom .common._base import BaseCheck\n\n\nIPMPSTAT_INTERFACE_COMMAND = 'ipmpstat -i'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_AUTH_TIMEOUT_SEC = 30\n\n    def _is_become_enabled(self):\n        value = self.get_connection_value('become', default=False)\n        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')\n\n    def _build_become_command(self):\n        method = str(self.get_connection_value('become_method', default='su -') or 'su -')\n        method = ' '.join(method.strip().lower().split())\n        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'\n\n        if method == 'su':\n            return 'su ' + user\n        if method == 'su -':\n            return 'su - ' + user\n        if method == 'sudo':\n            return 'sudo -u ' + user + ' -i'\n        raise ValueError(f'unsupported become_method: {method}')\n\n    def _build_paramiko_commands(self, command):\n        if not self._is_become_enabled():\n            return [command]\n\n        return [\n            {\n                'command': self._build_become_command(),\n                'timeout': 1,\n                'ignore_prompt': True,\n            },\n            {\n                'command': str(self.get_connection_value('become_password', default='') or ''),\n                'hide_command': True,\n            },\n            command,\n        ]\n\n    def _run_check_command(self, command):\n        try:\n            results = self._run_paramiko_commands(self._build_paramiko_commands(command))\n        except ValueError as exc:\n            return 1, '', str(exc)\n\n        for item in reversed(results):\n            if item.get('command') == command:\n                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')\n\n        failed_result = next((item for item in results if item.get('rc') != 0), None)\n        if failed_result:\n            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')\n        return 1, '', 'paramiko command result not found'\n\n\n    def _normalize(self, value):\n        return str(value or '').strip().lower()\n\n    def _parse_ipmp_interfaces(self, text):\n        lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]\n        header = None\n        rows = []\n\n        for line in lines:\n            tokens = re.split(r'\\s+', line.strip())\n            lowered = [token.lower() for token in tokens]\n            if 'interface' in lowered and 'active' in lowered and 'group' in lowered and 'link' in lowered and 'state' in lowered:\n                header = lowered\n                continue\n\n            if not header:\n                continue\n\n            if len(tokens) < len(header):\n                continue\n\n            row = {header[idx]: tokens[idx] for idx in range(len(header))}\n            interface = row.get('interface', '')\n            group_name = row.get('group', '')\n            if not interface or not group_name:\n                continue\n\n            rows.append({\n                'interface': interface,\n                'active': row.get('active', ''),\n                'group': group_name,\n                'flags': row.get('flags', ''),\n                'link': row.get('link', ''),\n                'state': row.get('state', ''),\n            })\n\n        if not rows:\n            return None\n\n        groups = defaultdict(list)\n        for row in rows:\n            groups[row['group']].append(row)\n\n        group_summaries = []\n        for group_name in sorted(groups.keys()):\n            members = groups[group_name]\n            group_summaries.append({\n                'group': group_name,\n                'interface_count': len(members),\n                'interfaces': [member['interface'] for member in members],\n            })\n\n        return {\n            'rows': rows,\n            'group_count': len(groups),\n            'group_summaries': group_summaries,\n        }\n\n    def run(self):\n        min_group_interface_count = self.get_threshold_var('min_group_interface_count', default=2, value_type='int')\n        expected_active_value = self.get_threshold_var('expected_active_value', default='yes', value_type='str')\n        expected_link_value = self.get_threshold_var('expected_link_value', default='up', value_type='str')\n        expected_state_value = self.get_threshold_var('expected_state_value', default='ok', value_type='str')\n        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')\n\n        rc, out, err = self._run_check_command(IPMPSTAT_INTERFACE_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Solaris NIC 이중화(IPMP) 점검에 실패했습니다. 현재 상태: ipmpstat 명령을 정상적으로 실행하지 못했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        command_error = self._detect_command_error(\n            out,\n            err,\n            extra_patterns=[\n                'permission denied',\n                'not supported',\n                'unknown userland error',\n                'no such file or directory',\n                'cannot find',\n                'not found',\n            ],\n        )\n        if command_error:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: ipmpstat 출력에서 실행 오류가 확인되었습니다: {command_error}'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        failure_keywords = [\n            keyword.strip()\n            for keyword in failure_keywords_raw.split(',')\n            if keyword.strip()\n        ]\n        matched_failure_keywords = [\n            keyword for keyword in failure_keywords\n            if keyword.lower() in (out or '').lower()\n        ]\n        if matched_failure_keywords:\n            return self.fail(\n                'NIC 이중화 실패 키워드 감지',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        parsed = self._parse_ipmp_interfaces(out)\n        if not parsed:\n            return self.fail(\n                'NIC 이중화 파싱 실패',\n                message='Solaris NIC 이중화(IPMP) 점검에 실패했습니다. 현재 상태: ipmpstat 출력에서 인터페이스 상태를 해석하지 못했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        expected_active_norm = self._normalize(expected_active_value)\n        expected_link_norm = self._normalize(expected_link_value)\n        expected_state_norm = self._normalize(expected_state_value)\n\n        inactive_interfaces = []\n        link_issue_interfaces = []\n        state_issue_interfaces = []\n        insufficient_groups = []\n        active_interface_count = 0\n\n        for row in parsed['rows']:\n            if self._normalize(row['active']) == expected_active_norm:\n                active_interface_count += 1\n            else:\n                inactive_interfaces.append(row['interface'])\n\n            if self._normalize(row['link']) != expected_link_norm:\n                link_issue_interfaces.append(row['interface'])\n\n            if self._normalize(row['state']) != expected_state_norm:\n                state_issue_interfaces.append(row['interface'])\n\n        for summary in parsed['group_summaries']:\n            if summary['interface_count'] < min_group_interface_count:\n                insufficient_groups.append(summary)\n\n        metrics = {\n            'group_count': parsed['group_count'],\n            'interface_count': len(parsed['rows']),\n            'active_interface_count': active_interface_count,\n            'group_summaries': parsed['group_summaries'],\n            'inactive_interfaces': inactive_interfaces,\n            'link_issue_interfaces': link_issue_interfaces,\n            'state_issue_interfaces': state_issue_interfaces,\n            'matched_failure_keywords': matched_failure_keywords,\n        }\n        thresholds = {\n            'min_group_interface_count': min_group_interface_count,\n            'expected_active_value': expected_active_value,\n            'expected_link_value': expected_link_value,\n            'expected_state_value': expected_state_value,\n            'failure_keywords': failure_keywords,\n        }\n\n        if insufficient_groups:\n            group_text = ', '.join(\n                f\"{item['group']}={item['interface_count']}개\"\n                for item in insufficient_groups\n            )\n            return self.fail(\n                'IPMP 그룹 인터페이스 수 부족',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    f'현재 상태: 같은 IPMP 그룹 내 인터페이스 수가 부족합니다. {group_text} '\n                    f'(기준 그룹당 {min_group_interface_count}개 이상).'\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if inactive_interfaces or link_issue_interfaces or state_issue_interfaces:\n            problem_parts = []\n            if inactive_interfaces:\n                problem_parts.append(f'ACTIVE 비정상={inactive_interfaces}')\n            if link_issue_interfaces:\n                problem_parts.append(f'LINK 비정상={link_issue_interfaces}')\n            if state_issue_interfaces:\n                problem_parts.append(f'STATE 비정상={state_issue_interfaces}')\n            return self.fail(\n                'NIC 이중화 상태 비정상',\n                message=(\n                    'Solaris NIC 이중화(IPMP) 점검에 실패했습니다. '\n                    '현재 상태: ' + ', '.join(problem_parts) + '. '\n                    f\"기준 ACTIVE={expected_active_value}, LINK={expected_link_value}, STATE={expected_state_value}.\"\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        group_names = ', '.join(summary['group'] for summary in parsed['group_summaries'])\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons=(\n                f'모든 인터페이스가 ACTIVE={expected_active_value}, LINK={expected_link_value}, '\n                f'STATE={expected_state_value}이며 각 IPMP 그룹이 {min_group_interface_count}개 이상 인터페이스를 가집니다.'\n            ),\n            message=(\n                'Solaris NIC 이중화(IPMP) 상태가 정상입니다. '\n                f'현재 상태: 그룹 {group_names}, 총 인터페이스 {len(parsed[\"rows\"])}개, '\n                f'ACTIVE 정상 {active_interface_count}개, '\n                f'LINK={expected_link_value} / STATE={expected_state_value} 확인, '\n                f'그룹당 인터페이스 수 기준 {min_group_interface_count}개 이상 충족.'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -55,6 +55,56 @@
         "    USE_HOST_CONNECTION = True",
         "    CONNECTION_METHOD = 'paramiko'",
         "    PARAMIKO_AUTH_TIMEOUT_SEC = 30",
+        "",
+        "    def _is_become_enabled(self):",
+        "        value = self.get_connection_value('become', default=False)",
+        "        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')",
+        "",
+        "    def _build_become_command(self):",
+        "        method = str(self.get_connection_value('become_method', default='su -') or 'su -')",
+        "        method = ' '.join(method.strip().lower().split())",
+        "        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'",
+        "",
+        "        if method == 'su':",
+        "            return 'su ' + user",
+        "        if method == 'su -':",
+        "            return 'su - ' + user",
+        "        if method == 'sudo':",
+        "            return 'sudo -u ' + user + ' -i'",
+        "        raise ValueError(f'unsupported become_method: {method}')",
+        "",
+        "    def _build_paramiko_commands(self, command):",
+        "        if not self._is_become_enabled():",
+        "            return [command]",
+        "",
+        "        return [",
+        "            {",
+        "                'command': self._build_become_command(),",
+        "                'timeout': 1,",
+        "                'ignore_prompt': True,",
+        "            },",
+        "            {",
+        "                'command': str(self.get_connection_value('become_password', default='') or ''),",
+        "                'hide_command': True,",
+        "            },",
+        "            command,",
+        "        ]",
+        "",
+        "    def _run_check_command(self, command):",
+        "        try:",
+        "            results = self._run_paramiko_commands(self._build_paramiko_commands(command))",
+        "        except ValueError as exc:",
+        "            return 1, '', str(exc)",
+        "",
+        "        for item in reversed(results):",
+        "            if item.get('command') == command:",
+        "                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')",
+        "",
+        "        failed_result = next((item for item in results if item.get('rc') != 0), None)",
+        "        if failed_result:",
+        "            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')",
+        "        return 1, '', 'paramiko command result not found'",
+        "",
         "",
         "    def _normalize(self, value):",
         "        return str(value or '').strip().lower()",
@@ -121,7 +171,7 @@
         "        expected_state_value = self.get_threshold_var('expected_state_value', default='ok', value_type='str')",
         "        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')",
         "",
-        "        rc, out, err = self._run_paramiko(IPMPSTAT_INTERFACE_COMMAND)",
+        "        rc, out, err = self._run_check_command(IPMPSTAT_INTERFACE_COMMAND)",
         "",
         "        if self._is_connection_error(rc, err):",
         "            return self.fail(",
@@ -330,45 +380,32 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "group_count": 1,
-        "interface_count": 2,
-        "active_interface_count": 2,
-        "group_summaries": [
-          {
-            "group": "ipmp0",
-            "interface_count": 2,
-            "interfaces": [
-              "net0",
-              "net1"
-            ]
-          }
-        ],
-        "inactive_interfaces": [],
-        "link_issue_interfaces": [],
-        "state_issue_interfaces": [],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "min_group_interface_count": 2,
-        "expected_active_value": "yes",
-        "expected_link_value": "up",
-        "expected_state_value": "ok",
-        "failure_keywords": []
-      },
-      "reasons": "모든 인터페이스가 ACTIVE=yes, LINK=up, STATE=ok이며 각 IPMP 그룹이 2개 이상 인터페이스를 가집니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ipmpstat -i\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: INTERFACE ACTIVE GROUP FLAGS  LINK STATE\nnet0      yes    ipmp0 ------ up   ok\nnet1      yes    ipmp0 ------ up   ok",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris NIC 이중화(IPMP) 점검에 실패했습니다. 현재 상태: ipmpstat 출력에서 실행 오류가 확인되었습니다: ipmpstat: not found",
+      "stdout": "ipmpstat: not found",
+      "stderr": "",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: ipmpstat -i\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ipmpstat: not found",
       "raw_output_lines": [
         "[점검 단계 1]",
+        " - 실행 명령어: su - root",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
         " - 실행 명령어: ipmpstat -i",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: INTERFACE ACTIVE GROUP FLAGS  LINK STATE",
-        "net0      yes    ipmp0 ------ up   ok",
-        "net1      yes    ipmp0 ------ up   ok"
-      ],
-      "message": "Solaris NIC 이중화(IPMP) 상태가 정상입니다. 현재 상태: 그룹 ipmp0, 총 인터페이스 2개, ACTIVE 정상 2개, LINK=up / STATE=ok 확인, 그룹당 인터페이스 수 기준 2개 이상 충족."
+        " - 출력 내용: ipmpstat: not found"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-NET-02"
+  ]
 }

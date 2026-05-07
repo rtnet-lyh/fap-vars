@@ -1,7 +1,12 @@
-prtdiag
-System Configuration: Sun Microsystems sun4u
-Memory size: 8192 Megabytes
-Memory Module:
-DIMM 0: 4096 MB, 64-bit, Error Correcting Code
-DIMM 1: 4096 MB, 64-bit, Error Correcting Code
+prtdiag; prtconf -v | grep -i memory
+System Configuration: QEMU Standard PC (i440FX + PIIX, 1996)
+BIOS Configuration: SeaBIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+
+==== Memory Device Sockets ================================
+
+Type    Status Set Device Locator      Bank Locator
+------- ------ --- ------------------- --------------------
+RAM     in use 0   DIMM 0
+Memory size: 2048 Megabytes
+            name='device-memory' type=int items=2
 #
