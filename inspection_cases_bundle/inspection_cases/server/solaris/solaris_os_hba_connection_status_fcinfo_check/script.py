@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-
 from .common._base import BaseCheck
 
 
@@ -11,57 +10,8 @@ FCINFO_HBA_PORT_COMMAND = 'fcinfo hba-port'
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
-
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_paramiko_commands(self, command):
-        if not self._is_become_enabled():
-            return [command]
-
-        return [
-            {
-                'command': self._build_become_command(),
-                'timeout': 1,
-                'ignore_prompt': True,
-            },
-            {
-                'command': str(self.get_connection_value('become_password', default='') or ''),
-                'hide_command': True,
-            },
-            command,
-        ]
-
-    def _run_check_command(self, command):
-        try:
-            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
-        except ValueError as exc:
-            return 1, '', str(exc)
-
-        for item in reversed(results):
-            if item.get('command') == command:
-                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
-
-        failed_result = next((item for item in results if item.get('rc') != 0), None)
-        if failed_result:
-            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
-        return 1, '', 'paramiko command result not found'
-
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
     def _normalize(self, value):
         return str(value or '').strip().lower()
@@ -137,7 +87,12 @@ class Check(BaseCheck):
         min_current_speed_gbps = self.get_threshold_var('min_current_speed_gbps', default=8, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_check_command(FCINFO_HBA_PORT_COMMAND)
+        result = self._run_solaris_commands([
+            {'command': FCINFO_HBA_PORT_COMMAND, 'timeout': 25},
+        ], become_required=True)[0]
+        rc = result['rc']
+        out = result['stdout']
+        err = result['stderr']
 
         if self._is_connection_error(rc, err):
             return self.fail(
@@ -146,16 +101,18 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
+        text = (out or '').strip()
+
         if rc != 0:
             return self.fail(
                 '점검 명령 실행 실패',
                 message='Solaris HBA 연결 상태 점검에 실패했습니다. 현재 상태: fcinfo 명령을 정상적으로 실행하지 못했습니다.',
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
         command_error = self._detect_command_error(
-            out,
+            text,
             err,
             extra_patterns=[
                 'permission denied',
@@ -173,7 +130,7 @@ class Check(BaseCheck):
                     'Solaris HBA 연결 상태 점검에 실패했습니다. '
                     f'현재 상태: fcinfo 출력에서 실행 오류가 확인되었습니다: {command_error}'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
@@ -184,7 +141,7 @@ class Check(BaseCheck):
         ]
         matched_failure_keywords = [
             keyword for keyword in failure_keywords
-            if keyword.lower() in (out or '').lower()
+            if keyword.lower() in text.lower()
         ]
         if matched_failure_keywords:
             return self.fail(
@@ -193,16 +150,16 @@ class Check(BaseCheck):
                     'Solaris HBA 연결 상태 점검에 실패했습니다. '
                     f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        ports = self._parse_ports(out)
+        ports = self._parse_ports(text)
         if not ports:
             return self.fail(
                 'HBA 연결 상태 파싱 실패',
                 message='Solaris HBA 연결 상태 점검에 실패했습니다. 현재 상태: fcinfo 출력에서 HBA 포트 정보를 해석하지 못했습니다.',
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
@@ -255,7 +212,7 @@ class Check(BaseCheck):
                     'Solaris HBA 연결 상태 점검에 실패했습니다. '
                     f'현재 상태: Current Speed 값을 해석하지 못한 포트가 있습니다: {speed_parse_issue_ports}.'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
@@ -272,7 +229,7 @@ class Check(BaseCheck):
                     '현재 상태: ' + ', '.join(problem_parts) + '. '
                     f'기준 State={expected_state_value}, Current Speed {min_current_speed_gbps}Gb 이상.'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 

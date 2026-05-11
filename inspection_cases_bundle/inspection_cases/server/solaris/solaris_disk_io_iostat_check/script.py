@@ -6,13 +6,13 @@ from .common._base import BaseCheck
 
 
 IOSTAT_COMMAND = 'iostat -x'
-BECOME_COMMAND_TIMEOUT = 1
 
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
     def _parse_float(self, value):
         try:
@@ -83,42 +83,8 @@ class Check(BaseCheck):
     def _split_keywords(self, raw_value):
         return [keyword.strip() for keyword in str(raw_value or '').split(',') if keyword.strip()]
 
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_commands(self):
-        if not self._is_become_enabled():
-            return [IOSTAT_COMMAND]
-
-        return [
-            {
-                'command': self._build_become_command(),
-                'timeout': BECOME_COMMAND_TIMEOUT,
-                'ignore_prompt': True,
-            },
-            {
-                'command': str(self.get_connection_value('become_password', default='') or ''),
-                'hide_command': True,
-            },
-            IOSTAT_COMMAND,
-        ]
-
     def _find_iostat_result(self, results):
-        for item in reversed(results):
+        for item in reversed(results or []):
             if item.get('command') == IOSTAT_COMMAND:
                 return item
         return None
@@ -131,7 +97,9 @@ class Check(BaseCheck):
         )
 
         try:
-            results = self._run_paramiko_commands(self._build_commands())
+            results = self._run_solaris_commands([
+                {'command': IOSTAT_COMMAND, 'timeout': 20},
+            ])
         except ValueError as exc:
             return self.fail('권한 상승 설정 오류', message=str(exc))
 

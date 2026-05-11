@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-
 from .common._base import BaseCheck
 
 
@@ -11,57 +10,8 @@ SWAP_LIST_COMMAND = 'swap -l'
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
-
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_paramiko_commands(self, command):
-        if not self._is_become_enabled():
-            return [command]
-
-        return [
-            {
-                'command': self._build_become_command(),
-                'timeout': 1,
-                'ignore_prompt': True,
-            },
-            {
-                'command': str(self.get_connection_value('become_password', default='') or ''),
-                'hide_command': True,
-            },
-            command,
-        ]
-
-    def _run_check_command(self, command):
-        try:
-            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
-        except ValueError as exc:
-            return 1, '', str(exc)
-
-        for item in reversed(results):
-            if item.get('command') == command:
-                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
-
-        failed_result = next((item for item in results if item.get('rc') != 0), None)
-        if failed_result:
-            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
-        return 1, '', 'paramiko command result not found'
-
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
     def _parse_int(self, value):
         try:
@@ -135,7 +85,12 @@ class Check(BaseCheck):
         min_swap_device_count = self.get_threshold_var('min_swap_device_count', default=1, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_check_command(SWAP_LIST_COMMAND)
+        result = self._run_solaris_commands([
+            {'command': SWAP_LIST_COMMAND, 'timeout': 10},
+        ], become_required=True)[0]
+        rc = result['rc']
+        out = result['stdout']
+        err = result['stderr']
 
         if self._is_connection_error(rc, err):
             return self.fail(
@@ -144,6 +99,8 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
+        text = (out or '').strip()
+
         if rc != 0:
             return self.fail(
                 '점검 명령 실행 실패',
@@ -151,12 +108,12 @@ class Check(BaseCheck):
                     'Solaris Paging Space 점검에 실패했습니다. '
                     '현재 상태: swap -l 명령을 정상적으로 실행하지 못했습니다.'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
         command_error = self._detect_command_error(
-            out,
+            text,
             err,
             extra_patterns=['permission denied', 'not supported', 'unknown userland error'],
         )
@@ -167,11 +124,10 @@ class Check(BaseCheck):
                     'Solaris Paging Space 점검에 실패했습니다. '
                     f'현재 상태: swap -l 출력에서 실행 오류가 확인되었습니다: {command_error}'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        text = (out or '').strip()
         failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
         combined_output = '\n'.join(part for part in (text, (err or '').strip()) if part)
         matched_failure_keywords = [
@@ -279,7 +235,7 @@ class Check(BaseCheck):
 
         return self.ok(
             metrics={
-                'swap_device_count': device_count,
+                    'swap_device_count': device_count,
                 'total_swap_blocks': total_blocks,
                 'total_swap_used_blocks': total_used_blocks,
                 'total_swap_free_blocks': total_free_blocks,
@@ -298,15 +254,12 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
             reasons=(
-                f'swap 장치 {device_count}개가 모두 정상 해석되었고 전체 사용률 {used_percent:.2f}%와 '
-                f'free {free_percent:.2f}%가 기준 이내입니다.'
+                f'swap 장치 {device_count}개가 모두 정상 집계되었고 전체 사용률 {used_percent:.2f}% / free {free_percent:.2f}%가 기준 범위 내입니다.'
             ),
             message=(
                 'Solaris Paging Space가 정상입니다. '
-                f'현재 상태: swap 사용률 {used_percent:.2f}% (기준 {max_swap_used_percent:.2f}% 이하), '
-                f'free {free_percent:.2f}% (기준 {min_swap_free_percent:.2f}% 이상), '
-                f'장치 {device_count}개, 전체 {total_blocks} blocks, 사용 {total_used_blocks} blocks, '
-                f'여유 {total_free_blocks} blocks, 장치 요약: {device_summary}.'
+                f'현재 상태: swap 장치 {device_count}개, 사용률 {used_percent:.2f}% (기준 {max_swap_used_percent:.2f}% 이하), '
+                f'free {free_percent:.2f}% (기준 {min_swap_free_percent:.2f}% 이상), 장치 요약: {device_summary}.'
             ),
         )
 

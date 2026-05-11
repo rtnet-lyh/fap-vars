@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-
 from .common._base import BaseCheck
 
 
@@ -11,57 +10,8 @@ METASTAT_COMMAND = 'metastat'
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
-
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_paramiko_commands(self, command):
-        if not self._is_become_enabled():
-            return [command]
-
-        return [
-            {
-                'command': self._build_become_command(),
-                'timeout': 1,
-                'ignore_prompt': True,
-            },
-            {
-                'command': str(self.get_connection_value('become_password', default='') or ''),
-                'hide_command': True,
-            },
-            command,
-        ]
-
-    def _run_check_command(self, command):
-        try:
-            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
-        except ValueError as exc:
-            return 1, '', str(exc)
-
-        for item in reversed(results):
-            if item.get('command') == command:
-                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
-
-        failed_result = next((item for item in results if item.get('rc') != 0), None)
-        if failed_result:
-            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
-        return 1, '', 'paramiko command result not found'
-
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
     def _split_blocks(self, text):
         sections = [section.strip() for section in re.split(r'\n\s*\n', (text or '').strip()) if section.strip()]
@@ -131,7 +81,12 @@ class Check(BaseCheck):
         min_submirror_count = self.get_threshold_var('min_submirror_count', default=2, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_check_command(METASTAT_COMMAND)
+        result = self._run_solaris_commands([
+            {'command': METASTAT_COMMAND, 'timeout': 25},
+        ], become_required=True)[0]
+        rc = result['rc']
+        out = result['stdout']
+        err = result['stderr']
 
         if self._is_connection_error(rc, err):
             return self.fail(
@@ -140,6 +95,8 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
+        text = (out or '').strip()
+
         if rc != 0:
             return self.fail(
                 '점검 명령 실행 실패',
@@ -147,12 +104,12 @@ class Check(BaseCheck):
                     'Solaris Disk 이중화 점검에 실패했습니다. '
                     '현재 상태: metastat 명령을 정상적으로 실행하지 못했습니다.'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
         command_error = self._detect_command_error(
-            out,
+            text,
             err,
             extra_patterns=['permission denied', 'not supported', 'unknown userland error'],
         )
@@ -163,11 +120,10 @@ class Check(BaseCheck):
                     'Solaris Disk 이중화 점검에 실패했습니다. '
                     f'현재 상태: metastat 출력에서 실행 오류가 확인되었습니다: {command_error}'
                 ),
-                stdout=(out or '').strip(),
+                stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        text = (out or '').strip()
         failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
         combined_output = '\n'.join(part for part in (text, (err or '').strip()) if part)
         matched_failure_keywords = [
@@ -255,7 +211,7 @@ class Check(BaseCheck):
         primary_mirror = mirrors[0]
         return self.ok(
             metrics={
-                'mirror_count': len(mirrors),
+                    'mirror_count': len(mirrors),
                 'mirror_name': primary_mirror['mirror_name'],
                 'submirror_count': len(primary_mirror['submirrors']),
                 'mirror_state': primary_mirror['mirror_state'],

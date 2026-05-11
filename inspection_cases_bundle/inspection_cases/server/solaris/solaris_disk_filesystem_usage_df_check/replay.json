@@ -27,6 +27,16 @@
   {
     "channel": "terminal",
     "action": "send",
+    "matcher_value": "/usr/bin/id"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "/usr/bin/id\r\nuid=0(root) gid=0(root)\r\n#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
     "matcher_value": "df -h"
   },
   {

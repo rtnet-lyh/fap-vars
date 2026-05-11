@@ -6,61 +6,20 @@ from .common._base import BaseCheck
 
 
 CHECK_COMMAND = "printf '\\n' | format"
-BECOME_COMMAND_TIMEOUT = 1
+
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
-
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        if not self._is_become_enabled():
-            return ''
-
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_check_command(self, become_command):
-
-        if become_command:
-            become_password = self.get_connection_value('become_password', default='')    
-            return [
-                {
-                    'command': become_command,
-                    'timeout': BECOME_COMMAND_TIMEOUT,
-                    'ignore_prompt': True,                    
-                },
-                {
-                    'command': become_password,
-                    'hide_command': True,
-                },
-                {
-                    'command': CHECK_COMMAND,
-                }
-            ]
-        else:
-            return [{'command': CHECK_COMMAND}]
-        
     def _find_check_result(self, results):
-        for item in reversed(results):
+        for item in reversed(results or []):
             if item.get('command') == CHECK_COMMAND:
                 return item
         return None
-    
+
     def _split_keywords(self, raw_value):
         return [token.strip() for token in str(raw_value or '').split(',') if token.strip()]
 
@@ -81,19 +40,31 @@ class Check(BaseCheck):
                 value_type=str,
             )
         )
-        become_command = self._build_become_command()
-        commands = self._build_check_command(become_command)
 
-        results = self._run_paramiko_commands(commands)
+        try:
+            results = self._run_solaris_commands([
+                {'command': CHECK_COMMAND, 'timeout': 20},
+            ], become_required=True)
+        except ValueError as exc:
+            return self.fail('권한 상승 설정 오류', message=str(exc))
+
         result = self._find_check_result(results)
 
         if result is None:
             failed_result = next((item for item in results if item.get('rc') != 0), None)
+            rc = failed_result.get('rc') if failed_result else 1
+            err = failed_result.get('stderr') if failed_result else ''
+            if self._is_connection_error(rc, err):
+                return self.fail(
+                    '호스트 연결 실패',
+                    message=(err or 'Paramiko 연결 확인에 실패했습니다.').strip(),
+                    stderr=(err or '').strip(),
+                )
             return self.fail(
                 error='명령 결과 없음',
                 message='명령 실행 결과를 찾지 못했습니다.',
                 stdout=(failed_result.get('stdout') or '').strip() if failed_result else '',
-                stderr=(failed_result.get('stderr') or '').strip() if failed_result else '',
+                stderr=(err or '').strip(),
                 metrics={
                     'executed_commands': [
                         item.get('display_command') or item.get('command')
@@ -102,23 +73,44 @@ class Check(BaseCheck):
                 },
             )
 
-        if result.get('rc') != 0:
+        rc = result.get('rc')
+        output = result.get('stdout', '')
+        err = result.get('stderr', '')
+        if self._is_connection_error(rc, err):
+            return self.fail(
+                '호스트 연결 실패',
+                message=(err or 'Paramiko 연결 확인에 실패했습니다.').strip(),
+                stderr=(err or '').strip(),
+            )
+        if rc != 0:
             return self.fail(
                 error='format 명령 실행 실패',
                 message='Solaris format 명령 실행에 실패했습니다.',
-                stdout=(result.get('stdout') or '').strip(),
-                stderr=(result.get('stderr') or '').strip(),
+                stdout=(output or '').strip(),
+                stderr=(err or '').strip(),
             )
 
-        output = result.get('stdout', '')
+        command_error = self._detect_command_error(
+            output,
+            err,
+            extra_patterns=['permission denied', 'not supported', 'unknown userland error'],
+        )
+        if command_error:
+            return self.fail(
+                error='format 명령 실행 실패',
+                message=f'format 출력에서 실행 오류가 확인되었습니다: {command_error}',
+                stdout=(output or '').strip(),
+                stderr=(err or '').strip(),
+            )
+
         disk_names = self._parse_disk_names(output)
         disk_count = len(disk_names)
         matched_failure_keywords = [
             keyword for keyword in failure_keywords
             if keyword.lower() in output.lower()
         ]
-        
-        metrics = {            
+
+        metrics = {
             'disk_count': disk_count,
             'disk_names': disk_names,
             'matched_failure_keywords': matched_failure_keywords,
@@ -153,5 +145,6 @@ class Check(BaseCheck):
                 'failure_keywords': failure_keywords,
             },
         )
-        
+
+
 CHECK_CLASS = Check

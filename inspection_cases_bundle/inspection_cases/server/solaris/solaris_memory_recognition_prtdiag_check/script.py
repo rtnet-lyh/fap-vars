@@ -1,67 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import re
-
 from .common._base import BaseCheck
 
 
-MEMORY_COMMAND = 'prtdiag; prtconf -v | grep -i memory'
+PRTDIAG_COMMAND = 'prtdiag'
 
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_AUTH_TIMEOUT_SEC = 30
-
-    def _is_become_enabled(self):
-        value = self.get_connection_value('become', default=False)
-        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
-
-    def _build_become_command(self):
-        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
-        method = ' '.join(method.strip().lower().split())
-        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
-
-        if method == 'su':
-            return 'su ' + user
-        if method == 'su -':
-            return 'su - ' + user
-        if method == 'sudo':
-            return 'sudo -u ' + user + ' -i'
-        raise ValueError(f'unsupported become_method: {method}')
-
-    def _build_paramiko_commands(self, command):
-        if not self._is_become_enabled():
-            return [command]
-
-        return [
-            {
-                'command': self._build_become_command(),
-                'timeout': 1,
-                'ignore_prompt': True,
-            },
-            {
-                'command': str(self.get_connection_value('become_password', default='') or ''),
-                'hide_command': True,
-            },
-            command,
-        ]
-
-    def _run_check_command(self, command):
-        try:
-            results = self._run_paramiko_commands(self._build_paramiko_commands(command))
-        except ValueError as exc:
-            return 1, '', str(exc)
-
-        for item in reversed(results):
-            if item.get('command') == command:
-                return item.get('rc'), item.get('stdout', ''), item.get('stderr', '')
-
-        failed_result = next((item for item in results if item.get('rc') != 0), None)
-        if failed_result:
-            return failed_result.get('rc'), failed_result.get('stdout', ''), failed_result.get('stderr', '')
-        return 1, '', 'paramiko command result not found'
-
+    PARAMIKO_PROFILE = 'solaris'
+    PARAMIKO_REUSE_SESSION = False
 
     def _to_memory_mb(self, value, unit):
         try:
@@ -135,19 +85,25 @@ class Check(BaseCheck):
         min_dimm_count = self.get_threshold_var('min_dimm_count', default=1, value_type='int')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
 
-        rc, out, err = self._run_check_command(MEMORY_COMMAND)
+        result = self._run_solaris_commands([
+            {'command': PRTDIAG_COMMAND, 'timeout': 25},
+        ], become_required=True)[0]
+        rc = result['rc']
+        out = result['stdout']
+        err = result['stderr']
 
         if self._is_connection_error(rc, err):
             return self.fail('호스트 연결 실패', message=(err or 'SSH 연결 확인에 실패했습니다.').strip(), stderr=(err or '').strip())
 
-        if rc != 0:
-            return self.fail('점검 명령 실행 실패', message='Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag/prtconf 명령을 정상적으로 실행하지 못했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())
-
-        command_error = self._detect_command_error(out, err, extra_patterns=['permission denied', 'not supported', 'unknown userland error'])
-        if command_error:
-            return self.fail('점검 명령 실행 실패', message=f'Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag/prtconf 출력에서 실행 오류가 확인되었습니다: {command_error}', stdout=(out or '').strip(), stderr=(err or '').strip())
-
         text = (out or '').strip()
+
+        if rc != 0:
+            return self.fail('점검 명령 실행 실패', message='Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag 명령을 정상적으로 실행하지 못했습니다.', stdout=text, stderr=(err or '').strip())
+
+        command_error = self._detect_command_error(text, err, extra_patterns=['permission denied', 'not supported', 'unknown userland error'])
+        if command_error:
+            return self.fail('점검 명령 실행 실패', message=f'Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag 출력에서 실행 오류가 확인되었습니다: {command_error}', stdout=text, stderr=(err or '').strip())
+
         failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
         combined_text = '\n'.join(part for part in (text, (err or '').strip()) if part)
         matched_failure_keywords = [keyword for keyword in failure_keywords if keyword.lower() in combined_text.lower()]
@@ -156,7 +112,7 @@ class Check(BaseCheck):
 
         parsed_memory = self._parse_memory_size(text)
         if not parsed_memory:
-            return self.fail('메모리 인식 정보 없음', message='Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag/prtconf 출력에서 Memory size 값을 찾지 못했습니다.', stdout=text, stderr=(err or '').strip())
+            return self.fail('메모리 인식 정보 없음', message='Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: prtdiag 출력에서 Memory size 값을 찾지 못했습니다.', stdout=text, stderr=(err or '').strip())
 
         recognized_memory_mb = parsed_memory['recognized_memory_mb']
         recognized_memory_gib = parsed_memory['recognized_memory_gib']
@@ -167,11 +123,18 @@ class Check(BaseCheck):
         dimm_total_mb = round(sum(entry['size_mb'] for entry in dimm_sized_entries), 2) if dimm_sized_entries else 0.0
         ecc_dimm_count = len([entry for entry in dimm_entries if entry.get('has_ecc')])
 
+        if expected_memory_mb and recognized_memory_mb < expected_memory_mb:
+            return self.fail('인식 메모리 부족', message=f'Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: 인식 메모리 {recognized_memory_mb:.2f}MB ({recognized_memory_gib:.2f}GiB)로 집계되어 기대값 {expected_memory_mb}MB보다 작습니다. DIMM {dimm_count}개, DIMM 합계 {dimm_total_mb:.2f}MB입니다.', stdout=text, stderr=(err or '').strip())
+
+        if dimm_count < min_dimm_count:
+            return self.fail('DIMM 정보 부족', message=f'Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: DIMM {dimm_count}개만 확인되어 기준 {min_dimm_count}개 이상을 만족하지 못했습니다. 총 메모리 {recognized_memory_mb:.2f}MB ({recognized_memory_gib:.2f}GiB), DIMM 합계 {dimm_total_mb:.2f}MB입니다.', stdout=text, stderr=(err or '').strip())
+
+        if dimm_sized_entries and dimm_total_mb + 0.01 < recognized_memory_mb:
+            return self.fail('DIMM 합계와 총 메모리 불일치', message=f'Solaris 메모리 상태 점검에 실패했습니다. 현재 상태: Memory size {recognized_memory_mb:.2f}MB인데 DIMM 합계는 {dimm_total_mb:.2f}MB로 더 작습니다. DIMM {dimm_count}개, ECC 표기 DIMM {ecc_dimm_count}개입니다.', stdout=text, stderr=(err or '').strip())
+
         metrics = {
             'recognized_memory_mb': recognized_memory_mb,
             'recognized_memory_gib': recognized_memory_gib,
-            'memory_value': parsed_memory['memory_value'],
-            'memory_unit': parsed_memory['memory_unit'],
             'dimm_count': dimm_count,
             'dimm_total_mb': dimm_total_mb,
             'ecc_dimm_count': ecc_dimm_count,
@@ -187,8 +150,8 @@ class Check(BaseCheck):
         return self.ok(
             metrics=metrics,
             thresholds=thresholds,
-            reasons=f'Memory size 값 {recognized_memory_mb:.2f}MB ({recognized_memory_gib:.2f}GiB)을 정상 수집했습니다.',
-            message=f'Solaris 메모리 상태가 정상입니다. 현재 상태: Memory size {recognized_memory_mb:.2f}MB ({recognized_memory_gib:.2f}GiB)를 수집했습니다.',
+            reasons=f'총 메모리 {recognized_memory_mb:.2f}MB와 DIMM {dimm_count}개가 정상 인식되었고 DIMM 합계도 일치합니다.',
+            message=f'Solaris 메모리 상태가 정상입니다. 현재 상태: 총 메모리 {recognized_memory_mb:.2f}MB ({recognized_memory_gib:.2f}GiB), DIMM {dimm_count}개 (기준 {min_dimm_count}개 이상), DIMM 합계 {dimm_total_mb:.2f}MB, ECC 표기 DIMM {ecc_dimm_count}개, 기대 메모리 {expected_memory_mb}MB 이상.',
         )
 
 

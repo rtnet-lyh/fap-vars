@@ -1,8 +1,6 @@
 {
   "total_cases": 29,
-  "failed_cases": [
-    "solaris_os_path_redundancy_mpathadm_check"
-  ],
+  "failed_cases": [],
   "cases": [
     {
       "case_name": "solaris_cluster_daemon_scstat_check",
@@ -175,10 +173,8 @@
     {
       "case_name": "solaris_os_path_redundancy_mpathadm_check",
       "result_file": "solaris_os_path_redundancy_mpathadm_check/result.json",
-      "failed_items": [
-        "SOL-REPLAY-OS-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     }
   ]
 }

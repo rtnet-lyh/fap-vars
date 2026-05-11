@@ -2,7 +2,7 @@
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "$"
+    "stdout": "fap@solaris:~$"
   },
   {
     "channel": "terminal",
@@ -22,76 +22,26 @@
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "\r\n#"
+    "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"
   },
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_value": "printf '%s\\n' shmmax/D seminfo_semmsl/D maxfiles/D maxuproc/D minfree/D msginfo_msgmax/D '$q' | mdb -k"
+    "matcher_value": "/usr/bin/id"
   },
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout_file": "outputs/mdb_k.stdout"
+    "stdout": "/usr/bin/id\r\nuid=0(root) gid=0(root)\r\n#"
   },
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_value": "ndd -get /dev/tcp tcp_conn_req_max_q"
+    "matcher_value": "sysdef"
   },
   {
     "channel": "terminal",
     "action": "recv",
-    "stdout": "ndd -get /dev/tcp tcp_conn_req_max_q\r\n128\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "matcher_value": "ndd -get /dev/tcp tcp_conn_req_max_q0"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "ndd -get /dev/tcp tcp_conn_req_max_q0\r\n1024\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "matcher_value": "ndd -get /dev/tcp tcp_keepalive_interval"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "ndd -get /dev/tcp tcp_keepalive_interval\r\n7200000\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "matcher_value": "ndd -get /dev/tcp tcp_time_wait_interval"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "ndd -get /dev/tcp tcp_time_wait_interval\r\n60000\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "matcher_value": "ndd -get /dev/ip ip_forwarding"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "ndd -get /dev/ip ip_forwarding\r\n0\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "matcher_value": "ulimit -n"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "ulimit -n\r\n1024\r\n#"
+    "stdout_file": "outputs/sysdef.stdout"
   }
 ]
