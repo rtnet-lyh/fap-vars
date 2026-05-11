@@ -1,9 +1,18 @@
 [
   {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
     "matcher_type": "regex",
-    "matcher_value": "^dmesg \\| egrep -i .+$",
-    "rc": 0,
-    "stdout_file": "outputs/command_1_dmesg_egrep_i_error_fail_warning.stdout",
-    "stderr": ""
+    "matcher_value": "^dmesg \\| egrep -i .+$"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | egrep -i 'error|fail|warning'\r\nWARNING: SCSI: Disk queue depth adjusted for /dev/dsk/c2t0d0\r\nERROR: fscsi0: I/O error detected on target 0 lun 0\r\n#"
   }
 ]

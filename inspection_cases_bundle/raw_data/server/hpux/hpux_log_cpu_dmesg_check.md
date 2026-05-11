@@ -27,7 +27,8 @@ dmesg | egrep -i 'ecc error|uncorrectable|cpu.*offline|offline.*cpu'
 - 명령 결과가 없으면 해당 키워드가 확인되지 않은 상태로 본다.
 
 # 임계치
-cpu_bad_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: CPU 관련 ECC, uncorrectable, offline 로그가 없는 경우

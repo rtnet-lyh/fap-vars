@@ -28,8 +28,8 @@ ERROR: fscsi0: I/O error detected on target 0 lun 0
 - 필요 시 `/var/adm/syslog/syslog.log`와 하드웨어 이벤트 로그를 함께 확인한다.
 
 # 임계치
-system_bad_log_keywords
-system_ignore_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: 장애성 error, fail, warning 로그가 확인되지 않는 경우

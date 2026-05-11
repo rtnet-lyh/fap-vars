@@ -27,8 +27,8 @@ FAN failed: Over-temperature detected
 - 반복 발생 시 하드웨어 교체 또는 벤더 점검을 권고한다.
 
 # 임계치
-fan_bad_log_keywords
-fan_ignore_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: FAN 장애 또는 과열 로그가 없는 경우

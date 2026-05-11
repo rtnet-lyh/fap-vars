@@ -27,7 +27,8 @@ Multi-bit ECC error detected on memory bank 1
 - 장애 로그가 반복되면 벤더 점검과 부품 교체를 검토한다.
 
 # 임계치
-memory_bad_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: 메모리 ECC 또는 uncorrectable 오류 로그가 없는 경우

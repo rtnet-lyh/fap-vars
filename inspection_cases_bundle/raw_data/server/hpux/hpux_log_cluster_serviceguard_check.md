@@ -28,8 +28,8 @@ Cluster Error: node2 communication failure
 - Serviceguard 미구성 서버는 해당 항목을 적용 제외 또는 확인 필요로 분류한다.
 
 # 임계치
-cluster_bad_log_keywords
-cluster_ignore_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: 최근 Serviceguard 로그에 장애 키워드가 없거나 정상 online 메시지만 확인되는 경우

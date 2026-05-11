@@ -27,7 +27,8 @@ dmesg | egrep -i 'panic|kernel panic|panicking'
 - 명령 결과가 없으면 해당 키워드가 확인되지 않은 상태로 본다.
 
 # 임계치
-kernel_panic_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: 커널 패닉 관련 로그가 없는 경우

@@ -27,8 +27,8 @@ lan0: Link Down
 - failover 로그는 이중화 동작 여부와 원인 장비를 함께 점검한다.
 
 # 임계치
-nic_bad_log_keywords
-nic_ignore_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: NIC link/status down 또는 failover 장애 로그가 없는 경우

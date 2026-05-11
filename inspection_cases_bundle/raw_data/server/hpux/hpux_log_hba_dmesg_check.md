@@ -28,8 +28,8 @@ Port 1 offline due to error
 - 지속적인 offline 또는 loop 오류는 스토리지 경로 장애로 이어질 수 있다.
 
 # 임계치
-hba_bad_log_keywords
-hba_ignore_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: HBA error, loop detected, port offline 로그가 없는 경우

@@ -28,7 +28,8 @@ I/O error on device /dev/dsk/c2t0d0
 - 오류가 확인되면 장애 시각과 업무 영향도를 대조한다.
 
 # 임계치
-io_bad_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: I/O 오류 키워드가 확인되지 않는 경우

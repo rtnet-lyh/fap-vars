@@ -366,6 +366,7 @@ class BaseCheck:
 
     def _paramiko_sendline(self, channel, text):
         channel.send(str(text or '') + '\n')
+        time.sleep(1.5)
 
     def _paramiko_expect(
         self,
@@ -562,6 +563,7 @@ class BaseCheck:
             channel = client.invoke_shell(term='vt100', width=200, height=1000)
             if options.get('probe_prompt', True):
                 channel.send('\n')
+                time.sleep(1.5)
             initial = self._paramiko_expect(
                 channel,
                 command_timeout,

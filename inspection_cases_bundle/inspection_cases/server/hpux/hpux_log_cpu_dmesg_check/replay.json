@@ -1,9 +1,18 @@
 [
   {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
     "matcher_type": "regex",
-    "matcher_value": "^dmesg \\| egrep -i .+$",
-    "rc": 0,
-    "stdout_file": "outputs/output.stdout",
-    "stderr": ""
+    "matcher_value": "^dmesg \\| egrep -i .+$"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "dmesg | egrep -i '\\becc\\s+error\\b|\\buncorrectable\\b|cpu.*offline|offline.*cpu'\r\n[    0.439458] ERST: Error Record Serialization Table (ERST) support is initialized.\r\nsdffsfs cpu sdfsdlf\r\n#"
   }
 ]

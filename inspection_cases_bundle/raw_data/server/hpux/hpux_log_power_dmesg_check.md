@@ -27,7 +27,8 @@ dmesg | egrep -i 'psu|power supply|power.*failed|not detected'
 - 로그가 없으면 해당 키워드가 확인되지 않은 상태로 본다.
 
 # 임계치
-power_bad_log_keywords
+bad_log_keywords
+ignore_log_keywords
 
 # 판단기준
 - **양호**: PSU 또는 전원 장애 로그가 없는 경우
