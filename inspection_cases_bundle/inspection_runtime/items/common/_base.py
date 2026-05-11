@@ -5,6 +5,10 @@ import io
 import os
 import re
 import time
+# 2026-05-07 생성 [조정희]
+# [FAP 변경] Paramiko 세션 재사용 기능에서 프로세스 종료 정리(atexit)와 세션 키 해시(hashlib)를 사용하기 위해 추가했습니다.
+import atexit
+import hashlib
 
 from .helpers import NetworkHelper, VMwareHelper, WebHelper
 
@@ -17,6 +21,11 @@ PARAMIKO_PROFILES = {
         'pager_response': ' ',
     },
     'linux': {
+    
+        'pager_patterns': [],
+        'pager_response': ' ',
+    },
+    'solaris': {
         'pager_patterns': [],
         'pager_response': ' ',
     },
@@ -38,6 +47,52 @@ PARAMIKO_PROFILES = {
         'pager_response': ' ',
     },
 }
+
+
+# 2026-05-07 생성 [조정희]
+
+# [FAP 변경 시작] 기존 _base.py에는 없던 Paramiko 세션 캐시/정리 유틸입니다.
+# 세션 재사용 기능을 켰을 때만 이 캐시에 client/channel을 저장합니다.
+# Runner 프로세스 안에서 Paramiko interactive shell을 재사용하기 위한 캐시.
+# inspection_scan.py가 runner.py를 subprocess로 새로 실행하면 프로세스가 바뀌므로
+# 이 캐시는 해당 runner 프로세스 안에서만 유지된다.
+_PARAMIKO_SESSION_CACHE = {}
+
+
+def _paramiko_secret_hash(value):
+    if value in (None, ''):
+        return ''
+    return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
+
+
+def _close_cached_paramiko_session(session):
+    if not isinstance(session, dict):
+        return
+
+    channel = session.get('channel')
+    client = session.get('client')
+
+    if channel is not None:
+        try:
+            channel.close()
+        except Exception:
+            pass
+
+    if client is not None:
+        try:
+            client.close()
+        except Exception:
+            pass
+
+
+def close_all_paramiko_sessions():
+    for session in list(_PARAMIKO_SESSION_CACHE.values()):
+        _close_cached_paramiko_session(session)
+    _PARAMIKO_SESSION_CACHE.clear()
+
+
+atexit.register(close_all_paramiko_sessions)
+# [FAP 변경 끝] Paramiko 세션 캐시/정리 유틸 추가 구간입니다.
 
 
 def decode_paramiko_bytes(value, preferred_encodings=None):
@@ -111,6 +166,15 @@ class BaseCheck:
     PARAMIKO_ENABLE_MODE = False
     PARAMIKO_PROBE_PROMPT = True
     PARAMIKO_CONTINUE_ON_TIMEOUT = False
+
+
+    # 2026-05-07 생성 [조정희]
+    # [FAP 변경 시작] 세션 재사용 on/off 스위치입니다.
+    # 기본값 False: 원래 _base.py처럼 _run_paramiko_commands 호출마다 접속을 열고 닫는다.
+    # True로 바꾸거나 FAP_PARAMIKO_REUSE_SESSION=1 환경변수를 주면 같은 runner 프로세스 안에서
+    # host/port/user/profile 단위로 Paramiko shell 세션을 재사용한다.
+    PARAMIKO_REUSE_SESSION = True
+    # [FAP 변경 끝] 기본값이 False이므로 설정하지 않으면 기존 동작을 유지합니다.
 
     def __init__(self, ctx):
         # ctx에는 ssh 함수, 접속 정보, 임계치 등이 들어있다.
@@ -366,7 +430,6 @@ class BaseCheck:
 
     def _paramiko_sendline(self, channel, text):
         channel.send(str(text or '') + '\n')
-        time.sleep(1.5)
 
     def _paramiko_expect(
         self,
@@ -534,11 +597,465 @@ class BaseCheck:
             'prompt': prompt or '',
         }
 
+    # 2026-05-07 생성 [조정희]
+    # [FAP 변경 시작] 아래 helper들은 세션 재사용 여부 판정, 세션 키 생성, 캐시 조회/폐기를 위해 추가했습니다.
+    def _paramiko_bool_option(self, value, default=False):
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        text = str(value).strip().lower()
+        if text in ('1', 'true', 'yes', 'y', 'on'):
+            return True
+        if text in ('0', 'false', 'no', 'n', 'off'):
+            return False
+        return default
+
+
+    def _solaris_bool_option(self, value, default=False):
+        """Solaris helper용 bool 파서.
+
+        credential/API payload에서는 bool 값이 True/False뿐 아니라
+        "true", "false", "1", "0" 같은 문자열로도 들어올 수 있으므로
+        기존 Paramiko bool 파서와 동일한 기준으로 해석한다.
+        """
+        return self._paramiko_bool_option(value, default)
+
+    def _get_solaris_become_config(self):
+        """Solaris su 기반 권한상승 설정을 반환한다.
+
+        우선순위는 application credential data -> connection credential data이다.
+        기본 정책은 Solaris에서 sudo가 아니라 su/su - 를 사용하는 것이다.
+        """
+        connection_method = self.get_connection_value('become_method', 'su -')
+        method = self.get_application_credential_value('become_method', connection_method)
+
+        connection_user = self.get_connection_value('become_user', 'root')
+        user = self.get_application_credential_value('become_user', connection_user)
+
+        connection_password = self.get_connection_value('become_password', '')
+        password = self.get_application_credential_value('become_password', connection_password)
+
+        connection_become = self.get_connection_value('become', False)
+        become = self.get_application_credential_value('become', connection_become)
+
+        method = ' '.join(str(method or 'su -').strip().lower().split()) or 'su -'
+        user = str(user or 'root').strip() or 'root'
+        password = '' if password is None else str(password)
+
+        return {
+            'become': self._solaris_bool_option(become, False),
+            'method': method,
+            'user': user,
+            'password': password,
+        }
+
+    def _solaris_become_enabled(self, become_required=False):
+        """Solaris 명령 실행 시 su 기반 권한상승이 필요한지 판단한다."""
+        if bool(become_required):
+            return True
+        return bool(self._get_solaris_become_config().get('become'))
+
+    def _validate_solaris_become_user(self, user):
+        """su 명령에 사용할 사용자명을 보수적으로 검증한다."""
+        text = str(user or 'root').strip() or 'root'
+        if not re.match(r'^[A-Za-z0-9_.-]+$', text):
+            raise ValueError('invalid solaris become_user: ' + text)
+        return text
+
+    def _normalize_solaris_command_specs(self, command_specs):
+        """Solaris 점검 명령 spec을 검증하고 정규화한다.
+
+        모든 실제 점검 명령은 {'command': '...', 'timeout': N} 형태여야 한다.
+        timeout 누락을 허용하지 않아 항목별 대기 시간이 코드에 명확히 남도록 한다.
+        """
+        if isinstance(command_specs, dict):
+            raw_items = [command_specs]
+        elif isinstance(command_specs, (list, tuple)):
+            raw_items = list(command_specs)
+        else:
+            raise ValueError('solaris command_specs must be a list of command dictionaries')
+
+        normalized = []
+        for idx, item in enumerate(raw_items, 1):
+            if not isinstance(item, dict):
+                raise ValueError('solaris command #%s must be a command dictionary with timeout' % idx)
+
+            command = str(item.get('command') or '').strip()
+            if not command:
+                raise ValueError('solaris command #%s requires non-empty command' % idx)
+            if item.get('timeout') is None:
+                raise ValueError('solaris command #%s requires timeout' % idx)
+
+            try:
+                timeout = float(item.get('timeout'))
+            except Exception as exc:
+                raise ValueError('invalid solaris timeout in command #%s: %s' % (idx, item.get('timeout'))) from exc
+            if timeout < 0:
+                raise ValueError('invalid solaris timeout in command #%s: %s' % (idx, item.get('timeout')))
+
+            copied = dict(item)
+            copied['command'] = command
+            copied['timeout'] = timeout
+            normalized.append(copied)
+
+        return normalized
+
+    def _build_solaris_become_commands(self):
+        """Solaris su/su - 기반 권한상승 command sequence를 만든다.
+
+        SOLARIS_PATH를 export하거나 PATH를 강제로 확장하지 않는다.
+        root 로그인 환경이 필요한 명령은 su - 를 통해 실행한다.
+        """
+        config = self._get_solaris_become_config()
+        method = config.get('method') or 'su -'
+        if method not in ('su', 'su -'):
+            raise ValueError('unsupported solaris become_method: ' + str(method))
+
+        user = self._validate_solaris_become_user(config.get('user') or 'root')
+        password = config.get('password') or ''
+        if password == '':
+            raise ValueError('solaris become_password is required for ' + method)
+
+        su_command = 'su - ' + user if method == 'su -' else 'su ' + user
+        return [
+            {
+                'command': su_command,
+                'timeout': 3,
+                'ignore_prompt': True,
+            },
+            {
+                'command': password,
+                'display_command': '*******',
+                'timeout': 5,
+                'hide_command': True,
+            },
+            {
+                'command': '/usr/bin/id',
+                'display_command': 'id',
+                'timeout': 5,
+            },
+        ]
+
+    def _verify_solaris_become_result(self, results):
+        """su - 이후 /usr/bin/id 결과로 root 전환 성공 여부를 검증한다."""
+        copied_results = list(results or [])
+        combined_stdout = '\n'.join(str(item.get('stdout') or '') for item in copied_results if isinstance(item, dict))
+        combined_stderr = '\n'.join(str(item.get('stderr') or '') for item in copied_results if isinstance(item, dict))
+        combined_raw = '\n'.join(str(item.get('raw_output') or '') for item in copied_results if isinstance(item, dict))
+        combined_text = '\n'.join(part for part in (combined_stdout, combined_stderr, combined_raw) if part)
+        combined_lower = combined_text.lower()
+
+        auth_failure_markers = (
+            'authentication failure',
+            'sorry',
+            'incorrect password',
+            'permission denied',
+            'su: failed',
+            'su: incorrect',
+            'su: authentication',
+        )
+        for marker in auth_failure_markers:
+            if marker in combined_lower:
+                return {
+                    'ok': False,
+                    'message': 'Solaris su 권한상승 실패: ' + marker,
+                    'stdout': combined_stdout,
+                    'stderr': combined_stderr,
+                    'raw_output': combined_text,
+                }
+
+        id_result = None
+        for item in copied_results:
+            if not isinstance(item, dict):
+                continue
+            command = str(item.get('command') or '')
+            display_command = str(item.get('display_command') or '')
+            if command.endswith('/usr/bin/id') or display_command == 'id':
+                id_result = item
+
+        if id_result is None:
+            return {
+                'ok': False,
+                'message': 'Solaris su 권한상승 검증 실패: id 결과가 없습니다.',
+                'stdout': combined_stdout,
+                'stderr': combined_stderr,
+                'raw_output': combined_text,
+            }
+
+        id_text = '\n'.join(part for part in (
+            str(id_result.get('stdout') or ''),
+            str(id_result.get('raw_output') or ''),
+            str(id_result.get('stderr') or ''),
+        ) if part)
+        if re.search(r'(?:^|\s)uid=0(?:\(|\s|$)', id_text):
+            return {
+                'ok': True,
+                'message': 'Solaris su 권한상승 성공',
+                'stdout': combined_stdout,
+                'stderr': combined_stderr,
+                'raw_output': combined_text,
+            }
+
+        return {
+            'ok': False,
+            'message': 'Solaris su 권한상승 검증 실패: uid=0(root)가 아닙니다.',
+            'stdout': combined_stdout,
+            'stderr': combined_stderr,
+            'raw_output': combined_text,
+        }
+
+    def _run_solaris_commands(self, command_specs, become_required=False, timeout_sec=None, include_become_results=False):
+        """Solaris 점검 명령을 Paramiko interactive shell로 실행한다.
+
+        - 항목 스크립트는 이 helper를 통해 _run_paramiko_commands를 호출한다.
+        - become_required=True 또는 credential become=true이면 su/su - 로 root 전환 후 실행한다.
+        - SOLARIS_PATH 추가나 export PATH 방식은 사용하지 않는다.
+        - 기본 반환값은 실제 점검 명령 결과만 반환한다.
+          include_become_results=True이면 su/id 결과까지 포함한 전체 결과를 반환한다.
+        """
+        normalized_specs = self._normalize_solaris_command_specs(command_specs)
+        profile = getattr(self, 'PARAMIKO_PROFILE', 'solaris') or 'solaris'
+
+        if not self._solaris_become_enabled(become_required=become_required):
+            return self._run_paramiko_commands(
+                normalized_specs,
+                profile=profile,
+                timeout_sec=timeout_sec,
+            )
+
+        become_commands = self._build_solaris_become_commands()
+        all_commands = become_commands + normalized_specs
+        all_results = self._run_paramiko_commands(
+            all_commands,
+            profile=profile,
+            timeout_sec=timeout_sec,
+        )
+
+        become_count = len(become_commands)
+        become_results = all_results[:become_count]
+        command_results = all_results[become_count:]
+        verification = self._verify_solaris_become_result(become_results)
+        self._solaris_last_become_results = become_results
+        self._solaris_last_become_verification = verification
+
+        if not verification.get('ok'):
+            first_command = normalized_specs[0]
+            failed_result = self._build_paramiko_result(
+                first_command.get('command'),
+                1,
+                stdout=verification.get('stdout') or '',
+                stderr=verification.get('message') or 'Solaris su 권한상승 실패',
+                raw_output=verification.get('raw_output') or '',
+                display_command=first_command.get('display_command') or first_command.get('command'),
+                hide_command=bool(first_command.get('hide_command', False)),
+            )
+            self._record_command(
+                failed_result.get('display_command') or failed_result.get('command'),
+                failed_result.get('rc'),
+                failed_result.get('stdout'),
+                failed_result.get('stderr'),
+            )
+            if include_become_results:
+                return become_results + [failed_result]
+            return [failed_result]
+
+        if include_become_results:
+            return all_results
+        return command_results
+
+    def _paramiko_reuse_session_enabled(self):
+        # 우선순위:
+        # 1) runner ctx의 paramiko_reuse_session
+        # 2) item_payload의 paramiko_reuse_session
+        # 3) 환경변수 FAP_PARAMIKO_REUSE_SESSION
+        # 4) 점검 클래스의 PARAMIKO_REUSE_SESSION
+        # 기본값은 False라서 설정하지 않으면 기존 동작처럼 매번 close한다.
+        ctx_value = self.ctx.get('paramiko_reuse_session')
+        if ctx_value is not None:
+            return self._paramiko_bool_option(ctx_value, False)
+
+        payload = self.ctx.get('item_payload') or {}
+        if isinstance(payload, dict) and payload.get('paramiko_reuse_session') is not None:
+            return self._paramiko_bool_option(payload.get('paramiko_reuse_session'), False)
+
+        env_value = os.environ.get('FAP_PARAMIKO_REUSE_SESSION')
+        if env_value is not None:
+            return self._paramiko_bool_option(env_value, False)
+
+        return self._paramiko_bool_option(getattr(self, 'PARAMIKO_REUSE_SESSION', False), False)
+
+    def _paramiko_profile_key(self, resolved_profile):
+        if isinstance(resolved_profile, dict):
+            pager_patterns = tuple(str(x) for x in (resolved_profile.get('pager_patterns') or []))
+            pager_response = str(resolved_profile.get('pager_response', ' '))
+            return (pager_patterns, pager_response)
+        return str(resolved_profile or '')
+
+    def _paramiko_session_key(self, options, resolved_profile, enable_required):
+        return (
+            self.ctx.get('host'),
+            int(self.ctx.get('port') or 22),
+            self.ctx.get('user') or '',
+            _paramiko_secret_hash(self.ctx.get('password') or ''),
+            str(options.get('auth_method') or 'auto'),
+            str(options.get('key_filename') or ''),
+            _paramiko_secret_hash(options.get('private_key') or ''),
+            _paramiko_secret_hash(options.get('private_key_passphrase') or ''),
+            bool(options.get('allow_agent', False)),
+            bool(options.get('look_for_keys', False)),
+            self._paramiko_profile_key(resolved_profile),
+            bool(enable_required),
+        )
+
+    def _paramiko_session_alive(self, session):
+        if not isinstance(session, dict):
+            return False
+
+        client = session.get('client')
+        channel = session.get('channel')
+        if client is None or channel is None:
+            return False
+
+        try:
+            if getattr(channel, 'closed', False):
+                return False
+        except Exception:
+            return False
+
+        try:
+            transport = client.get_transport()
+            if transport is None or not transport.is_active():
+                return False
+        except Exception:
+            return False
+
+        return True
+
+    def _discard_paramiko_session(self, key):
+        if key is None:
+            return
+        session = _PARAMIKO_SESSION_CACHE.pop(key, None)
+        _close_cached_paramiko_session(session)
+
+    def _create_paramiko_session(
+        self,
+        options,
+        resolved_profile,
+        command_timeout,
+        read_timeout,
+        enable_required,
+    ):
+        client = self._open_paramiko_client(options)
+        channel = client.invoke_shell(term='vt100', width=200, height=1000)
+
+        try:
+            if options.get('probe_prompt', True):
+                channel.send('\n')
+
+            initial = self._paramiko_expect(
+                channel,
+                command_timeout,
+                resolved_profile,
+                settle_timeout_sec=read_timeout,
+            )
+
+            current_prompt = str(initial.get('prompt') or '').rstrip()
+            if not initial.get('matched') or not current_prompt:
+                raise RuntimeError('prompt was not received after login')
+
+            if enable_required and not current_prompt.endswith('#'):
+                privilege_command = 'enable'
+                self._paramiko_sendline(channel, privilege_command)
+
+                enable_result = self._paramiko_expect(
+                    channel,
+                    command_timeout,
+                    resolved_profile,
+                    extra_patterns=DEFAULT_PASSWORD_PROMPT_PATTERNS,
+                    settle_timeout_sec=read_timeout,
+                    command=privilege_command,
+                )
+
+                if enable_result.get('matched') and enable_result.get('match_kind') == 'pattern':
+                    password = self.get_connection_value('en_password', '')
+                    if password in (None, ''):
+                        raise ValueError('privilege password is required')
+
+                    self._paramiko_sendline(channel, password)
+                    enable_result = self._paramiko_expect(
+                        channel,
+                        command_timeout,
+                        resolved_profile,
+                        settle_timeout_sec=read_timeout,
+                    )
+
+                current_prompt = str(enable_result.get('prompt') or '').rstrip()
+                if not enable_result.get('matched') or not current_prompt:
+                    raise RuntimeError('enable prompt was not received')
+
+            return {
+                'client': client,
+                'channel': channel,
+                'prompt': current_prompt,
+                'profile': resolved_profile,
+                'created_at': time.time(),
+            }
+        except Exception:
+            try:
+                channel.close()
+            except Exception:
+                pass
+            try:
+                client.close()
+            except Exception:
+                pass
+            raise
+
+    def _get_paramiko_session(
+        self,
+        options,
+        resolved_profile,
+        command_timeout,
+        read_timeout,
+        enable_required,
+    ):
+        reuse_enabled = self._paramiko_reuse_session_enabled()
+        key = self._paramiko_session_key(options, resolved_profile, enable_required)
+
+        if reuse_enabled:
+            cached = _PARAMIKO_SESSION_CACHE.get(key)
+            if self._paramiko_session_alive(cached):
+                return key, cached, True
+            self._discard_paramiko_session(key)
+
+        session = self._create_paramiko_session(
+            options,
+            resolved_profile,
+            command_timeout,
+            read_timeout,
+            enable_required,
+        )
+
+        if reuse_enabled:
+            _PARAMIKO_SESSION_CACHE[key] = session
+
+        return key, session, False
+    # [FAP 변경 끝] Paramiko 세션 재사용 helper 추가 구간입니다.
+
+    # 2026-05-07 생성 [조정희]
+    # [FAP 변경 시작] 기존 _run_paramiko_commands를 세션 재사용 옵션을 지원하도록 수정했습니다.
     def _run_paramiko_commands(self, commands, profile=None, enable_mode=None, timeout_sec=None):
-        """Paramiko interactive shell로 여러 CLI 명령을 한 세션에서 순차 실행한다."""
+        """Paramiko interactive shell로 여러 CLI 명령을 한 세션에서 순차 실행한다.
+
+        PARAMIKO_REUSE_SESSION=True이면 같은 runner 프로세스 안에서 동일한
+        host/port/user/password/auth/profile/enable 조건의 shell 세션을 재사용한다.
+        명령 timeout이나 예외로 prompt 상태가 불확실해지면 캐시된 세션을 폐기한다.
+        """
         command_items = self._normalize_paramiko_commands(commands)
         if not command_items:
             return []
+
         first_command = command_items[0]['command']
         first_display_command = command_items[0].get('display_command', first_command)
         first_hide_command = bool(command_items[0].get('hide_command'))
@@ -553,53 +1070,30 @@ class BaseCheck:
             if enable_mode is None
             else bool(enable_mode)
         )
-        client = None
+
+        session_key = None
+        session = None
         channel = None
         current_prompt = ''
+        should_discard_session = False
         results = []
 
         try:
-            client = self._open_paramiko_client(options)
-            channel = client.invoke_shell(term='vt100', width=200, height=1000)
-            if options.get('probe_prompt', True):
-                channel.send('\n')
-                time.sleep(1.5)
-            initial = self._paramiko_expect(
-                channel,
-                command_timeout,
+            # 2026-05-07 생성 [조정희]
+            # [FAP 변경] 기존에는 여기서 매번 _open_paramiko_client()/invoke_shell()을 직접 호출했습니다.
+            # 이제는 설정값에 따라 캐시된 세션을 재사용하거나, 기존 방식처럼 새 세션을 생성합니다.
+            session_key, session, reused = self._get_paramiko_session(
+                options,
                 resolved_profile,
-                settle_timeout_sec=read_timeout,
+                command_timeout,
+                read_timeout,
+                enable_required,
             )
-            current_prompt = str(initial.get('prompt') or '').rstrip()
-            if not initial.get('matched') or not current_prompt:
-                raise RuntimeError('prompt was not received after login')
 
-            if enable_required:
-                if not current_prompt.endswith('#'):
-                    privilege_command = 'enable'
-                    self._paramiko_sendline(channel, privilege_command)
-                    enable_result = self._paramiko_expect(
-                        channel,
-                        command_timeout,
-                        resolved_profile,
-                        extra_patterns=DEFAULT_PASSWORD_PROMPT_PATTERNS,
-                        settle_timeout_sec=read_timeout,
-                        command=privilege_command,
-                    )
-                    if enable_result.get('matched') and enable_result.get('match_kind') == 'pattern':
-                        password = self.get_connection_value('en_password', '')
-                        if password in (None, ''):
-                            raise ValueError('privilege password is required')
-                        self._paramiko_sendline(channel, password)
-                        enable_result = self._paramiko_expect(
-                            channel,
-                            command_timeout,
-                            resolved_profile,
-                            settle_timeout_sec=read_timeout,
-                        )
-                    current_prompt = str(enable_result.get('prompt') or '').rstrip()
-                    if not enable_result.get('matched') or not current_prompt:
-                        raise RuntimeError('enable prompt was not received')
+            channel = session.get('channel')
+            current_prompt = str(session.get('prompt') or '').rstrip()
+            if channel is None or not current_prompt:
+                raise RuntimeError('cached paramiko session is invalid')
 
             for command_item in command_items:
                 command = command_item['command']
@@ -619,20 +1113,24 @@ class BaseCheck:
                     settle_timeout_sec=read_timeout,
                     command=command,
                 )
+
                 timed_out = bool(received.get('timed_out', False))
                 rc = 0 if received.get('matched') else 124
                 stderr = ''
                 if rc != 0:
                     stderr = 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received'
+
                 item_prompt = str(received.get('prompt') or '').rstrip()
                 output = self._strip_paramiko_command_output(
                     command,
                     received.get('text', ''),
                     item_prompt,
                 )
+
                 raw_output = received.get('text', '')
                 if hide_command:
                     raw_output = self._redact_paramiko_command_text(raw_output, command, display_command)
+
                 item = self._build_paramiko_result(
                     command,
                     rc,
@@ -646,13 +1144,26 @@ class BaseCheck:
                 )
                 results.append(item)
                 self._record_command(display_command, item['rc'], item['stdout'], item['stderr'])
+
                 if item['rc'] == 0 and item_prompt:
                     current_prompt = item_prompt
+                    # 2026-05-07 생성 [조정희]
+                    # [FAP 변경] 세션을 재사용할 수 있도록 마지막 정상 prompt를 캐시에 갱신합니다.
+                    session['prompt'] = current_prompt
                 elif timed_out and ignore_prompt:
+                    # 호출자가 timeout 후 계속 진행하기를 원하면 세션은 남기되,
+                    # 다음 expect가 prompt를 새로 학습할 수 있게 prompt를 비운다.
                     current_prompt = ''
+                    session['prompt'] = ''
+                elif item['rc'] != 0:
+                    # prompt를 못 받은 세션은 이후 명령 출력과 섞일 수 있으므로 폐기한다.
+                    should_discard_session = True
+
                 if item['rc'] != 0 and not (ignore_prompt and timed_out):
                     break
+
         except Exception as exc:
+            should_discard_session = True
             stderr = 'PARAMIKO_CONNECTION_ERROR: ' + str(exc)
             item = self._build_paramiko_result(
                 first_command,
@@ -664,18 +1175,13 @@ class BaseCheck:
             results.append(item)
             self._record_command(first_display_command, 255, '', stderr)
         finally:
-            if channel is not None:
-                try:
-                    channel.close()
-                except Exception:
-                    pass
-            if client is not None:
-                try:
-                    client.close()
-                except Exception:
-                    pass
+            if should_discard_session:
+                self._discard_paramiko_session(session_key)
+            elif not self._paramiko_reuse_session_enabled():
+                _close_cached_paramiko_session(session)
 
         return results
+    # [FAP 변경 끝] _run_paramiko_commands 세션 재사용 지원 수정 구간입니다.
 
     def _run_paramiko(self, command, **kwargs):
         results = self._run_paramiko_commands([command], **kwargs)
