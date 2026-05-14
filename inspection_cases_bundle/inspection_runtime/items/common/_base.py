@@ -15,6 +15,17 @@ from .helpers import NetworkHelper, VMwareHelper, WebHelper
 
 ANSI_ESCAPE_RE = re.compile(r'(?:\x1B\[[0-?]*[ -/]*[@-~]|\x1B\][^\x07]*(?:\x07|\x1B\\))')
 DEFAULT_PASSWORD_PROMPT_PATTERNS = [r'(?:[Pp]assword|암호):\s*$']
+SOLARIS_LEGACY_KEX_ALGORITHMS = (
+    'diffie-hellman-group-exchange-sha1',
+    'diffie-hellman-group14-sha1',
+    'diffie-hellman-group1-sha1',
+)
+SOLARIS_LEGACY_HOST_KEY_ALGORITHMS = ('ssh-rsa',)
+DIFFIE_HELLMAN_GROUP1_P = int(
+    'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3'
+    'CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A63A3620FFFFFFFFFFFFFFFF',
+    16,
+)
 PARAMIKO_PROFILES = {
     'generic_network': {
         'pager_patterns': [r'--More--', r'--- more ---', r'Press any key', r'More:\s*<space>'],
@@ -28,6 +39,8 @@ PARAMIKO_PROFILES = {
     'solaris': {
         'pager_patterns': [],
         'pager_response': ' ',
+        'extra_kex_algorithms': SOLARIS_LEGACY_KEX_ALGORITHMS,
+        'extra_host_key_algorithms': SOLARIS_LEGACY_HOST_KEY_ALGORITHMS,
     },
     'cisco_ios': {
         'pager_patterns': [r'--More--', r'--More--\s*$', r'More:\s*<space>'],
@@ -234,6 +247,117 @@ class BaseCheck:
         resolved.setdefault('pager_response', ' ')
         return resolved
 
+    def _normalize_paramiko_algorithm_list(self, values):
+        if isinstance(values, str):
+            values = values.split(',')
+        return tuple(
+            text
+            for text in (str(value or '').strip() for value in (values or ()))
+            if text
+        )
+
+    def _append_paramiko_algorithms(self, base_values, extra_values):
+        merged = list(base_values or ())
+        for value in extra_values or ():
+            if value not in merged:
+                merged.append(value)
+        return tuple(merged)
+
+    def _configure_paramiko_legacy_kex_algorithms(self, transport, extra_kex_algorithms):
+        if not extra_kex_algorithms:
+            return
+
+        kex_info = dict(getattr(transport, '_kex_info', {}))
+        needs_sha1_kex = any(
+            algorithm in extra_kex_algorithms
+            for algorithm in SOLARIS_LEGACY_KEX_ALGORITHMS
+        )
+        if needs_sha1_kex:
+            from hashlib import sha1
+            from paramiko.kex_gex import KexGexSHA256
+            from paramiko.kex_group14 import KexGroup14SHA256
+
+            class KexGexSHA1(KexGexSHA256):
+                name = 'diffie-hellman-group-exchange-sha1'
+                hash_algo = sha1
+
+            class KexGroup14SHA1(KexGroup14SHA256):
+                name = 'diffie-hellman-group14-sha1'
+                hash_algo = sha1
+
+            class KexGroup1SHA1(KexGroup14SHA1):
+                P = DIFFIE_HELLMAN_GROUP1_P
+                name = 'diffie-hellman-group1-sha1'
+
+            kex_info.update({
+                'diffie-hellman-group-exchange-sha1': KexGexSHA1,
+                'diffie-hellman-group14-sha1': KexGroup14SHA1,
+                'diffie-hellman-group1-sha1': KexGroup1SHA1,
+            })
+
+        unknown_algorithms = [
+            algorithm for algorithm in extra_kex_algorithms
+            if algorithm not in kex_info
+        ]
+        if unknown_algorithms:
+            raise ValueError('unknown paramiko kex algorithm: ' + ', '.join(unknown_algorithms))
+
+        transport._kex_info = kex_info
+        transport._preferred_kex = self._append_paramiko_algorithms(
+            getattr(transport, '_preferred_kex', ()),
+            extra_kex_algorithms,
+        )
+
+    def _configure_paramiko_legacy_host_key_algorithms(self, transport, extra_host_key_algorithms, paramiko_module):
+        if not extra_host_key_algorithms:
+            return
+
+        key_info = dict(getattr(transport, '_key_info', {}))
+        if 'ssh-rsa' in extra_host_key_algorithms:
+            from cryptography.hazmat.primitives import hashes
+
+            class LegacyRSAKey(paramiko_module.RSAKey):
+                HASHES = dict(paramiko_module.RSAKey.HASHES)
+
+            LegacyRSAKey.HASHES['ssh-rsa'] = hashes.SHA1
+            LegacyRSAKey.HASHES['ssh-rsa-cert-v01@openssh.com'] = hashes.SHA1
+            key_info['ssh-rsa'] = LegacyRSAKey
+
+        unknown_algorithms = [
+            algorithm for algorithm in extra_host_key_algorithms
+            if algorithm not in key_info
+        ]
+        if unknown_algorithms:
+            raise ValueError('unknown paramiko host key algorithm: ' + ', '.join(unknown_algorithms))
+
+        transport._key_info = key_info
+        transport._preferred_keys = self._append_paramiko_algorithms(
+            getattr(transport, '_preferred_keys', ()),
+            extra_host_key_algorithms,
+        )
+
+    def _build_paramiko_transport_factory(self, resolved_profile, paramiko_module):
+        extra_kex_algorithms = self._normalize_paramiko_algorithm_list(
+            resolved_profile.get('extra_kex_algorithms')
+        )
+        extra_host_key_algorithms = self._normalize_paramiko_algorithm_list(
+            resolved_profile.get('extra_host_key_algorithms')
+        )
+        if not extra_kex_algorithms and not extra_host_key_algorithms:
+            return None
+
+        def transport_factory(sock, disabled_algorithms=None):
+            transport = paramiko_module.Transport(sock, disabled_algorithms=disabled_algorithms)
+            self._configure_paramiko_legacy_kex_algorithms(transport, extra_kex_algorithms)
+            self._configure_paramiko_legacy_host_key_algorithms(
+                transport,
+                extra_host_key_algorithms,
+                paramiko_module,
+            )
+            return transport
+
+        return transport_factory
+
     def _normalize_paramiko_commands(self, commands):
         if isinstance(commands, str):
             raw_commands = commands.splitlines()
@@ -369,6 +493,7 @@ class BaseCheck:
         raise ValueError('unsupported private key')
 
     def _build_paramiko_connect_kwargs(self, options, auth_attempt, paramiko_module):
+        resolved_profile = options.get('resolved_profile') or self._resolve_paramiko_profile(options.get('profile'))
         kwargs = {
             'hostname': self.ctx.get('host'),
             'port': int(self.ctx.get('port') or 22),
@@ -379,6 +504,9 @@ class BaseCheck:
             'allow_agent': bool(options.get('allow_agent', False)),
             'look_for_keys': bool(options.get('look_for_keys', False)),
         }
+        transport_factory = self._build_paramiko_transport_factory(resolved_profile, paramiko_module)
+        if transport_factory is not None:
+            kwargs['transport_factory'] = transport_factory
         if auth_attempt == 'password':
             kwargs['password'] = self.ctx.get('password') or None
             kwargs['allow_agent'] = False
@@ -889,7 +1017,18 @@ class BaseCheck:
         if isinstance(resolved_profile, dict):
             pager_patterns = tuple(str(x) for x in (resolved_profile.get('pager_patterns') or []))
             pager_response = str(resolved_profile.get('pager_response', ' '))
-            return (pager_patterns, pager_response)
+            extra_kex_algorithms = self._normalize_paramiko_algorithm_list(
+                resolved_profile.get('extra_kex_algorithms')
+            )
+            extra_host_key_algorithms = self._normalize_paramiko_algorithm_list(
+                resolved_profile.get('extra_host_key_algorithms')
+            )
+            return (
+                pager_patterns,
+                pager_response,
+                extra_kex_algorithms,
+                extra_host_key_algorithms,
+            )
         return str(resolved_profile or '')
 
     def _paramiko_session_key(self, options, resolved_profile, enable_required):
@@ -1062,6 +1201,7 @@ class BaseCheck:
 
         options = self._paramiko_options()
         resolved_profile = self._resolve_paramiko_profile(profile)
+        options['resolved_profile'] = resolved_profile
         command_timeout = float(timeout_sec if timeout_sec is not None else options.get('timeout_sec', 10))
         read_timeout = float(options.get('read_timeout_sec', 0.5))
         continue_on_timeout = bool(options.get('continue_on_timeout', False))

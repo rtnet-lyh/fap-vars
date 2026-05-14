@@ -732,6 +732,7 @@ def get_check_attr(mod, name, default=None):
 
 def resolve_paramiko_options(mod):
     return {
+        'profile': get_check_attr(mod, 'PARAMIKO_PROFILE', 'generic_network'),
         'auth_method': get_check_attr(mod, 'PARAMIKO_AUTH_METHOD', 'auto'),
         'key_filename': get_check_attr(mod, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
         'private_key': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY', None),
@@ -778,6 +779,16 @@ def build_paramiko_connect_kwargs(host, port, user, password, options, auth_atte
         'allow_agent': bool(options.get('allow_agent', False)),
         'look_for_keys': bool(options.get('look_for_keys', False)),
     }
+    profile = (options or {}).get('profile')
+    if profile:
+        from items.common._base import BaseCheck
+
+        profile_check = BaseCheck({})
+        resolved_profile = profile_check._resolve_paramiko_profile(profile)
+        transport_factory = profile_check._build_paramiko_transport_factory(resolved_profile, paramiko_module)
+        if transport_factory is not None:
+            kwargs['transport_factory'] = transport_factory
+
     if auth_attempt == 'password':
         kwargs['password'] = password or None
         kwargs['allow_agent'] = False
@@ -934,6 +945,7 @@ def run_paramiko_su_precheck(
         'paramiko_client_factory': client_factory,
     })
     check.PARAMIKO_AUTH_METHOD = (options or {}).get('auth_method', 'auto')
+    check.PARAMIKO_PROFILE = (options or {}).get('profile', 'linux')
     check.PARAMIKO_KEY_FILENAME = (options or {}).get('key_filename', '~/.ssh/id_rsa.pub')
     check.PARAMIKO_PRIVATE_KEY = (options or {}).get('private_key')
     check.PARAMIKO_PRIVATE_KEY_PASSPHRASE = (options or {}).get('private_key_passphrase')

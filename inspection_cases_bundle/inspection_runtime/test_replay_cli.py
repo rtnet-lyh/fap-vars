@@ -4,6 +4,7 @@
 import json
 import io
 import os
+import socket
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,8 @@ if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
 import replay_cli
+import runner
+from items.common._base import BaseCheck
 
 
 SCRIPT_TEXT = """# -*- coding: utf-8 -*-
@@ -588,6 +591,59 @@ CHECK_CLASS = Check
             self.assertEqual(output['results'][0]['status'], 'ok')
             self.assertEqual(output['results'][0]['metrics']['commands'], ['whoami'])
             self.assertEqual(output['results'][0]['metrics']['whoami'], 'admin')
+
+    def test_solaris_paramiko_profile_adds_legacy_algorithms(self):
+        import paramiko
+
+        check = BaseCheck({
+            'host': '127.0.0.1',
+            'port': 22,
+            'user': 'admin',
+            'password': 'admin',
+        })
+        options = check._paramiko_options()
+        options['resolved_profile'] = check._resolve_paramiko_profile('solaris')
+
+        kwargs = check._build_paramiko_connect_kwargs(options, 'password', paramiko)
+
+        self.assertIn('transport_factory', kwargs)
+        runner_kwargs = runner.build_paramiko_connect_kwargs(
+            '127.0.0.1',
+            22,
+            'admin',
+            'admin',
+            {
+                'profile': 'solaris',
+                'timeout_sec': 10,
+                'banner_timeout_sec': 10,
+                'auth_timeout_sec': 10,
+                'allow_agent': False,
+                'look_for_keys': False,
+            },
+            'password',
+            paramiko,
+        )
+        self.assertIn('transport_factory', runner_kwargs)
+        left, right = socket.socketpair()
+        transport = None
+        try:
+            transport = kwargs['transport_factory'](left)
+            self.assertIn('diffie-hellman-group-exchange-sha1', transport._preferred_kex)
+            self.assertIn('diffie-hellman-group14-sha1', transport._preferred_kex)
+            self.assertIn('diffie-hellman-group1-sha1', transport._preferred_kex)
+            self.assertIn('diffie-hellman-group-exchange-sha1', transport._kex_info)
+            self.assertIn('diffie-hellman-group14-sha1', transport._kex_info)
+            self.assertIn('diffie-hellman-group1-sha1', transport._kex_info)
+            self.assertIn('ssh-rsa', transport._preferred_keys)
+            self.assertIn('ssh-rsa', transport._key_info)
+            self.assertIn('ssh-rsa', transport._key_info['ssh-rsa'].HASHES)
+        finally:
+            if transport is not None:
+                try:
+                    transport.close()
+                except Exception:
+                    pass
+            right.close()
 
     def test_paramiko_command_dict_hides_command_in_raw_output(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
