@@ -1,0 +1,6 @@
+[root@sd_tipswebwas ~]# awk '$(NF-2)==404' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20
+172.29.41.55 [08/May/2026:17:53:55 +0900] "POST /getOpinionPopupInfo.do HTTP/1.1" 404 12 6
+172.25.37.142 [08/May/2026:17:53:55 +0900] "POST /getLtrsInfoList.do HTTP/1.1" 404 991 18
+172.34.41.60 [08/May/2026:17:53:55 +0900] "POST /getVmsAutoTargetDrfInfo.do HTTP/1.1" 404 5418 21
+172.29.41.55 [08/May/2026:17:53:55 +0900] "POST /checkSession.do HTTP/1.1" 404 14 4
+[root@sd_tipswebwas ~]#

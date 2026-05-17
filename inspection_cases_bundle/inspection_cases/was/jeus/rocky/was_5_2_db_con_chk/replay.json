@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[fap@tips_was1 ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[root@tips_was1 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "id"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "id\nuid=0(root) gid=0(root) groups=0(root)\n[root@tips_was1 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "grep -i \"Connection\" /home/exTMS/tmax/jeus/log/jdbc.log || true"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/db_connection.stdout"
+  }
+]

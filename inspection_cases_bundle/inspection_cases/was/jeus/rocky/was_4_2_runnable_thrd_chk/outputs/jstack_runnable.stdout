@@ -1,0 +1,15 @@
+[root@tips_was1 ~]# for pid in $(ps -ef | grep "jeus.server.ServerBootstrapper" | grep -v grep | awk '{print $2}'); do echo "======== PID: $pid ========"; jstack $pid | awk '/^"/{t=$0} /Thread.State: RUNNABLE/{print t "\n" $0 "\n"}'; done
+======== PID: 1559740 ========
+"Attach Listener" #192 daemon prio=9 os_prio=0 tid=0x00007ff900001800 nid=0x17fcf0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"webtob2-hth0-50" #173 daemon prio=5 os_prio=0 tid=0x00007ff968fbc800 nid=0x17cd86 runnable [0x00007ff7ba5e4000]
+   java.lang.Thread.State: RUNNABLE
+
+======== PID: 1567015 ========
+"Attach Listener" #192 daemon prio=9 os_prio=0 tid=0x00007ff900001800 nid=0x17fcf0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"webtob2-hth0-50" #173 daemon prio=5 os_prio=0 tid=0x00007ff968fbc800 nid=0x17cd86 runnable [0x00007ff7ba5e4000]
+   java.lang.Thread.State: RUNNABLE
+[root@tips_was1 ~]#

@@ -1,0 +1,19 @@
+[root@tips_was1 ~]# for pid in $(ps -ef | grep "jeus.server.ServerBootstrapper" | grep -v grep | awk '{print $2}'); do echo "======== PID: $pid ========"; jstack $pid | awk '/^"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print ""}'; done
+======== PID: 1559740 ========
+"jspEngineFileWriter-exTMS_RENEW-1.0-1" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]
+   java.lang.Thread.State: WAITING (parking)
+        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+
+"jspEngineFileWriter-exTMS_RENEW-1.0-1" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]
+   java.lang.Thread.State: WAITING (parking)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+
+======== PID: 1567015 ========
+"jspEngineFileWriter-exTMS_RENEW-1.0-1" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]
+   java.lang.Thread.State: WAITING (parking)
+        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+
+"jspEngineFileWriter-exTMS_RENEW-1.0-1" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]
+   java.lang.Thread.State: WAITING (parking)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+[root@tips_was1 ~]#

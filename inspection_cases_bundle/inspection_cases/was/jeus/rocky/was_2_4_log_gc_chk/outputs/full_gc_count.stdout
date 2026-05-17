@@ -1,0 +1,3 @@
+[root@tips_was1 ~]# grep -i "Full GC" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l
+1
+[root@tips_was1 ~]#

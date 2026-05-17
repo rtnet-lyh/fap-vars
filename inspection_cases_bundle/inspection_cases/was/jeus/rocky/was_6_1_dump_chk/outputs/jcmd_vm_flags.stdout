@@ -1,0 +1,8 @@
+[root@tips_was1 ~]# for pid in $(ps -ef | grep "jeus.server.ServerBootstrapper" | grep -v grep | awk '{print $2}'); do echo "======== PID: $pid ========"; jcmd $pid VM.flags; done
+======== PID: 1516108 ========
+1516108:
+-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=8589934592 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/trafficMonitor2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=8589934592 -XX:+UseG1GC
+======== PID: 1664513 ========
+1664513:
+-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=4294967296 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/extms2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=4294967296 -XX:+UseParallelGC
+[root@tips_was1 ~]#

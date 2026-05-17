@@ -47,6 +47,34 @@ class Check(BaseCheck):
 CHECK_CLASS = Check
 """
 
+SSH_BECOME_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+
+    def run(self):
+        rc, out, err = self._ssh("id -un", become=True)
+        if rc != 0:
+            return self.fail(
+                'command failed',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+        return self.ok(
+            metrics={'user': (out or '').strip()},
+            thresholds={},
+            reasons='ok',
+            message='become ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
 SYNTAX_ERROR_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
@@ -215,6 +243,40 @@ class Check(BaseCheck):
             },
             reasons='ok',
             message='paramiko hidden ok',
+        )
+
+
+CHECK_CLASS = Check
+"""
+
+
+PARAMIKO_BECOME_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        results = self._run_paramiko_commands([
+            'whoami',
+            'id -un',
+        ], become=True)
+        failed = [item for item in results if item['rc'] != 0]
+        if failed:
+            return self.fail('paramiko become failed', stderr=failed[0]['stderr'])
+        return self.ok(
+            metrics={
+                'commands': [item['command'] for item in results],
+                'whoami': results[0]['stdout'],
+                'id_un': results[1]['stdout'],
+            },
+            reasons='ok',
+            message='paramiko become ok',
         )
 
 
@@ -405,6 +467,52 @@ class ReplayCliTest(unittest.TestCase):
             result_path = os.path.join(case_dir, 'result.json')
             self.assertTrue(os.path.isfile(result_path))
 
+    def test_run_path_replay_ssh_become_matches_wrapped_command(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_case_dir(tmp_dir, name='ssh_become_case')
+            wrapped_cmd = "printf '%s\\n' 'root password' | sudo -S -p '' -u root -- sh -lc 'id -un'"
+
+            with open(os.path.join(case_dir, 'case.json'), 'r', encoding='utf-8') as fh:
+                case_data = json.load(fh)
+            case_data['credentials']['LINUX'][0]['data'].update({
+                'become_method': 'sudo',
+                'become_user': 'root',
+                'become_password': 'root password',
+            })
+            with open(os.path.join(case_dir, 'case.json'), 'w', encoding='utf-8') as fh:
+                json.dump(case_data, fh, ensure_ascii=False, indent=2)
+                fh.write('\n')
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(SSH_BECOME_SCRIPT_TEXT)
+            with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+                json.dump(
+                    [
+                        {
+                            'matcher_type': 'exact',
+                            'matcher_value': wrapped_cmd,
+                            'rc': 0,
+                            'stdout': 'root\n',
+                            'stderr': '',
+                        }
+                    ],
+                    fh,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                fh.write('\n')
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            result = output['results'][0]
+            self.assertEqual(result['status'], 'ok')
+            self.assertEqual(result['metrics']['user'], 'root')
+            self.assertEqual(result['message'], 'become ok')
+            self.assertIn('raw_output', result)
+            self.assertIn("sudo -S -p '' -u root -- sh -lc 'id -un'", result['raw_output'])
+            self.assertNotIn('root password', result['raw_output'])
+
     def test_run_path_live_uses_case_json_without_override(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             case_dir = self.create_case_dir(tmp_dir)
@@ -522,6 +630,58 @@ class ReplayCliTest(unittest.TestCase):
                 ['su -'],
             )
             self.assertEqual(output['results'][0]['metrics']['whoami'], 'root')
+
+    def test_run_path_replay_paramiko_common_become_runs_before_actual_commands(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            case_dir = self.create_paramiko_timeout_continue_case_dir(tmp_dir, name='paramiko_become_case')
+
+            with open(os.path.join(case_dir, 'case.json'), 'r', encoding='utf-8') as fh:
+                case_data = json.load(fh)
+            case_data['credentials']['LINUX'][0]['data'].update({
+                'become': 'true',
+                'become_method': 'su -',
+                'become_user': 'root',
+                'become_password': 'root-password',
+            })
+            with open(os.path.join(case_dir, 'case.json'), 'w', encoding='utf-8') as fh:
+                json.dump(case_data, fh, ensure_ascii=False, indent=2)
+                fh.write('\n')
+            with open(os.path.join(case_dir, 'script.py'), 'w', encoding='utf-8') as fh:
+                fh.write(PARAMIKO_BECOME_SCRIPT_TEXT)
+            with open(os.path.join(case_dir, 'replay.json'), 'w', encoding='utf-8') as fh:
+                json.dump(
+                    [
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'admin@linux:~$'},
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'su - root'},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'su - root\r\nPassword:'},
+                        {'channel': 'terminal', 'action': 'send', 'redacted': True},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': '[root@linux ~]#'},
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'id'},
+                        {
+                            'channel': 'terminal',
+                            'action': 'recv',
+                            'stdout': 'id\r\nuid=0(root) gid=0(root) groups=0(root)\r\n[root@linux ~]#',
+                        },
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'whoami'},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'whoami\r\nroot\r\n[root@linux ~]#'},
+                        {'channel': 'terminal', 'action': 'send', 'matcher_value': 'id -un'},
+                        {'channel': 'terminal', 'action': 'recv', 'stdout': 'id -un\r\nroot\r\n[root@linux ~]#'},
+                    ],
+                    fh,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                fh.write('\n')
+
+            output, exit_code = replay_cli.run_path(case_dir, mode='replay')
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output['failed_items'], [])
+            self.assertEqual(output['results'][0]['status'], 'ok')
+            self.assertEqual(output['results'][0]['metrics']['commands'], ['whoami', 'id -un'])
+            self.assertEqual(output['results'][0]['metrics']['whoami'], 'root')
+            self.assertEqual(output['results'][0]['metrics']['id_un'], 'root')
+            self.assertNotIn('root-password', output['results'][0]['raw_output'])
 
     def test_paramiko_command_dict_validates_invalid_ignore_prompt(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

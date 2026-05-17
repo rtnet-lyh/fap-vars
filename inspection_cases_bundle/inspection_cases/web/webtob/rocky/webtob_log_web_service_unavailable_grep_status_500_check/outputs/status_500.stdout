@@ -1,0 +1,2 @@
+[root@sd_tipswebwas ~]# grep "500" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)
+[root@sd_tipswebwas ~]#

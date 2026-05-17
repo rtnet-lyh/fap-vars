@@ -1,0 +1,6 @@
+[root@sd_tipswebwas ~]# webtob_ctl status
+Status: RUNNING
+MaxConnections: 1000
+MaxRequestPerConnection: 50
+MaxWorkerThreads: 200
+[root@sd_tipswebwas ~]#

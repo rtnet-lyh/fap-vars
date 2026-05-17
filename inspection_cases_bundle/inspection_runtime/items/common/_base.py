@@ -4,6 +4,7 @@ import codecs
 import io
 import os
 import re
+import shlex
 import time
 # 2026-05-07 생성 [조정희]
 # [FAP 변경] Paramiko 세션 재사용 기능에서 프로세스 종료 정리(atexit)와 세션 키 해시(hashlib)를 사용하기 위해 추가했습니다.
@@ -166,6 +167,10 @@ class BaseCheck:
     PARAMIKO_ENABLE_MODE = False
     PARAMIKO_PROBE_PROMPT = True
     PARAMIKO_CONTINUE_ON_TIMEOUT = False
+    PARAMIKO_BECOME = False
+    PARAMIKO_BECOME_METHOD = ''
+    PARAMIKO_BECOME_USER = ''
+    PARAMIKO_BECOME_PASSWORD = None
 
 
     # 2026-05-07 생성 [조정희]
@@ -190,18 +195,68 @@ class BaseCheck:
     def run(self):
         raise NotImplementedError
 
-    def _ssh(self, cmd):
+    def _ssh(self, cmd, become=False):
         """현재 항목의 host 컨텍스트로 명령을 1회 실행한다."""
+        exec_cmd = cmd
+        display_cmd = cmd
+        if become:
+            try:
+                exec_cmd, display_cmd = self._build_ssh_become_command(cmd)
+            except ValueError as exc:
+                err = str(exc)
+                self._record_command(str(cmd or ''), 1, '', err)
+                return 1, '', err
+
         rc, out, err = self.ctx['ssh'](
-            cmd,
+            exec_cmd,
             self.ctx['host'],
             self.ctx['port'],
             self.ctx['user'],
             self.ctx['password'],
             self.ctx['ssh_options'],
         )
-        self._record_command(cmd, rc, out, err)
+        self._record_command(display_cmd, rc, out, err)
         return rc, out, err
+
+    def _build_ssh_become_config(self):
+        raw_method = self._get_preferred_credential_value('become_method', 'su -')
+        raw_user = self._get_preferred_credential_value('become_user', 'root')
+        raw_password = self._get_preferred_credential_value('become_password', '')
+
+        method = self._normalize_become_method(raw_method or 'su -')
+        if method not in ('sudo', 'su', 'su -'):
+            raise ValueError('unsupported ssh become_method: ' + str(raw_method))
+
+        return {
+            'method': method,
+            'user': self._validate_become_user(raw_user),
+            'password': '' if raw_password is None else str(raw_password),
+        }
+
+    def _build_ssh_become_command(self, cmd):
+        config = self._build_ssh_become_config()
+        method = config['method']
+        user_arg = shlex.quote(config['user'])
+        password_arg = shlex.quote(config['password'])
+        display_password_arg = shlex.quote('*******')
+        cmd_arg = shlex.quote(str(cmd or ''))
+
+        prefix = "printf '%s\\n' {password} | ".format(password=password_arg)
+        display_prefix = "printf '%s\\n' {password} | ".format(password=display_password_arg)
+
+        if method == 'sudo':
+            suffix = "sudo -S -p '' -u {user} -- sh -lc {cmd}".format(
+                user=user_arg,
+                cmd=cmd_arg,
+            )
+        elif method == 'su':
+            suffix = "su {user} -c {cmd}".format(user=user_arg, cmd=cmd_arg)
+        elif method == 'su -':
+            suffix = "su - {user} -c {cmd}".format(user=user_arg, cmd=cmd_arg)
+        else:
+            raise ValueError('unsupported ssh become_method: ' + str(method))
+
+        return prefix + suffix, display_prefix + suffix
 
     def _paramiko_options(self):
         return {
@@ -611,6 +666,178 @@ class BaseCheck:
             return False
         return default
 
+    def _get_preferred_credential_value(self, key, default=None):
+        for data in (
+            self.get_application_credential_data(),
+            self.get_connection_credential_data(),
+        ):
+            if not isinstance(data, dict) or key not in data:
+                continue
+            value = data.get(key)
+            if value not in (None, ''):
+                return value
+        return default
+
+    def _normalize_become_method(self, value):
+        return ' '.join(str(value or '').strip().lower().split())
+
+    def _validate_become_user(self, user):
+        text = str(user or 'root').strip() or 'root'
+        if not re.match(r'^[A-Za-z0-9_.-]+$', text):
+            raise ValueError('invalid become_user: ' + text)
+        return text
+
+    def _build_paramiko_become_config(self, become=None):
+        if isinstance(become, dict):
+            enabled = self._paramiko_bool_option(become.get('become', become.get('enabled', True)), True)
+            method_default = self._get_preferred_credential_value(
+                'become_method',
+                getattr(self, 'PARAMIKO_BECOME_METHOD', '') or 'su -',
+            )
+            user_default = self._get_preferred_credential_value(
+                'become_user',
+                getattr(self, 'PARAMIKO_BECOME_USER', '') or 'root',
+            )
+            password_default = self._get_preferred_credential_value(
+                'become_password',
+                getattr(self, 'PARAMIKO_BECOME_PASSWORD', None),
+            )
+            raw_method = become.get('method', become.get('become_method', method_default))
+            raw_user = become.get('user', become.get('become_user', user_default))
+            raw_password = become.get('password', become.get('become_password', password_default))
+        else:
+            enabled = self._paramiko_bool_option(
+                become if become is not None else getattr(self, 'PARAMIKO_BECOME', False),
+                False,
+            )
+            raw_method = self._get_preferred_credential_value(
+                'become_method',
+                getattr(self, 'PARAMIKO_BECOME_METHOD', '') or 'su -',
+            )
+            raw_user = self._get_preferred_credential_value(
+                'become_user',
+                getattr(self, 'PARAMIKO_BECOME_USER', '') or 'root',
+            )
+            raw_password = self._get_preferred_credential_value(
+                'become_password',
+                getattr(self, 'PARAMIKO_BECOME_PASSWORD', None),
+            )
+
+        if not enabled:
+            return None
+
+        method = self._normalize_become_method(raw_method or 'su -')
+        if method not in ('su', 'su -', 'sudo'):
+            raise ValueError('unsupported paramiko become_method: ' + str(raw_method))
+
+        return {
+            'method': method,
+            'user': self._validate_become_user(raw_user),
+            'password': '' if raw_password is None else str(raw_password),
+        }
+
+    def _paramiko_become_key(self, become_config):
+        if not become_config:
+            return (False, '', '', '')
+        return (
+            True,
+            str(become_config.get('method') or ''),
+            str(become_config.get('user') or ''),
+            _paramiko_secret_hash(become_config.get('password') or ''),
+        )
+
+    def _parse_unix_id_uid(self, output):
+        match = re.search(r'(?:^|\s)uid=(\d+)(?:\(([^)]*)\))?', str(output or ''))
+        if not match:
+            return '', ''
+        return match.group(1), match.group(2) or ''
+
+    def _paramiko_become_command(self, become_config):
+        method = become_config.get('method')
+        user = become_config.get('user') or 'root'
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return "sudo -S -p 'FAP_SUDO_PASSWORD:' -iu " + shlex.quote(user)
+        raise ValueError('unsupported paramiko become_method: ' + str(method))
+
+    def _paramiko_verify_become(self, channel, current_prompt, command_timeout, read_timeout, resolved_profile, become_config):
+        verify_command = 'id'
+        self._paramiko_sendline(channel, verify_command)
+        verify_result = self._paramiko_expect(
+            channel,
+            command_timeout,
+            resolved_profile,
+            prompt=(current_prompt or None),
+            settle_timeout_sec=read_timeout,
+            command=verify_command,
+        )
+        if not verify_result.get('matched'):
+            raise RuntimeError('become verification prompt was not received')
+
+        verify_prompt = str(verify_result.get('prompt') or current_prompt or '').rstrip()
+        verify_output = self._strip_paramiko_command_output(
+            verify_command,
+            verify_result.get('text', ''),
+            verify_prompt,
+        )
+        uid, user_name = self._parse_unix_id_uid(verify_output)
+        expected_user = str(become_config.get('user') or 'root').strip() or 'root'
+        if expected_user == 'root' and uid == '0':
+            return verify_prompt
+        if expected_user != 'root' and user_name == expected_user:
+            return verify_prompt
+
+        raise RuntimeError(
+            '권한 상승 사용자 확인 실패: expected_user=%s, actual_user=%s, actual_uid=%s, output=%s'
+            % (expected_user, user_name or '', uid or '', verify_output.strip())
+        )
+
+    def _paramiko_apply_become(self, channel, current_prompt, command_timeout, read_timeout, resolved_profile, become_config):
+        if not become_config:
+            return current_prompt
+
+        command = self._paramiko_become_command(become_config)
+        self._paramiko_sendline(channel, command)
+        result = self._paramiko_expect(
+            channel,
+            command_timeout,
+            resolved_profile,
+            extra_patterns=DEFAULT_PASSWORD_PROMPT_PATTERNS + [r'FAP_SUDO_PASSWORD:\s*$'],
+            settle_timeout_sec=read_timeout,
+            command=command,
+        )
+
+        if result.get('matched') and result.get('match_kind') == 'pattern':
+            password = become_config.get('password') or ''
+            if password == '':
+                raise ValueError('paramiko become_password is required for ' + str(become_config.get('method') or ''))
+            self._paramiko_sendline(channel, password)
+            result = self._paramiko_expect(
+                channel,
+                command_timeout,
+                resolved_profile,
+                settle_timeout_sec=read_timeout,
+            )
+
+        if not result.get('matched'):
+            raise RuntimeError('become prompt was not received')
+
+        become_prompt = str(result.get('prompt') or '').rstrip()
+        if not become_prompt:
+            raise RuntimeError('become prompt was not received')
+
+        return self._paramiko_verify_become(
+            channel,
+            become_prompt,
+            command_timeout,
+            read_timeout,
+            resolved_profile,
+            become_config,
+        )
+
 
     def _solaris_bool_option(self, value, default=False):
         """Solaris helper용 bool 파서.
@@ -892,7 +1119,7 @@ class BaseCheck:
             return (pager_patterns, pager_response)
         return str(resolved_profile or '')
 
-    def _paramiko_session_key(self, options, resolved_profile, enable_required):
+    def _paramiko_session_key(self, options, resolved_profile, enable_required, become_config=None):
         return (
             self.ctx.get('host'),
             int(self.ctx.get('port') or 22),
@@ -906,6 +1133,7 @@ class BaseCheck:
             bool(options.get('look_for_keys', False)),
             self._paramiko_profile_key(resolved_profile),
             bool(enable_required),
+            self._paramiko_become_key(become_config),
         )
 
     def _paramiko_session_alive(self, session):
@@ -945,6 +1173,7 @@ class BaseCheck:
         command_timeout,
         read_timeout,
         enable_required,
+        become_config=None,
     ):
         client = self._open_paramiko_client(options)
         channel = client.invoke_shell(term='vt100', width=200, height=1000)
@@ -994,6 +1223,15 @@ class BaseCheck:
                 if not enable_result.get('matched') or not current_prompt:
                     raise RuntimeError('enable prompt was not received')
 
+            current_prompt = self._paramiko_apply_become(
+                channel,
+                current_prompt,
+                command_timeout,
+                read_timeout,
+                resolved_profile,
+                become_config,
+            )
+
             return {
                 'client': client,
                 'channel': channel,
@@ -1019,9 +1257,10 @@ class BaseCheck:
         command_timeout,
         read_timeout,
         enable_required,
+        become_config=None,
     ):
         reuse_enabled = self._paramiko_reuse_session_enabled()
-        key = self._paramiko_session_key(options, resolved_profile, enable_required)
+        key = self._paramiko_session_key(options, resolved_profile, enable_required, become_config=become_config)
 
         if reuse_enabled:
             cached = _PARAMIKO_SESSION_CACHE.get(key)
@@ -1035,6 +1274,7 @@ class BaseCheck:
             command_timeout,
             read_timeout,
             enable_required,
+            become_config=become_config,
         )
 
         if reuse_enabled:
@@ -1045,12 +1285,14 @@ class BaseCheck:
 
     # 2026-05-07 생성 [조정희]
     # [FAP 변경 시작] 기존 _run_paramiko_commands를 세션 재사용 옵션을 지원하도록 수정했습니다.
-    def _run_paramiko_commands(self, commands, profile=None, enable_mode=None, timeout_sec=None):
+    def _run_paramiko_commands(self, commands, profile=None, enable_mode=None, timeout_sec=None, become=None):
         """Paramiko interactive shell로 여러 CLI 명령을 한 세션에서 순차 실행한다.
 
         PARAMIKO_REUSE_SESSION=True이면 같은 runner 프로세스 안에서 동일한
         host/port/user/password/auth/profile/enable 조건의 shell 세션을 재사용한다.
         명령 timeout이나 예외로 prompt 상태가 불확실해지면 캐시된 세션을 폐기한다.
+        become=True이면 credential 또는 class 속성의 become 설정으로 먼저 권한상승한 뒤
+        같은 shell 세션에서 실제 명령만 실행한다. 기본값은 비활성이라 기존 호출 동작은 유지된다.
         """
         command_items = self._normalize_paramiko_commands(commands)
         if not command_items:
@@ -1070,6 +1312,7 @@ class BaseCheck:
             if enable_mode is None
             else bool(enable_mode)
         )
+        become_config = self._build_paramiko_become_config(become)
 
         session_key = None
         session = None
@@ -1088,6 +1331,7 @@ class BaseCheck:
                 command_timeout,
                 read_timeout,
                 enable_required,
+                become_config=become_config,
             )
 
             channel = session.get('channel')

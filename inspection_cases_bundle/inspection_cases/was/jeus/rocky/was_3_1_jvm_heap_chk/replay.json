@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[fap@tips_was1 ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[root@tips_was1 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "id"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "id\nuid=0(root) gid=0(root) groups=0(root)\n[root@tips_was1 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/jmap_heap.stdout"
+  }
+]

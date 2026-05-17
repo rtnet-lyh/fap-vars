@@ -1,0 +1,6 @@
+[root@sd_tipswebwas ~]# awk '$(NF-2)==200' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20
+172.18.12.53 [08/May/2026:17:57:42 +0900] "POST /getNotiPopupInfo.do HTTP/1.1" 200 12 5
+172.29.53.51 [08/May/2026:17:57:42 +0900] "GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778222531851 HTTP/1.1" 200 10553961 156
+172.18.12.53 [08/May/2026:17:57:42 +0900] "POST /getOpinionPopupInfo.do HTTP/1.1" 200 12 2
+172.18.12.53 [08/May/2026:17:57:42 +0900] "POST /checkSession.do HTTP/1.1" 200 14 0
+[root@sd_tipswebwas ~]#

@@ -1,0 +1,129 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-011",
+      "item_id": 92011,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_thread_pool",
+          "value1": "10"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk \\'{print $2}\\'); do echo \"======== PID: $pid ========\"; jstack $pid | awk \\'/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}\\'; done'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        thread_lines = [line for line in stdout.splitlines() if line.strip().startswith('\"')]\n        waiting_blocked_lines = [line.strip() for line in stdout.splitlines() if 'Thread.State: WAITING' in line or 'Thread.State: BLOCKED' in line]\n        threshold = self.get_threshold_var('max_thread_pool', default=10, value_type='int')\n        metrics = {'thread_pool_stack_count': len(thread_lines), 'waiting_blocked_count': len(waiting_blocked_lines), 'waiting_blocked_lines': waiting_blocked_lines[:20]}\n        thresholds = {'max_thread_pool': threshold}\n        if len(thread_lines) > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 스레드 수가 기준을 초과했습니다.', message='Work Thread Pool 경고: thread_count=%s, 기준=%s' % (len(thread_lines), threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 스레드 수가 기준 이하입니다.', message='Work Thread Pool 정상: thread_count=%s, 기준=%s' % (len(thread_lines), threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk \\'{print $2}\\'); do echo \"======== PID: $pid ========\"; jstack $pid | awk \\'/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}\\'; done'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        thread_lines = [line for line in stdout.splitlines() if line.strip().startswith('\"')]",
+        "        waiting_blocked_lines = [line.strip() for line in stdout.splitlines() if 'Thread.State: WAITING' in line or 'Thread.State: BLOCKED' in line]",
+        "        threshold = self.get_threshold_var('max_thread_pool', default=10, value_type='int')",
+        "        metrics = {'thread_pool_stack_count': len(thread_lines), 'waiting_blocked_count': len(waiting_blocked_lines), 'waiting_blocked_lines': waiting_blocked_lines[:20]}",
+        "        thresholds = {'max_thread_pool': threshold}",
+        "        if len(thread_lines) > threshold:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 스레드 수가 기준을 초과했습니다.', message='Work Thread Pool 경고: thread_count=%s, 기준=%s' % (len(thread_lines), threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 스레드 수가 기준 이하입니다.', message='Work Thread Pool 정상: thread_count=%s, 기준=%s' % (len(thread_lines), threshold))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-011",
+      "item_id": 92011,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_thread_pool",
+          "value1": "10"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "thread_pool_stack_count": 4,
+        "waiting_blocked_count": 4,
+        "waiting_blocked_lines": [
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)"
+        ]
+      },
+      "thresholds": {
+        "max_thread_pool": 10
+      },
+      "reasons": "Thread Pool 스레드 수가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jstack $pid | awk '/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}'; done\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ======== PID: 1559740 ========\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)\n\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)\n\n======== PID: 1567015 ========\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)\n\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jstack $pid | awk '/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}'; done",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ======== PID: 1559740 ========",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)",
+        "",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)",
+        "",
+        "======== PID: 1567015 ========",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)",
+        "",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)"
+      ],
+      "message": "Work Thread Pool 정상: thread_count=4, 기준=10"
+    }
+  ],
+  "failed_items": []
+}

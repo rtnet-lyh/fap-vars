@@ -1,0 +1,150 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-010",
+      "item_id": 92010,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_heap_size",
+          "value1": "8192"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk \\'{print $2}\\'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        heap_sizes = []\n        for line in stdout.splitlines():\n            if 'MaxHeapSize' not in line or '(' not in line:\n                continue\n            try:\n                heap_sizes.append(float(line.split('(')[1].split('MB')[0]))\n            except (IndexError, ValueError):\n                continue\n        if not heap_sizes:\n            return self.fail('Heap 크기 파싱 실패', message='jmap 출력에서 MaxHeapSize 값을 확인하지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_heap_size', default=8192.0, value_type='float')\n        max_heap_size = max(heap_sizes)\n        metrics = {'jvm_count': len(heap_sizes), 'max_heap_size_mb': max_heap_size, 'heap_sizes_mb': heap_sizes}\n        thresholds = {'max_heap_size': threshold}\n        if max_heap_size > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='MaxHeapSize가 기준을 초과했습니다.', message='JEUS JVM Heap 경고: 최대 %.1fMB, 기준 %.1fMB' % (max_heap_size, threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='MaxHeapSize가 기준 이하입니다.', message='JEUS JVM Heap 정상: 최대 %.1fMB, 기준 %.1fMB' % (max_heap_size, threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk \\'{print $2}\\'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        heap_sizes = []",
+        "        for line in stdout.splitlines():",
+        "            if 'MaxHeapSize' not in line or '(' not in line:",
+        "                continue",
+        "            try:",
+        "                heap_sizes.append(float(line.split('(')[1].split('MB')[0]))",
+        "            except (IndexError, ValueError):",
+        "                continue",
+        "        if not heap_sizes:",
+        "            return self.fail('Heap 크기 파싱 실패', message='jmap 출력에서 MaxHeapSize 값을 확인하지 못했습니다.', stdout=stdout)",
+        "        threshold = self.get_threshold_var('max_heap_size', default=8192.0, value_type='float')",
+        "        max_heap_size = max(heap_sizes)",
+        "        metrics = {'jvm_count': len(heap_sizes), 'max_heap_size_mb': max_heap_size, 'heap_sizes_mb': heap_sizes}",
+        "        thresholds = {'max_heap_size': threshold}",
+        "        if max_heap_size > threshold:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='MaxHeapSize가 기준을 초과했습니다.', message='JEUS JVM Heap 경고: 최대 %.1fMB, 기준 %.1fMB' % (max_heap_size, threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='MaxHeapSize가 기준 이하입니다.', message='JEUS JVM Heap 정상: 최대 %.1fMB, 기준 %.1fMB' % (max_heap_size, threshold))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-010",
+      "item_id": 92010,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_heap_size",
+          "value1": "8192"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "jvm_count": 2,
+        "max_heap_size_mb": 8192.0,
+        "heap_sizes_mb": [
+          8192.0,
+          4096.0
+        ]
+      },
+      "thresholds": {
+        "max_heap_size": 8192.0
+      },
+      "reasons": "MaxHeapSize가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ======== PID: 1385334 ========\nAttaching to process ID 1385334, please wait...\nDebugger attached successfully.\nServer compiler detected.\nJVM version is 25.431-b10\n\nHeap Configuration:\n   MaxHeapSize              = 8589934592 (8192.0MB)\n   MetaspaceSize            = 536870912 (512.0MB)\n\nHeap Usage:\nG1 Heap:\n   capacity = 8589934592 (8192.0MB)\n   used     = 3874552064 (3695.060791015625MB)\n   45.105722546577454% used\n\n======== PID: 1416324 ========\nAttaching to process ID 1416324, please wait...\nDebugger attached successfully.\nServer compiler detected.\nJVM version is 25.431-b10\n\nHeap Configuration:\n   MaxHeapSize              = 4294967296 (4096.0MB)\n   MetaspaceSize            = 536870912 (512.0MB)\n\nHeap Usage:\nPS Old Generation\n   capacity = 2863661056 (2731.0MB)\n   used     = 311900208 (297.4512176513672MB)\n   10.891659379398286% used",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ======== PID: 1385334 ========",
+        "Attaching to process ID 1385334, please wait...",
+        "Debugger attached successfully.",
+        "Server compiler detected.",
+        "JVM version is 25.431-b10",
+        "",
+        "Heap Configuration:",
+        "   MaxHeapSize              = 8589934592 (8192.0MB)",
+        "   MetaspaceSize            = 536870912 (512.0MB)",
+        "",
+        "Heap Usage:",
+        "G1 Heap:",
+        "   capacity = 8589934592 (8192.0MB)",
+        "   used     = 3874552064 (3695.060791015625MB)",
+        "   45.105722546577454% used",
+        "",
+        "======== PID: 1416324 ========",
+        "Attaching to process ID 1416324, please wait...",
+        "Debugger attached successfully.",
+        "Server compiler detected.",
+        "JVM version is 25.431-b10",
+        "",
+        "Heap Configuration:",
+        "   MaxHeapSize              = 4294967296 (4096.0MB)",
+        "   MetaspaceSize            = 536870912 (512.0MB)",
+        "",
+        "Heap Usage:",
+        "PS Old Generation",
+        "   capacity = 2863661056 (2731.0MB)",
+        "   used     = 311900208 (297.4512176513672MB)",
+        "   10.891659379398286% used"
+      ],
+      "message": "JEUS JVM Heap 정상: 최대 8192.0MB, 기준 8192.0MB"
+    }
+  ],
+  "failed_items": []
+}

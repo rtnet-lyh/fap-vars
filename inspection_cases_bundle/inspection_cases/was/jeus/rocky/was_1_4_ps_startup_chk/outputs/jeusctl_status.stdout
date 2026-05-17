@@ -1,0 +1,5 @@
+[root@tips_was1 ~]# /home/exTMS/tmax/jeus/bin/jeusctl status
+adminServer RUNNING
+extms1 RUNNING
+extms2 RUNNING
+[root@tips_was1 ~]#

@@ -1,0 +1,2 @@
+[root@tips_was1 ~]# awk '$(NF-2) >= 400 && $(NF-2) <= 409 || $(NF-2) >=500 && $(NF-2) <= 509' $(ls /home/exTMS/tmax/jeus/log/adminServer/servlet/access.log*|sort|tail -n 1)
+[root@tips_was1 ~]#

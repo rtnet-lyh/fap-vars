@@ -1,0 +1,33 @@
+[root@tips_was1 ~]# for pid in $(ps -ef | grep "jeus.server.ServerBootstrapper" | grep -v grep | awk '{print $2}'); do echo "======== PID: $pid ========"; jmap -heap $pid; echo; done
+======== PID: 1385334 ========
+Attaching to process ID 1385334, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.431-b10
+
+Heap Configuration:
+   MaxHeapSize              = 8589934592 (8192.0MB)
+   MetaspaceSize            = 536870912 (512.0MB)
+
+Heap Usage:
+G1 Heap:
+   capacity = 8589934592 (8192.0MB)
+   used     = 3874552064 (3695.060791015625MB)
+   45.105722546577454% used
+
+======== PID: 1416324 ========
+Attaching to process ID 1416324, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.431-b10
+
+Heap Configuration:
+   MaxHeapSize              = 4294967296 (4096.0MB)
+   MetaspaceSize            = 536870912 (512.0MB)
+
+Heap Usage:
+PS Old Generation
+   capacity = 2863661056 (2731.0MB)
+   used     = 311900208 (297.4512176513672MB)
+   10.891659379398286% used
+[root@tips_was1 ~]#

@@ -1,0 +1,54 @@
+{
+  "host": "192.168.1.123",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 202,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 1,
+  "host_id": 1,
+  "job_id": 1,
+  "item": {
+    "inspection_code": "WAS-JEUS-ROCKY-REPLAY-017",
+    "item_id": 92017,
+    "application_id": 202,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "JEUS",
+    "application_family_name": "WAS",
+    "host_vars": {},
+    "threshold_list": [
+      {
+        "name": "max_active_threads",
+        "value1": "20"
+      },
+      {
+        "name": "max_idle_thread",
+        "value1": "10"
+      },
+      {
+        "name": "max_task_count",
+        "value1": "2000"
+      }
+    ]
+  }
+}
