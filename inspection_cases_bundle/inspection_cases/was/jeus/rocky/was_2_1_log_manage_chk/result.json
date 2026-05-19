@@ -1,0 +1,105 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-005",
+      "item_id": 92005,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/manager.log'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        if not lines:\n            return self.fail('로그 출력 없음', message='로그 출력이 비어 있습니다.', stdout=stdout)\n        warning_words = ('ERROR', 'WARN', 'FATAL', 'CRITICAL')\n        warning_lines = [line for line in lines if any(word in line.upper() for word in warning_words)]\n        metrics = {'inspected_line_count': len(lines), 'warning_line_count': len(warning_lines), 'warning_lines': warning_lines[:20], 'sample_lines': lines[:20]}\n        thresholds = {'warning_patterns': '|'.join(warning_words)}\n        if warning_lines:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='로그에서 ERROR/WARN 계열 라인이 발견되었습니다.', message='JEUS 로그 점검 경고: warning_line_count=%s' % len(warning_lines))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='로그에서 ERROR/WARN 계열 라인이 발견되지 않았습니다.', message='JEUS 로그 점검 정상: inspected_line_count=%s' % len(lines))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/manager.log'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        lines = [line.strip() for line in stdout.splitlines() if line.strip()]",
+        "        if not lines:",
+        "            return self.fail('로그 출력 없음', message='로그 출력이 비어 있습니다.', stdout=stdout)",
+        "        warning_words = ('ERROR', 'WARN', 'FATAL', 'CRITICAL')",
+        "        warning_lines = [line for line in lines if any(word in line.upper() for word in warning_words)]",
+        "        metrics = {'inspected_line_count': len(lines), 'warning_line_count': len(warning_lines), 'warning_lines': warning_lines[:20], 'sample_lines': lines[:20]}",
+        "        thresholds = {'warning_patterns': '|'.join(warning_words)}",
+        "        if warning_lines:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='로그에서 ERROR/WARN 계열 라인이 발견되었습니다.', message='JEUS 로그 점검 경고: warning_line_count=%s' % len(warning_lines))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='로그에서 ERROR/WARN 계열 라인이 발견되지 않았습니다.', message='JEUS 로그 점검 정상: inspected_line_count=%s' % len(lines))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-005",
+      "item_id": 92005,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "inspected_line_count": 2,
+        "warning_line_count": 0,
+        "warning_lines": [],
+        "sample_lines": [
+          "[2026.05.14 13:10:28:479][2] [adminServer-1] [Manager-0001] Domain management task completed.",
+          "[2026.05.14 13:10:30:079][2] [adminServer-2] [Manager-0002] Configuration synchronized successfully."
+        ]
+      },
+      "thresholds": {
+        "warning_patterns": "ERROR|WARN|FATAL|CRITICAL"
+      },
+      "reasons": "로그에서 ERROR/WARN 계열 라인이 발견되지 않았습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/manager.log\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [2026.05.14 13:10:28:479][2] [adminServer-1] [Manager-0001] Domain management task completed.\n[2026.05.14 13:10:30:079][2] [adminServer-2] [Manager-0002] Configuration synchronized successfully.",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/manager.log",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: [2026.05.14 13:10:28:479][2] [adminServer-1] [Manager-0001] Domain management task completed.",
+        "[2026.05.14 13:10:30:079][2] [adminServer-2] [Manager-0002] Configuration synchronized successfully."
+      ],
+      "message": "JEUS 로그 점검 정상: inspected_line_count=2"
+    }
+  ],
+  "failed_items": []
+}

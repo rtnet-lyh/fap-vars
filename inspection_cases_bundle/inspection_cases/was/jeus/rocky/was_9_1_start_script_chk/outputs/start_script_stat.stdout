@@ -1,0 +1,11 @@
+[root@tips_was1 ~]# stat /home/exTMS/tmax/jeus/bin/startDomainAdminServer
+  File: /home/exTMS/tmax/jeus/bin/startDomainAdminServer
+  Size: 3507            Blocks: 8          IO Block: 4096   일반 파일
+Device: fd00h/64768d    Inode: 37690590    Links: 1
+Access: (0700/-rwx------)  Uid: ( 1001/   exTMS)   Gid: ( 1001/   exTMS)
+Context: unconfined_u:object_r:user_home_t:s0
+Access: 2026-05-15 15:51:28.263962332 +0900
+Modify: 2025-07-25 11:22:36.982827460 +0900
+Change: 2025-07-25 11:22:36.982827460 +0900
+ Birth: 2025-07-25 11:22:36.982827460 +0900
+[root@tips_was1 ~]#

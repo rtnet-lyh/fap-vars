@@ -1,0 +1,52 @@
+# -*- coding: utf-8 -*-
+
+from .common._base import BaseCheck
+
+
+COMMAND = 'jeusadmin -u jeus -p jeus -f listApplications'
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_REUSE_SESSION = False
+
+    COMMAND_TIMEOUT = 20
+
+    def _run_jeus_command(self):
+        result = self._run_paramiko_commands(
+            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            become=True,
+            profile='linux',
+        )[0]
+        stdout = (result.get('stdout') or '').strip()
+        stderr = (result.get('stderr') or '').strip()
+        if result.get('rc') != 0:
+            return stdout, stderr, self.fail(
+                '점검 명령 실행 실패',
+                message='JEUS 점검 명령 실행에 실패했습니다.',
+                stdout=stdout,
+                stderr=stderr,
+            )
+        return stdout, stderr, None
+
+    def run(self):
+        stdout, _stderr, error = self._run_jeus_command()
+        if error:
+            return error
+        if not stdout.strip():
+            return self.fail('Deploy 상태 출력 없음', message='jeusadmin listApplications 출력이 비어 있습니다.', stdout=stdout)
+        if 'connection failed' in stdout.lower() or 'fail to connect' in stdout.lower():
+            return self.fail('jeusadmin 접속 실패', message='JEUS MBeanServer 접속에 실패했습니다.', stdout=stdout)
+        app_lines = [line.strip() for line in stdout.splitlines() if '|' in line and 'Deployment Status' not in line and '---' not in line]
+        not_deployed = [line for line in app_lines if 'not deployed' in line.lower()]
+        deployed = [line for line in app_lines if 'deployed' in line.lower() and line not in not_deployed]
+        metrics = {'application_count': len(app_lines), 'deployed_count': len(deployed), 'not_deployed_count': len(not_deployed), 'not_deployed_lines': not_deployed, 'application_lines': app_lines}
+        thresholds = {'required_deployment_status': 'deployed'}
+        if not_deployed:
+            return self.warn(metrics=metrics, thresholds=thresholds, reasons='not deployed 상태 애플리케이션이 있습니다.', message='JEUS Deploy 상태 경고: not_deployed_count=%s' % len(not_deployed))
+        return self.ok(metrics=metrics, thresholds=thresholds, reasons='애플리케이션이 deployed 상태입니다.', message='JEUS Deploy 상태 정상: deployed_count=%s' % len(deployed))
+
+
+CHECK_CLASS = Check

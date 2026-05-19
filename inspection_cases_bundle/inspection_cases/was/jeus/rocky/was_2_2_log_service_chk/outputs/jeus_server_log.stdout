@@ -1,0 +1,12 @@
+[root@tips_was1 ~]# tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/JeusServer.log
+[2026.05.14 13:10:28:479][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]
+[2026.05.14 13:10:28:480][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..
+[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0121] SCF Connection from extms2 has been allowed. Handler is SocketStream@3b0d6807(172.18.9.62:10000(SCF) -> 172.18.9.63:10010(SCF)).
+[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0310] State of member [extms2] changed. STOPPED -> ALIVE
+[2026.05.14 13:10:30:186][2] [adminServer-1044] [Domain-0037] Sending a resynchronization request to extms2[172.18.9.63:10010(SCF)]
+[2026.05.14 13:10:30:290][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]
+[2026.05.14 13:10:30:291][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..
+[2026.05.14 13:10:42:608][2] [adminServer-399] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is DISTRIBUTED. Final state is DISTRIBUTED
+[2026.05.14 13:10:42:620][2] [adminServer-68] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is RUNNING. Final state is RUNNING
+[2026.05.14 13:10:42:696][2] [adminServer-768] [Domain-0022] Domain Administration Server succeeded to start server extms2.
+[root@tips_was1 ~]#

@@ -1,0 +1,3 @@
+[root@sd_tipswebwas ~]# netstat -an | grep 9080
+tcp        0      0 0.0.0.0:9080            0.0.0.0:*               LISTEN
+[root@sd_tipswebwas ~]#

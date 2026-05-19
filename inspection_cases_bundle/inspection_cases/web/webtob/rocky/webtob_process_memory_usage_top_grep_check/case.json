@@ -1,0 +1,50 @@
+{
+  "host": "192.168.1.123",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 201,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 1,
+  "host_id": 1,
+  "job_id": 1,
+  "item": {
+    "inspection_code": "WEBTOB-ROCKY-REPLAY-005",
+    "item_id": 91005,
+    "application_id": 201,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "WebtoB",
+    "application_family_name": "WebtoB",
+    "host_vars": {},
+    "threshold_list": [
+      {
+        "name": "process_name",
+        "value1": "exTMS"
+      },
+      {
+        "name": "max_mem_usage_percent",
+        "value1": "70"
+      }
+    ]
+  }
+}

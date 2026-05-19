@@ -12,6 +12,7 @@ if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
 import runner
+from items.common._base import BaseCheck
 
 
 class FakeResponse:
@@ -255,6 +256,133 @@ class RunnerWinrmTest(unittest.TestCase):
         )
 
         self.assertEqual((rc, out, err), (0, '', ''))
+
+
+class BaseCheckSshBecomeTest(unittest.TestCase):
+    def make_check(self, app_data=None, conn_data=None, response=(0, 'ok', '')):
+        calls = []
+
+        def ssh_executor(cmd, host, port, user, password, ssh_options):
+            calls.append({
+                'cmd': cmd,
+                'host': host,
+                'port': port,
+                'user': user,
+                'password': password,
+                'ssh_options': ssh_options,
+            })
+            return response
+
+        check = BaseCheck({
+            'ssh': ssh_executor,
+            'host': '10.0.0.1',
+            'port': 22,
+            'user': 'inspector',
+            'password': 'ssh-password',
+            'ssh_options': '',
+            'inspection_code': 'U-SSH-BECOME',
+            'item_id': 1,
+            'item_payload': {},
+            'connection_credential_data': conn_data or {},
+            'application_credential_data': app_data or {},
+        })
+        return check, calls
+
+    def test_ssh_without_become_passes_original_command_even_if_credential_become_true(self):
+        check, calls = self.make_check(
+            app_data={
+                'become': True,
+                'become_method': 'sudo',
+                'become_user': 'root',
+                'become_password': 'root-password',
+            }
+        )
+
+        self.assertEqual(check._ssh('whoami'), (0, 'ok', ''))
+
+        self.assertEqual([call['cmd'] for call in calls], ['whoami'])
+        self.assertEqual(check._command_history[0]['cmd'], 'whoami')
+
+    def test_ssh_become_sudo_wraps_command_and_redacts_history(self):
+        check, calls = self.make_check(
+            app_data={
+                'become_method': 'sudo',
+                'become_user': 'root',
+                'become_password': 'app password',
+            },
+            conn_data={
+                'become_method': 'su',
+                'become_user': 'oracle',
+                'become_password': 'connection-password',
+            },
+        )
+
+        self.assertEqual(check._ssh('id -un', become=True), (0, 'ok', ''))
+
+        self.assertEqual(
+            calls[0]['cmd'],
+            "printf '%s\\n' 'app password' | sudo -S -p '' -u root -- sh -lc 'id -un'",
+        )
+        raw_output = check.ok(message='ok')['raw_output']
+        self.assertIn(
+            "printf '%s\\n' '*******' | sudo -S -p '' -u root -- sh -lc 'id -un'",
+            raw_output,
+        )
+        self.assertNotIn('app password', raw_output)
+        self.assertNotIn('connection-password', raw_output)
+
+    def test_ssh_become_su_and_su_dash_use_distinct_wrappers(self):
+        su_check, su_calls = self.make_check(
+            app_data={
+                'become_method': 'su',
+                'become_user': 'oracle',
+                'become_password': 'oracle-password',
+            }
+        )
+        su_dash_check, su_dash_calls = self.make_check(
+            conn_data={
+                'become_method': 'su -',
+                'become_user': 'root',
+                'become_password': 'root-password',
+            }
+        )
+
+        self.assertEqual(su_check._ssh('whoami', become=True), (0, 'ok', ''))
+        self.assertEqual(su_dash_check._ssh('whoami', become=True), (0, 'ok', ''))
+
+        self.assertEqual(
+            su_calls[0]['cmd'],
+            "printf '%s\\n' oracle-password | su oracle -c whoami",
+        )
+        self.assertEqual(
+            su_dash_calls[0]['cmd'],
+            "printf '%s\\n' root-password | su - root -c whoami",
+        )
+
+    def test_ssh_become_rejects_unsupported_method_without_remote_execution(self):
+        check, calls = self.make_check(app_data={'become_method': 'doas'})
+
+        rc, out, err = check._ssh('whoami', become=True)
+
+        self.assertEqual((rc, out), (1, ''))
+        self.assertIn('unsupported ssh become_method: doas', err)
+        self.assertEqual(calls, [])
+        self.assertEqual(check._command_history[0]['cmd'], 'whoami')
+
+    def test_ssh_become_rejects_invalid_user_without_remote_execution(self):
+        check, calls = self.make_check(
+            app_data={
+                'become_method': 'sudo',
+                'become_user': 'root;id',
+            }
+        )
+
+        rc, out, err = check._ssh('whoami', become=True)
+
+        self.assertEqual((rc, out), (1, ''))
+        self.assertIn('invalid become_user: root;id', err)
+        self.assertEqual(calls, [])
+        self.assertEqual(check._command_history[0]['cmd'], 'whoami')
 
 
 class RunnerBecomePrecheckTest(unittest.TestCase):

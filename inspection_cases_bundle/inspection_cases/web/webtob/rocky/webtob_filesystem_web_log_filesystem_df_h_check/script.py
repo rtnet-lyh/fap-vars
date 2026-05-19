@@ -1,0 +1,127 @@
+# -*- coding: utf-8 -*-
+
+import re
+import shlex
+
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_PROFILE = 'linux'
+    PARAMIKO_REUSE_SESSION = False
+
+    DEFAULT_PATH = '/home/exTMS/tmax/webtob/log'
+    DEFAULT_MAX_USE_PERCENT = 80
+    COMMAND_TIMEOUT = 10
+
+    def _target_path(self):
+        host_path = str(self.get_host_var('web_log_fs_path', '') or '').strip()
+        if host_path:
+            return host_path, 'host_vars'
+
+        threshold_path = str(
+            self.get_threshold_var('web_log_fs_path', default='', value_type='str') or ''
+        ).strip()
+        if threshold_path:
+            return threshold_path, 'threshold_list'
+
+        return self.DEFAULT_PATH, 'default'
+
+    def _parse_df(self, stdout):
+        for line in str(stdout or '').splitlines():
+            if not line.strip() or 'Filesystem' in line:
+                continue
+
+            parts = re.split(r'\s+', line.strip())
+            use_index = next(
+                (idx for idx, token in enumerate(parts) if re.match(r'^\d+%$', token)),
+                -1,
+            )
+            if use_index < 1:
+                continue
+
+            return {
+                'filesystem': parts[0],
+                'use_percent': int(parts[use_index].rstrip('%')),
+                'mounted_on': ' '.join(parts[use_index + 1:]).strip(),
+            }
+        return None
+
+    def run(self):
+        target_path, path_source = self._target_path()
+        max_use_percent = self.get_threshold_var(
+            'max_use_percent',
+            default=self.DEFAULT_MAX_USE_PERCENT,
+            value_type='int',
+        )
+        command = 'df -h %s' % shlex.quote(target_path)
+
+        result = self._run_paramiko_commands(
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
+            become=True,
+            profile='linux',
+        )[0]
+
+        stdout = (result.get('stdout') or '').strip()
+        stderr = (result.get('stderr') or '').strip()
+        if result.get('rc') != 0:
+            return self.fail(
+                'df 명령 실행 실패',
+                message='WEB 로그 파일시스템 사용률을 확인하지 못했습니다.',
+                stdout=stdout,
+                stderr=stderr,
+            )
+
+        parsed = self._parse_df(stdout)
+        if not parsed:
+            return self.fail(
+                'df 출력 파싱 실패',
+                message='df -h 출력에서 파일시스템 사용률을 확인하지 못했습니다.',
+                stdout=stdout,
+                stderr=stderr,
+            )
+
+        metrics = {
+            'web_log_fs_path': target_path,
+            'web_log_fs_path_source': path_source,
+            'filesystem': parsed['filesystem'],
+            'mounted_on': parsed['mounted_on'],
+            'use_percent': parsed['use_percent'],
+            'max_use_percent': max_use_percent,
+        }
+        thresholds = {
+            'web_log_fs_path': target_path,
+            'web_log_fs_path_source': path_source,
+            'max_use_percent': max_use_percent,
+        }
+
+        if parsed['use_percent'] > max_use_percent:
+            return self.warn(
+                metrics=metrics,
+                thresholds=thresholds,
+                reasons='파일시스템 사용률 %s%%가 기준 %s%%를 초과했습니다.' % (
+                    parsed['use_percent'],
+                    max_use_percent,
+                ),
+                message='WEB 로그 파일시스템 사용률 경고: %s 사용률 %s%%, 기준 %s%%' % (
+                    target_path,
+                    parsed['use_percent'],
+                    max_use_percent,
+                ),
+            )
+
+        return self.ok(
+            metrics=metrics,
+            thresholds=thresholds,
+            reasons='파일시스템 사용률이 기준 이하입니다.',
+            message='WEB 로그 파일시스템 사용률 정상: %s 사용률 %s%%, 기준 %s%%' % (
+                target_path,
+                parsed['use_percent'],
+                max_use_percent,
+            ),
+        )
+
+
+CHECK_CLASS = Check

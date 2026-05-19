@@ -1,0 +1,2 @@
+[root@tips_was1 ~]# grep -i "connection leak" /home/exTMS/tmax/jeus/log/adminServer/jdbc.log || true
+[root@tips_was1 ~]#

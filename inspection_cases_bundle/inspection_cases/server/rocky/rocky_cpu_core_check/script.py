@@ -69,7 +69,7 @@ class Check(BaseCheck):
     def run(self):
         fail_keywords_raw = self.get_threshold_var('fail_keywords', default='offline')
         fail_keywords = self._parse_fail_keywords(fail_keywords_raw)
-        rc, out, err = self._ssh("lscpu")
+        rc, out, err = self._ssh("lscpu", become=True)
 
         if self._is_connection_error(rc, err):
             return self.fail(

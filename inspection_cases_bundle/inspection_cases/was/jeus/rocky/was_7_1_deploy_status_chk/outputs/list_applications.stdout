@@ -1,0 +1,6 @@
+[root@tips_was1 ~]# jeusadmin -u jeus -p jeus -f listApplications
+Application Name    | Deployment Status | Running Instances
+-----------------------------------------------------------
+myApp               | deployed          | 2 (server1, server2)
+otherApp            | not deployed      | 0
+[root@tips_was1 ~]#

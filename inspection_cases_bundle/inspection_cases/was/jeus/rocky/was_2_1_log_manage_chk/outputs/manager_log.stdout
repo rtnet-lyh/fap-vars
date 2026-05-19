@@ -1,0 +1,4 @@
+[root@tips_was1 ~]# tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/manager.log
+[2026.05.14 13:10:28:479][2] [adminServer-1] [Manager-0001] Domain management task completed.
+[2026.05.14 13:10:30:079][2] [adminServer-2] [Manager-0002] Configuration synchronized successfully.
+[root@tips_was1 ~]#

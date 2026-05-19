@@ -1,0 +1,155 @@
+{
+  "items": [
+    {
+      "inspection_code": "WEBTOB-ROCKY-REPLAY-015",
+      "item_id": 91015,
+      "application_id": 201,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "WebtoB",
+      "application_family_name": "WebtoB",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "error_log_path",
+          "value1": "/home/exTMS/tmax/webtob/log/main"
+        },
+        {
+          "name": "critical_patterns",
+          "value1": "CRITICAL|FATAL"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    DEFAULT_ERROR_LOG_PATH = '/home/exTMS/tmax/webtob/log/main'\n    DEFAULT_CRITICAL_PATTERNS = 'CRITICAL|FATAL'\n    COMMAND_TIMEOUT = 10\n\n    def _build_command(self, error_log_path):\n        path = error_log_path.rstrip('/')\n        return 'grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls %s/error.log*|sort|tail -n 1) | tail -20' % path\n\n    def run(self):\n        error_log_path = str(\n            self.get_threshold_var('error_log_path', default=self.DEFAULT_ERROR_LOG_PATH, value_type='str') or ''\n        ).strip() or self.DEFAULT_ERROR_LOG_PATH\n        critical_patterns = str(\n            self.get_threshold_var(\n                'critical_patterns',\n                default=self.DEFAULT_CRITICAL_PATTERNS,\n                value_type='str',\n            ) or ''\n        ).strip() or self.DEFAULT_CRITICAL_PATTERNS\n        command = self._build_command(error_log_path)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                'error log 명령 실행 실패',\n                message='WebtoB error log를 확인하지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        pattern = re.compile(critical_patterns, re.IGNORECASE)\n        critical_lines = [line for line in lines if pattern.search(line)]\n        metrics = {\n            'error_log_path': error_log_path,\n            'inspected_line_count': len(lines),\n            'critical_fatal_count': len(critical_lines),\n            'critical_fatal_lines': critical_lines[:20],\n            'sample_lines': lines[:20],\n        }\n        thresholds = {\n            'error_log_path': error_log_path,\n            'critical_patterns': critical_patterns,\n        }\n\n        if critical_lines:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='error log에서 CRITICAL 또는 FATAL 로그가 발견되었습니다.',\n                message='WebtoB error log 경고: critical_fatal_count=%s' % len(critical_lines),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='error log에서 CRITICAL/FATAL 로그가 발견되지 않았습니다.',\n            message='WebtoB error log 정상: inspected_line_count=%s, critical_fatal_count=0' % len(lines),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    DEFAULT_ERROR_LOG_PATH = '/home/exTMS/tmax/webtob/log/main'",
+        "    DEFAULT_CRITICAL_PATTERNS = 'CRITICAL|FATAL'",
+        "    COMMAND_TIMEOUT = 10",
+        "",
+        "    def _build_command(self, error_log_path):",
+        "        path = error_log_path.rstrip('/')",
+        "        return 'grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls %s/error.log*|sort|tail -n 1) | tail -20' % path",
+        "",
+        "    def run(self):",
+        "        error_log_path = str(",
+        "            self.get_threshold_var('error_log_path', default=self.DEFAULT_ERROR_LOG_PATH, value_type='str') or ''",
+        "        ).strip() or self.DEFAULT_ERROR_LOG_PATH",
+        "        critical_patterns = str(",
+        "            self.get_threshold_var(",
+        "                'critical_patterns',",
+        "                default=self.DEFAULT_CRITICAL_PATTERNS,",
+        "                value_type='str',",
+        "            ) or ''",
+        "        ).strip() or self.DEFAULT_CRITICAL_PATTERNS",
+        "        command = self._build_command(error_log_path)",
+        "",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return self.fail(",
+        "                'error log 명령 실행 실패',",
+        "                message='WebtoB error log를 확인하지 못했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "",
+        "        lines = [line.strip() for line in stdout.splitlines() if line.strip()]",
+        "        pattern = re.compile(critical_patterns, re.IGNORECASE)",
+        "        critical_lines = [line for line in lines if pattern.search(line)]",
+        "        metrics = {",
+        "            'error_log_path': error_log_path,",
+        "            'inspected_line_count': len(lines),",
+        "            'critical_fatal_count': len(critical_lines),",
+        "            'critical_fatal_lines': critical_lines[:20],",
+        "            'sample_lines': lines[:20],",
+        "        }",
+        "        thresholds = {",
+        "            'error_log_path': error_log_path,",
+        "            'critical_patterns': critical_patterns,",
+        "        }",
+        "",
+        "        if critical_lines:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='error log에서 CRITICAL 또는 FATAL 로그가 발견되었습니다.',",
+        "                message='WebtoB error log 경고: critical_fatal_count=%s' % len(critical_lines),",
+        "            )",
+        "",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='error log에서 CRITICAL/FATAL 로그가 발견되지 않았습니다.',",
+        "            message='WebtoB error log 정상: inspected_line_count=%s, critical_fatal_count=0' % len(lines),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WEBTOB-ROCKY-REPLAY-015",
+      "item_id": 91015,
+      "application_id": 201,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "WebtoB",
+      "application_family_name": "WebtoB",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "error_log_path",
+          "value1": "/home/exTMS/tmax/webtob/log/main"
+        },
+        {
+          "name": "critical_patterns",
+          "value1": "CRITICAL|FATAL"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "inspected_line_count": 1,
+        "critical_fatal_count": 0,
+        "critical_fatal_lines": [],
+        "sample_lines": [
+          "[2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1"
+        ]
+      },
+      "thresholds": {
+        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "critical_patterns": "CRITICAL|FATAL"
+      },
+      "reasons": "error log에서 CRITICAL/FATAL 로그가 발견되지 않았습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1) | tail -20",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: [2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1"
+      ],
+      "message": "WebtoB error log 정상: inspected_line_count=1, critical_fatal_count=0"
+    }
+  ],
+  "failed_items": []
+}

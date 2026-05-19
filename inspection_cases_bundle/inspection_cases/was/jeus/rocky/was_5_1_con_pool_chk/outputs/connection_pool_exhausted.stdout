@@ -1,0 +1,4 @@
+[root@tips_was1 ~]# grep -i "connection pool exhausted" /home/exTMS/tmax/jeus/log/jdbc.log || true
+2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).
+2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).
+[root@tips_was1 ~]#

@@ -1,0 +1,47 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[fap@sd_tipswebwas ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[root@sd_tipswebwas ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "id"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "id\nuid=0(root) gid=0(root) groups=0(root)\n[root@sd_tipswebwas ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "awk '$NF >= 1000' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | head -20"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/response_time.stdout"
+  }
+]

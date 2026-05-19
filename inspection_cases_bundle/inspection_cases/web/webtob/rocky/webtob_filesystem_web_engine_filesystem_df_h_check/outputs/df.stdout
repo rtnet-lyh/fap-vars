@@ -1,0 +1,4 @@
+[root@sd_tipswebwas webtob]# df -h /home/exTMS/tmax/webtob
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/rl-root   30G   28G  2.6G  92% /
+[root@sd_tipswebwas ~]#

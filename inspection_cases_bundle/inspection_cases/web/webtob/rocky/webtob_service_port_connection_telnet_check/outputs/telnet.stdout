@@ -1,0 +1,5 @@
+[root@sd_tipswebwas ~]# echo quit | telnet 172.18.9.3 9080
+Trying 172.18.9.3...
+Connected to 172.18.9.3.
+Escape character is '^]'.
+[root@sd_tipswebwas ~]#

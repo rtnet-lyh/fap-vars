@@ -1,0 +1,5 @@
+[root@tips_was1 ~]# grep -i "Connection" /home/exTMS/tmax/jeus/log/jdbc.log || true
+2024-09-12 10:00:23,123 ERROR [JDBC] Connection timeout: Unable to get a connection from the poolager 3000ms.
+2024-09-12 10:05:12,789 WARN [JDBC] Connection closed by database due to inactivity.
+2024-09-12 10:22:45,456 INFO [JDBC] Connection established to database.
+[root@tips_was1 ~]#

@@ -1,0 +1,10 @@
+[root@tips_was1 ~]# jeusadmin -u jeus -p jeus "show-thread-pool-status adminServer"
+Thread Pool Name: default
+Active Threads: 15
+Idle Threads: 5
+Max Threads: 20
+Queue Size: 10
+Completed Tasks: 1000
+Task Count: 1015
+Largest Pool Size: 18
+[root@tips_was1 ~]#
