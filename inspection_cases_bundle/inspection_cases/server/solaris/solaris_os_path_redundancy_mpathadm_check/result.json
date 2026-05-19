@@ -351,90 +351,26 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "logical_unit_count": 1,
-        "stms_enabled_count": 1,
-        "connected_path_status_count": 1,
-        "connected_path_count": 3,
-        "abnormal_path_count": 0,
-        "logical_units": [
-          {
-            "logical_unit": "600144F0A08A4DB300005E1000000456",
-            "stms_state": "ENABLED",
-            "current_path": "/dev/dsk/c0t50060E801049C1F0d0s2",
-            "path_status": "CONNECTED",
-            "paths": [
-              {
-                "path": "/dev/dsk/c0t50060E801049C1F1d0s2",
-                "status": "CONNECTED"
-              },
-              {
-                "path": "/dev/dsk/c0t50060E801049C1F2d0s2",
-                "status": "CONNECTED"
-              },
-              {
-                "path": "/dev/dsk/c0t50060E801049C1F3d0s2",
-                "status": "CONNECTED"
-              }
-            ],
-            "path_count": 3,
-            "connected_path_count": 3
-          }
-        ],
-        "stms_issue_units": [],
-        "path_status_issue_units": [],
-        "abnormal_paths": [],
-        "disallowed_paths": [],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "expected_stms_state": "ENABLED",
-        "expected_path_status": "CONNECTED",
-        "expected_path_state": "CONNECTED",
-        "disallowed_path_states": [
-          "DISABLED"
-        ],
-        "failure_keywords": []
-      },
-      "reasons": "모든 Logical Unit의 Stms State가 ENABLED이고 Path Status와 개별 경로 상태가 CONNECTED/CONNECTED 기준을 충족합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: mpathadm show lu\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Logical Unit: 600144F0A08A4DB300005E1000000456\nmpath-support: libmpscsi_vhci.so\nVendor: HITACHI\nProduct: OPEN-V\nRevision: 6000\nStms State: ENABLED\nAvailable Spare: NO\nActive Spare: NO\nCurrent Path: /dev/dsk/c0t50060E801049C1F0d0s2\nPath Status: CONNECTED\nPath /dev/dsk/c0t50060E801049C1F1d0s2: CONNECTED\nPath /dev/dsk/c0t50060E801049C1F2d0s2: CONNECTED\nPath /dev/dsk/c0t50060E801049C1F3d0s2: CONNECTED",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris Multipath 이중화 점검에 실패했습니다. 현재 상태: mpathadm 명령을 정상적으로 실행하지 못했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: mpathadm show lu\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: mpathadm show lu",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Logical Unit: 600144F0A08A4DB300005E1000000456",
-        "mpath-support: libmpscsi_vhci.so",
-        "Vendor: HITACHI",
-        "Product: OPEN-V",
-        "Revision: 6000",
-        "Stms State: ENABLED",
-        "Available Spare: NO",
-        "Active Spare: NO",
-        "Current Path: /dev/dsk/c0t50060E801049C1F0d0s2",
-        "Path Status: CONNECTED",
-        "Path /dev/dsk/c0t50060E801049C1F1d0s2: CONNECTED",
-        "Path /dev/dsk/c0t50060E801049C1F2d0s2: CONNECTED",
-        "Path /dev/dsk/c0t50060E801049C1F3d0s2: CONNECTED"
-      ],
-      "message": "Solaris Multipath 이중화 상태가 정상입니다. 현재 상태: LU 1개, Stms State 정상 1개, Path Status 정상 1개, CONNECTED 경로 3개, 비정상 경로 0개입니다."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-OS-01"
+  ]
 }

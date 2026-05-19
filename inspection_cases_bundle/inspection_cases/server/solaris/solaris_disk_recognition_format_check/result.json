@@ -208,60 +208,26 @@
           "value1": "Unknown,Drive not available,장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "disk_count": 4,
-        "disk_names": [
-          "c0t0d0",
-          "c0t1d0",
-          "c0t2d0",
-          "c0t3d0"
-        ],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "expected_disk_count": 1,
-        "failure_keywords": [
-          "Unknown",
-          "Drive not available",
-          "장치를 찾을 수 없습니다",
-          "not found",
-          "cannot",
-          "command not found",
-          "module missing"
-        ]
-      },
-      "reasons": "format 출력에서 디스크 4개가 확인되었습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: printf '\\n' | format\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: AVAILABLE DISK SELECTIONS:\n0. c0t0d0 <ST3200822AS> (16.8GB)\n1. c0t1d0 <ST3200822AS> (16.8GB)\n2. c0t2d0 <ST3200822AS> (16.8GB)\n3. c0t3d0 <ST3200822AS> (16.8GB)\nSpecify disk (enter its number):",
+      "status": "fail",
+      "error": "format 명령 실행 실패",
+      "message": "Solaris format 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: printf '\\n' | format\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: printf '\\n' | format",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: AVAILABLE DISK SELECTIONS:",
-        "0. c0t0d0 <ST3200822AS> (16.8GB)",
-        "1. c0t1d0 <ST3200822AS> (16.8GB)",
-        "2. c0t2d0 <ST3200822AS> (16.8GB)",
-        "3. c0t3d0 <ST3200822AS> (16.8GB)",
-        "Specify disk (enter its number):"
-      ],
-      "message": "Disk 인식 개수가 정상(4)입니다. 최소개수는 1입니다."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-DISK-04"
+  ]
 }

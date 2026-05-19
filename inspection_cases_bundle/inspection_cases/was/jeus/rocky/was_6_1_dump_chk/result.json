@@ -76,33 +76,21 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "status": "ok",
-      "metrics": {
-        "pid_count": 2,
-        "heap_dump_on_oom": true,
-        "heap_dump_path": true
-      },
-      "thresholds": {
-        "required_flags": [
-          "-XX:+HeapDumpOnOutOfMemoryError",
-          "-XX:HeapDumpPath="
-        ]
-      },
-      "reasons": "HeapDump 옵션이 설정되어 있습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jcmd $pid VM.flags; done\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ======== PID: 1516108 ========\n1516108:\n-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=8589934592 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/trafficMonitor2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=8589934592 -XX:+UseG1GC\n======== PID: 1664513 ========\n1664513:\n-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=4294967296 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/extms2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=4294967296 -XX:+UseParallelGC",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jcmd $pid VM.flags; done\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jcmd $pid VM.flags; done",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: ======== PID: 1516108 ========",
-        "1516108:",
-        "-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=8589934592 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/trafficMonitor2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=8589934592 -XX:+UseG1GC",
-        "======== PID: 1664513 ========",
-        "1664513:",
-        "-XX:CICompilerCount=4 -XX:CompressedClassSpaceSize=528482304 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/LOG/exTMS/tmax/jeus/log/dump/ -XX:InitialHeapSize=4294967296 -XX:LogFile=/LOG/exTMS/tmax/jeus/log/extms2/jvm.log -XX:+LogVMOutput -XX:MaxHeapSize=4294967296 -XX:+UseParallelGC"
-      ],
-      "message": "JEUS Dump 옵션 정상: pid_count=2"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-015"
+  ]
 }

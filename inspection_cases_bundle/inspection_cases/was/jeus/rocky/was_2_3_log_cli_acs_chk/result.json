@@ -74,24 +74,21 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "status": "ok",
-      "metrics": {
-        "finding_label": "HTTP 400/500대 오류",
-        "matching_line_count": 0,
-        "sample_lines": []
-      },
-      "thresholds": {
-        "expected_matching_line_count": 0
-      },
-      "reasons": "HTTP 400/500대 오류이 발견되지 않았습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2) >= 400 && $(NF-2) <= 409 || $(NF-2) >=500 && $(NF-2) <= 509' $(ls /home/exTMS/tmax/jeus/log/adminServer/servlet/access.log*|sort|tail -n 1)\n - 명령 종료코드: rc=0 (정상 종료)",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2) >= 400 && $(NF-2) <= 409 || $(NF-2) >=500 && $(NF-2) <= 509' $(ls /home/exTMS/tmax/jeus/log/adminServer/servlet/access.log*|sort|tail -n 1)\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: awk '$(NF-2) >= 400 && $(NF-2) <= 409 || $(NF-2) >=500 && $(NF-2) <= 509' $(ls /home/exTMS/tmax/jeus/log/adminServer/servlet/access.log*|sort|tail -n 1)",
-        " - 명령 종료코드: rc=0 (정상 종료)"
-      ],
-      "message": "JEUS 로그 패턴 정상: HTTP 400/500대 오류 미검출"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-007"
+  ]
 }

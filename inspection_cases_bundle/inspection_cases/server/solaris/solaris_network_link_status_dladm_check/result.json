@@ -422,97 +422,26 @@
           "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found,no such file"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "command_rc": 0,
-        "link_count": 3,
-        "up_count": 3,
-        "down_count": 0,
-        "unknown_count": 0,
-        "abnormal_state_count": 0,
-        "speed_mismatch_count": 0,
-        "duplex_mismatch_count": 0,
-        "matched_failure_keywords": [],
-        "links": [
-          {
-            "line_number": 2,
-            "raw_line": "e1000g0  1000baseT  up       1000    full",
-            "link_name": "e1000g0",
-            "media": "1000baseT",
-            "state": "up",
-            "speed_mbps": 1000,
-            "duplex": "full"
-          },
-          {
-            "line_number": 3,
-            "raw_line": "e1000g1  1000baseT  up       1000    full",
-            "link_name": "e1000g1",
-            "media": "1000baseT",
-            "state": "up",
-            "speed_mbps": 1000,
-            "duplex": "full"
-          },
-          {
-            "line_number": 4,
-            "raw_line": "e1000g2  1000baseT  up       1000    full",
-            "link_name": "e1000g2",
-            "media": "1000baseT",
-            "state": "up",
-            "speed_mbps": 1000,
-            "duplex": "full"
-          }
-        ]
-      },
-      "thresholds": {
-        "required_state": "up",
-        "expected_speed_map": {
-          "e1000g0": "1000",
-          "e1000g1": "1000",
-          "e1000g2": "1000"
-        },
-        "expected_duplex_map": {
-          "e1000g0": "full",
-          "e1000g1": "full",
-          "e1000g2": "full"
-        },
-        "failure_keywords": [
-          "장치를 찾을 수 없습니다",
-          "not found",
-          "module",
-          "cannot",
-          "command not found",
-          "no such file"
-        ]
-      },
-      "reasons": "링크 3개가 모두 up 상태로 확인되었고 속도와 duplex 설정도 지정한 기준과 일치합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: dladm show-phys\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: LINK     MEDIA      STATE    SPEED   DUPLEX\ne1000g0  1000baseT  up       1000    full\ne1000g1  1000baseT  up       1000    full\ne1000g2  1000baseT  up       1000    full",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris Network 연결상태 정상 유무 점검에 실패했습니다. 현재 상태: dladm show-phys 명령 종료코드가 rc=1로 반환되었습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: dladm show-phys\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: dladm show-phys",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: LINK     MEDIA      STATE    SPEED   DUPLEX",
-        "e1000g0  1000baseT  up       1000    full",
-        "e1000g1  1000baseT  up       1000    full",
-        "e1000g2  1000baseT  up       1000    full"
-      ],
-      "message": "Solaris Network 연결상태가 정상입니다. 현재 상태: 링크 3개, up 3개, down 0개, unknown 0개, 속도 불일치 0개, duplex 불일치 0개입니다. 링크 요약: e1000g0 state=up, speed=1000, duplex=full, e1000g1 state=up, speed=1000, duplex=full, e1000g2 state=up, speed=1000, duplex=full."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-NET-01"
+  ]
 }

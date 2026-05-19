@@ -240,40 +240,21 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "command": "dmesg | egrep -i 'psu.*fail|power\\s+supply.*fail|power.*failed|not\\s+detected'",
-        "command_rc": 0,
-        "log_line_count": 0,
-        "ignored_line_count": 0,
-        "bad_match_count": 0,
-        "ignored_lines": [],
-        "bad_matches": []
-      },
-      "thresholds": {
-        "bad_log_keywords": "psu.*fail|power\\s+supply.*fail|power.*failed|not\\s+detected",
-        "ignore_log_keywords": ""
-      },
-      "reasons": "POWER 장애 로그가 확인되지 않았습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: dmesg | egrep -i 'psu.*fail|power\\s+supply.*fail|power.*failed|not\\s+detected'\n - 명령 종료코드: rc=0 (정상 종료)",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "POWER 로그 점검 명령 종료코드가 rc=255로 반환되었습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
-        "",
-        "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: dmesg | egrep -i 'psu.*fail|power\\s+supply.*fail|power.*failed|not\\s+detected'",
-        " - 명령 종료코드: rc=0 (정상 종료)"
-      ],
-      "message": "POWER 로그 점검이 정상 수행되었습니다."
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "HPUX-REPLAY-20"
+  ]
 }

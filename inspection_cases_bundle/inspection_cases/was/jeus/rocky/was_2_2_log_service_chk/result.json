@@ -76,46 +76,21 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "status": "ok",
-      "metrics": {
-        "inspected_line_count": 10,
-        "warning_line_count": 0,
-        "warning_lines": [],
-        "sample_lines": [
-          "[2026.05.14 13:10:28:479][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]",
-          "[2026.05.14 13:10:28:480][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..",
-          "[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0121] SCF Connection from extms2 has been allowed. Handler is SocketStream@3b0d6807(172.18.9.62:10000(SCF) -> 172.18.9.63:10010(SCF)).",
-          "[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0310] State of member [extms2] changed. STOPPED -> ALIVE",
-          "[2026.05.14 13:10:30:186][2] [adminServer-1044] [Domain-0037] Sending a resynchronization request to extms2[172.18.9.63:10010(SCF)]",
-          "[2026.05.14 13:10:30:290][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]",
-          "[2026.05.14 13:10:30:291][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..",
-          "[2026.05.14 13:10:42:608][2] [adminServer-399] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is DISTRIBUTED. Final state is DISTRIBUTED",
-          "[2026.05.14 13:10:42:620][2] [adminServer-68] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is RUNNING. Final state is RUNNING",
-          "[2026.05.14 13:10:42:696][2] [adminServer-768] [Domain-0022] Domain Administration Server succeeded to start server extms2."
-        ]
-      },
-      "thresholds": {
-        "warning_patterns": "ERROR|WARN|FATAL|CRITICAL"
-      },
-      "reasons": "로그에서 ERROR/WARN 계열 라인이 발견되지 않았습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/JeusServer.log\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [2026.05.14 13:10:28:479][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]\n[2026.05.14 13:10:28:480][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..\n[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0121] SCF Connection from extms2 has been allowed. Handler is SocketStream@3b0d6807(172.18.9.62:10000(SCF) -> 172.18.9.63:10010(SCF)).\n[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0310] State of member [extms2] changed. STOPPED -> ALIVE\n[2026.05.14 13:10:30:186][2] [adminServer-1044] [Domain-0037] Sending a resynchronization request to extms2[172.18.9.63:10010(SCF)]\n[2026.05.14 13:10:30:290][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]\n[2026.05.14 13:10:30:291][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..\n[2026.05.14 13:10:42:608][2] [adminServer-399] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is DISTRIBUTED. Final state is DISTRIBUTED\n[2026.05.14 13:10:42:620][2] [adminServer-68] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is RUNNING. Final state is RUNNING\n[2026.05.14 13:10:42:696][2] [adminServer-768] [Domain-0022] Domain Administration Server succeeded to start server extms2.",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/JeusServer.log\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: tail -n 50 /home/exTMS/tmax/jeus/log/adminServer/JeusServer.log",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: [2026.05.14 13:10:28:479][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]",
-        "[2026.05.14 13:10:28:480][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..",
-        "[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0121] SCF Connection from extms2 has been allowed. Handler is SocketStream@3b0d6807(172.18.9.62:10000(SCF) -> 172.18.9.63:10010(SCF)).",
-        "[2026.05.14 13:10:30:079][2] [adminServer-15] [SCF-0310] State of member [extms2] changed. STOPPED -> ALIVE",
-        "[2026.05.14 13:10:30:186][2] [adminServer-1044] [Domain-0037] Sending a resynchronization request to extms2[172.18.9.63:10010(SCF)]",
-        "[2026.05.14 13:10:30:290][2] [adminServer-777] [SERVER-0208] Operation: DOWNLOAD_CONFIG [extms2]",
-        "[2026.05.14 13:10:30:291][2] [adminServer-777] [SERVER-0228] The files on the managed server are up-to-date, so the configuration files will not be sent..",
-        "[2026.05.14 13:10:42:608][2] [adminServer-399] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is DISTRIBUTED. Final state is DISTRIBUTED",
-        "[2026.05.14 13:10:42:620][2] [adminServer-68] [Deploy-0376] The state of the application [exTMS] in the server [extms2] is RUNNING. Final state is RUNNING",
-        "[2026.05.14 13:10:42:696][2] [adminServer-768] [Domain-0022] Domain Administration Server succeeded to start server extms2."
-      ],
-      "message": "JEUS 로그 점검 정상: inspected_line_count=10"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-006"
+  ]
 }

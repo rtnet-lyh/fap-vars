@@ -261,34 +261,16 @@
         }
       ],
       "status": "fail",
-      "error": "NIC 이중화 상태 비정상",
-      "message": "up_links=['lan0PPA', 'lan1PPA'], down_links=[], interface_errors=[{'name': 'lan1', 'ierrs': 111111, 'oerrs': 0}]",
-      "stdout": "Name  Mtu   Network         Address            Ipkts Ierrs Opkts Oerrs Coll\nlan0  1500  192.168.1.0     192.168.1.136      12000     0 11000     0    0\nlan1  1500  192.168.1.0     192.168.1.137      11800     111111 10900     0    0\nState of LAN Interface(s)\nNamePPA  Hardware Path        Station Address    HP-DLPI   Link\nlan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP\nlan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP",
-      "stdout_lines": [
-        "Name  Mtu   Network         Address            Ipkts Ierrs Opkts Oerrs Coll",
-        "lan0  1500  192.168.1.0     192.168.1.136      12000     0 11000     0    0",
-        "lan1  1500  192.168.1.0     192.168.1.137      11800     111111 10900     0    0",
-        "State of LAN Interface(s)",
-        "NamePPA  Hardware Path        Station Address    HP-DLPI   Link",
-        "lan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP",
-        "lan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP"
-      ],
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: netstat -in\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name  Mtu   Network         Address            Ipkts Ierrs Opkts Oerrs Coll\nlan0  1500  192.168.1.0     192.168.1.136      12000     0 11000     0    0\nlan1  1500  192.168.1.0     192.168.1.137      11800     111111 10900     0    0\n\n[점검 단계 2]\n - 실행 명령어: lanscan -q\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: State of LAN Interface(s)\nNamePPA  Hardware Path        Station Address    HP-DLPI   Link\nlan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP\nlan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP",
+      "error": "권한 상승 사용자 확인 실패",
+      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:netstat -in but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; netstat -in'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; netstat -in'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:netstat -in but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; netstat -in'",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: netstat -in",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Name  Mtu   Network         Address            Ipkts Ierrs Opkts Oerrs Coll",
-        "lan0  1500  192.168.1.0     192.168.1.136      12000     0 11000     0    0",
-        "lan1  1500  192.168.1.0     192.168.1.137      11800     111111 10900     0    0",
-        "",
-        "[점검 단계 2]",
-        " - 실행 명령어: lanscan -q",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: State of LAN Interface(s)",
-        "NamePPA  Hardware Path        Station Address    HP-DLPI   Link",
-        "lan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP",
-        "lan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP"
+        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; netstat -in'",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:netstat -in but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; netstat -in'"
       ]
     }
   ],

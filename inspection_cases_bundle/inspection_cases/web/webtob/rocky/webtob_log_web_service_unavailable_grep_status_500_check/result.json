@@ -119,26 +119,21 @@
           "value1": "500"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "warning_status_code": 500,
-        "matching_status_count": 0,
-        "sample_lines": []
-      },
-      "thresholds": {
-        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "warning_status_code": 500
-      },
-      "reasons": "error log에서 HTTP 500 관련 로그가 발견되지 않았습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep \"500\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)\n - 명령 종료코드: rc=0 (정상 종료)",
+      "status": "fail",
+      "error": "error log 명령 실행 실패",
+      "message": "WebtoB error log에서 500 상태를 확인하지 못했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep \"500\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: grep \"500\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)",
-        " - 명령 종료코드: rc=0 (정상 종료)"
-      ],
-      "message": "WebtoB 500 상태 정상: status=500 미검출"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WEBTOB-ROCKY-REPLAY-016"
+  ]
 }

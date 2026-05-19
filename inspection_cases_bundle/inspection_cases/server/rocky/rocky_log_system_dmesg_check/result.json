@@ -204,67 +204,21 @@
           "value1": "temperature above threshold|cpu clock throttled|throttled|reset|timeout"
         }
       ],
-      "status": "warn",
-      "metrics": {
-        "log_line_count": 3,
-        "critical_match_count": 0,
-        "warning_match_count": 3,
-        "critical_keyword_counts": {
-          "Out of memory": 0,
-          "I/O error": 0,
-          "Buffer I/O error": 0,
-          "Call Trace": 0,
-          "segfault": 0,
-          "filesystem error": 0,
-          "kernel panic": 0
-        },
-        "warning_keyword_counts": {
-          "temperature above threshold": 0,
-          "cpu clock throttled": 0,
-          "throttled": 0,
-          "reset": 3,
-          "timeout": 1
-        },
-        "critical_matches": [],
-        "warning_matches": [
-          {
-            "line": "[    2.189093] igb 0000:02:00.0: PHY reset is blocked due to SOL/IDER session.",
-            "matched_keywords": [
-              "reset"
-            ]
-          },
-          {
-            "line": "[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout\t: 0 secs/0 secs",
-            "matched_keywords": [
-              "reset",
-              "timeout"
-            ]
-          },
-          {
-            "line": "[    2.225555] igb 0000:02:00.1: PHY reset is blocked due to SOL/IDER session.",
-            "matched_keywords": [
-              "reset"
-            ]
-          }
-        ]
-      },
-      "thresholds": {
-        "critical_log_keywords": "Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic",
-        "warning_log_keywords": "temperature above threshold|cpu clock throttled|throttled|reset|timeout"
-      },
-      "reasons": "경고 키워드가 포함된 dmesg 로그가 확인되어 추가 점검이 필요합니다. 키워드별 검출 건수: temperature above threshold=0건, cpu clock throttled=0건, throttled=0건, reset=3건, timeout=1건",
-      "message": "경고 수준의 dmesg 로그가 확인되었습니다. 키워드별 검출 건수: temperature above threshold=0건, cpu clock throttled=0건, throttled=0건, reset=3건, timeout=1건. 임계치: critical_log_keywords=Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic; warning_log_keywords=temperature above threshold|cpu clock throttled|throttled|reset|timeout",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): [    2.189093] igb 0000:02:00.0: PHY reset is blocked due to SOL/IDER session.\n[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout\t: 0 secs/0 secs\n[    2.225555] igb 0000:02:00.1: PHY reset is blocked due to SOL/IDER session.\n - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "dmesg 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:dmesg but got ssh command: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\"",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\"\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:dmesg but got ssh command: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\"",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\"",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용(stdout): [    2.189093] igb 0000:02:00.0: PHY reset is blocked due to SOL/IDER session.",
-        "[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout\t: 0 secs/0 secs",
-        "[    2.225555] igb 0000:02:00.1: PHY reset is blocked due to SOL/IDER session.",
-        " - 출력 내용(stderr): Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:dmesg but got ssh command: dmesg | grep -E \"Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic|temperature above threshold|cpu clock throttled|throttled|reset|timeout\""
       ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "U-REPLAY-DMESG-01"
+  ]
 }

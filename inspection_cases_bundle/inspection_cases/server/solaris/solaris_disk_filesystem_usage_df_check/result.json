@@ -339,146 +339,26 @@
           "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "filesystem_count": 6,
-        "checked_filesystem_count": 3,
-        "ignored_zero_size_filesystem_count": 3,
-        "max_usage_mount_point": "/",
-        "max_usage_percent": 49.0,
-        "lowest_avail_mount_point": "/",
-        "lowest_avail_percent": 50.62,
-        "rows": [
-          {
-            "line_number": 2,
-            "filesystem": "/dev/dsk/c0d0s0",
-            "size": "8.1G",
-            "used": "3.9G",
-            "avail": "4.1G",
-            "used_percent": 49.0,
-            "avail_percent": 50.62,
-            "mount_point": "/",
-            "size_bytes": 8697308774.4,
-            "used_bytes": 4187593113.6,
-            "avail_bytes": 4402341478.4,
-            "is_zero_sized": false
-          },
-          {
-            "line_number": 3,
-            "filesystem": "/devices",
-            "size": "0K",
-            "used": "0K",
-            "avail": "0K",
-            "used_percent": 0.0,
-            "avail_percent": 0.0,
-            "mount_point": "/devices",
-            "size_bytes": 0.0,
-            "used_bytes": 0.0,
-            "avail_bytes": 0.0,
-            "is_zero_sized": true
-          },
-          {
-            "line_number": 4,
-            "filesystem": "ctfs",
-            "size": "0K",
-            "used": "0K",
-            "avail": "0K",
-            "used_percent": 0.0,
-            "avail_percent": 0.0,
-            "mount_point": "/system/contract",
-            "size_bytes": 0.0,
-            "used_bytes": 0.0,
-            "avail_bytes": 0.0,
-            "is_zero_sized": true
-          },
-          {
-            "line_number": 5,
-            "filesystem": "proc",
-            "size": "0K",
-            "used": "0K",
-            "avail": "0K",
-            "used_percent": 0.0,
-            "avail_percent": 0.0,
-            "mount_point": "/proc",
-            "size_bytes": 0.0,
-            "used_bytes": 0.0,
-            "avail_bytes": 0.0,
-            "is_zero_sized": true
-          },
-          {
-            "line_number": 6,
-            "filesystem": "swap",
-            "size": "1.7G",
-            "used": "1008K",
-            "avail": "1.7G",
-            "used_percent": 1.0,
-            "avail_percent": 100.0,
-            "mount_point": "/etc/svc/volatile",
-            "size_bytes": 1825361100.8,
-            "used_bytes": 1032192.0,
-            "avail_bytes": 1825361100.8,
-            "is_zero_sized": false
-          },
-          {
-            "line_number": 7,
-            "filesystem": "/dev/dsk/c0d0s7",
-            "size": "50G",
-            "used": "51M",
-            "avail": "50G",
-            "used_percent": 1.0,
-            "avail_percent": 100.0,
-            "mount_point": "/export/home",
-            "size_bytes": 53687091200.0,
-            "used_bytes": 53477376.0,
-            "avail_bytes": 53687091200.0,
-            "is_zero_sized": false
-          }
-        ],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "used_max_percent": 80.0,
-        "avail_min_percent": 20.0,
-        "failure_keywords": [
-          "장치를 찾을 수 없습니다",
-          "not found",
-          "cannot",
-          "command not found",
-          "module missing"
-        ]
-      },
-      "reasons": "점검 대상 파일시스템 3개가 정상 해석되었고 최대 사용률 49.00%와 최소 여유율 50.62%가 모두 기준 이내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: df -h\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem             size   used  avail capacity  Mounted on\n/dev/dsk/c0d0s0        8.1G   3.9G   4.1G    49%    /\n/devices                 0K     0K     0K     0%    /devices\nctfs                     0K     0K     0K     0%    /system/contract\nproc                     0K     0K     0K     0%    /proc\nswap                   1.7G  1008K   1.7G     1%    /etc/svc/volatile\n/dev/dsk/c0d0s7         50G    51M    50G     1%    /export/home",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris 파일시스템 사용량 점검에 실패했습니다. 현재 상태: df -h 명령을 정상적으로 실행하지 못했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: df -h\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: df -h",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Filesystem             size   used  avail capacity  Mounted on",
-        "/dev/dsk/c0d0s0        8.1G   3.9G   4.1G    49%    /",
-        "/devices                 0K     0K     0K     0%    /devices",
-        "ctfs                     0K     0K     0K     0%    /system/contract",
-        "proc                     0K     0K     0K     0%    /proc",
-        "swap                   1.7G  1008K   1.7G     1%    /etc/svc/volatile",
-        "/dev/dsk/c0d0s7         50G    51M    50G     1%    /export/home"
-      ],
-      "message": "Solaris 파일시스템 사용량이 정상입니다. 현재 상태: 점검 대상 파일시스템 3개, 최대 사용률 / 49.00% (기준 80.00% 미만), 최소 여유율 / 50.62% (기준 20.00% 이상), 영향 mount 요약: / 49.00% used, avail 50.62%, /etc/svc/volatile 1.00% used, avail 100.00%, /export/home 1.00% used, avail 100.00%."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-DISK-01"
+  ]
 }

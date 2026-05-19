@@ -319,75 +319,26 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "port_count": 1,
-        "online_port_count": 1,
-        "compliant_speed_port_count": 1,
-        "minimum_speed_gbps_observed": 8,
-        "ports": [
-          {
-            "hba_port_wwn": "10000000c9612345",
-            "os_device_name": "/dev/cfg/c2",
-            "manufacturer": "Emulex",
-            "model": "LPe12062",
-            "driver_name": "lpfc",
-            "state": "online",
-            "supported_speeds": "2Gb 4Gb 8Gb",
-            "current_speed": "8Gb",
-            "current_speed_gbps": 8,
-            "node_wwn": "20000000c9612345"
-          }
-        ],
-        "offline_ports": [],
-        "speed_issue_ports": [],
-        "speed_parse_issue_ports": [],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "expected_state_value": "online",
-        "min_current_speed_gbps": 8,
-        "failure_keywords": []
-      },
-      "reasons": "모든 HBA 포트가 State=online이며 Current Speed가 8Gb 이상입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: fcinfo hba-port\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: # fcinfo hba-port\nHBA Port WWN: 10000000c9612345\nOS Device Name: /dev/cfg/c2\nManufacturer: Emulex\nModel: LPe12062\nFirmware Version: 2.02a16\nFCode/BIOS Version: 3.33a4\nSerial Number: MY12345\nDriver Name: lpfc\nDriver Version: 9.2.0\nState: online\nSupported Speeds: 2Gb 4Gb 8Gb\nCurrent Speed: 8Gb\nNode WWN: 20000000c9612345",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris HBA 연결 상태 점검에 실패했습니다. 현재 상태: fcinfo 명령을 정상적으로 실행하지 못했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: fcinfo hba-port\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: fcinfo hba-port",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: # fcinfo hba-port",
-        "HBA Port WWN: 10000000c9612345",
-        "OS Device Name: /dev/cfg/c2",
-        "Manufacturer: Emulex",
-        "Model: LPe12062",
-        "Firmware Version: 2.02a16",
-        "FCode/BIOS Version: 3.33a4",
-        "Serial Number: MY12345",
-        "Driver Name: lpfc",
-        "Driver Version: 9.2.0",
-        "State: online",
-        "Supported Speeds: 2Gb 4Gb 8Gb",
-        "Current Speed: 8Gb",
-        "Node WWN: 20000000c9612345"
-      ],
-      "message": "Solaris HBA 연결 상태가 정상입니다. 현재 상태: 포트 /dev/cfg/c2, 총 포트 1개, online 포트 1개, Current Speed 기준 8Gb 이상 충족 1개, 최저 확인 속도 8Gb."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-OS-02"
+  ]
 }

@@ -166,21 +166,26 @@
       "application_name": "ROCKY",
       "application_family_name": "ROCKY",
       "threshold_list": [],
-      "status": "fail",
-      "error": "권한 상승 실패",
-      "message": "SSH 권한상승 사전 점검 실패: Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.\n암호:su: 인증 실패",
-      "message_lines": [
-        "SSH 권한상승 사전 점검 실패: Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
-        "암호:su: 인증 실패"
-      ],
-      "raw_output": "Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.\n암호:su: 인증 실패",
+      "status": "ok",
+      "metrics": {
+        "become_enabled": true,
+        "become_user": "root",
+        "root_identity": "root",
+        "root_dir_access": true
+      },
+      "thresholds": {},
+      "reasons": "su - 권한상승과 root 전용 경로 접근을 정상 확인했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'*****'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; whoami && ls /root >/dev/null && echo ROOT_DIR_ACCESS_OK'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: __BECOME_USER__:root\nroot\nROOT_DIR_ACCESS_OK",
       "raw_output_lines": [
-        "Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
-        "암호:su: 인증 실패"
-      ]
+        "[점검 단계 1]",
+        " - 실행 명령어: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'*****'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; whoami && ls /root >/dev/null && echo ROOT_DIR_ACCESS_OK'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: __BECOME_USER__:root",
+        "root",
+        "ROOT_DIR_ACCESS_OK"
+      ],
+      "message": "_ssh + su - 예제가 정상 수행되었습니다. become_user=root"
     }
   ],
-  "failed_items": [
-    "TUTORIAL-ROCKY-SSH-05"
-  ]
+  "failed_items": []
 }

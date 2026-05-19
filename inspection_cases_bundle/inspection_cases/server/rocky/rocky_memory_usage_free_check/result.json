@@ -199,13 +199,36 @@
           "value1": "50"
         }
       ],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "SSH 연결 실패: ssh: connect to host 127.0.0.1 port 22: Connection refused",
-      "raw_output": "ssh: connect to host 127.0.0.1 port 22: Connection refused"
+      "status": "ok",
+      "metrics": {
+        "mem_total_kib": 15726928,
+        "mem_used_kib": 5016052,
+        "mem_free_kib": 2362220,
+        "mem_shared_kib": 249868,
+        "mem_buff_cache_kib": 8993692,
+        "mem_available_kib": 10710876,
+        "available_memory_percent": 68.11,
+        "swap_total_kib": 8060924,
+        "swap_used_kib": 799920,
+        "swap_free_kib": 7261004,
+        "swap_usage_percent": 9.92
+      },
+      "thresholds": {
+        "min_available_memory_percent": 10.0,
+        "max_swap_usage_percent": 50.0
+      },
+      "reasons": "available_memory_percent=68.11%가 최소 기준 10.0% 이상이고 swap_usage_percent=9.92%가 최대 기준 50.0% 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: free\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용:                total        used        free      shared  buff/cache   available\nMem:        15726928     5016052     2362220      249868     8993692    10710876\nSwap:        8060924      799920     7261004",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: free",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용:                total        used        free      shared  buff/cache   available",
+        "Mem:        15726928     5016052     2362220      249868     8993692    10710876",
+        "Swap:        8060924      799920     7261004"
+      ],
+      "message": "free 기준 메모리 사용률 점검이 정상 수행되었습니다. 임계치 정보: min_available_memory_percent=10.0%, max_swap_usage_percent=50.0%. 판단근거: available_memory_percent=68.11%, swap_usage_percent=9.92%, mem_available_kib=10710876, swap_used_kib=799920."
     }
   ],
-  "failed_items": [
-    "U-REPLAY-FREE-01"
-  ]
+  "failed_items": []
 }

@@ -299,60 +299,21 @@
           "value1": "up|running"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "cluster_count": 1,
-        "node_count": 2,
-        "package_count": 1,
-        "clusters": [
-          {
-            "name": "sgcluster",
-            "status": "up"
-          }
-        ],
-        "nodes": [
-          {
-            "name": "node1",
-            "status": "up",
-            "state": "running"
-          },
-          {
-            "name": "node2",
-            "status": "up",
-            "state": "running"
-          }
-        ],
-        "packages": [
-          {
-            "name": "pkg_app",
-            "status": "up",
-            "state": "running"
-          }
-        ],
-        "bad_lines": []
-      },
-      "thresholds": {
-        "expected_cluster_status": "running|up",
-        "expected_package_status": "running|up"
-      },
-      "reasons": "클러스터와 노드/패키지 상태가 정상입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: cmviewcl -v\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CLUSTER      STATUS\nsgcluster    up\n\n  NODE        STATUS       STATE\n  node1       up           running\n  node2       up           running\n\n  PACKAGE     STATUS       STATE       AUTO_RUN\n  pkg_app     up           running     enabled",
+      "status": "fail",
+      "error": "권한 상승 사용자 확인 실패",
+      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:cmviewcl -v but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cmviewcl -v'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cmviewcl -v'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:cmviewcl -v but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cmviewcl -v'",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: cmviewcl -v",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CLUSTER      STATUS",
-        "sgcluster    up",
-        "",
-        "  NODE        STATUS       STATE",
-        "  node1       up           running",
-        "  node2       up           running",
-        "",
-        "  PACKAGE     STATUS       STATE       AUTO_RUN",
-        "  pkg_app     up           running     enabled"
-      ],
-      "message": "Serviceguard 클러스터 상태 점검이 정상 수행되었습니다."
+        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cmviewcl -v'",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:cmviewcl -v but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; cmviewcl -v'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "HPUX-REPLAY-02"
+  ]
 }

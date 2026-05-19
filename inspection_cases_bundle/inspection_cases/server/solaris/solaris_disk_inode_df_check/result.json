@@ -289,76 +289,26 @@
           "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "filesystem_count": 2,
-        "max_inode_used_mount_point": "/var",
-        "max_inode_used_percent": 30.0,
-        "min_inode_free_mount_point": "/var",
-        "min_inode_free_percent": 68.5,
-        "rows": [
-          {
-            "line_number": 2,
-            "filesystem": "/dev/dsk/c0t0d0s0",
-            "inode_used": 10234,
-            "inode_free": 89765,
-            "inode_total": 99999,
-            "inode_used_percent": 10.0,
-            "inode_free_percent": 89.77,
-            "mount_point": "/"
-          },
-          {
-            "line_number": 3,
-            "filesystem": "/dev/dsk/c0t0d0s1",
-            "inode_used": 5678,
-            "inode_free": 12345,
-            "inode_total": 18023,
-            "inode_used_percent": 30.0,
-            "inode_free_percent": 68.5,
-            "mount_point": "/var"
-          }
-        ],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "max_inode_used_percent": 80.0,
-        "min_inode_free_percent": 20.0,
-        "failure_keywords": [
-          "장치를 찾을 수 없습니다",
-          "not found",
-          "cannot",
-          "command not found",
-          "module missing"
-        ]
-      },
-      "reasons": "모든 파일시스템의 inode 사용률과 잔여 inode 비율이 기준 이내입니다. 최대 사용률은 /var 30.00%입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: df -o i\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem          iused  ifree %iused Mounted on\n/dev/dsk/c0t0d0s0   10234  89765   10%  /\n/dev/dsk/c0t0d0s1    5678  12345   30%  /var",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris I-Node 사용률 점검에 실패했습니다. 현재 상태: df -o i 명령을 정상적으로 실행하지 못했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: df -o i\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: df -o i",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Filesystem          iused  ifree %iused Mounted on",
-        "/dev/dsk/c0t0d0s0   10234  89765   10%  /",
-        "/dev/dsk/c0t0d0s1    5678  12345   30%  /var"
-      ],
-      "message": "Solaris I-Node 사용률이 정상입니다. 현재 상태: 파일시스템 2개, 최대 inode 사용률 /var 30.00% (기준 80.00% 이하), 최소 잔여율 /var 68.50% (기준 20.00% 이상), 영향 mount 요약: /var inode 30.00% used, free 68.50%, / inode 10.00% used, free 89.77%."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-DISK-06"
+  ]
 }

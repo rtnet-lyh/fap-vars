@@ -149,40 +149,21 @@
           "value1": "LISTEN"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "webtob_service_port": 9080,
-        "connection_count": 1,
-        "listen_count": 1,
-        "connections": [
-          {
-            "protocol": "tcp",
-            "recv_q": "0",
-            "send_q": "0",
-            "local_address": "0.0.0.0:9080",
-            "foreign_address": "0.0.0.0:*",
-            "state": "LISTEN"
-          }
-        ]
-      },
-      "thresholds": {
-        "webtob_service_port": 9080,
-        "allow_state": "LISTEN",
-        "allow_protocols": [
-          "tcp",
-          "tcp6"
-        ]
-      },
-      "reasons": "대상 포트가 tcp LISTEN 상태입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: netstat -an | grep 9080\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: tcp        0      0 0.0.0.0:9080            0.0.0.0:*               LISTEN",
+      "status": "fail",
+      "error": "netstat 명령 실행 실패",
+      "message": "WebtoB 서비스 포트 상태를 확인하지 못했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: netstat -an | grep 9080\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: netstat -an | grep 9080",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: tcp        0      0 0.0.0.0:9080            0.0.0.0:*               LISTEN"
-      ],
-      "message": "WebtoB 서비스 포트 오픈 정상: port=9080, listen_count=1"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WEBTOB-ROCKY-REPLAY-008"
+  ]
 }

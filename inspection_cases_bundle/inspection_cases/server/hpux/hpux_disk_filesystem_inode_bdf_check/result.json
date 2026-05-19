@@ -259,24 +259,16 @@
         }
       ],
       "status": "fail",
-      "error": "I-Node 사용률 임계치 초과",
-      "message": "임계치 초과 파일시스템: /opt=81%",
-      "stdout": "Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on\n/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /\n/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt\n/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var",
-      "stdout_lines": [
-        "Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on",
-        "/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /",
-        "/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt",
-        "/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var"
-      ],
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: bdf -i\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on\n/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /\n/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt\n/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var",
+      "error": "권한 상승 사용자 확인 실패",
+      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:bdf -i but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf -i'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf -i'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:bdf -i but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf -i'",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: bdf -i",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on",
-        "/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /",
-        "/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt",
-        "/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var"
+        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf -i'",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:bdf -i but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf -i'"
       ]
     }
   ],

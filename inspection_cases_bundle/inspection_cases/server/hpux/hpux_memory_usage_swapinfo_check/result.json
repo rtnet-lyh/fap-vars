@@ -255,33 +255,21 @@
           "value1": "2"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "memory_total_mb": 16384.0,
-        "memory_used_mb": 9200.0,
-        "memory_free_mb": 7184.0,
-        "memory_used_percent": 56.0,
-        "memory_free_percent": 43.85,
-        "memory_free_gb": 7.02
-      },
-      "thresholds": {
-        "FREE_MIN_RATIO_PCT": 20.0,
-        "FREE_MIN_GB": 2.0
-      },
-      "reasons": "사용 가능 메모리가 기준 이상입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: swapinfo -tam\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME\ndev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2\nreserve       -       -    2048\nmemory    16384    9200    7184   56%\ntotal     24576   10224   14352   42%",
+      "status": "fail",
+      "error": "권한 상승 사용자 확인 실패",
+      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:swapinfo -tam but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -tam'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -tam'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:swapinfo -tam but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -tam'",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: swapinfo -tam",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME",
-        "dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2",
-        "reserve       -       -    2048",
-        "memory    16384    9200    7184   56%",
-        "total     24576   10224   14352   42%"
-      ],
-      "message": "swapinfo 기준 메모리 사용률 점검이 정상 수행되었습니다."
+        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -tam'",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:swapinfo -tam but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -tam'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "HPUX-REPLAY-24"
+  ]
 }

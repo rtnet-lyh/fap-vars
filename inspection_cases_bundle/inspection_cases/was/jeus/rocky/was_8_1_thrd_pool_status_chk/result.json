@@ -118,41 +118,21 @@
           "value1": "2000"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "thread_pool_values": {
-          "Active Threads": 15,
-          "Idle Threads": 5,
-          "Max Threads": 20,
-          "Queue Size": 10,
-          "Completed Tasks": 1000,
-          "Task Count": 1015,
-          "Largest Pool Size": 18
-        },
-        "failed_checks": []
-      },
-      "thresholds": {
-        "max_active_threads": 20,
-        "max_idle_thread": 10,
-        "max_task_count": 2000
-      },
-      "reasons": "Thread Pool 값이 기준 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Thread Pool Name: default\nActive Threads: 15\nIdle Threads: 5\nMax Threads: 20\nQueue Size: 10\nCompleted Tasks: 1000\nTask Count: 1015\nLargest Pool Size: 18",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Thread Pool Name: default",
-        "Active Threads: 15",
-        "Idle Threads: 5",
-        "Max Threads: 20",
-        "Queue Size: 10",
-        "Completed Tasks: 1000",
-        "Task Count: 1015",
-        "Largest Pool Size: 18"
-      ],
-      "message": "JEUS Thread Pool 상태 정상: Active=15, Idle=5, Task=1015"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-017"
+  ]
 }

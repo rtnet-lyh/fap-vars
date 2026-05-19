@@ -341,83 +341,26 @@
           "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "swap_device_count": 2,
-        "total_swap_blocks": 3145728,
-        "total_swap_used_blocks": 1572864,
-        "total_swap_free_blocks": 1572864,
-        "swap_used_percent": 50.0,
-        "swap_free_percent": 50.0,
-        "largest_swap_device": "/dev/dsk/c0t0d0s2",
-        "largest_swap_blocks": 2097152,
-        "lowest_device_free_percent": 50.0,
-        "device_rows": [
-          {
-            "line_number": 2,
-            "swapfile": "/dev/dsk/c0t0d0s1",
-            "device": "118,1",
-            "swaplo": "16",
-            "blocks": 1048576,
-            "free_blocks": 524288,
-            "used_blocks": 524288,
-            "free_percent": 50.0,
-            "used_percent": 50.0
-          },
-          {
-            "line_number": 3,
-            "swapfile": "/dev/dsk/c0t0d0s2",
-            "device": "118,2",
-            "swaplo": "16",
-            "blocks": 2097152,
-            "free_blocks": 1048576,
-            "used_blocks": 1048576,
-            "free_percent": 50.0,
-            "used_percent": 50.0
-          }
-        ],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "max_swap_used_percent": 80.0,
-        "min_swap_free_percent": 20.0,
-        "min_swap_device_count": 1,
-        "failure_keywords": [
-          "장치를 찾을 수 없습니다",
-          "not found",
-          "cannot",
-          "command not found",
-          "module missing"
-        ]
-      },
-      "reasons": "swap 장치 2개가 모두 정상 집계되었고 전체 사용률 50.00% / free 50.00%가 기준 범위 내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: swap -l\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: swapfile           dev   swaplo   blocks    free\n/dev/dsk/c0t0d0s1  118,1 16       1048576   524288\n/dev/dsk/c0t0d0s2  118,2 16       2097152   1048576",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "Solaris Paging Space 점검에 실패했습니다. 현재 상태: swap -l 명령을 정상적으로 실행하지 못했습니다.",
+      "stdout": "",
+      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: swap -l\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Password:",
-        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
         "",
         "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: /usr/bin/id",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: uid=0(root) gid=0(root)",
-        "",
-        "[점검 단계 4]",
         " - 실행 명령어: swap -l",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: swapfile           dev   swaplo   blocks    free",
-        "/dev/dsk/c0t0d0s1  118,1 16       1048576   524288",
-        "/dev/dsk/c0t0d0s2  118,2 16       2097152   1048576"
-      ],
-      "message": "Solaris Paging Space가 정상입니다. 현재 상태: swap 장치 2개, 사용률 50.00% (기준 80.00% 이하), free 50.00% (기준 20.00% 이상), 장치 요약: /dev/dsk/c0t0d0s1 free 50.00% (524288/1048576 blocks), /dev/dsk/c0t0d0s2 free 50.00% (1048576/2097152 blocks)."
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "SOL-REPLAY-MEM-03"
+  ]
 }

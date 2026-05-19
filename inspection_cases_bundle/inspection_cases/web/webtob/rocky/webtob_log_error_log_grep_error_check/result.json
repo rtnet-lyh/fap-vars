@@ -126,30 +126,21 @@
           "value1": "CRITICAL|FATAL"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "inspected_line_count": 1,
-        "critical_fatal_count": 0,
-        "critical_fatal_lines": [],
-        "sample_lines": [
-          "[2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1"
-        ]
-      },
-      "thresholds": {
-        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "critical_patterns": "CRITICAL|FATAL"
-      },
-      "reasons": "error log에서 CRITICAL/FATAL 로그가 발견되지 않았습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1",
+      "status": "fail",
+      "error": "error log 명령 실행 실패",
+      "message": "WebtoB error log를 확인하지 못했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: grep -Ei \"CRITICAL|FATAL|ERR-|error\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1) | tail -20",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: [2026-05-12T13:32:07] [CLIENT(127.0.0.1)] [E] [ERR-00045] A request does not belong to any virtual host or node. Access is denied. {server address=127.0.0.1:9080, host:127.0.0.1} HEAD / HTTP/1.1"
-      ],
-      "message": "WebtoB error log 정상: inspected_line_count=1, critical_fatal_count=0"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WEBTOB-ROCKY-REPLAY-015"
+  ]
 }

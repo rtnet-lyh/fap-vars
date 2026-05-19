@@ -237,26 +237,16 @@
         }
       ],
       "status": "fail",
-      "error": "커널 파라미터 누락",
-      "message": "필수 커널 파라미터가 확인되지 않습니다: test",
-      "stdout": "Tunable                      Value  Expression  Changes\nmax_thread_proc              1024   Default     Immed\nmaxfiles                     2048   Default     Immed\nnproc                        4200   Default     Immed\nsemmns                       4096   Default     Immed",
-      "stdout_lines": [
-        "Tunable                      Value  Expression  Changes",
-        "max_thread_proc              1024   Default     Immed",
-        "maxfiles                     2048   Default     Immed",
-        "nproc                        4200   Default     Immed",
-        "semmns                       4096   Default     Immed"
-      ],
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: kctune\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Tunable                      Value  Expression  Changes\nmax_thread_proc              1024   Default     Immed\nmaxfiles                     2048   Default     Immed\nnproc                        4200   Default     Immed\nsemmns                       4096   Default     Immed",
+      "error": "권한 상승 사용자 확인 실패",
+      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
+      "stdout": "",
+      "stderr": "REPLAY_MISS: expected exact:kctune but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; kctune'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; kctune'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:kctune but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; kctune'",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: kctune",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Tunable                      Value  Expression  Changes",
-        "max_thread_proc              1024   Default     Immed",
-        "maxfiles                     2048   Default     Immed",
-        "nproc                        4200   Default     Immed",
-        "semmns                       4096   Default     Immed"
+        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; kctune'",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:kctune but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; kctune'"
       ]
     }
   ],

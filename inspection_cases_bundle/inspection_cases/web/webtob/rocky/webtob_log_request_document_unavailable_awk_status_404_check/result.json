@@ -132,35 +132,21 @@
           "value1": "404"
         }
       ],
-      "status": "warn",
-      "metrics": {
-        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "warning_status_code": 404,
-        "matching_status_count": 4,
-        "sample_lines": [
-          "172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 404 12 6",
-          "172.25.37.142 [08/May/2026:17:53:55 +0900] \"POST /getLtrsInfoList.do HTTP/1.1\" 404 991 18",
-          "172.34.41.60 [08/May/2026:17:53:55 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 404 5418 21",
-          "172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /checkSession.do HTTP/1.1\" 404 14 4"
-        ]
-      },
-      "thresholds": {
-        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
-        "warning_status_code": 404
-      },
-      "reasons": "최신 access log에서 HTTP 404 응답이 발견되었습니다.",
-      "message": "WebtoB access log 404 응답 경고: count=4",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2)==404' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 404 12 6\n172.25.37.142 [08/May/2026:17:53:55 +0900] \"POST /getLtrsInfoList.do HTTP/1.1\" 404 991 18\n172.34.41.60 [08/May/2026:17:53:55 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 404 5418 21\n172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /checkSession.do HTTP/1.1\" 404 14 4",
+      "status": "fail",
+      "error": "access log 명령 실행 실패",
+      "message": "WebtoB access log에서 404 응답을 확인하지 못했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2)==404' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: awk '$(NF-2)==404' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: 172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 404 12 6",
-        "172.25.37.142 [08/May/2026:17:53:55 +0900] \"POST /getLtrsInfoList.do HTTP/1.1\" 404 991 18",
-        "172.34.41.60 [08/May/2026:17:53:55 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 404 5418 21",
-        "172.29.41.55 [08/May/2026:17:53:55 +0900] \"POST /checkSession.do HTTP/1.1\" 404 14 4"
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
       ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WEBTOB-ROCKY-REPLAY-013"
+  ]
 }
