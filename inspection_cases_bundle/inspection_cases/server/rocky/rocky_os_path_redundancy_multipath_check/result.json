@@ -254,21 +254,63 @@
       "application_name": "A",
       "application_family_name": "A",
       "threshold_list": [],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "multipath -ll 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:bash -lc 'printf '\"'\"'%s\\n'\"'\"' password | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'' but got ssh command: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'f3dtop0!'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'*****'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:bash -lc 'printf '\"'\"'%s\\n'\"'\"' password | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'' but got ssh command: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'f3dtop0!'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
+      "status": "ok",
+      "metrics": {
+        "become_user": "root",
+        "multipath_device_detected": true,
+        "path_group_count": 2,
+        "path_entry_count": 2,
+        "running_path_count": 2,
+        "abnormal_path_count": 0,
+        "group_statuses": [
+          "active",
+          "enabled"
+        ],
+        "path_entries": [
+          {
+            "host_channel": "2:0:0:1",
+            "device_name": "sdb",
+            "status_tokens": [
+              "active",
+              "ready",
+              "running"
+            ],
+            "running": true,
+            "abnormal_markers": [],
+            "line": "| `- 2:0:0:1 sdb 8:16 active ready running"
+          },
+          {
+            "host_channel": "3:0:0:1",
+            "device_name": "sdc",
+            "status_tokens": [
+              "active",
+              "ready",
+              "running"
+            ],
+            "running": true,
+            "abnormal_markers": [],
+            "line": "`- 3:0:0:1 sdc 8:32 active ready running"
+          }
+        ],
+        "abnormal_lines": []
+      },
+      "thresholds": {},
+      "reasons": "모든 경로 그룹이 active/enabled 상태이고 물리 경로가 running 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'*****'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: __BECOME_USER__:root\nmpatha (36005076810810548b8000000000000aa) dm-2 IBM,2145\nsize=100G features='1 queue_if_no_path' hwhandler='0' wp=rw\n|-+- policy='round-robin 0' prio=1 status=active\n| `- 2:0:0:1 sdb 8:16 active ready running\n`-+- policy='round-robin 0' prio=1 status=enabled\n  `- 3:0:0:1 sdc 8:32 active ready running",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'*****'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:bash -lc 'printf '\"'\"'%s\\n'\"'\"' password | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'' but got ssh command: bash -lc 'printf '\"'\"'%s\\n'\"'\"' '\"'\"'f3dtop0!'\"'\"' | su - root -c '\"'\"'bash -lc '\"'\"'\"'\"'\"'\"'\"'\"'current_user=$(whoami); echo __BECOME_USER__:${current_user}; exec multipath -ll'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: __BECOME_USER__:root",
+        "mpatha (36005076810810548b8000000000000aa) dm-2 IBM,2145",
+        "size=100G features='1 queue_if_no_path' hwhandler='0' wp=rw",
+        "|-+- policy='round-robin 0' prio=1 status=active",
+        "| `- 2:0:0:1 sdb 8:16 active ready running",
+        "`-+- policy='round-robin 0' prio=1 status=enabled",
+        "  `- 3:0:0:1 sdc 8:32 active ready running"
+      ],
+      "message": "Path 이중화 점검 정상"
     }
   ],
-  "failed_items": [
-    "U-REPLAY-MULTIPATH-01"
-  ]
+  "failed_items": []
 }

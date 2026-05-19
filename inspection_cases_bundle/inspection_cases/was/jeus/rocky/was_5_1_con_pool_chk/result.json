@@ -83,21 +83,28 @@
           "value1": "0"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "JEUS 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "warn",
+      "metrics": {
+        "message_count": 2,
+        "sample_lines": [
+          "2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
+          "2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30)."
+        ]
+      },
+      "thresholds": {
+        "max_message_count": 0
+      },
+      "reasons": "Connection pool exhausted 메시지 수가 기준을 초과했습니다.",
+      "message": "Connection Pool 메시지 경고: count=2, 기준=0",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).\n2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
+        "2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30)."
       ]
     }
   ],
-  "failed_items": [
-    "WAS-JEUS-ROCKY-REPLAY-013"
-  ]
+  "failed_items": []
 }

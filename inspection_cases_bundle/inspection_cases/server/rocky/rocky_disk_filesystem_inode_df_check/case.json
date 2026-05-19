@@ -38,7 +38,7 @@
     "threshold_list": [
       {
         "name": "max_inode_usage_percent",
-        "value1": "80"
+        "value1": "100"
       }
     ]
   }

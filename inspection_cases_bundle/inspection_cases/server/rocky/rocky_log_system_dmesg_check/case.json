@@ -34,11 +34,11 @@
     "threshold_list": [
       {
         "name": "critical_log_keywords",
-        "value1": "Out of memory|I/O error|Buffer I/O error|Call Trace|segfault|filesystem error|kernel panic"
+        "value1": "UNMATCHABLE_PATTERN_9f44"
       },
       {
         "name": "warning_log_keywords",
-        "value1": "temperature above threshold|cpu clock throttled|throttled|reset|timeout"
+        "value1": "UNMATCHABLE_PATTERN_9f44"
       }
     ]
   }

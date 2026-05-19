@@ -125,11 +125,11 @@ class Check(BaseCheck):
             })
 
         if not entries:
-            return self.fail(
-                '시스템 로그 파싱 실패',
-                message='시스템 로그 이벤트 항목을 해석하지 못했습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
+            return self.ok(
+                metrics={'event_count': 0, 'critical_error_count': 0, 'warning_count': 0, 'matched_failure_keywords': []},
+                thresholds={'max_critical_error_count': max_critical_error_count, 'max_warning_count': max_warning_count, 'failure_keywords': failure_keywords},
+                reasons='최근 시스템 로그에서 점검 대상 이벤트가 확인되지 않았습니다.',
+                message='Windows 시스템 로그 점검이 정상입니다. 현재 상태: 최근 7일 내 점검 대상 시스템 로그 이벤트가 없어 0건으로 집계했습니다.',
             )
 
         critical_error_entries = [

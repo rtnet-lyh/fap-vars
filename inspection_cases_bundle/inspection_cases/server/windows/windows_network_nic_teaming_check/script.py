@@ -74,14 +74,11 @@ class Check(BaseCheck):
             )
 
         if text in ('NIC Teaming(LBFO): 미구성 또는 미지원', 'NetLbfo cmdlet 없음'):
-            return self.fail(
-                'NIC Teaming 미구성 또는 미지원',
-                message=(
-                    f'Windows NIC 이중화 상태 점검에 실패했습니다. 현재 상태: {text}, '
-                    '팀 0개, 멤버 0개로 집계했습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
+            return self.warn(
+                metrics={'team_count': 0, 'member_count': 0, 'teaming_available': False},
+                thresholds={},
+                reasons='NIC Teaming이 미구성 또는 미지원 상태라 대상미해당 또는 추가 확인 대상으로 분류했습니다.',
+                message=f'Windows NIC 이중화 상태를 추가 확인해야 합니다. 현재 상태: {text}.',
             )
 
         failure_keywords = [

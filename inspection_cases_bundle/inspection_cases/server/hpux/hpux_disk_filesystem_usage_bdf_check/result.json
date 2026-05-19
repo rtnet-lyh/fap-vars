@@ -19,7 +19,7 @@
       "threshold_list": [
         {
           "name": "USED_MAX_PCT",
-          "value1": "80"
+          "value1": "85"
         },
         {
           "name": "AVAIL_MIN_PCT",
@@ -278,7 +278,7 @@
       "threshold_list": [
         {
           "name": "USED_MAX_PCT",
-          "value1": "80"
+          "value1": "85"
         },
         {
           "name": "AVAIL_MIN_PCT",
@@ -289,21 +289,63 @@
           "value1": "/proc|/dev"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:bdf but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:bdf but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf'",
+      "status": "ok",
+      "metrics": {
+        "filesystem_count": 3,
+        "max_usage_percent": 80,
+        "max_usage_mount_point": "/opt",
+        "checked_filesystems": [
+          {
+            "filesystem": "/dev/vg00/lvol3",
+            "usage_percent": 40,
+            "mount_point": "/",
+            "raw_line": "/dev/vg00/lvol3   20971520  8300000 12671520  40% /",
+            "avail_percent": 60.0
+          },
+          {
+            "filesystem": "/dev/vg00/lvol4",
+            "usage_percent": 80,
+            "mount_point": "/opt",
+            "raw_line": "/dev/vg00/lvol4   52428800 42000000 10428800  80% /opt",
+            "avail_percent": 20.0
+          },
+          {
+            "filesystem": "/dev/vg00/lvol5",
+            "usage_percent": 67,
+            "mount_point": "/var",
+            "raw_line": "/dev/vg00/lvol5  104857600 70000000 34857600  67% /var",
+            "avail_percent": 33.0
+          }
+        ],
+        "ignored_filesystems": [
+          {
+            "filesystem": "tmpfs",
+            "usage_percent": 0,
+            "mount_point": "/dev/shm",
+            "raw_line": "tmpfs              8192000        0  8192000   0% /dev/shm"
+          }
+        ],
+        "skipped_lines": []
+      },
+      "thresholds": {
+        "USED_MAX_PCT": 85.0,
+        "AVAIL_MIN_PCT": 20.0,
+        "IGNORE_MOUNTS": "/proc|/dev"
+      },
+      "reasons": "최대 파일시스템 사용률 80%가 기준 이내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: bdf\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem          kbytes    used   avail %used Mounted on\n/dev/vg00/lvol3   20971520  8300000 12671520  40% /\n/dev/vg00/lvol4   52428800 42000000 10428800  80% /opt\n/dev/vg00/lvol5  104857600 70000000 34857600  67% /var\ntmpfs              8192000        0  8192000   0% /dev/shm",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:bdf but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; bdf'"
-      ]
+        " - 실행 명령어: bdf",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Filesystem          kbytes    used   avail %used Mounted on",
+        "/dev/vg00/lvol3   20971520  8300000 12671520  40% /",
+        "/dev/vg00/lvol4   52428800 42000000 10428800  80% /opt",
+        "/dev/vg00/lvol5  104857600 70000000 34857600  67% /var",
+        "tmpfs              8192000        0  8192000   0% /dev/shm"
+      ],
+      "message": "bdf 기준 파일시스템 사용량 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-06"
-  ]
+  "failed_items": []
 }

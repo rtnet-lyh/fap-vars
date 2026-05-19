@@ -1,7 +1,7 @@
 [
   {
-    "matcher_type": "exact",
-    "matcher_value": "dmesg",
+    "matcher_type": "contains",
+    "matcher_value": "dmesg | grep -E",
     "rc": 0,
     "stdout_file": "outputs/dmesg.stdout",
     "stderr": ""

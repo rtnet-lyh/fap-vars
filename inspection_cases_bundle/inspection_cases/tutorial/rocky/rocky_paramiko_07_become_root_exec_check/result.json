@@ -163,21 +163,38 @@
       "application_name": "ROCKY",
       "application_family_name": "ROCKY",
       "threshold_list": [],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Paramiko root 권한 확인 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - test\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "connection_method": "paramiko",
+        "become_enabled": true,
+        "become_method": "su -",
+        "become_user": "root",
+        "root_identity": "root",
+        "root_uid": "0",
+        "root_access_marker": true
+      },
+      "thresholds": {},
+      "reasons": "Paramiko 상호작용 입력으로 root 권한상승과 root 전용 파일 접근을 정상 확인했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): 암호:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 3]\n - 실행 명령어: id; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root) groups=0(root)\nPARAMIKO_ROOT_ACCESS_OK",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: su - test",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 실행 명령어: su - root",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): 암호:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: id; test -r /etc/shadow && echo PARAMIKO_ROOT_ACCESS_OK",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root) groups=0(root)",
+        "PARAMIKO_ROOT_ACCESS_OK"
+      ],
+      "message": "Paramiko root 권한상승 예제가 정상 수행되었습니다. user=root, uid=0"
     }
   ],
-  "failed_items": [
-    "TUTORIAL-ROCKY-PARAMIKO-07"
-  ]
+  "failed_items": []
 }

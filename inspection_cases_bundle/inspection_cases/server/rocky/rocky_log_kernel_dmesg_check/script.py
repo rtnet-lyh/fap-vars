@@ -74,7 +74,7 @@ class Check(BaseCheck):
             'panic_log_keywords': '|'.join(panic_keywords),
         }
 
-        if lines:
+        if any(keyword_counts.values()):
             return self.fail(
                 '커널 패닉 로그 감지',
                 message=(

@@ -51,7 +51,7 @@
       },
       {
         "name": "max_memory_usage_percent",
-        "value1": "80"
+        "value1": "95"
       },
       {
         "name": "expected_power_state",

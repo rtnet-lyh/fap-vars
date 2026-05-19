@@ -275,21 +275,50 @@
           "value1": "CLAIMED"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:ioscan -fnC disk but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC disk'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC disk'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC disk but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC disk'",
+      "status": "ok",
+      "metrics": {
+        "device_count": 2,
+        "devices": [
+          {
+            "class": "disk",
+            "instance": "0",
+            "hw_path": "0/1/1/0.0.0",
+            "driver": "sdisk",
+            "state": "CLAIMED",
+            "hw_type": "DEVICE",
+            "description": "HP LOGICAL VOLUME"
+          },
+          {
+            "class": "disk",
+            "instance": "1",
+            "hw_path": "0/1/1/0.1.0",
+            "driver": "sdisk",
+            "state": "CLAIMED",
+            "hw_type": "DEVICE",
+            "description": "HP LOGICAL VOLUME"
+          }
+        ],
+        "abnormal_devices": []
+      },
+      "thresholds": {
+        "expected_disk_count": 0,
+        "allowed_disk_states": "CLAIMED"
+      },
+      "reasons": "disk 장치 2개가 정상 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ioscan -fnC disk\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Class     I  H/W Path        Driver   S/W State   H/W Type     Description\n=========================================================================\ndisk      0  0/1/1/0.0.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME\n          /dev/dsk/c0t0d0    /dev/rdsk/c0t0d0\ndisk      1  0/1/1/0.1.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME\n          /dev/dsk/c1t0d0    /dev/rdsk/c1t0d0",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC disk'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC disk but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC disk'"
-      ]
+        " - 실행 명령어: ioscan -fnC disk",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Class     I  H/W Path        Driver   S/W State   H/W Type     Description",
+        "=========================================================================",
+        "disk      0  0/1/1/0.0.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME",
+        "          /dev/dsk/c0t0d0    /dev/rdsk/c0t0d0",
+        "disk      1  0/1/1/0.1.0     sdisk    CLAIMED     DEVICE       HP LOGICAL VOLUME",
+        "          /dev/dsk/c1t0d0    /dev/rdsk/c1t0d0"
+      ],
+      "message": "ioscan 기준 Disk 인식여부 점검 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-09"
-  ]
+  "failed_items": []
 }

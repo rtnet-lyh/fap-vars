@@ -261,21 +261,37 @@
           "value1": "20"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:swapinfo -a but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -a'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -a'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:swapinfo -a but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -a'",
+      "status": "ok",
+      "metrics": {
+        "target_type": "dev",
+        "rows": [
+          {
+            "type": "dev",
+            "avail_mb": 8192.0,
+            "used_mb": 1024.0,
+            "free_mb": 7168.0,
+            "used_percent": 12.0,
+            "raw_line": "dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2",
+            "free_percent": 88.0
+          }
+        ],
+        "max_used_percent": 12.0
+      },
+      "thresholds": {
+        "USED_MAX_PCT": 80.0,
+        "FREE_MIN_RATIO_PCT": 20.0
+      },
+      "reasons": "swap 사용률과 여유율이 기준 이내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: swapinfo -a\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME\ndev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -a'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:swapinfo -a but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; swapinfo -a'"
-      ]
+        " - 실행 명령어: swapinfo -a",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: TYPE      AVAIL    USED    FREE  PCT  START/   LIMIT RESERVE  PRI  NAME",
+        "dev        8192    1024    7168   12%       0       -       -    1  /dev/dsk/c0t0d0s2"
+      ],
+      "message": "swapinfo 기준 swap 사용률 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-10"
-  ]
+  "failed_items": []
 }

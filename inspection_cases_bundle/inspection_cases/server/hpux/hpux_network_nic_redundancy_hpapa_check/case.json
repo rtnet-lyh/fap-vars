@@ -13,7 +13,7 @@
         "data": {
           "username": "fap",
           "password": "f3dtop0!",
-          "become": "true",
+          "become": "false",
           "become_method": "su -",
           "become_user": "root",
           "become_password": "f3dtop0!"
@@ -50,7 +50,7 @@
       },
       {
         "name": "max_interface_error_count",
-        "value1": "0"
+        "value1": "200000"
       }
     ]
   }

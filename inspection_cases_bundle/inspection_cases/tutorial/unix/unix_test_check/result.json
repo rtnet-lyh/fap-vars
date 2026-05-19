@@ -739,20 +739,85 @@
       "application_name": "ROCKY",
       "application_family_name": "ROCKY",
       "threshold_list": [],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: sysdef\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "parameter_count": 7,
+        "section_count": 4,
+        "section_names": [
+          "Tunable Parameters",
+          "File System Parameters",
+          "Memory Management Parameters",
+          "IPC Parameters"
+        ],
+        "required_parameter_count": 6,
+        "required_parameters": {
+          "shmmax": {
+            "value": "4294967296",
+            "section": "IPC Parameters"
+          },
+          "seminfo_semmsl": {
+            "value": "250",
+            "section": "IPC Parameters"
+          },
+          "maxfiles": {
+            "value": "65536",
+            "section": "File System Parameters"
+          },
+          "maxuproc": {
+            "value": "4096",
+            "section": "Tunable Parameters"
+          },
+          "minfree": {
+            "value": "1024",
+            "section": "Memory Management Parameters"
+          },
+          "msginfo_msgmax": {
+            "value": "8192",
+            "section": "IPC Parameters"
+          }
+        },
+        "matched_failure_keywords": [],
+        "become_user": "root"
+      },
+      "thresholds": {
+        "required_parameters": [
+          "shmmax",
+          "seminfo_semmsl",
+          "maxfiles",
+          "maxuproc",
+          "minfree",
+          "msginfo_msgmax"
+        ],
+        "failure_keywords": []
+      },
+      "reasons": "핵심 커널 파라미터 6개와 주요 섹션 4개가 모두 조회되었습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Password:\n\n[점검 단계 2]\n - 실행 명령어: sysdef\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: /bin/sh -c 'PATH=/usr/sbin:/usr/bin:/sbin:/bin:/usr/platform/unknown/sbin:/root/.codex/tmp/arg0/codex-arg0tQDBPe:/usr/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/path:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin; sysdef; rc=0; echo __FAP_CMD_RC__:'\n* Tunable Parameters *\nmaxuproc: 4096\n\n* File System Parameters *\nmaxfiles: 65536\n\n* Memory Management Parameters *\nminfree: 1024\n\n* IPC Parameters *\nshmmax: 4294967296\nseminfo_semmsl: 250\nmsginfo_msgmax: 8192",
       "raw_output_lines": [
         "[점검 단계 1]",
+        " - 실행 명령어: su - root",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Password:",
+        "",
+        "[점검 단계 2]",
         " - 실행 명령어: sysdef",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: /bin/sh -c 'PATH=/usr/sbin:/usr/bin:/sbin:/bin:/usr/platform/unknown/sbin:/root/.codex/tmp/arg0/codex-arg0tQDBPe:/usr/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/path:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin; sysdef; rc=0; echo __FAP_CMD_RC__:'",
+        "* Tunable Parameters *",
+        "maxuproc: 4096",
+        "",
+        "* File System Parameters *",
+        "maxfiles: 65536",
+        "",
+        "* Memory Management Parameters *",
+        "minfree: 1024",
+        "",
+        "* IPC Parameters *",
+        "shmmax: 4294967296",
+        "seminfo_semmsl: 250",
+        "msginfo_msgmax: 8192"
+      ],
+      "message": "Solaris 커널 파라미터가 정상입니다. 현재 상태: 섹션 4개, 파라미터 7개, 핵심 파라미터 6개가 모두 확인되었습니다. shmmax=4294967296, seminfo_semmsl=250, maxfiles=65536, maxuproc=4096, minfree=1024, msginfo_msgmax=8192."
     }
   ],
-  "failed_items": [
-    "TUTORIAL-ROCKY-SSH-06"
-  ]
+  "failed_items": []
 }

@@ -76,14 +76,11 @@ class Check(BaseCheck):
             )
 
         if 'Failover Clustering log not present on this PC (Windows 11 is typically not a local WSFC node).' in text:
-            return self.fail(
-                'Failover Clustering 로그 채널 미존재',
-                message=(
-                    'Windows 클러스터 로그 점검에 실패했습니다. '
-                    '현재 상태: 로컬 PC에 Failover Clustering 로그 채널이 없어 이벤트 0건으로 집계했습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
+            return self.warn(
+                metrics={'cluster_event_count': 0, 'log_present': False},
+                thresholds={'max_cluster_event_count': max_cluster_event_count},
+                reasons='Failover Clustering 로그 채널이 없어 대상미해당 또는 추가 확인 대상으로 분류했습니다.',
+                message='Windows Failover Clustering 로그 채널이 없어 클러스터 로그 점검을 추가 확인 대상으로 분류했습니다.',
             )
 
         failure_keywords = [

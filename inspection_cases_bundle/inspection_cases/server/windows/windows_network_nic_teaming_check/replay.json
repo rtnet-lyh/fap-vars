@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "if (Get-Command Get-NetLbfoTeam -ErrorAction SilentlyContinue) { $teams = Get-NetLbfoTeam -ErrorAction SilentlyContinue; if ($teams) { @($teams | ForEach-Object { $team = $_; Get-NetLbfoTeamMember -Team $team.Name | Select-Object @{N='GROUPNAME';E={$team.Name}}, @{N='TEAMSTATE';E={$team.Status}}, @{N='MODE';E={$team.TeamingMode}}, @{N='NIC';E={$_.Name}}, @{N='STATE';E={$_.OperationalMode}}, @{N='ACTIVE';E={if ($_.OperationalMode -eq 'Active') {'Yes'} else {'No'}}}, @{N='ROLE';E={$_.AdministrativeMode}} }) | ConvertTo-Json -Depth 3 } else { 'NIC Teaming(LBFO): 미구성 또는 미지원' } } else { 'NetLbfo cmdlet 없음' }",
+    "matcher_value": "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); if (Get-Command Get-NetLbfoTeam -ErrorAction SilentlyContinue) { $teams = Get-NetLbfoTeam -ErrorAction SilentlyContinue; if ($teams) { @($teams | ForEach-Object { $team = $_; Get-NetLbfoTeamMember -Team $team.Name | Select-Object @{N='GROUPNAME';E={$team.Name}}, @{N='TEAMSTATE';E={$team.Status}}, @{N='MODE';E={$team.TeamingMode}}, @{N='NIC';E={$_.Name}}, @{N='STATE';E={$_.OperationalMode}}, @{N='ACTIVE';E={if ($_.OperationalMode -eq 'Active') {'Yes'} else {'No'}}}, @{N='ROLE';E={$_.AdministrativeMode}} }) | ConvertTo-Json -Depth 3 } else { 'NIC Teaming(LBFO): 미구성 또는 미지원' } } else { 'NetLbfo cmdlet 없음' }",
     "rc": 0,
     "stdout_file": "outputs/network_nic_ha.stdout",
     "stderr": ""

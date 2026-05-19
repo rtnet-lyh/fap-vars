@@ -152,21 +152,38 @@
           "value1": "1000"
         }
       ],
-      "status": "fail",
-      "error": "access log 명령 실행 실패",
-      "message": "WebtoB access log에서 응답시간을 확인하지 못했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$NF >= 1000' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | head -20\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "warn",
+      "metrics": {
+        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "max_response_time": 1000,
+        "slow_response_count": 5,
+        "max_observed_response_time": 4152,
+        "sample_lines": [
+          "172.34.35.55 [08/May/2026:00:00:03 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1776238340558 HTTP/1.1\" 200 10547450 1083",
+          "172.19.22.30 [08/May/2026:00:00:04 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2696",
+          "172.27.35.52 [08/May/2026:00:00:07 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158355767 HTTP/1.1\" 200 10547450 3651",
+          "172.27.35.52 [08/May/2026:00:00:08 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158371237 HTTP/1.1\" 200 10547450 4152",
+          "172.19.41.54 [08/May/2026:00:00:10 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2529"
+        ]
+      },
+      "thresholds": {
+        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "max_response_time": 1000
+      },
+      "reasons": "기준 이상의 응답시간이 발견되었습니다.",
+      "message": "WebtoB 응답시간 경고: 최대 4152ms, 기준 1000ms",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$NF >= 1000' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | head -20\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 172.34.35.55 [08/May/2026:00:00:03 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1776238340558 HTTP/1.1\" 200 10547450 1083\n172.19.22.30 [08/May/2026:00:00:04 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2696\n172.27.35.52 [08/May/2026:00:00:07 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158355767 HTTP/1.1\" 200 10547450 3651\n172.27.35.52 [08/May/2026:00:00:08 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158371237 HTTP/1.1\" 200 10547450 4152\n172.19.41.54 [08/May/2026:00:00:10 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2529",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: awk '$NF >= 1000' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | head -20",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 172.34.35.55 [08/May/2026:00:00:03 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1776238340558 HTTP/1.1\" 200 10547450 1083",
+        "172.19.22.30 [08/May/2026:00:00:04 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2696",
+        "172.27.35.52 [08/May/2026:00:00:07 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158355767 HTTP/1.1\" 200 10547450 3651",
+        "172.27.35.52 [08/May/2026:00:00:08 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778158371237 HTTP/1.1\" 200 10547450 4152",
+        "172.19.41.54 [08/May/2026:00:00:10 +0900] \"POST /getVmsAutoTargetDrfInfo.do HTTP/1.1\" 200 9591935 2529"
       ]
     }
   ],
-  "failed_items": [
-    "WEBTOB-ROCKY-REPLAY-014"
-  ]
+  "failed_items": []
 }

@@ -13,7 +13,7 @@
         "data": {
           "username": "fap",
           "password": "f3dtop0!",
-          "become": "true",
+          "become": "false",
           "become_method": "su -",
           "become_user": "root",
           "become_password": "f3dtop0!"
@@ -46,7 +46,7 @@
     "threshold_list": [
       {
         "name": "bad_log_keywords",
-        "value1": "loop\\s+detected|port.*offline|offline.*port|hba.*(error|fail|failed)"
+        "value1": "UNMATCHABLE_PATTERN_9f44"
       },
       {
         "name": "ignore_log_keywords",

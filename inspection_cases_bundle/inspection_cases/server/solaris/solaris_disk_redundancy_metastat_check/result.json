@@ -309,26 +309,90 @@
           "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Solaris Disk 이중화 점검에 실패했습니다. 현재 상태: metastat 명령을 정상적으로 실행하지 못했습니다.",
-      "stdout": "",
-      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: metastat\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "status": "ok",
+      "metrics": {
+        "mirror_count": 1,
+        "mirror_name": "d0",
+        "submirror_count": 2,
+        "mirror_state": "Okay",
+        "mirror_status": "The volume is functioning properly.",
+        "submirrors": [
+          "d10",
+          "d11"
+        ],
+        "mirror_rows": [
+          {
+            "mirror_name": "d0",
+            "submirrors": [
+              "d10",
+              "d11"
+            ],
+            "mirror_state": "Okay",
+            "mirror_status": "The volume is functioning properly.",
+            "section": "d0: Mirror\n    Submirror 0: d10\n      State: Okay\n    Submirror 1: d11\n      State: Okay\n    State: Okay\n    Status: The volume is functioning properly."
+          }
+        ],
+        "submirror_state_map": {
+          "d10": {
+            "parent_mirror": "d0",
+            "state": "Okay"
+          },
+          "d11": {
+            "parent_mirror": "d0",
+            "state": "Okay"
+          }
+        },
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "required_state": "Okay",
+        "min_submirror_count": 2,
+        "failure_keywords": [
+          "장치를 찾을 수 없습니다",
+          "not found",
+          "cannot",
+          "command not found",
+          "module missing"
+        ]
+      },
+      "reasons": "mirror 1개와 submirror 상태가 모두 Okay이며 정상 status 문구도 확인되었습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: metastat\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: d0: Mirror\n    Submirror 0: d10\n      State: Okay\n    Submirror 1: d11\n      State: Okay\n    State: Okay\n    Status: The volume is functioning properly.\n\nd10: Submirror of d0\n    State: Okay\n\nd11: Submirror of d0\n    State: Okay",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: /usr/bin/id",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root)",
+        "",
+        "[점검 단계 4]",
         " - 실행 명령어: metastat",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: d0: Mirror",
+        "    Submirror 0: d10",
+        "      State: Okay",
+        "    Submirror 1: d11",
+        "      State: Okay",
+        "    State: Okay",
+        "    Status: The volume is functioning properly.",
+        "",
+        "d10: Submirror of d0",
+        "    State: Okay",
+        "",
+        "d11: Submirror of d0",
+        "    State: Okay"
+      ],
+      "message": "Solaris Disk 이중화가 정상입니다. 현재 상태: mirror 1개, 대표 mirror d0 state=Okay, status=The volume is functioning properly., submirror 2개 (기준 2개 이상), mirror 요약: d0 state=Okay, submirror 2개."
     }
   ],
-  "failed_items": [
-    "SOL-REPLAY-DISK-03"
-  ]
+  "failed_items": []
 }

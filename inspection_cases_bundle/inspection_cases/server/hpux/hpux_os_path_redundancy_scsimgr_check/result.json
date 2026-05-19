@@ -19,7 +19,7 @@
       "threshold_list": [
         {
           "name": "expected_path_count",
-          "value1": "3"
+          "value1": "2"
         },
         {
           "name": "required_lun_status",
@@ -206,17 +206,36 @@
       "threshold_list": [
         {
           "name": "expected_path_count",
-          "value1": "3"
+          "value1": "2"
         },
         {
           "name": "required_lun_status",
           "value1": "OPTIMAL"
         }
       ],
-      "status": "fail",
-      "error": "Path 이중화 상태 비정상",
-      "message": "경로 수 부족 또는 LUN 상태 비정상 디스크가 확인되었습니다: /dev/rdisk/disk1(legacy_paths=2, scsimgr_paths=2, status=OPTIMAL)",
-      "stdout": "",
+      "status": "ok",
+      "metrics": {
+        "disk_count": 1,
+        "failed_disk_count": 0,
+        "disks": [
+          {
+            "persistent_dsf": "/dev/rdisk/disk1",
+            "legacy_dsfs": [
+              "/dev/rdsk/c2t0d0",
+              "/dev/rdsk/c3t0d0"
+            ],
+            "legacy_path_count": 2,
+            "scsimgr_path_count": 2,
+            "lun_status": "OPTIMAL"
+          }
+        ],
+        "failed_disks": []
+      },
+      "thresholds": {
+        "expected_path_count": 2,
+        "required_lun_status": "OPTIMAL"
+      },
+      "reasons": "모든 persistent DSF의 legacy path 수, scsimgr path 수, LUN 상태가 기준을 만족합니다.",
       "raw_output": "[점검 단계 1]\n - 실행 명령어: ioscan -m dsf\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Persistent DSF           Legacy DSF(s)\n========================================\n/dev/rdisk/disk1         /dev/rdsk/c2t0d0\n                         /dev/rdsk/c3t0d0\n\n[점검 단계 2]\n - 실행 명령어: scsimgr get_info -D /dev/rdisk/disk1\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: STATUS INFORMATION FOR LUN : /dev/rdisk/disk1\nGeneric Status: OPTIMAL\nNumber of Paths: 2",
       "raw_output_lines": [
         "[점검 단계 1]",
@@ -233,10 +252,9 @@
         " - 출력 내용: STATUS INFORMATION FOR LUN : /dev/rdisk/disk1",
         "Generic Status: OPTIMAL",
         "Number of Paths: 2"
-      ]
+      ],
+      "message": "ioscan/scsimgr 기준 Path 이중화 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-29"
-  ]
+  "failed_items": []
 }

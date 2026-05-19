@@ -253,21 +253,52 @@
           "value1": "true"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:lanscan -q but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; lanscan -q'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; lanscan -q'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:lanscan -q but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; lanscan -q'",
+      "status": "ok",
+      "metrics": {
+        "interfaces": [
+          {
+            "name": "lan0PPA",
+            "link": "UP",
+            "state": "UP",
+            "hardware_path": "0/1/2/0/0/0"
+          },
+          {
+            "name": "lan1PPA",
+            "link": "UP",
+            "state": "UP",
+            "hardware_path": "0/1/2/0/0/1"
+          }
+        ],
+        "link_status": "Up",
+        "speed_mbps": 1000,
+        "duplex": "Full"
+      },
+      "thresholds": {
+        "EXPECT_SPEED_MBPS": 1000,
+        "REQUIRE_FULL_DUPLEX": true
+      },
+      "reasons": "NIC 링크 상태와 속도/duplex가 기준을 만족합니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: lanscan -q\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: State of LAN Interface(s)\nNamePPA  Hardware Path        Station Address    HP-DLPI   Link\nlan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP\nlan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP\n\n[점검 단계 2]\n - 실행 명령어: lanadmin -x 0\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Interface = lan0\nLink status   : Up\nSpeed         : 1000 Mbps\nDuplex        : Full\nAutoneg       : On",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; lanscan -q'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:lanscan -q but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; lanscan -q'"
-      ]
+        " - 실행 명령어: lanscan -q",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: State of LAN Interface(s)",
+        "NamePPA  Hardware Path        Station Address    HP-DLPI   Link",
+        "lan0PPA  0/1/2/0/0/0           0x001560A1B2C3     UP        UP",
+        "lan1PPA  0/1/2/0/0/1           0x001560A1B2C4     UP        UP",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: lanadmin -x 0",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Interface = lan0",
+        "Link status   : Up",
+        "Speed         : 1000 Mbps",
+        "Duplex        : Full",
+        "Autoneg       : On"
+      ],
+      "message": "lanscan/lanadmin 기준 NW 링크 상태 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-25"
-  ]
+  "failed_items": []
 }

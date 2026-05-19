@@ -275,21 +275,68 @@
           "value1": "CLAIMED"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:ioscan -fnC processor but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC processor'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC processor'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC processor but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC processor'",
+      "status": "ok",
+      "metrics": {
+        "device_count": 4,
+        "devices": [
+          {
+            "class": "processor",
+            "instance": "0",
+            "hw_path": "120",
+            "driver": "processor",
+            "state": "CLAIMED",
+            "hw_type": "PROCESSOR",
+            "description": "Processor"
+          },
+          {
+            "class": "processor",
+            "instance": "1",
+            "hw_path": "121",
+            "driver": "processor",
+            "state": "CLAIMED",
+            "hw_type": "PROCESSOR",
+            "description": "Processor"
+          },
+          {
+            "class": "processor",
+            "instance": "2",
+            "hw_path": "122",
+            "driver": "processor",
+            "state": "CLAIMED",
+            "hw_type": "PROCESSOR",
+            "description": "Processor"
+          },
+          {
+            "class": "processor",
+            "instance": "3",
+            "hw_path": "123",
+            "driver": "processor",
+            "state": "CLAIMED",
+            "hw_type": "PROCESSOR",
+            "description": "Processor"
+          }
+        ],
+        "abnormal_devices": []
+      },
+      "thresholds": {
+        "expected_cpu_count": 0,
+        "allowed_processor_states": "CLAIMED"
+      },
+      "reasons": "processor 장치 4개가 정상 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ioscan -fnC processor\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Class       I  H/W Path        Driver      S/W State   H/W Type     Description\n===========================================================================\nprocessor  0  120             processor   CLAIMED     PROCESSOR    Processor\nprocessor  1  121             processor   CLAIMED     PROCESSOR    Processor\nprocessor  2  122             processor   CLAIMED     PROCESSOR    Processor\nprocessor  3  123             processor   CLAIMED     PROCESSOR    Processor",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC processor'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC processor but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC processor'"
-      ]
+        " - 실행 명령어: ioscan -fnC processor",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Class       I  H/W Path        Driver      S/W State   H/W Type     Description",
+        "===========================================================================",
+        "processor  0  120             processor   CLAIMED     PROCESSOR    Processor",
+        "processor  1  121             processor   CLAIMED     PROCESSOR    Processor",
+        "processor  2  122             processor   CLAIMED     PROCESSOR    Processor",
+        "processor  3  123             processor   CLAIMED     PROCESSOR    Processor"
+      ],
+      "message": "ioscan 기준 CPU 코어별 상태 점검 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-04"
-  ]
+  "failed_items": []
 }

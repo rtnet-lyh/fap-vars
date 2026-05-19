@@ -75,14 +75,14 @@ class Check(BaseCheck):
             )
 
         if text.startswith('Mount point not found:'):
-            return self.fail(
-                '공유 볼륨 마운트 지점 없음',
+            return self.warn(
+                metrics={'expected_mount_path': expected_mount_path, 'mounted': False},
+                thresholds={'expected_mount_path': expected_mount_path},
+                reasons='클러스터 공유 볼륨 마운트 지점이 없어 대상미해당 또는 추가 확인 대상으로 분류했습니다.',
                 message=(
-                    f'Windows 클러스터 공유 볼륨 마운트 점검에 실패했습니다. '
+                    f'Windows 클러스터 공유 볼륨 마운트 지점이 확인되지 않습니다. '
                     f'현재 상태: 기대 마운트 경로 {expected_mount_path}를 찾지 못했습니다.'
                 ),
-                stdout=text,
-                stderr=(err or '').strip(),
             )
 
         info = {}

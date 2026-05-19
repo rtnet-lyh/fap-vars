@@ -167,21 +167,86 @@
           "value1": "Z,D,T"
         }
       ],
-      "status": "fail",
-      "error": "ps 명령 실행 실패",
-      "message": "WEB 프로세스 기동 상태를 확인하지 못했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps aux | grep webtob | grep -v grep\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "process_name": "webtob",
+        "process_count": 4,
+        "pids": [
+          "1476176",
+          "1480138",
+          "1480139",
+          "1480140"
+        ],
+        "states": [
+          "S",
+          "Sl"
+        ],
+        "bad_process_count": 0,
+        "bad_processes": [],
+        "processes": [
+          {
+            "user": "exTMS",
+            "pid": "1476176",
+            "cpu_percent": 0.0,
+            "mem_percent": 5.8,
+            "stat": "Sl",
+            "start": "2025",
+            "time": "93:32",
+            "command": "/usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer"
+          },
+          {
+            "user": "exTMS",
+            "pid": "1480138",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "stat": "S",
+            "start": "2025",
+            "time": "8:27",
+            "command": "wsm -l 0x2 -I webtob1_1480137 -b 1480137"
+          },
+          {
+            "user": "exTMS",
+            "pid": "1480139",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "stat": "S",
+            "start": "2025",
+            "time": "2:40",
+            "command": "htl -l 0x2 -I webtob1_1480137 -b 1480137"
+          },
+          {
+            "user": "exTMS",
+            "pid": "1480140",
+            "cpu_percent": 0.0,
+            "mem_percent": 3.6,
+            "stat": "Sl",
+            "start": "2025",
+            "time": "3:13",
+            "command": "hth -l 0x2 -I webtob1_1480137 -b 1480137"
+          }
+        ]
+      },
+      "thresholds": {
+        "process_name": "webtob",
+        "bad_process_states": [
+          "D",
+          "T",
+          "Z"
+        ]
+      },
+      "reasons": "유효한 PID가 있고 비정상 상태 코드가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps aux | grep webtob | grep -v grep\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: exTMS    1476176  0.0  5.8 6052980 940596 ?      Sl    2025  93:32 /usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer\nexTMS    1480138  0.0  0.0  19032  8728 ?        S     2025   8:27 wsm -l 0x2 -I webtob1_1480137 -b 1480137\nexTMS    1480139  0.0  0.0  12588   900 ?        S     2025   2:40 htl -l 0x2 -I webtob1_1480137 -b 1480137\nexTMS    1480140  0.0  3.6 1211928 596944 ?      Sl    2025   3:13 hth -l 0x2 -I webtob1_1480137 -b 1480137",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: ps aux | grep webtob | grep -v grep",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: exTMS    1476176  0.0  5.8 6052980 940596 ?      Sl    2025  93:32 /usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer",
+        "exTMS    1480138  0.0  0.0  19032  8728 ?        S     2025   8:27 wsm -l 0x2 -I webtob1_1480137 -b 1480137",
+        "exTMS    1480139  0.0  0.0  12588   900 ?        S     2025   2:40 htl -l 0x2 -I webtob1_1480137 -b 1480137",
+        "exTMS    1480140  0.0  3.6 1211928 596944 ?      Sl    2025   3:13 hth -l 0x2 -I webtob1_1480137 -b 1480137"
+      ],
+      "message": "WEB 프로세스 기동 정상: 4개 프로세스 PID=1476176,1480138,1480139,1480140"
     }
   ],
-  "failed_items": [
-    "WEBTOB-ROCKY-REPLAY-007"
-  ]
+  "failed_items": []
 }

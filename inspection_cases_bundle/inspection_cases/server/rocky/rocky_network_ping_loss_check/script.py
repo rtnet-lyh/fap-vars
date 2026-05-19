@@ -202,7 +202,7 @@ class Check(BaseCheck):
                 thresholds=thresholds,
                 reasons=reasons,
                 message='Ping Loss 추가 확인 필요',
-                error='Ping Loss 추가 확인 필요'None,
+                error='Ping Loss 추가 확인 필요',
             )
 
         return self.ok(

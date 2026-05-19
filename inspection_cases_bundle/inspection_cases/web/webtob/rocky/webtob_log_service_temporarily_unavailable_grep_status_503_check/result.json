@@ -119,21 +119,26 @@
           "value1": "503"
         }
       ],
-      "status": "fail",
-      "error": "error log 명령 실행 실패",
-      "message": "WebtoB error log에서 503 상태를 확인하지 못했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep \"503\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "warning_status_code": 503,
+        "matching_status_count": 0,
+        "sample_lines": []
+      },
+      "thresholds": {
+        "error_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "warning_status_code": 503
+      },
+      "reasons": "error log에서 HTTP 503 관련 로그가 발견되지 않았습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep \"503\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)\n - 명령 종료코드: rc=0 (정상 종료)",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: grep \"503\" $(ls /home/exTMS/tmax/webtob/log/main/error.log*|sort|tail -n 1)",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)"
+      ],
+      "message": "WebtoB 503 상태 정상: status=503 미검출"
     }
   ],
-  "failed_items": [
-    "WEBTOB-ROCKY-REPLAY-017"
-  ]
+  "failed_items": []
 }

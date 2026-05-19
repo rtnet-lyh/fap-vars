@@ -305,21 +305,78 @@
           "value1": "rw"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:mount but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; mount'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; mount'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:mount but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; mount'",
+      "status": "ok",
+      "metrics": {
+        "mount_count": 2,
+        "target_mount_count": 2,
+        "mounts": [
+          {
+            "source": "/dev/vgshared/lvol1",
+            "mount_point": "/app",
+            "fstype": "vxfs",
+            "options": [
+              "rw",
+              "suid",
+              "delaylog",
+              "largefiles",
+              "dev=4000001"
+            ]
+          },
+          {
+            "source": "/dev/vgshared/lvol2",
+            "mount_point": "/data",
+            "fstype": "vxfs",
+            "options": [
+              "rw",
+              "suid",
+              "delaylog",
+              "largefiles",
+              "dev=4000002"
+            ]
+          }
+        ],
+        "target_mounts": [
+          {
+            "source": "/dev/vgshared/lvol1",
+            "mount_point": "/app",
+            "fstype": "vxfs",
+            "options": [
+              "rw",
+              "suid",
+              "delaylog",
+              "largefiles",
+              "dev=4000001"
+            ]
+          },
+          {
+            "source": "/dev/vgshared/lvol2",
+            "mount_point": "/data",
+            "fstype": "vxfs",
+            "options": [
+              "rw",
+              "suid",
+              "delaylog",
+              "largefiles",
+              "dev=4000002"
+            ]
+          }
+        ]
+      },
+      "thresholds": {
+        "required_shared_mounts": "/app|/data",
+        "required_mount_options": "rw"
+      },
+      "reasons": "공유 볼륨이 요구 옵션으로 마운트되어 있습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: mount\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: /dev/vgshared/lvol1 on /app type vxfs rw,suid,delaylog,largefiles,dev=4000001 on Thu Dec 30 12:10:01 2025\n/dev/vgshared/lvol2 on /data type vxfs rw,suid,delaylog,largefiles,dev=4000002 on Thu Dec 30 12:10:01 2025",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; mount'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:mount but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; mount'"
-      ]
+        " - 실행 명령어: mount",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: /dev/vgshared/lvol1 on /app type vxfs rw,suid,delaylog,largefiles,dev=4000001 on Thu Dec 30 12:10:01 2025",
+        "/dev/vgshared/lvol2 on /data type vxfs rw,suid,delaylog,largefiles,dev=4000002 on Thu Dec 30 12:10:01 2025"
+      ],
+      "message": "공유 볼륨 상태 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-03"
-  ]
+  "failed_items": []
 }

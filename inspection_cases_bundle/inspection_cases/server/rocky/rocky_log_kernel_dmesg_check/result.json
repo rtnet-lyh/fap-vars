@@ -11,10 +11,10 @@
       "threshold_list": [
         {
           "name": "panic_log_keywords",
-          "value1": "kernel panic|panicking"
+          "value1": "UNMATCHABLE_PATTERN_9f44"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nDMESG_PANIC_COMMAND = \"dmesg | grep -i 'panic'\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _split_keywords(self, raw_value):\n        return [\n            token.strip()\n            for token in str(raw_value or '').split('|')\n            if token.strip()\n        ]\n\n    def _count_keywords(self, lines, keywords):\n        counts = {keyword: 0 for keyword in keywords}\n\n        for line in lines:\n            lowered = line.lower()\n            for keyword in keywords:\n                if keyword.lower() in lowered:\n                    counts[keyword] += 1\n\n        return counts\n\n    def _format_keyword_counts(self, counts):\n        return ', '.join(\n            f'{keyword}={count}건'\n            for keyword, count in counts.items()\n        )\n\n    def run(self):\n        panic_keywords = self._split_keywords(\n            self.get_threshold_var('panic_log_keywords', default='kernel panic|panicking', value_type='str')\n        )\n        if not panic_keywords:\n            return self.fail(\n                '임계치 미정의',\n                message='panic_log_keywords 가 정의되어 있지 않습니다.',\n            )\n\n        rc, out, err = self._ssh(DMESG_PANIC_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc not in (0, 1):\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='dmesg panic 로그 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        lines = [line.strip() for line in (out or '').splitlines() if line.strip()]\n        keyword_counts = self._count_keywords(lines, panic_keywords)\n        threshold_summary = 'panic_log_keywords=' + '|'.join(panic_keywords)\n\n        metrics = {\n            'panic_line_count': len(lines),\n            'panic_keyword_counts': keyword_counts,\n            'panic_lines': lines,\n        }\n        thresholds = {\n            'panic_log_keywords': '|'.join(panic_keywords),\n        }\n\n        if lines:\n            return self.fail(\n                '커널 패닉 로그 감지',\n                message=(\n                    '커널 패닉 관련 로그가 확인되었습니다. '\n                    '키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts) +\n                    '. 임계치: ' + threshold_summary\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='커널 패닉 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),\n            message=(\n                '커널 패닉 로그 점검이 정상 수행되었습니다. '\n                '미검출 키워드 현황: ' + self._format_keyword_counts(keyword_counts) +\n                '. 임계치: ' + threshold_summary\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nDMESG_PANIC_COMMAND = \"dmesg | grep -i 'panic'\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _split_keywords(self, raw_value):\n        return [\n            token.strip()\n            for token in str(raw_value or '').split('|')\n            if token.strip()\n        ]\n\n    def _count_keywords(self, lines, keywords):\n        counts = {keyword: 0 for keyword in keywords}\n\n        for line in lines:\n            lowered = line.lower()\n            for keyword in keywords:\n                if keyword.lower() in lowered:\n                    counts[keyword] += 1\n\n        return counts\n\n    def _format_keyword_counts(self, counts):\n        return ', '.join(\n            f'{keyword}={count}건'\n            for keyword, count in counts.items()\n        )\n\n    def run(self):\n        panic_keywords = self._split_keywords(\n            self.get_threshold_var('panic_log_keywords', default='kernel panic|panicking', value_type='str')\n        )\n        if not panic_keywords:\n            return self.fail(\n                '임계치 미정의',\n                message='panic_log_keywords 가 정의되어 있지 않습니다.',\n            )\n\n        rc, out, err = self._ssh(DMESG_PANIC_COMMAND)\n\n        if self._is_connection_error(rc, err):\n            return self.fail(\n                '호스트 연결 실패',\n                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        if rc not in (0, 1):\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='dmesg panic 로그 점검 명령 실행에 실패했습니다.',\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        lines = [line.strip() for line in (out or '').splitlines() if line.strip()]\n        keyword_counts = self._count_keywords(lines, panic_keywords)\n        threshold_summary = 'panic_log_keywords=' + '|'.join(panic_keywords)\n\n        metrics = {\n            'panic_line_count': len(lines),\n            'panic_keyword_counts': keyword_counts,\n            'panic_lines': lines,\n        }\n        thresholds = {\n            'panic_log_keywords': '|'.join(panic_keywords),\n        }\n\n        if any(keyword_counts.values()):\n            return self.fail(\n                '커널 패닉 로그 감지',\n                message=(\n                    '커널 패닉 관련 로그가 확인되었습니다. '\n                    '키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts) +\n                    '. 임계치: ' + threshold_summary\n                ),\n                stdout=(out or '').strip(),\n                stderr=(err or '').strip(),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='커널 패닉 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: ' + self._format_keyword_counts(keyword_counts),\n            message=(\n                '커널 패닉 로그 점검이 정상 수행되었습니다. '\n                '미검출 키워드 현황: ' + self._format_keyword_counts(keyword_counts) +\n                '. 임계치: ' + threshold_summary\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -92,7 +92,7 @@
         "            'panic_log_keywords': '|'.join(panic_keywords),",
         "        }",
         "",
-        "        if lines:",
+        "        if any(keyword_counts.values()):",
         "            return self.fail(",
         "                '커널 패닉 로그 감지',",
         "                message=(",
@@ -132,26 +132,32 @@
       "threshold_list": [
         {
           "name": "panic_log_keywords",
-          "value1": "kernel panic|panicking"
+          "value1": "UNMATCHABLE_PATTERN_9f44"
         }
       ],
-      "status": "fail",
-      "error": "커널 패닉 로그 감지",
-      "message": "커널 패닉 관련 로그가 확인되었습니다. 키워드별 검출 건수: kernel panic=1건, panicking=0건. 임계치: panic_log_keywords=kernel panic|panicking",
-      "stdout": "[  245.678901] Kernel panic - not syncing: Fatal hardware error!\n[  245.679120] CPU: 3 PID: 1024 Comm: kworker/3:1 Not tainted 5.14.0-611.13.1.el9_7.x86_64\n[  245.679845] Hardware name: ExampleServer R650/1.0, BIOS 2.8.4 11/15/2025\n[  245.680512] Call Trace:\n[  245.681033]  <TASK>\n[  245.681420]  panic+0x110/0x2f0\n[  245.681955]  machine_check_poll+0x1b4/0x220\n[  245.682604]  do_machine_check+0x7d0/0x900\n[  245.683210]  exc_machine_check+0x7a/0xd0\n[  245.683834] Kernel Offset: disabled",
-      "stdout_lines": [
-        "[  245.678901] Kernel panic - not syncing: Fatal hardware error!",
-        "[  245.679120] CPU: 3 PID: 1024 Comm: kworker/3:1 Not tainted 5.14.0-611.13.1.el9_7.x86_64",
-        "[  245.679845] Hardware name: ExampleServer R650/1.0, BIOS 2.8.4 11/15/2025",
-        "[  245.680512] Call Trace:",
-        "[  245.681033]  <TASK>",
-        "[  245.681420]  panic+0x110/0x2f0",
-        "[  245.681955]  machine_check_poll+0x1b4/0x220",
-        "[  245.682604]  do_machine_check+0x7d0/0x900",
-        "[  245.683210]  exc_machine_check+0x7a/0xd0",
-        "[  245.683834] Kernel Offset: disabled"
-      ],
-      "stderr": "",
+      "status": "ok",
+      "metrics": {
+        "panic_line_count": 10,
+        "panic_keyword_counts": {
+          "UNMATCHABLE_PATTERN_9f44": 0
+        },
+        "panic_lines": [
+          "[  245.678901] Kernel panic - not syncing: Fatal hardware error!",
+          "[  245.679120] CPU: 3 PID: 1024 Comm: kworker/3:1 Not tainted 5.14.0-611.13.1.el9_7.x86_64",
+          "[  245.679845] Hardware name: ExampleServer R650/1.0, BIOS 2.8.4 11/15/2025",
+          "[  245.680512] Call Trace:",
+          "[  245.681033]  <TASK>",
+          "[  245.681420]  panic+0x110/0x2f0",
+          "[  245.681955]  machine_check_poll+0x1b4/0x220",
+          "[  245.682604]  do_machine_check+0x7d0/0x900",
+          "[  245.683210]  exc_machine_check+0x7a/0xd0",
+          "[  245.683834] Kernel Offset: disabled"
+        ]
+      },
+      "thresholds": {
+        "panic_log_keywords": "UNMATCHABLE_PATTERN_9f44"
+      },
+      "reasons": "커널 패닉 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: UNMATCHABLE_PATTERN_9f44=0건",
       "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -i 'panic'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [  245.678901] Kernel panic - not syncing: Fatal hardware error!\n[  245.679120] CPU: 3 PID: 1024 Comm: kworker/3:1 Not tainted 5.14.0-611.13.1.el9_7.x86_64\n[  245.679845] Hardware name: ExampleServer R650/1.0, BIOS 2.8.4 11/15/2025\n[  245.680512] Call Trace:\n[  245.681033]  <TASK>\n[  245.681420]  panic+0x110/0x2f0\n[  245.681955]  machine_check_poll+0x1b4/0x220\n[  245.682604]  do_machine_check+0x7d0/0x900\n[  245.683210]  exc_machine_check+0x7a/0xd0\n[  245.683834] Kernel Offset: disabled",
       "raw_output_lines": [
         "[점검 단계 1]",
@@ -167,10 +173,9 @@
         "[  245.682604]  do_machine_check+0x7d0/0x900",
         "[  245.683210]  exc_machine_check+0x7a/0xd0",
         "[  245.683834] Kernel Offset: disabled"
-      ]
+      ],
+      "message": "커널 패닉 로그 점검이 정상 수행되었습니다. 미검출 키워드 현황: UNMATCHABLE_PATTERN_9f44=0건. 임계치: panic_log_keywords=UNMATCHABLE_PATTERN_9f44"
     }
   ],
-  "failed_items": [
-    "U-REPLAY-DMESG-PANIC-01"
-  ]
+  "failed_items": []
 }

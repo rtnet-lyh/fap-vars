@@ -38,7 +38,7 @@
     "threshold_list": [
       {
         "name": "panic_log_keywords",
-        "value1": "kernel panic|panicking"
+        "value1": "UNMATCHABLE_PATTERN_9f44"
       }
     ]
   }

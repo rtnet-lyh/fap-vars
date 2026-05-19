@@ -7,27 +7,6 @@
   {
     "channel": "terminal",
     "action": "send",
-    "matcher_type": "exact",
-    "matcher_value": "su - root"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "Password:"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
-    "redacted": true
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
     "matcher_type": "regex",
     "matcher_value": "^tail\\ \\-n\\ 2000\\ /var/adm/cmcluster/cmcld\\.log \\| egrep -i .+$"
   },

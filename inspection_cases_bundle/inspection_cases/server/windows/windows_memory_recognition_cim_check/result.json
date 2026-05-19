@@ -248,21 +248,75 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows 메모리 상태 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4",
+      "status": "ok",
+      "metrics": {
+        "array_slot_count": 4,
+        "array_max_capacity_gib": 64.0,
+        "installed_module_count": 2,
+        "installed_memory_total_gib": 8.0,
+        "configured_clock_speeds_mhz": [
+          2400,
+          2400
+        ],
+        "memory_speeds_mhz": [
+          2400,
+          2400
+        ],
+        "smbios_memory_types": [
+          26,
+          26
+        ],
+        "form_factors": [
+          12,
+          12
+        ],
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "min_installed_memory_gib": 8.0,
+        "failure_keywords": []
+      },
+      "reasons": "메모리 슬롯 정보와 설치 메모리 용량이 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: {\n  \"Array\": {\n    \"Slots\": 4,\n    \"MaxCapacityGiB\": 64.0\n  },\n  \"Modules\": [\n    {\n      \"DeviceLocator\": \"DIMM1\",\n      \"BankLabel\": \"\",\n      \"SizeGiB\": 4.0,\n      \"Manufacturer\": \"802C0000802C\",\n      \"PartNumber\": \"4ATF51264AZ-2G3E1\",\n      \"SerialNumber\": \"1F3535E2\",\n      \"ConfiguredClockSpeed\": 2400,\n      \"Speed\": 2400,\n      \"SMBIOSMemoryType\": 26,\n      \"FormFactor\": 12\n    },\n    {\n      \"DeviceLocator\": \"DIMM2\",\n      \"BankLabel\": \"\",\n      \"SizeGiB\": 4.0,\n      \"Manufacturer\": \"802C0000802C\",\n      \"PartNumber\": \"4ATF51264AZ-2G3E1\",\n      \"SerialNumber\": \"1F351D92\",\n      \"ConfiguredClockSpeed\": 2400,\n      \"Speed\": 2400,\n      \"SMBIOSMemoryType\": 26,\n      \"FormFactor\": 12\n    }\n  ]\n}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:$a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $a=Get-CimInstance Win32_PhysicalMemoryArray;$m=Get-CimInstance Win32_PhysicalMemory;$result = [ordered]@{  Array = [ordered]@{    Slots = (($a | Measure-Object -Property MemoryDevices -Sum).Sum);    MaxCapacityGiB = [math]::Round((((($a | Measure-Object -Property MaxCapacityEx -Sum).Sum) * 1KB) / 1GB), 2)  };  Modules = @($m | Select-Object     DeviceLocator,    BankLabel,    @{N='SizeGiB';E={[math]::Round($_.Capacity/1GB,2)}},    Manufacturer,    PartNumber,    SerialNumber,    ConfiguredClockSpeed,    Speed,    SMBIOSMemoryType,    FormFactor  )};$result | ConvertTo-Json -Depth 4"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: {",
+        "  \"Array\": {",
+        "    \"Slots\": 4,",
+        "    \"MaxCapacityGiB\": 64.0",
+        "  },",
+        "  \"Modules\": [",
+        "    {",
+        "      \"DeviceLocator\": \"DIMM1\",",
+        "      \"BankLabel\": \"\",",
+        "      \"SizeGiB\": 4.0,",
+        "      \"Manufacturer\": \"802C0000802C\",",
+        "      \"PartNumber\": \"4ATF51264AZ-2G3E1\",",
+        "      \"SerialNumber\": \"1F3535E2\",",
+        "      \"ConfiguredClockSpeed\": 2400,",
+        "      \"Speed\": 2400,",
+        "      \"SMBIOSMemoryType\": 26,",
+        "      \"FormFactor\": 12",
+        "    },",
+        "    {",
+        "      \"DeviceLocator\": \"DIMM2\",",
+        "      \"BankLabel\": \"\",",
+        "      \"SizeGiB\": 4.0,",
+        "      \"Manufacturer\": \"802C0000802C\",",
+        "      \"PartNumber\": \"4ATF51264AZ-2G3E1\",",
+        "      \"SerialNumber\": \"1F351D92\",",
+        "      \"ConfiguredClockSpeed\": 2400,",
+        "      \"Speed\": 2400,",
+        "      \"SMBIOSMemoryType\": 26,",
+        "      \"FormFactor\": 12",
+        "    }",
+        "  ]",
+        "}"
+      ],
+      "message": "Windows 메모리 상태 점검이 정상입니다. 현재 상태: 메모리 슬롯 4개, 최대 용량 64.00GiB, 설치 모듈 2개, 설치 용량 8.00GiB (기준 8.00GiB 이상)."
     }
   ],
-  "failed_items": [
-    "W-REPLAY-MEM-STATUS-01"
-  ]
+  "failed_items": []
 }

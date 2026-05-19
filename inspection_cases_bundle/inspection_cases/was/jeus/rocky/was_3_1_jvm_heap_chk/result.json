@@ -93,21 +93,58 @@
           "value1": "8192"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "JEUS 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "jvm_count": 2,
+        "max_heap_size_mb": 8192.0,
+        "heap_sizes_mb": [
+          8192.0,
+          4096.0
+        ]
+      },
+      "thresholds": {
+        "max_heap_size": 8192.0
+      },
+      "reasons": "MaxHeapSize가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ======== PID: 1385334 ========\nAttaching to process ID 1385334, please wait...\nDebugger attached successfully.\nServer compiler detected.\nJVM version is 25.431-b10\n\nHeap Configuration:\n   MaxHeapSize              = 8589934592 (8192.0MB)\n   MetaspaceSize            = 536870912 (512.0MB)\n\nHeap Usage:\nG1 Heap:\n   capacity = 8589934592 (8192.0MB)\n   used     = 3874552064 (3695.060791015625MB)\n   45.105722546577454% used\n\n======== PID: 1416324 ========\nAttaching to process ID 1416324, please wait...\nDebugger attached successfully.\nServer compiler detected.\nJVM version is 25.431-b10\n\nHeap Configuration:\n   MaxHeapSize              = 4294967296 (4096.0MB)\n   MetaspaceSize            = 536870912 (512.0MB)\n\nHeap Usage:\nPS Old Generation\n   capacity = 2863661056 (2731.0MB)\n   used     = 311900208 (297.4512176513672MB)\n   10.891659379398286% used",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jmap -heap $pid; echo; done",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ======== PID: 1385334 ========",
+        "Attaching to process ID 1385334, please wait...",
+        "Debugger attached successfully.",
+        "Server compiler detected.",
+        "JVM version is 25.431-b10",
+        "",
+        "Heap Configuration:",
+        "   MaxHeapSize              = 8589934592 (8192.0MB)",
+        "   MetaspaceSize            = 536870912 (512.0MB)",
+        "",
+        "Heap Usage:",
+        "G1 Heap:",
+        "   capacity = 8589934592 (8192.0MB)",
+        "   used     = 3874552064 (3695.060791015625MB)",
+        "   45.105722546577454% used",
+        "",
+        "======== PID: 1416324 ========",
+        "Attaching to process ID 1416324, please wait...",
+        "Debugger attached successfully.",
+        "Server compiler detected.",
+        "JVM version is 25.431-b10",
+        "",
+        "Heap Configuration:",
+        "   MaxHeapSize              = 4294967296 (4096.0MB)",
+        "   MetaspaceSize            = 536870912 (512.0MB)",
+        "",
+        "Heap Usage:",
+        "PS Old Generation",
+        "   capacity = 2863661056 (2731.0MB)",
+        "   used     = 311900208 (297.4512176513672MB)",
+        "   10.891659379398286% used"
+      ],
+      "message": "JEUS JVM Heap 정상: 최대 8192.0MB, 기준 8192.0MB"
     }
   ],
-  "failed_items": [
-    "WAS-JEUS-ROCKY-REPLAY-010"
-  ]
+  "failed_items": []
 }

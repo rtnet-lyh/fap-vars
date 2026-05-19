@@ -11,11 +11,11 @@
       "threshold_list": [
         {
           "name": "max_memory_usage_percent",
-          "value1": "80.0"
+          "value1": "90.0"
         },
         {
           "name": "min_memory_free_percent",
-          "value1": "20.0"
+          "value1": "10.0"
         },
         {
           "name": "max_swap_usage_percent",
@@ -233,11 +233,11 @@
       "threshold_list": [
         {
           "name": "max_memory_usage_percent",
-          "value1": "80.0"
+          "value1": "90.0"
         },
         {
           "name": "min_memory_free_percent",
-          "value1": "20.0"
+          "value1": "10.0"
         },
         {
           "name": "max_swap_usage_percent",
@@ -248,21 +248,35 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows 메모리 사용률 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:$os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:$os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)",
+      "status": "ok",
+      "metrics": {
+        "memory_total_gib": 7.73,
+        "memory_used_gib": 6.63,
+        "memory_free_gib": 1.1,
+        "memory_usage_percent": 85.83,
+        "memory_free_percent": 14.23,
+        "swap_total_gib": 18.0,
+        "swap_used_gib": 4.77,
+        "swap_free_gib": 13.23,
+        "swap_usage_percent": 26.5,
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_memory_usage_percent": 90.0,
+        "min_memory_free_percent": 10.0,
+        "max_swap_usage_percent": 50.0,
+        "failure_keywords": []
+      },
+      "reasons": "물리 메모리 사용률, 가용 메모리 비율, 스왑 사용률이 모두 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: MEM total=7.73GiB used=6.63GiB free=1.10GiB usage=85.83% | SWAP total=18.00GiB used=4.77GiB free=13.23GiB",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:$os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: MEM total=7.73GiB used=6.63GiB free=1.10GiB usage=85.83% | SWAP total=18.00GiB used=4.77GiB free=13.23GiB"
+      ],
+      "message": "Windows 메모리 사용률 점검이 정상입니다. 현재 상태: 물리 메모리 총 7.73GiB, 사용 6.63GiB, 여유 1.10GiB, 사용률 85.83% (기준 90.00% 미만), 여유율 14.23% (기준 10.00% 초과), 스왑 사용률 26.50% (기준 50.00% 미만)."
     }
   ],
-  "failed_items": [
-    "W-REPLAY-MEM-01"
-  ]
+  "failed_items": []
 }

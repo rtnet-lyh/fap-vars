@@ -240,21 +240,38 @@
           "value1": "sdf"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "CPU 로그 점검 명령 종료코드가 rc=255로 반환되었습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "command": "dmesg | egrep -i '\\becc\\s+error\\b|\\buncorrectable\\b|cpu.*offline|offline.*cpu'",
+        "command_rc": 0,
+        "log_line_count": 2,
+        "ignored_line_count": 1,
+        "bad_match_count": 0,
+        "ignored_lines": [
+          {
+            "line": "sdffsfs cpu sdfsdlf",
+            "matched_patterns": [
+              "sdf"
+            ]
+          }
+        ],
+        "bad_matches": []
+      },
+      "thresholds": {
+        "bad_log_keywords": "\\becc\\s+error\\b|\\buncorrectable\\b|cpu.*offline|offline.*cpu",
+        "ignore_log_keywords": "sdf"
+      },
+      "reasons": "CPU 장애 로그가 확인되지 않았습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | egrep -i '\\becc\\s+error\\b|\\buncorrectable\\b|cpu.*offline|offline.*cpu'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [    0.439458] ERST: Error Record Serialization Table (ERST) support is initialized.\nsdffsfs cpu sdfsdlf",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 실행 명령어: dmesg | egrep -i '\\becc\\s+error\\b|\\buncorrectable\\b|cpu.*offline|offline.*cpu'",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: [    0.439458] ERST: Error Record Serialization Table (ERST) support is initialized.",
+        "sdffsfs cpu sdfsdlf"
+      ],
+      "message": "CPU 로그 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-13"
-  ]
+  "failed_items": []
 }

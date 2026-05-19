@@ -269,21 +269,45 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows CPU 코어 상태 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
+      "status": "ok",
+      "metrics": {
+        "socket_count": 1,
+        "total_core_count": 4,
+        "total_logical_processor_count": 8,
+        "threads_per_core": 2.0,
+        "processor_name": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+        "socket_designation": "U3E1",
+        "manufacturer": "GenuineIntel",
+        "max_clock_speed_mhz": 2419,
+        "processor_names": [
+          "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz"
+        ],
+        "socket_designations": [
+          "U3E1"
+        ],
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "min_socket_count": 1,
+        "min_total_core_count": 4,
+        "min_total_logical_processor_count": 8,
+        "failure_keywords": []
+      },
+      "reasons": "물리 CPU 소켓 수, 물리 코어 수, 논리 프로세서 수가 모두 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2419\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 8",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+        "SocketDesignation         : U3E1",
+        "Manufacturer              : GenuineIntel",
+        "MaxClockSpeed             : 2419",
+        "NumberOfCores             : 4",
+        "NumberOfLogicalProcessors : 8"
+      ],
+      "message": "Windows CPU 코어 상태 점검이 정상입니다. 현재 상태: CPU=\"11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\", 소켓 1개 (기준 1개 이상), 물리 코어 4개 (기준 4개 이상), 논리 프로세서 8개 (기준 8개 이상), 스레드/코어 2.0, 최대 클럭 2419MHz."
     }
   ],
-  "failed_items": [
-    "W-REPLAY-CPU-CORE-01"
-  ]
+  "failed_items": []
 }

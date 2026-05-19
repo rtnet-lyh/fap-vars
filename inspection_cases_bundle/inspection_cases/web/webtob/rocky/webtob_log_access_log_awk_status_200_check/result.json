@@ -135,21 +135,35 @@
           "value1": "200"
         }
       ],
-      "status": "fail",
-      "error": "access log 명령 실행 실패",
-      "message": "WebtoB access log에서 정상 응답 상태를 확인하지 못했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2)==200' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "required_status_code": 200,
+        "matching_status_count": 4,
+        "sample_lines": [
+          "172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getNotiPopupInfo.do HTTP/1.1\" 200 12 5",
+          "172.29.53.51 [08/May/2026:17:57:42 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778222531851 HTTP/1.1\" 200 10553961 156",
+          "172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 200 12 2",
+          "172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /checkSession.do HTTP/1.1\" 200 14 0"
+        ]
+      },
+      "thresholds": {
+        "access_log_path": "/home/exTMS/tmax/webtob/log/main",
+        "required_status_code": 200
+      },
+      "reasons": "최신 access log에서 HTTP 200 응답을 확인했습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: awk '$(NF-2)==200' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getNotiPopupInfo.do HTTP/1.1\" 200 12 5\n172.29.53.51 [08/May/2026:17:57:42 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778222531851 HTTP/1.1\" 200 10553961 156\n172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 200 12 2\n172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /checkSession.do HTTP/1.1\" 200 14 0",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: awk '$(NF-2)==200' $(ls /home/exTMS/tmax/webtob/log/main/access.log*|sort|tail -n 1) | tail -20",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getNotiPopupInfo.do HTTP/1.1\" 200 12 5",
+        "172.29.53.51 [08/May/2026:17:57:42 +0900] \"GET /trafficMonitor/trafficData?source=trafficVdsCorrectionLine&sourceLayer=VDS_TRAFFIC_CORRECTION&_=1778222531851 HTTP/1.1\" 200 10553961 156",
+        "172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /getOpinionPopupInfo.do HTTP/1.1\" 200 12 2",
+        "172.18.12.53 [08/May/2026:17:57:42 +0900] \"POST /checkSession.do HTTP/1.1\" 200 14 0"
+      ],
+      "message": "WebtoB access log 정상 응답 확인 정상: status=200, count=4"
     }
   ],
-  "failed_items": [
-    "WEBTOB-ROCKY-REPLAY-012"
-  ]
+  "failed_items": []
 }

@@ -1,0 +1,106 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-008",
+      "item_id": 92008,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_frequency",
+          "value1": "2"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        try:\n            full_gc_count = int(stdout.split()[0])\n        except (IndexError, ValueError):\n            return self.fail('Full GC 횟수 파싱 실패', message='Full GC 횟수 값을 확인하지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_frequency', default=2, value_type='int')\n        metrics = {'full_gc_count': full_gc_count}\n        thresholds = {'max_frequency': threshold}\n        if full_gc_count > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준을 초과했습니다.', message='Full GC 발생 빈도 경고: count=%s, 기준=%s' % (full_gc_count, threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준 이하입니다.', message='Full GC 발생 빈도 정상: count=%s, 기준=%s' % (full_gc_count, threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        try:",
+        "            full_gc_count = int(stdout.split()[0])",
+        "        except (IndexError, ValueError):",
+        "            return self.fail('Full GC 횟수 파싱 실패', message='Full GC 횟수 값을 확인하지 못했습니다.', stdout=stdout)",
+        "        threshold = self.get_threshold_var('max_frequency', default=2, value_type='int')",
+        "        metrics = {'full_gc_count': full_gc_count}",
+        "        thresholds = {'max_frequency': threshold}",
+        "        if full_gc_count > threshold:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준을 초과했습니다.', message='Full GC 발생 빈도 경고: count=%s, 기준=%s' % (full_gc_count, threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준 이하입니다.', message='Full GC 발생 빈도 정상: count=%s, 기준=%s' % (full_gc_count, threshold))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-008",
+      "item_id": 92008,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_frequency",
+          "value1": "2"
+        }
+      ],
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
+    }
+  ],
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-008"
+  ]
+}

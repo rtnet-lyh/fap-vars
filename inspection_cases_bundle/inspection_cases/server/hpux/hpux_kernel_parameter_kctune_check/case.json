@@ -13,7 +13,7 @@
         "data": {
           "username": "fap",
           "password": "f3dtop0!",
-          "become": "true",
+          "become": "false",
           "become_method": "su -",
           "become_user": "root",
           "become_password": "f3dtop0!"
@@ -46,7 +46,7 @@
     "threshold_list": [
       {
         "name": "required_kernel_parameters",
-        "value1": "test"
+        "value1": "max_thread_proc,maxfiles,nproc,semmns"
       }
     ]
   }

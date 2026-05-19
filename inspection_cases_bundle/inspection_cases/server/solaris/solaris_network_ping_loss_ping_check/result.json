@@ -268,26 +268,54 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Solaris Network 통신 상태 점검에 실패했습니다. 현재 상태: ping 명령을 정상적으로 실행하지 못했습니다.",
-      "stdout": "",
-      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: ping -s 8.8.8.8 56 4\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "status": "ok",
+      "metrics": {
+        "packets_transmitted": 4,
+        "packets_received": 4,
+        "packet_loss_percent": 0.0,
+        "rtt_min_ms": 12.1,
+        "rtt_avg_ms": 12.4,
+        "rtt_max_ms": 12.8,
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_packet_loss_percent": 0.0,
+        "max_avg_rtt_ms": 100.0,
+        "failure_keywords": []
+      },
+      "reasons": "패킷 손실률이 0.00% 이하이고 평균 RTT가 100.00ms 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: ping -s 8.8.8.8 56 4\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PING 8.8.8.8: 56 data bytes\n64 bytes from 8.8.8.8: icmp_seq=0. time=12.1 ms\n64 bytes from 8.8.8.8: icmp_seq=1. time=12.4 ms\n64 bytes from 8.8.8.8: icmp_seq=2. time=12.8 ms\n64 bytes from 8.8.8.8: icmp_seq=3. time=12.3 ms\n----8.8.8.8 PING Statistics----\n4 packets transmitted, 4 received, 0% packet loss\nround-trip (ms) min/avg/max = 12.1/12.4/12.8",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: /usr/bin/id",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root)",
+        "",
+        "[점검 단계 4]",
         " - 실행 명령어: ping -s 8.8.8.8 56 4",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: PING 8.8.8.8: 56 data bytes",
+        "64 bytes from 8.8.8.8: icmp_seq=0. time=12.1 ms",
+        "64 bytes from 8.8.8.8: icmp_seq=1. time=12.4 ms",
+        "64 bytes from 8.8.8.8: icmp_seq=2. time=12.8 ms",
+        "64 bytes from 8.8.8.8: icmp_seq=3. time=12.3 ms",
+        "----8.8.8.8 PING Statistics----",
+        "4 packets transmitted, 4 received, 0% packet loss",
+        "round-trip (ms) min/avg/max = 12.1/12.4/12.8"
+      ],
+      "message": "Solaris Network 통신 상태가 정상입니다. 현재 상태: 패킷 손실률 0.00% (기준 0.00% 이하), 전송 4건, 수신 4건, RTT min/avg/max 12.1/12.4/12.8ms, 평균 RTT 기준 100.00ms 이하 충족."
     }
   ],
-  "failed_items": [
-    "SOL-REPLAY-NET-03"
-  ]
+  "failed_items": []
 }

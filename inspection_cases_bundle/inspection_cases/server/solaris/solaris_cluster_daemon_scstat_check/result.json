@@ -340,26 +340,84 @@
           "value1": "Cluster Nodes,Cluster Transport Paths,Resource Groups,Network Interfaces"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Solaris Cluster 정상 유무 점검에 실패했습니다. 현재 상태: scstat 명령 종료코드가 rc=1로 반환되었습니다.",
-      "stdout": "",
-      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: scstat\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "status": "ok",
+      "metrics": {
+        "command_rc": 0,
+        "section_count": 4,
+        "total_entry_count": 8,
+        "matched_failure_keywords": [],
+        "abnormal_entry_count": 0,
+        "abnormal_entries": [],
+        "cluster_nodes_count": 2,
+        "transport_paths_count": 2,
+        "resource_groups_count": 2,
+        "network_interfaces_count": 2,
+        "online_count": 8,
+        "offline_count": 0,
+        "maintenance_count": 0,
+        "path_down_count": 0,
+        "stderr_line_count": 0
+      },
+      "thresholds": {
+        "bad_status_keywords": [
+          "offline",
+          "maintenance",
+          "path down"
+        ],
+        "failure_keywords": [
+          "장치를 찾을 수 없습니다",
+          "not found",
+          "module",
+          "cannot",
+          "command not found"
+        ],
+        "required_sections": [
+          "Cluster Nodes",
+          "Cluster Transport Paths",
+          "Resource Groups",
+          "Network Interfaces"
+        ]
+      },
+      "reasons": "Cluster Nodes, Cluster Transport Paths, Resource Groups, Network Interfaces 섹션이 모두 확인되었고 offline, maintenance, path down 같은 비정상 상태가 검출되지 않았습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: scstat\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: === Cluster Nodes ===\nnode1  Online\nnode2  Online\n\n=== Cluster Transport Paths ===\nnode1 -> node2  Path online\nnode2 -> node1  Path online\n\n=== Resource Groups ===\nresource_grp1  node1  Online\nresource_grp2  node2  Online\n\n=== Network Interfaces ===\nnet0  node1  Online\nnet1  node2  Online",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: /usr/bin/id",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root)",
+        "",
+        "[점검 단계 4]",
         " - 실행 명령어: scstat",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: === Cluster Nodes ===",
+        "node1  Online",
+        "node2  Online",
+        "",
+        "=== Cluster Transport Paths ===",
+        "node1 -> node2  Path online",
+        "node2 -> node1  Path online",
+        "",
+        "=== Resource Groups ===",
+        "resource_grp1  node1  Online",
+        "resource_grp2  node2  Online",
+        "",
+        "=== Network Interfaces ===",
+        "net0  node1  Online",
+        "net1  node2  Online"
+      ],
+      "message": "Solaris Cluster 정상 유무 점검이 정상입니다. 현재 상태: Cluster Nodes 2건, Transport Paths 2건, Resource Groups 2건, Network Interfaces 2건, online 8건, offline 0건, maintenance 0건, path down 0건으로 집계되었습니다."
     }
   ],
-  "failed_items": [
-    "SOL-REPLAY-CLUSTER-02"
-  ]
+  "failed_items": []
 }

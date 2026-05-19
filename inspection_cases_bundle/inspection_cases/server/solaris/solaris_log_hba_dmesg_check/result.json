@@ -179,26 +179,55 @@
           "value1": "장치를 찾을 수 없습니다,not found,cannot,command not found,module missing"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Solaris HBA 로그 점검에 실패했습니다. 현재 상태: stderr 출력이 확인되었습니다: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "stdout": "",
-      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: dmesg | grep -i 'hba|loop|port|offline|online'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "status": "ok",
+      "metrics": {
+        "matched_log_count": 0,
+        "abnormal_log_count": 0,
+        "matched_logs": [],
+        "abnormal_logs": [],
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "bad_log_keywords": [
+          "loop",
+          "offline",
+          "error",
+          "failed",
+          "failure"
+        ],
+        "failure_keywords": [
+          "장치를 찾을 수 없습니다",
+          "not found",
+          "cannot",
+          "command not found",
+          "module missing"
+        ]
+      },
+      "reasons": "HBA 관련 비정상 로그가 검출되지 않았고 stderr도 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: dmesg | grep -i 'hba|loop|port|offline|online'\n - 명령 종료코드: rc=0 (정상 종료)",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: /usr/bin/id",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root)",
+        "",
+        "[점검 단계 4]",
         " - 실행 명령어: dmesg | grep -i 'hba|loop|port|offline|online'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)"
+      ],
+      "message": "Solaris HBA 로그가 정상입니다. 현재 상태: HBA 관련 로그 0건 조회, 비정상 로그 0건, stderr 0건으로 집계되었습니다."
     }
   ],
-  "failed_items": [
-    "SOL-REPLAY-LOG-07"
-  ]
+  "failed_items": []
 }

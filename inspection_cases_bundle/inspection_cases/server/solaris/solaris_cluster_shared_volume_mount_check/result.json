@@ -364,26 +364,75 @@
           "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found,no such file"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Solaris 공유 볼륨 상태 점검에 실패했습니다. 현재 상태: stderr 출력이 확인되었습니다: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "stdout": "",
-      "stderr": "Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'\n\n[점검 단계 2]\n - 실행 명령어: mount | grep -- '/mnt/shared'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다.",
+      "status": "ok",
+      "metrics": {
+        "command_rc": 0,
+        "mount_point": "/mnt/shared",
+        "device": "/dev/dsk/shared_vol",
+        "filesystem_type": "ufs",
+        "access_mode": "rw",
+        "mount_options": [
+          "rw",
+          "logging"
+        ],
+        "parsed_mount_count": 1,
+        "matched_mount_count": 1,
+        "matched_failure_keywords": [],
+        "parsed_mounts": [
+          {
+            "line_number": 1,
+            "raw_line": "/dev/dsk/shared_vol on /mnt/shared type ufs (rw, logging)",
+            "device": "/dev/dsk/shared_vol",
+            "mount_point": "/mnt/shared",
+            "filesystem_type": "ufs",
+            "mount_options": [
+              "rw",
+              "logging"
+            ]
+          }
+        ]
+      },
+      "thresholds": {
+        "mount_point": "/mnt/shared",
+        "expected_access_mode": "rw",
+        "expected_filesystem_types": [
+          "ufs"
+        ],
+        "failure_keywords": [
+          "장치를 찾을 수 없습니다",
+          "not found",
+          "module",
+          "cannot",
+          "command not found",
+          "no such file"
+        ]
+      },
+      "reasons": "공유 볼륨 /mnt/shared가 정상 마운트되어 있고 접근 상태 rw, 파일시스템 ufs가 기준과 일치합니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: mount | grep -- '/mnt/shared'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: /dev/dsk/shared_vol on /mnt/shared type ufs (rw, logging)",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Password:",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: /usr/bin/id",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: uid=0(root) gid=0(root)",
+        "",
+        "[점검 단계 4]",
         " - 실행 명령어: mount | grep -- '/mnt/shared'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: Solaris su 권한상승 검증 실패: id 결과가 없습니다."
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: /dev/dsk/shared_vol on /mnt/shared type ufs (rw, logging)"
+      ],
+      "message": "Solaris 공유 볼륨 상태가 정상입니다. 현재 상태: mount point /mnt/shared, device /dev/dsk/shared_vol, filesystem ufs, access rw (기준 rw), options rw, logging."
     }
   ],
-  "failed_items": [
-    "SOL-REPLAY-CLUSTER-03"
-  ]
+  "failed_items": []
 }

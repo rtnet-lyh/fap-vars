@@ -275,21 +275,48 @@
           "value1": "CLAIMED"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:ioscan -fnC fc but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC fc'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC fc'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC fc but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC fc'",
+      "status": "ok",
+      "metrics": {
+        "device_count": 2,
+        "devices": [
+          {
+            "class": "fc",
+            "instance": "0",
+            "hw_path": "0/2/1/0",
+            "driver": "fcd",
+            "state": "CLAIMED",
+            "hw_type": "INTERFACE",
+            "description": "HP Fibre Channel Mass Storage Adapter"
+          },
+          {
+            "class": "fc",
+            "instance": "1",
+            "hw_path": "0/2/1/1",
+            "driver": "fcd",
+            "state": "CLAIMED",
+            "hw_type": "INTERFACE",
+            "description": "HP Fibre Channel Mass Storage Adapter"
+          }
+        ],
+        "abnormal_devices": []
+      },
+      "thresholds": {
+        "expected_hba_count": 0,
+        "allowed_hba_states": "CLAIMED"
+      },
+      "reasons": "fc 장치 2개가 정상 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ioscan -fnC fc\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Class     I  H/W Path        Driver      S/W State   H/W Type     Description\n===========================================================================\nfc        0  0/2/1/0         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter\nfc        1  0/2/1/1         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC fc'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:ioscan -fnC fc but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ioscan -fnC fc'"
-      ]
+        " - 실행 명령어: ioscan -fnC fc",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Class     I  H/W Path        Driver      S/W State   H/W Type     Description",
+        "===========================================================================",
+        "fc        0  0/2/1/0         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter",
+        "fc        1  0/2/1/1         fcd         CLAIMED     INTERFACE    HP Fibre Channel Mass Storage Adapter"
+      ],
+      "message": "ioscan 기준 HBA 연결상태 점검 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-28"
-  ]
+  "failed_items": []
 }

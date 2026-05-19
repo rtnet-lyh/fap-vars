@@ -213,21 +213,48 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows 기본 게이트웨이 Ping 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
+      "status": "ok",
+      "metrics": {
+        "target_gateway": "192.168.0.1",
+        "sent_packets": 10,
+        "received_packets": 10,
+        "lost_packets": 0,
+        "loss_percent": 0,
+        "minimum_time_ms": 0,
+        "maximum_time_ms": 50,
+        "average_time_ms": 6,
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_loss_percent": 0,
+        "max_average_time_ms": 50,
+        "failure_keywords": []
+      },
+      "reasons": "기본 라우터로의 Ping 결과에서 패킷 손실이 없고 응답 시간이 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Ping 192.168.0.1 32바이트 데이터 사용:\n192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=50ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간<1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64\n192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64\n\n192.168.0.1에 대한 Ping 통계:\n    패킷: 보냄 = 10, 받음 = 10, 손실 = 0 (0% 손실),\n왕복 시간(밀리초):\n    최소 = 0ms, 최대 = 50ms, 평균 = 6ms",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop) but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: Ping 192.168.0.1 32바이트 데이터 사용:",
+        "192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=50ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간<1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=1ms TTL=64",
+        "192.168.0.1의 응답: 바이트=32 시간=2ms TTL=64",
+        "",
+        "192.168.0.1에 대한 Ping 통계:",
+        "    패킷: 보냄 = 10, 받음 = 10, 손실 = 0 (0% 손실),",
+        "왕복 시간(밀리초):",
+        "    최소 = 0ms, 최대 = 50ms, 평균 = 6ms"
+      ],
+      "message": "Windows 기본 게이트웨이 Ping 점검이 정상입니다. 현재 상태: gateway=192.168.0.1, sent=10, received=10, lost=0 (0% 손실, 기준 0% 이하), avg=6ms (기준 50ms 이하)."
     }
   ],
-  "failed_items": [
-    "W-REPLAY-GW-PING-01"
-  ]
+  "failed_items": []
 }

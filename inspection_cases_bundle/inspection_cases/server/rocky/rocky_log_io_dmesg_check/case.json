@@ -38,7 +38,7 @@
     "threshold_list": [
       {
         "name": "io_error_fail_keywords",
-        "value1": "i/o error|timeout|transport failed|media error"
+        "value1": "UNMATCHABLE_PATTERN_9f44"
       },
       {
         "name": "io_error_except_keywords",

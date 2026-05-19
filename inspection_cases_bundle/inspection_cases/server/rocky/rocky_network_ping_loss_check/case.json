@@ -34,11 +34,11 @@
     "threshold_list": [
       {
         "name": "ping_count",
-        "value1": "1"
+        "value1": "10"
       },
       {
         "name": "ping_target",
-        "value1": "8.8.8.81"
+        "value1": "8.8.8.8"
       },
       {
         "name": "max_ping_loss_percent",

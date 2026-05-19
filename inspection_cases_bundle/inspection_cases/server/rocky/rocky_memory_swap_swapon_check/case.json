@@ -42,7 +42,7 @@
       },
       {
         "name": "min_swap_size_gb",
-        "value1": "4"
+        "value1": "3"
       }
     ]
   }

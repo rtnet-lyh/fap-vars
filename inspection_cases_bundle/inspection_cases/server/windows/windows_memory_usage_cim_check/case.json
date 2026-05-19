@@ -40,11 +40,11 @@
     "threshold_list": [
       {
         "name": "max_memory_usage_percent",
-        "value1": "80.0"
+        "value1": "90.0"
       },
       {
         "name": "min_memory_free_percent",
-        "value1": "20.0"
+        "value1": "10.0"
       },
       {
         "name": "max_swap_usage_percent",

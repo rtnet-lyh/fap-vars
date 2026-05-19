@@ -1,0 +1,162 @@
+# Baseline Replay Report
+
+- 기준 일자: 2026-05-19
+- 실행 명령: `python3 inspection_runtime/replay_cli.py inspection_cases`
+- 확인한 주요 디렉터리: `.agents/`, `.venv/`, `api_data/`, `inspection_cases/`, `inspection_runtime/`, `raw_data/`
+- summary 복사본: `baseline_results/summary.json`
+- case result 복사본: `baseline_results/case_results/<case_path>/result.json`
+
+## Summary
+
+- 전체 case 수: 177
+- 성공 case 수: 31
+- 실패 case 수: 146
+
+## Failed Cases
+
+- `network/cisco_ios/cisco_ios_자원사용률점검_CPU사용률`
+- `server/esxi/esxi_datastore_path_check`
+- `server/esxi/esxi_status_agent_service_check`
+- `server/esxi/esxi_status_basic_check`
+- `server/esxi/esxi_status_hardware_health_check`
+- `server/esxi/esxi_status_vcenter_agent_check`
+- `server/esxi/esxi_status_vm_list_check`
+- `server/hpux/hpux_cluster_daemon_cmviewcl_check`
+- `server/hpux/hpux_cluster_shared_volume_mount_check`
+- `server/hpux/hpux_cpu_core_ioscan_check`
+- `server/hpux/hpux_disk_filesystem_inode_bdf_check`
+- `server/hpux/hpux_disk_filesystem_usage_bdf_check`
+- `server/hpux/hpux_disk_io_sar_check`
+- `server/hpux/hpux_disk_raid_vgdisplay_check`
+- `server/hpux/hpux_disk_recognition_ioscan_check`
+- `server/hpux/hpux_disk_swap_swapinfo_check`
+- `server/hpux/hpux_kernel_parameter_kctune_check`
+- `server/hpux/hpux_log_cluster_serviceguard_check`
+- `server/hpux/hpux_log_cpu_dmesg_check`
+- `server/hpux/hpux_log_fan_dmesg_check`
+- `server/hpux/hpux_log_hba_dmesg_check`
+- `server/hpux/hpux_log_io_dmesg_check`
+- `server/hpux/hpux_log_kernel_dmesg_check`
+- `server/hpux/hpux_log_memory_dmesg_check`
+- `server/hpux/hpux_log_nic_dmesg_check`
+- `server/hpux/hpux_log_power_dmesg_check`
+- `server/hpux/hpux_log_system_dmesg_check`
+- `server/hpux/hpux_memory_recognition_machinfo_check`
+- `server/hpux/hpux_memory_swap_swapinfo_check`
+- `server/hpux/hpux_memory_usage_swapinfo_check`
+- `server/hpux/hpux_network_link_status_lanscan_check`
+- `server/hpux/hpux_network_nic_redundancy_hpapa_check`
+- `server/hpux/hpux_network_ping_loss_check`
+- `server/hpux/hpux_os_hba_connection_ioscan_check`
+- `server/hpux/hpux_os_path_redundancy_scsimgr_check`
+- `server/rocky/rocky_cpu_core_check`
+- `server/rocky/rocky_disk_filesystem_inode_df_check`
+- `server/rocky/rocky_kernel_parameter_sysctl_check`
+- `server/rocky/rocky_log_io_dmesg_check`
+- `server/rocky/rocky_log_kernel_dmesg_check`
+- `server/rocky/rocky_log_system_dmesg_check`
+- `server/rocky/rocky_memory_recognition_dmidecode_check`
+- `server/rocky/rocky_memory_swap_swapon_check`
+- `server/rocky/rocky_network_nic_redundancy_bonding_check`
+- `server/rocky/rocky_network_ping_loss_check`
+- `server/rocky/rocky_os_path_redundancy_multipath_check`
+- `server/solaris/solaris_cluster_daemon_scstat_check`
+- `server/solaris/solaris_cluster_shared_volume_mount_check`
+- `server/solaris/solaris_cpu_core_psrinfo_check`
+- `server/solaris/solaris_cpu_usage_prstat_check`
+- `server/solaris/solaris_disk_filesystem_usage_df_check`
+- `server/solaris/solaris_disk_inode_df_check`
+- `server/solaris/solaris_disk_io_iostat_check`
+- `server/solaris/solaris_disk_recognition_format_check`
+- `server/solaris/solaris_disk_redundancy_metastat_check`
+- `server/solaris/solaris_disk_swap_swap_check`
+- `server/solaris/solaris_kernal_parameter_sysdef_check`
+- `server/solaris/solaris_log_cluster_clog_check`
+- `server/solaris/solaris_log_cpu_dmesg_check`
+- `server/solaris/solaris_log_fan_dmesg_check`
+- `server/solaris/solaris_log_hba_dmesg_check`
+- `server/solaris/solaris_log_io_dmesg_check`
+- `server/solaris/solaris_log_kernel_dmesg_check`
+- `server/solaris/solaris_log_memory_dmesg_check`
+- `server/solaris/solaris_log_nic_dmesg_check`
+- `server/solaris/solaris_log_power_dmesg_check`
+- `server/solaris/solaris_log_system_dmesg_check`
+- `server/solaris/solaris_memory_paging_space_swap_check`
+- `server/solaris/solaris_memory_recognition_prtdiag_check`
+- `server/solaris/solaris_memory_usage_vmstat_check`
+- `server/solaris/solaris_network_link_status_dladm_check`
+- `server/solaris/solaris_network_nic_redundancy_ipmpstat_check`
+- `server/solaris/solaris_network_ping_loss_ping_check`
+- `server/solaris/solaris_os_hba_connection_status_fcinfo_check`
+- `server/solaris/solaris_os_path_redundancy_mpathadm_check`
+- `server/windows/windows_cluster_daemon_check`
+- `server/windows/windows_cluster_shared_volume_check`
+- `server/windows/windows_cpu_core_cim_check`
+- `server/windows/windows_cpu_usage_counter_check`
+- `server/windows/windows_disk_ swap_usage_check`
+- `server/windows/windows_disk_filesystem_usage_cim_check`
+- `server/windows/windows_disk_inode_not_applicable_check`
+- `server/windows/windows_disk_io_counter_check`
+- `server/windows/windows_disk_recognition_cim_check`
+- `server/windows/windows_disk_redundancy_health_check`
+- `server/windows/windows_kernel_parameter_nettcp_check`
+- `server/windows/windows_log_cluster_event_check`
+- `server/windows/windows_log_cpu_event_check`
+- `server/windows/windows_log_fan_manual_check`
+- `server/windows/windows_log_hba_manual_check`
+- `server/windows/windows_log_io_event_check`
+- `server/windows/windows_log_kernel_event_check`
+- `server/windows/windows_log_memory_event_check`
+- `server/windows/windows_log_nic_event_check`
+- `server/windows/windows_log_power_event_check`
+- `server/windows/windows_log_system_event_check`
+- `server/windows/windows_memory_pagefile_usage_cim_check`
+- `server/windows/windows_memory_recognition_cim_check`
+- `server/windows/windows_memory_usage_cim_check`
+- `server/windows/windows_network_link_status_check`
+- `server/windows/windows_network_nic_teaming_check`
+- `server/windows/windows_network_ping_loss_check`
+- `server/windows/windows_os_hba_connection_manual_check`
+- `server/windows/windows_os_mpio_path_check`
+- `tutorial/cisco_ios/cisco_ios_paramiko_01_show_clock_check`
+- `tutorial/cisco_ios/cisco_ios_paramiko_02_show_version_check`
+- `tutorial/cisco_ios/cisco_ios_paramiko_03_interface_brief_check`
+- `tutorial/cisco_ios/cisco_ios_paramiko_04_running_hostname_check`
+- `tutorial/cisco_ios/cisco_ios_paramiko_05_running_config_check`
+- `tutorial/rocky/rocky_paramiko_07_become_root_exec_check`
+- `tutorial/unix/unix_test_check`
+- `was/jeus/rocky/was_1_1_ps_cpu_chk`
+- `was/jeus/rocky/was_1_2_ps_mem_chk`
+- `was/jeus/rocky/was_1_3_ps_status_chk`
+- `was/jeus/rocky/was_1_4_ps_startup_chk`
+- `was/jeus/rocky/was_2_1_log_manage_chk`
+- `was/jeus/rocky/was_2_2_log_service_chk`
+- `was/jeus/rocky/was_2_3_log_cli_acs_chk`
+- `was/jeus/rocky/was_2_4_log_gc_chk`
+- `was/jeus/rocky/was_2_5_log_con_pool_chk`
+- `was/jeus/rocky/was_3_1_jvm_heap_chk`
+- `was/jeus/rocky/was_4_1_work_thrd_chk`
+- `was/jeus/rocky/was_4_2_runnable_thrd_chk`
+- `was/jeus/rocky/was_5_1_con_pool_chk`
+- `was/jeus/rocky/was_5_2_db_con_chk`
+- `was/jeus/rocky/was_6_1_dump_chk`
+- `was/jeus/rocky/was_7_1_deploy_status_chk`
+- `was/jeus/rocky/was_8_1_thrd_pool_status_chk`
+- `was/jeus/rocky/was_9_1_start_script_chk`
+- `web/webtob/rocky/webtob_config_web_was_connection_webtob_ctl_status_check`
+- `web/webtob/rocky/webtob_filesystem_web_application_filesystem_df_h_check`
+- `web/webtob/rocky/webtob_filesystem_web_engine_filesystem_df_h_check`
+- `web/webtob/rocky/webtob_filesystem_web_log_filesystem_df_h_check`
+- `web/webtob/rocky/webtob_log_access_log_awk_status_200_check`
+- `web/webtob/rocky/webtob_log_error_log_grep_error_check`
+- `web/webtob/rocky/webtob_log_request_document_unavailable_awk_status_404_check`
+- `web/webtob/rocky/webtob_log_service_temporarily_unavailable_grep_status_503_check`
+- `web/webtob/rocky/webtob_log_was_response_time_awk_response_time_check`
+- `web/webtob/rocky/webtob_log_web_service_unavailable_grep_status_500_check`
+- `web/webtob/rocky/webtob_process_cpu_usage_top_grep_check`
+- `web/webtob/rocky/webtob_process_memory_usage_top_grep_check`
+- `web/webtob/rocky/webtob_process_startup_ps_aux_grep_check`
+- `web/webtob/rocky/webtob_process_status_top_grep_check`
+- `web/webtob/rocky/webtob_service_port_connection_telnet_check`
+- `web/webtob/rocky/webtob_service_port_open_netstat_grep_check`
+- `web/webtob/rocky/webtob_service_request_count_webtob_ctl_status_check`

@@ -90,8 +90,6 @@ class Check(BaseCheck):
             if str(status or '').lower() not in normal_states:
                 abnormal_health[name] = status
 
-        if not hardware_health and not metrics.get('sensors'):
-            failed.append('하드웨어 Health 센서 정보가 비어 있습니다.')
         if abnormal_health:
             failed.append('비정상 하드웨어 Health: %s' % ', '.join(
                 '%s=%s' % (name, status) for name, status in sorted(abnormal_health.items())

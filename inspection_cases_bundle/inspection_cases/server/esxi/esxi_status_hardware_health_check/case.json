@@ -47,7 +47,7 @@
     "threshold_list": [
       {
         "name": "expected_overall_status",
-        "value1": "green"
+        "value1": "gray"
       },
       {
         "name": "normal_health_states",

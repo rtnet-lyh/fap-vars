@@ -86,21 +86,23 @@
           "value1": "2"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "JEUS 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "full_gc_count": 1
+      },
+      "thresholds": {
+        "max_frequency": 2
+      },
+      "reasons": "Full GC 발생 횟수가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 1",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 1"
+      ],
+      "message": "Full GC 발생 빈도 정상: count=1, 기준=2"
     }
   ],
-  "failed_items": [
-    "WAS-JEUS-ROCKY-REPLAY-008"
-  ]
+  "failed_items": []
 }

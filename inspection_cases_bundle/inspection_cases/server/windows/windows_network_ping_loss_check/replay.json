@@ -1,7 +1,7 @@
 [
   {
     "matcher_type": "exact",
-    "matcher_value": "ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
+    "matcher_value": "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); ping -n 10 ((Get-NetRoute -AddressFamily IPv4 -DestinationPrefix \"0.0.0.0/0\" | Sort-Object RouteMetric,InterfaceMetric | Select-Object -First 1).NextHop)",
     "rc": 0,
     "stdout_file": "outputs/network_gateway_ping.stdout",
     "stderr": ""

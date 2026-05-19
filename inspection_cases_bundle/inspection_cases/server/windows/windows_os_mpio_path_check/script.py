@@ -50,15 +50,11 @@ class Check(BaseCheck):
 
         text = (out or '').strip()
         if not text or text == 'MPIO 미설치 또는 미지원':
-            return self.fail(
-                'MPIO 미설치 또는 미지원',
-                message=(
-                    'Windows MPIO 경로 이중화 점검에 실패했습니다. '
-                    '현재 상태: MPIO가 설치되어 있지 않거나 지원되지 않아 '
-                    'active 유사 경로 0개, failed 유사 경로 0개로 집계했습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
+            return self.warn(
+                metrics={'active_path_count': 0, 'failed_path_count': 0, 'mpio_available': False},
+                thresholds={},
+                reasons='MPIO가 미설치 또는 미지원 상태라 대상미해당 또는 추가 확인 대상으로 분류했습니다.',
+                message='Windows MPIO가 설치되어 있지 않거나 지원되지 않아 경로 이중화 점검을 추가 확인 대상으로 분류했습니다.',
             )
 
         failure_keywords = [

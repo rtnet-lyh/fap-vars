@@ -163,21 +163,112 @@
           "value1": "70"
         }
       ],
-      "status": "fail",
-      "error": "top 명령 실행 실패",
-      "message": "WEB 프로세스 메모리 사용률을 확인하지 못했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "process_name": "exTMS",
+        "process_count": 9,
+        "max_mem_usage_percent": 5.8,
+        "max_mem_pid": "1476176",
+        "max_mem_command": "java",
+        "over_threshold_count": 0,
+        "processes": [
+          {
+            "pid": "4937",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "systemd"
+          },
+          {
+            "pid": "4940",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "(sd-pam)"
+          },
+          {
+            "pid": "5029",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "dbus-daemon"
+          },
+          {
+            "pid": "1476176",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 5.8,
+            "command": "java"
+          },
+          {
+            "pid": "1480138",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.1,
+            "command": "wsm"
+          },
+          {
+            "pid": "1480139",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "htl"
+          },
+          {
+            "pid": "1480140",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 3.7,
+            "command": "hth"
+          },
+          {
+            "pid": "3485909",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "tmux:"
+          },
+          {
+            "pid": "3485910",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 0.0,
+            "command": "bash"
+          }
+        ]
+      },
+      "thresholds": {
+        "process_name": "exTMS",
+        "max_mem_usage_percent": 70.0
+      },
+      "reasons": "대상 프로세스 메모리 사용률이 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n   4937 exTMS     20   0   89776   5716   4184 S   0.0   0.0   2:46.91 systemd\n   4940 exTMS     20   0  301032   5496      0 S   0.0   0.0   0:00.00 (sd-pam)\n   5029 exTMS     20   0   64484   3180   2680 S   0.0   0.0   0:00.00 dbus-daemon\n1476176 exTMS     20   0 6052980 940596  30104 S   0.0   5.8  93:31.63 java\n1480138 exTMS     20   0   19032   8728   8536 S   0.0   0.1   8:27.12 wsm\n1480139 exTMS     20   0   12588    900    828 S   0.0   0.0   2:40.03 htl\n1480140 exTMS     20   0 1211928 596944  10828 S   0.0   3.7   3:13.83 hth\n3485909 exTMS     20   0  243244   6392   2628 S   0.0   0.0   0:12.54 tmux: server\n3485910 exTMS     20   0  226432   4840   2716 S   0.0   0.0   0:00.01 bash",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
+        "   4937 exTMS     20   0   89776   5716   4184 S   0.0   0.0   2:46.91 systemd",
+        "   4940 exTMS     20   0  301032   5496      0 S   0.0   0.0   0:00.00 (sd-pam)",
+        "   5029 exTMS     20   0   64484   3180   2680 S   0.0   0.0   0:00.00 dbus-daemon",
+        "1476176 exTMS     20   0 6052980 940596  30104 S   0.0   5.8  93:31.63 java",
+        "1480138 exTMS     20   0   19032   8728   8536 S   0.0   0.1   8:27.12 wsm",
+        "1480139 exTMS     20   0   12588    900    828 S   0.0   0.0   2:40.03 htl",
+        "1480140 exTMS     20   0 1211928 596944  10828 S   0.0   3.7   3:13.83 hth",
+        "3485909 exTMS     20   0  243244   6392   2628 S   0.0   0.0   0:12.54 tmux: server",
+        "3485910 exTMS     20   0  226432   4840   2716 S   0.0   0.0   0:00.01 bash"
+      ],
+      "message": "WEB 프로세스 메모리 사용률 정상: 최대 5.8%, 기준 70.0%"
     }
   ],
-  "failed_items": [
-    "WEBTOB-ROCKY-REPLAY-005"
-  ]
+  "failed_items": []
 }

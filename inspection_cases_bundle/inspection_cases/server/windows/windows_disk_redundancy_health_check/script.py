@@ -85,11 +85,11 @@ class Check(BaseCheck):
         raid_lines = [line for line in lines if raid_marker in line]
 
         if not raid_lines:
-            return self.fail(
-                'Storage Spaces RAID 장치 미검출',
-                message='Windows 디스크 HA 점검에 실패했습니다. 현재 상태: Storage Spaces RAID 장치를 찾지 못했습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
+            return self.warn(
+                metrics={'raid_device_count': 0, 'non_raid_device_count': len(non_raid_lines)},
+                thresholds={},
+                reasons='Storage Spaces RAID 장치를 찾지 못해 대상미해당 또는 추가 확인 대상으로 분류했습니다.',
+                message='Windows 디스크 HA 점검에서 Storage Spaces RAID 장치를 찾지 못했습니다.',
             )
 
         parsed = []

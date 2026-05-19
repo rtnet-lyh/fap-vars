@@ -249,21 +249,43 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows 디스크 사용률 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3",
+      "status": "ok",
+      "metrics": {
+        "filesystem_count": 1,
+        "max_usage_percent": 38.05,
+        "max_usage_filesystem": "C:",
+        "max_usage_mount_point": "C:",
+        "min_available_percent": 61.95,
+        "min_available_filesystem": "C:",
+        "min_available_mount_point": "C:",
+        "over_usage_mounts": [],
+        "low_available_mounts": [],
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_usage_percent": 80.0,
+        "min_available_percent": 20.0,
+        "failure_keywords": []
+      },
+      "reasons": "모든 볼륨 사용률과 가용 공간 비율이 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [\n  {\n    \"Filesystem\": \"C:\",\n    \"Size(GB)\": 476.34,\n    \"Used(GB)\": 181.25,\n    \"Avail(GB)\": 295.09,\n    \"Use%\": 38.05,\n    \"Mounted on\": \"C:\"\n  }\n]",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Volume | Where-Object { $_.DriveType -eq 3 -and $_.Capacity } | Select-Object @{N='Filesystem';E={if($_.DriveLetter){$_.DriveLetter}else{$_.Name.TrimEnd('\\')}}},@{N='Size(GB)';E={[math]::Round($_.Capacity/1GB,2)}},@{N='Used(GB)';E={[math]::Round(($_.Capacity-$_.FreeSpace)/1GB,2)}},@{N='Avail(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}},@{N='Use%';E={[math]::Round((($_.Capacity-$_.FreeSpace)/$_.Capacity)*100,2)}},@{N='Mounted on';E={$_.Name.TrimEnd('\\')}} | ConvertTo-Json -Depth 3"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: [",
+        "  {",
+        "    \"Filesystem\": \"C:\",",
+        "    \"Size(GB)\": 476.34,",
+        "    \"Used(GB)\": 181.25,",
+        "    \"Avail(GB)\": 295.09,",
+        "    \"Use%\": 38.05,",
+        "    \"Mounted on\": \"C:\"",
+        "  }",
+        "]"
+      ],
+      "message": "Windows 디스크 사용률 점검이 정상입니다. 현재 상태: 볼륨 1개, 최고 사용률 C: 38.05% (기준 80.00% 미만), 최소 가용률 C: 61.95% (기준 20.00% 이상)."
     }
   ],
-  "failed_items": [
-    "W-REPLAY-DISK-01"
-  ]
+  "failed_items": []
 }

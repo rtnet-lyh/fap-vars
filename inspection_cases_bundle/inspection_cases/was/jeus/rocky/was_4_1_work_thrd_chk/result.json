@@ -84,21 +84,46 @@
           "value1": "10"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "JEUS 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jstack $pid | awk '/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}'; done\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "thread_pool_stack_count": 4,
+        "waiting_blocked_count": 4,
+        "waiting_blocked_lines": [
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)",
+          "java.lang.Thread.State: WAITING (parking)"
+        ]
+      },
+      "thresholds": {
+        "max_thread_pool": 10
+      },
+      "reasons": "Thread Pool 스레드 수가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jstack $pid | awk '/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}'; done\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ======== PID: 1559740 ========\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)\n\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)\n\n======== PID: 1567015 ========\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)\n\n\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]\n   java.lang.Thread.State: WAITING (parking)\n        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: for pid in $(ps -ef | grep \"jeus.server.ServerBootstrapper\" | grep -v grep | awk '{print $2}'); do echo \"======== PID: $pid ========\"; jstack $pid | awk '/^\"/ {thread=$0} /Thread.State/ {state=$0} /java.util.concurrent.ThreadPoolExecutor/ {print thread; print state; print $0; print \"\"}'; done",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ======== PID: 1559740 ========",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)",
+        "",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)",
+        "",
+        "======== PID: 1567015 ========",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)",
+        "",
+        "\"jspEngineFileWriter-exTMS_RENEW-1.0-1\" #193 daemon prio=5 os_prio=0 tid=0x00007ff7e8796800 nid=0x180ba3 waiting on condition [0x00007ff904f9c000]",
+        "   java.lang.Thread.State: WAITING (parking)",
+        "        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)"
+      ],
+      "message": "Work Thread Pool 정상: thread_count=4, 기준=10"
     }
   ],
-  "failed_items": [
-    "WAS-JEUS-ROCKY-REPLAY-011"
-  ]
+  "failed_items": []
 }

@@ -255,21 +255,34 @@
           "value1": "192.168.1.1"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:ping 192.168.1.1 64 3 but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ping 192.168.1.1 64 3'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ping 192.168.1.1 64 3'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:ping 192.168.1.1 64 3 but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ping 192.168.1.1 64 3'",
+      "status": "ok",
+      "metrics": {
+        "packets_transmitted": 3,
+        "packets_received": 3,
+        "loss_percent": 0.0,
+        "avg_latency_ms": 0.5
+      },
+      "thresholds": {
+        "PING_LOSS_MAX_PCT": 0.0,
+        "PING_LATENCY_MAX_MS": 100.0
+      },
+      "reasons": "Ping 손실률과 지연 시간이 기준 이내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ping 192.168.1.1 64 3\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PING 192.168.1.1: 64 byte packets\n64 bytes from 192.168.1.1: icmp_seq=0. time=0.5 ms\n64 bytes from 192.168.1.1: icmp_seq=1. time=0.4 ms\n64 bytes from 192.168.1.1: icmp_seq=2. time=0.5 ms\n\n----192.168.1.1 PING Statistics----\n3 packets transmitted, 3 packets received, 0% packet loss\nround-trip (ms)  min/avg/max = 0.4/0.5/0.5",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ping 192.168.1.1 64 3'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:ping 192.168.1.1 64 3 but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; ping 192.168.1.1 64 3'"
-      ]
+        " - 실행 명령어: ping 192.168.1.1 64 3",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: PING 192.168.1.1: 64 byte packets",
+        "64 bytes from 192.168.1.1: icmp_seq=0. time=0.5 ms",
+        "64 bytes from 192.168.1.1: icmp_seq=1. time=0.4 ms",
+        "64 bytes from 192.168.1.1: icmp_seq=2. time=0.5 ms",
+        "",
+        "----192.168.1.1 PING Statistics----",
+        "3 packets transmitted, 3 packets received, 0% packet loss",
+        "round-trip (ms)  min/avg/max = 0.4/0.5/0.5"
+      ],
+      "message": "Ping Loss 점검이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-27"
-  ]
+  "failed_items": []
 }

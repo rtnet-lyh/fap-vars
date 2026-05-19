@@ -228,21 +228,51 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows FAN 로그 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4",
+      "status": "ok",
+      "metrics": {
+        "fan_device_count": 1,
+        "abnormal_fan_count": 0,
+        "fan_event_count": 0,
+        "fan_data_exposed": true,
+        "latest_event_time": "",
+        "latest_event_provider": "",
+        "latest_event_id": "",
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_fan_event_count": 0,
+        "failure_keywords": []
+      },
+      "reasons": "최근 30일 내 FAN 관련 경고/오류 이벤트가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: {\n  \"FanDataExposed\": true,\n  \"EventDataExposed\": false,\n  \"Fans\": [\n    {\n      \"Name\": \"냉각 장치\",\n      \"Status\": \"OK\",\n      \"DesiredSpeed\": null,\n      \"VariableSpeed\": null,\n      \"Availability\": 3,\n      \"ConfigManagerErrorCode\": 0\n    }\n  ],\n  \"Events\": []\n}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:$f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $f=Get-CimInstance Win32_Fan -ErrorAction SilentlyContinue; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bfan\\b|fan fail|cooling|thermal|overheat|fan speed too low|failure detected' }; $result=[ordered]@{FanDataExposed=[bool]$f; EventDataExposed=[bool]$e; Fans=@($f | Select-Object Name,Status,DesiredSpeed,VariableSpeed,Availability,ConfigManagerErrorCode); Events=@($e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result | ConvertTo-Json -Depth 4"
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: {",
+        "  \"FanDataExposed\": true,",
+        "  \"EventDataExposed\": false,",
+        "  \"Fans\": [",
+        "    {",
+        "      \"Name\": \"냉각 장치\",",
+        "      \"Status\": \"OK\",",
+        "      \"DesiredSpeed\": null,",
+        "      \"VariableSpeed\": null,",
+        "      \"Availability\": 3,",
+        "      \"ConfigManagerErrorCode\": 0",
+        "    }",
+        "  ],",
+        "  \"Events\": []",
+        "}"
+      ],
+      "message": "Windows FAN 로그 점검이 정상입니다. 현재 상태: \nFAN 관련 이벤트 0건 (기준 0건 이하), \nFAN 장치 정보 1개, 비정상으로 해석된 장치 0개 및 [] \nWin32_Fan 노출 여부 True, 최근 이벤트 ID N/A.",
+      "message_lines": [
+        "Windows FAN 로그 점검이 정상입니다. 현재 상태: ",
+        "FAN 관련 이벤트 0건 (기준 0건 이하), ",
+        "FAN 장치 정보 1개, 비정상으로 해석된 장치 0개 및 [] ",
+        "Win32_Fan 노출 여부 True, 최근 이벤트 ID N/A."
       ]
     }
   ],
-  "failed_items": [
-    "W-REPLAY-FAN-LOG-01"
-  ]
+  "failed_items": []
 }

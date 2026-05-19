@@ -1,0 +1,130 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-001",
+      "item_id": 92001,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_cpu_usage_percent",
+          "value1": "70"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_top_rows(self, stdout):\n        rows = []\n        header = []\n        for line in stdout.splitlines():\n            parts = line.split()\n            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:\n                header = parts\n                continue\n            if not header or len(parts) < len(header):\n                continue\n            try:\n                rows.append({\n                    'pid': parts[header.index('PID')],\n                    'user': parts[header.index('USER')],\n                    'state': parts[header.index('S')],\n                    'cpu_percent': float(parts[header.index('%CPU')]),\n                    'mem_percent': float(parts[header.index('%MEM')]),\n                    'command': parts[header.index('COMMAND')],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        rows = self._parse_top_rows(stdout)\n        if not rows:\n            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_cpu_usage_percent', default=70.0, value_type='float')\n        max_row = max(rows, key=lambda row: row['cpu_percent'])\n        over_rows = [row for row in rows if row['cpu_percent'] > threshold]\n        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'max_cpu_usage_percent': max_row['cpu_percent'], 'max_cpu_pid': max_row['pid'], 'max_cpu_command': max_row['command'], 'over_threshold_count': len(over_rows), 'processes': rows}\n        thresholds = {'max_cpu_usage_percent': threshold}\n        if over_rows:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='CPU 사용률 기준 초과 프로세스가 있습니다.', message='JEUS 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.', message='JEUS 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def _parse_top_rows(self, stdout):",
+        "        rows = []",
+        "        header = []",
+        "        for line in stdout.splitlines():",
+        "            parts = line.split()",
+        "            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:",
+        "                header = parts",
+        "                continue",
+        "            if not header or len(parts) < len(header):",
+        "                continue",
+        "            try:",
+        "                rows.append({",
+        "                    'pid': parts[header.index('PID')],",
+        "                    'user': parts[header.index('USER')],",
+        "                    'state': parts[header.index('S')],",
+        "                    'cpu_percent': float(parts[header.index('%CPU')]),",
+        "                    'mem_percent': float(parts[header.index('%MEM')]),",
+        "                    'command': parts[header.index('COMMAND')],",
+        "                })",
+        "            except (ValueError, IndexError):",
+        "                continue",
+        "        return rows",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        rows = self._parse_top_rows(stdout)",
+        "        if not rows:",
+        "            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)",
+        "        threshold = self.get_threshold_var('max_cpu_usage_percent', default=70.0, value_type='float')",
+        "        max_row = max(rows, key=lambda row: row['cpu_percent'])",
+        "        over_rows = [row for row in rows if row['cpu_percent'] > threshold]",
+        "        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'max_cpu_usage_percent': max_row['cpu_percent'], 'max_cpu_pid': max_row['pid'], 'max_cpu_command': max_row['command'], 'over_threshold_count': len(over_rows), 'processes': rows}",
+        "        thresholds = {'max_cpu_usage_percent': threshold}",
+        "        if over_rows:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='CPU 사용률 기준 초과 프로세스가 있습니다.', message='JEUS 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.', message='JEUS 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-001",
+      "item_id": 92001,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_cpu_usage_percent",
+          "value1": "70"
+        }
+      ],
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
+    }
+  ],
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-001"
+  ]
+}

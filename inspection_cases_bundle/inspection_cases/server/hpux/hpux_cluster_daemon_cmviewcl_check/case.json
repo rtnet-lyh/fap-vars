@@ -13,7 +13,7 @@
         "data": {
           "username": "fap",
           "password": "f3dtop0!",
-          "become": "true",
+          "become": "false",
           "become_method": "su -",
           "become_user": "root",
           "become_password": "f3dtop0!"

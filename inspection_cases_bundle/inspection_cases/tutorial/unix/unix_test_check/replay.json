@@ -1,1 +1,39 @@
-[]
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "fap@solaris$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Password:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "contains",
+    "matcher_value": "sysdef"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/sysdef.stdout"
+  }
+]

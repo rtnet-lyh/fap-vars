@@ -198,15 +198,14 @@ class Check(BaseCheck):
         bonds = metrics.get('bonds') or []
 
         if not parsed.get('bonding_configured'):
-            result = self.fail(
-                'NIC Bonding 미구성',
-                message='시스템에 NIC bonding이 구성되어 있지 않습니다.',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
+            result = self.warn(
+                metrics=metrics,
+                thresholds={},
+                reasons='명령 결과가 NIC BONDING NOT CONFIGURED로 출력되어 NIC bonding 미구성 상태를 추가 확인 대상으로 분류했습니다.',
+                message='시스템에 NIC bonding이 구성되어 있지 않아 추가 확인이 필요합니다.',
             )
-            result['metrics'] = metrics
-            result['thresholds'] = {}
-            result['reasons'] = '명령 결과가 NIC BONDING NOT CONFIGURED로 출력되어 NIC bonding이 미구성 상태로 확인되었습니다.'
+            result['stdout'] = (out or '').strip()
+            result['stderr'] = (err or '').strip()
             return result
 
         failed_bonds = [

@@ -11,7 +11,7 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "0.1"
+          "value1": "80"
         }
       ],
       "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCPU_USAGE_COMMAND = 'show processes cpu sorted'\nCPU_LINE_PATTERN = re.compile(\n    r'^CPU utilization for five seconds:\\s*'\n    r'(?P<five_sec>[0-9]+(?:\\.[0-9]+)?)%'\n    r'(?:/(?P<interrupt>[0-9]+(?:\\.[0-9]+)?)%)?;\\s*'\n    r'one minute:\\s*(?P<one_min>[0-9]+(?:\\.[0-9]+)?)%;\\s*'\n    r'five minutes:\\s*(?P<five_min>[0-9]+(?:\\.[0-9]+)?)%\\s*$',\n    re.IGNORECASE,\n)\nPROCESS_LINE_PATTERN = re.compile(\n    r'^\\s*(?P<pid>\\d+)\\s+'\n    r'(?P<runtime_ms>\\d+)\\s+'\n    r'(?P<invoked>\\d+)\\s+'\n    r'(?P<usecs>\\d+)\\s+'\n    r'(?P<five_sec>[0-9]+(?:\\.[0-9]+)?)%\\s+'\n    r'(?P<one_min>[0-9]+(?:\\.[0-9]+)?)%\\s+'\n    r'(?P<five_min>[0-9]+(?:\\.[0-9]+)?)%\\s+'\n    r'(?P<tty>\\S+)\\s+'\n    r'(?P<process>.+?)\\s*$'\n)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'cisco_ios'\n\n    def _get_credential_value(self, key, default=None):\n        value = self.get_connection_value(key, None)\n        if value not in (None, ''):\n            return value\n        return self.get_application_credential_value(key, default)\n\n    def _is_enable_requested(self):\n        become_raw = self._get_credential_value('become', False)\n        return str(become_raw).strip().lower() in ('1', 'true', 'y', 'yes', 'on')\n\n    def _build_command_items(self):\n        command_items = []\n\n        if self._is_enable_requested():\n            become_password = str(self._get_credential_value('become_password', '') or '')\n            if not become_password:\n                return None, self.fail(\n                    'enable 비밀번호 없음',\n                    message='connection credential data에 become_password가 필요합니다.',\n                )\n            command_items.extend([\n                {\n                    'command': 'enable',\n                    'ignore_prompt': True,\n                },\n                {\n                    'command': become_password,\n                    'hide_command': True,\n                },\n            ])\n\n        command_items.extend([\n            {\n                'command': 'terminal length 0',\n            },\n            {\n                'command': CPU_USAGE_COMMAND,\n            },\n        ])\n        return command_items, None\n\n    def _run_commands(self):\n        command_items, error = self._build_command_items()\n        if error:\n            return None, error\n\n        results = self._run_paramiko_commands(command_items)\n        failed = [\n            item for item in results\n            if item.get('rc') != 0 and not (item.get('command') == 'enable' and item.get('timed_out'))\n        ]\n        if failed:\n            first = failed[0]\n            display_command = first.get('display_command') or first.get('command')\n            return None, self.fail(\n                '점검 명령 실행 실패',\n                message=f'{display_command} 명령 실행에 실패했습니다.',\n                stdout=(first.get('stdout') or '').strip(),\n                stderr=(first.get('stderr') or '').strip(),\n            )\n\n        return results, None\n\n    def _parse_cpu_header(self, text):\n        for raw_line in (text or '').splitlines():\n            line = raw_line.strip()\n            if not line:\n                continue\n            match = CPU_LINE_PATTERN.match(line)\n            if match:\n                return {\n                    'cpu_usage_5sec_percent': round(float(match.group('five_sec')), 2),\n                    'cpu_usage_5sec_interrupt_percent': round(float(match.group('interrupt') or 0.0), 2),\n                    'cpu_usage_1min_percent': round(float(match.group('one_min')), 2),\n                    'cpu_usage_5min_percent': round(float(match.group('five_min')), 2),\n                }\n        return None\n\n    def _parse_top_processes(self, text, limit=5):\n        processes = []\n        for raw_line in (text or '').splitlines():\n            match = PROCESS_LINE_PATTERN.match(raw_line.rstrip())\n            if not match:\n                continue\n            processes.append({\n                'pid': int(match.group('pid')),\n                'runtime_ms': int(match.group('runtime_ms')),\n                'invoked': int(match.group('invoked')),\n                'usecs': int(match.group('usecs')),\n                'cpu_5sec_percent': round(float(match.group('five_sec')), 2),\n                'cpu_1min_percent': round(float(match.group('one_min')), 2),\n                'cpu_5min_percent': round(float(match.group('five_min')), 2),\n                'tty': match.group('tty'),\n                'process': match.group('process').strip(),\n            })\n            if len(processes) >= limit:\n                break\n        return processes\n\n    # def _serialize_command_results(self, results):\n    #     serialized = []\n    #     for item in results:\n    #         serialized.append({\n    #             'command': item.get('command'),\n    #             'display_command': item.get('display_command') or item.get('command'),\n    #             'rc': item.get('rc'),\n    #             'stdout': item.get('stdout') or '',\n    #             'stderr': item.get('stderr') or '',\n    #             'raw_output': item.get('raw_output') or '',\n    #             'timed_out': bool(item.get('timed_out')),\n    #             'prompt': item.get('prompt') or '',\n    #         })\n    #     return serialized\n\n    def run(self):\n        max_cpu_usage_percent = self.get_threshold_var(\n            'max_cpu_usage_percent',\n            default=80.0,\n            value_type='float',\n        )\n        results, error = self._run_commands()\n        if error:\n            return error\n\n        if not results:\n            return self.fail(\n                '점검 결과 없음',\n                message='Cisco IOS CPU 사용률 점검 결과가 비어 있습니다.',\n            )\n\n        cpu_output = (results[-1].get('stdout') or '').strip()\n        if not cpu_output:\n            return self.fail(\n                'CPU 출력 없음',\n                message='show processes cpu sorted 결과가 비어 있습니다.',\n                stdout='',\n            )\n\n        parsed = self._parse_cpu_header(cpu_output)\n        if not parsed:\n            return self.fail(\n                'CPU 사용률 파싱 실패',\n                message='show processes cpu sorted 첫 줄에서 CPU 사용률을 해석하지 못했습니다.',\n                stdout=cpu_output,\n            )\n\n        top_processes = self._parse_top_processes(cpu_output)\n        metrics = {\n            'cpu_usage_5sec_percent': parsed['cpu_usage_5sec_percent'],\n            'cpu_usage_5sec_interrupt_percent': parsed['cpu_usage_5sec_interrupt_percent'],\n            'cpu_usage_1min_percent': parsed['cpu_usage_1min_percent'],\n            'cpu_usage_5min_percent': parsed['cpu_usage_5min_percent'],\n            'top_processes': top_processes,\n        }\n        thresholds = {\n            'max_cpu_usage_percent': max_cpu_usage_percent,\n        }\n\n        if parsed['cpu_usage_5min_percent'] > max_cpu_usage_percent:\n            return self.fail(\n                'CPU 사용률 임계치 초과',\n                message=(\n                    'Cisco IOS CPU 사용률이 기준치를 초과했습니다. '\n                    f'5분 평균 CPU 사용률 {parsed[\"cpu_usage_5min_percent\"]}%가 '\n                    f'임계치 {max_cpu_usage_percent}%보다 큽니다.'\n                ),\n                stdout=cpu_output,\n            )\n\n        if (\n            parsed['cpu_usage_5sec_percent'] > max_cpu_usage_percent\n            or parsed['cpu_usage_1min_percent'] > max_cpu_usage_percent\n        ):\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons=(\n                    f'5초 CPU 사용률 {parsed[\"cpu_usage_5sec_percent\"]}% 또는 '\n                    f'1분 CPU 사용률 {parsed[\"cpu_usage_1min_percent\"]}%가 임계치 '\n                    f'{max_cpu_usage_percent}%를 초과했지만 5분 평균 '\n                    f'{parsed[\"cpu_usage_5min_percent\"]}%는 기준 이내입니다.'\n                ),\n                message=(\n                    'Cisco IOS CPU 사용률이 단기적으로 높습니다. '\n                    f'5초={parsed[\"cpu_usage_5sec_percent\"]}%, '\n                    f'1분={parsed[\"cpu_usage_1min_percent\"]}%, '\n                    f'5분={parsed[\"cpu_usage_5min_percent\"]}%, '\n                    f'기준={max_cpu_usage_percent}%.'\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons=(\n                f'5분 평균 CPU 사용률 {parsed[\"cpu_usage_5min_percent\"]}%가 '\n                f'임계치 {max_cpu_usage_percent}% 이하입니다.'\n            ),\n            message=(\n                'Cisco IOS CPU 사용률 점검이 정상 수행되었습니다. '\n                f'5초={parsed[\"cpu_usage_5sec_percent\"]}%, '\n                f'1분={parsed[\"cpu_usage_1min_percent\"]}%, '\n                f'5분={parsed[\"cpu_usage_5min_percent\"]}%, '\n                f'기준={max_cpu_usage_percent}%.'\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
@@ -274,24 +274,110 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "0.1"
+          "value1": "80"
         }
       ],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "enable 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "status": "ok",
+      "metrics": {
+        "cpu_usage_5sec_percent": 2.0,
+        "cpu_usage_5sec_interrupt_percent": 0.0,
+        "cpu_usage_1min_percent": 2.0,
+        "cpu_usage_5min_percent": 1.0,
+        "top_processes": [
+          {
+            "pid": 274,
+            "runtime_ms": 17150928,
+            "invoked": 11694587,
+            "usecs": 1466,
+            "cpu_5sec_percent": 0.95,
+            "cpu_1min_percent": 0.12,
+            "cpu_5min_percent": 0.08,
+            "tty": "0",
+            "process": "SNMP ENGINE"
+          },
+          {
+            "pid": 186,
+            "runtime_ms": 284944,
+            "invoked": 2724828251,
+            "usecs": 0,
+            "cpu_5sec_percent": 0.31,
+            "cpu_1min_percent": 0.37,
+            "cpu_5min_percent": 0.39,
+            "tty": "0",
+            "process": "HQF Shaper Backg"
+          },
+          {
+            "pid": 40,
+            "runtime_ms": 32492,
+            "invoked": 45353675,
+            "usecs": 0,
+            "cpu_5sec_percent": 0.15,
+            "cpu_1min_percent": 0.03,
+            "cpu_5min_percent": 0.0,
+            "tty": "0",
+            "process": "TTY Background"
+          },
+          {
+            "pid": 19,
+            "runtime_ms": 26831924,
+            "invoked": 261178291,
+            "usecs": 102,
+            "cpu_5sec_percent": 0.07,
+            "cpu_1min_percent": 0.05,
+            "cpu_5min_percent": 0.07,
+            "tty": "0",
+            "process": "ARP Input"
+          },
+          {
+            "pid": 121,
+            "runtime_ms": 13091468,
+            "invoked": 84738198,
+            "usecs": 154,
+            "cpu_5sec_percent": 0.07,
+            "cpu_1min_percent": 0.07,
+            "cpu_5min_percent": 0.03,
+            "tty": "0",
+            "process": "IP Input"
+          }
+        ]
+      },
+      "thresholds": {
+        "max_cpu_usage_percent": 80.0
+      },
+      "reasons": "5분 평균 CPU 사용률 1.0%가 임계치 80.0% 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: *******\nTranslating \"*******\"\n\n% Bad IP address or host name\n% Unknown command or computer name, or unable to find computer address\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show processes cpu sorted\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CPU utilization for five seconds: 2%/0%; one minute: 2%; five minutes: 1%\n PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process \n 274    17150928    11694587       1466  0.95%  0.12%  0.08%   0 SNMP ENGINE      \n 186      284944  2724828251          0  0.31%  0.37%  0.39%   0 HQF Shaper Backg \n  40       32492    45353675          0  0.15%  0.03%  0.00%   0 TTY Background   \n  19    26831924   261178291        102  0.07%  0.05%  0.07%   0 ARP Input        \n 121    13091468    84738198        154  0.07%  0.07%  0.03%   0 IP Input         \n 209     3546604    23284828        152  0.07%  0.01%  0.00%   0 IP SNMP",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: enable",
-        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
-        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
-      ]
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 2]",
+        " - 실행 명령어: *******",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: *******",
+        "Translating \"*******\"",
+        "",
+        "% Bad IP address or host name",
+        "% Unknown command or computer name, or unable to find computer address",
+        "",
+        "[점검 단계 3]",
+        " - 실행 명령어: terminal length 0",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        "",
+        "[점검 단계 4]",
+        " - 실행 명령어: show processes cpu sorted",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: CPU utilization for five seconds: 2%/0%; one minute: 2%; five minutes: 1%",
+        " PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process ",
+        " 274    17150928    11694587       1466  0.95%  0.12%  0.08%   0 SNMP ENGINE      ",
+        " 186      284944  2724828251          0  0.31%  0.37%  0.39%   0 HQF Shaper Backg ",
+        "  40       32492    45353675          0  0.15%  0.03%  0.00%   0 TTY Background   ",
+        "  19    26831924   261178291        102  0.07%  0.05%  0.07%   0 ARP Input        ",
+        " 121    13091468    84738198        154  0.07%  0.07%  0.03%   0 IP Input         ",
+        " 209     3546604    23284828        152  0.07%  0.01%  0.00%   0 IP SNMP"
+      ],
+      "message": "Cisco IOS CPU 사용률 점검이 정상 수행되었습니다. 5초=2.0%, 1분=2.0%, 5분=1.0%, 기준=80.0%."
     }
   ],
-  "failed_items": [
-    "NETWORK-CISCO-CPU-01"
-  ]
+  "failed_items": []
 }

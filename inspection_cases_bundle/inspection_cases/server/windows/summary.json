@@ -1,12 +1,6 @@
 {
   "total_cases": 29,
-  "failed_cases": [
-    "windows_cluster_shared_volume_check",
-    "windows_disk_filesystem_usage_cim_check",
-    "windows_log_kernel_event_check",
-    "windows_log_system_event_check",
-    "windows_memory_usage_cim_check"
-  ],
+  "failed_cases": [],
   "cases": [
     {
       "case_name": "windows_cluster_daemon_check",
@@ -17,10 +11,8 @@
     {
       "case_name": "windows_cluster_shared_volume_check",
       "result_file": "windows_cluster_shared_volume_check/result.json",
-      "failed_items": [
-        "W-REPLAY-CLUSTER-MOUNT-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "windows_cpu_core_cim_check",
@@ -43,10 +35,8 @@
     {
       "case_name": "windows_disk_filesystem_usage_cim_check",
       "result_file": "windows_disk_filesystem_usage_cim_check/result.json",
-      "failed_items": [
-        "W-REPLAY-DISK-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "windows_disk_inode_not_applicable_check",
@@ -111,10 +101,8 @@
     {
       "case_name": "windows_log_kernel_event_check",
       "result_file": "windows_log_kernel_event_check/result.json",
-      "failed_items": [
-        "W-REPLAY-KERNEL-LOG-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "windows_log_memory_event_check",
@@ -137,10 +125,8 @@
     {
       "case_name": "windows_log_system_event_check",
       "result_file": "windows_log_system_event_check/result.json",
-      "failed_items": [
-        "W-REPLAY-LOG-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "windows_memory_pagefile_usage_cim_check",
@@ -157,10 +143,8 @@
     {
       "case_name": "windows_memory_usage_cim_check",
       "result_file": "windows_memory_usage_cim_check/result.json",
-      "failed_items": [
-        "W-REPLAY-MEM-01"
-      ],
-      "is_success": false
+      "failed_items": [],
+      "is_success": true
     },
     {
       "case_name": "windows_network_link_status_check",

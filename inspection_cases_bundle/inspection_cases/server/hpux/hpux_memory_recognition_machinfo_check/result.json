@@ -234,21 +234,28 @@
           "value1": "0"
         }
       ],
-      "status": "fail",
-      "error": "권한 상승 사용자 확인 실패",
-      "message": "권한 상승 후 사용자 확인 결과를 찾지 못했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:machinfo but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; machinfo'",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; machinfo'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:machinfo but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; machinfo'",
+      "status": "ok",
+      "metrics": {
+        "recognized_memory_gb": 16.0
+      },
+      "thresholds": {
+        "expected_memory_gb": 0.0
+      },
+      "reasons": "물리 메모리 용량이 정상 인식되었습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: machinfo\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CPU info:\n  4 Intel(R) Itanium 2 processors\n\nMemory: 16384 MB (16 GB)\nFirmware info:\n  Firmware revision:  03.30",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: printf '%s\\n' '*****' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; machinfo'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:machinfo but got ssh command: printf '%s\\n' 'f3dtop0!' | su - root -c 'current_user=$(whoami); echo __BECOME_USER__:${current_user}; machinfo'"
-      ]
+        " - 실행 명령어: machinfo",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: CPU info:",
+        "  4 Intel(R) Itanium 2 processors",
+        "",
+        "Memory: 16384 MB (16 GB)",
+        "Firmware info:",
+        "  Firmware revision:  03.30"
+      ],
+      "message": "machinfo 기준 메모리 상태 확인이 정상 수행되었습니다."
     }
   ],
-  "failed_items": [
-    "HPUX-REPLAY-22"
-  ]
+  "failed_items": []
 }

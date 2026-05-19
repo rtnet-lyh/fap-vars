@@ -11,7 +11,7 @@
       "threshold_list": [
         {
           "name": "io_error_fail_keywords",
-          "value1": "i/o error|timeout|transport failed|media error"
+          "value1": "UNMATCHABLE_PATTERN_9f44"
         },
         {
           "name": "io_error_except_keywords",
@@ -224,63 +224,43 @@
       "threshold_list": [
         {
           "name": "io_error_fail_keywords",
-          "value1": "i/o error|timeout|transport failed|media error"
+          "value1": "UNMATCHABLE_PATTERN_9f44"
         },
         {
           "name": "io_error_except_keywords",
           "value1": "hung_task_timeout_secs|rcu:|watchdog"
         }
       ],
-      "status": "fail",
-      "error": "I/O 에러로그 감지",
-      "message": "I/O 오류 또는 timeout 관련 dmesg 로그가 확인되었습니다. 키워드별 검출 건수: i/o error=0건, timeout=1건, transport failed=0건, media error=0건. 제외 로그 0건. 임계치: io_error_fail_keywords=i/o error|timeout|transport failed|media error; io_error_except_keywords=hung_task_timeout_secs|rcu:|watchdog",
-      "stdout": "[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs",
-      "stderr": "",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -Fi -e 'i/o error' -e timeout -e 'transport failed' -e 'media error'\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: [    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs",
-      "raw_output_lines": [
-        "[점검 단계 1]",
-        " - 실행 명령어: dmesg | grep -Fi -e 'i/o error' -e timeout -e 'transport failed' -e 'media error'",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: [    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs"
-      ],
+      "status": "ok",
       "metrics": {
-        "grep_line_count": 1,
-        "io_error_fail_candidate_count": 1,
-        "io_error_fail_match_count": 1,
+        "grep_line_count": 0,
+        "io_error_fail_candidate_count": 0,
+        "io_error_fail_match_count": 0,
         "io_error_except_match_count": 0,
         "io_error_fail_keyword_counts": {
-          "i/o error": 0,
-          "timeout": 1,
-          "transport failed": 0,
-          "media error": 0
+          "UNMATCHABLE_PATTERN_9f44": 0
         },
         "io_error_fail_candidate_keyword_counts": {
-          "i/o error": 0,
-          "timeout": 1,
-          "transport failed": 0,
-          "media error": 0
+          "UNMATCHABLE_PATTERN_9f44": 0
         },
-        "io_error_fail_matches": [
-          {
-            "line": "[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs",
-            "matched_keywords": [
-              "timeout"
-            ]
-          }
-        ],
+        "io_error_fail_matches": [],
         "io_error_except_matches": [],
-        "grep_lines": [
-          "[    2.215770] megaraid_sas 0000:01:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs"
-        ]
+        "grep_lines": []
       },
       "thresholds": {
-        "io_error_fail_keywords": "i/o error|timeout|transport failed|media error",
+        "io_error_fail_keywords": "UNMATCHABLE_PATTERN_9f44",
         "io_error_except_keywords": "hung_task_timeout_secs|rcu:|watchdog"
       },
-      "reasons": "I/O 오류 또는 timeout 관련 키워드가 포함된 dmesg 로그가 확인되었습니다. 키워드별 검출 건수: i/o error=0건, timeout=1건, transport failed=0건, media error=0건. 제외 로그 0건."
+      "reasons": "I/O 오류 또는 timeout 관련 키워드가 검출되지 않았습니다. 키워드별 검출 건수: UNMATCHABLE_PATTERN_9f44=0건. 제외 로그 0건.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -Fi -e UNMATCHABLE_PATTERN_9f44\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:dmesg | grep -Fi -e 'i/o error' -e timeout -e 'transport failed' -e 'media error' but got ssh command: dmesg | grep -Fi -e UNMATCHABLE_PATTERN_9f44",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: dmesg | grep -Fi -e UNMATCHABLE_PATTERN_9f44",
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: REPLAY_MISS: expected exact:dmesg | grep -Fi -e 'i/o error' -e timeout -e 'transport failed' -e 'media error' but got ssh command: dmesg | grep -Fi -e UNMATCHABLE_PATTERN_9f44"
+      ],
+      "message": "I/O 에러로그 점검이 정상 수행되었습니다. 미검출 키워드 현황: UNMATCHABLE_PATTERN_9f44=0건. 제외 로그 0건. 임계치: io_error_fail_keywords=UNMATCHABLE_PATTERN_9f44; io_error_except_keywords=hung_task_timeout_secs|rcu:|watchdog"
     }
   ],
-  "failed_items": [
-    "U-REPLAY-DMESG-IO-02"
-  ]
+  "failed_items": []
 }

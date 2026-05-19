@@ -37,7 +37,7 @@
     "threshold_list": [
       {
         "name": "max_cpu_usage_percent",
-        "value1": "0.1"
+        "value1": "80"
       }
     ]
   }
