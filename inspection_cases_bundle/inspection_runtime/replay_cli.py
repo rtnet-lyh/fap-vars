@@ -535,6 +535,8 @@ def main(argv=None):
     try:
         output, exit_code = run_path(args.path, mode=args.mode)
     except Exception as exc:
+        import traceback
+        print(traceback.format_exc())
         print(json.dumps({'error': str(exc)}, ensure_ascii=False))
         return 1
 

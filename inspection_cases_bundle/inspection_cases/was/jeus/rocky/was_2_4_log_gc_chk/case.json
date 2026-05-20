@@ -1,6 +1,6 @@
 {
-  "host": "192.168.1.123",
-  "port": 22,
+  "host": "172.18.9.62",
+  "port": 222,
   "user": "root",
   "password": "",
   "credentials": {
@@ -11,12 +11,12 @@
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
+          "username": "sysmng",
+          "password": "!ehfhrhdtk1",
           "become": "true",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "!ehfhrhdtk1"
         }
       }
     ]
@@ -36,11 +36,6 @@
     "application_name": "JEUS",
     "application_family_name": "WAS",
     "host_vars": {},
-    "threshold_list": [
-      {
-        "name": "max_frequency",
-        "value1": "2"
-      }
-    ]
+    "threshold_list": []    
   }
 }

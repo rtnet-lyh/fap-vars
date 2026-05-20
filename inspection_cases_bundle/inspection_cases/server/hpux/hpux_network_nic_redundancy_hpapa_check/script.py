@@ -1,202 +1,147 @@
 # -*- coding: utf-8 -*-
 
 import re
-import shlex
 
 from .common._base import BaseCheck
 
 
-CONFIG = {'mode': 'nic_redundancy',
- 'case_name': 'hpux_network_nic_redundancy_hpapa_check',
- 'item_name': 'NIC 이중화 점검',
- 'commands': ['netstat -in', 'lanscan -q'],
- 'thresholds': [{'name': 'required_redundant_nic_count', 'default': 2, 'type': 'int'},
-                {'name': 'max_interface_error_count', 'default': 0, 'type': 'int'}]}
-BECOME_USER_MARKER = '__BECOME_USER__:'
-
+CHECK_COMMAND = 'nwmgr -S apa'
+BECOME_COMMAND_TIMEOUT = 1
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
-
-    def _thresholds(self):
-        values = {}
-        for spec in CONFIG.get('thresholds', []):
-            name = spec.get('name')
-            if not name:
-                continue
-            values[name] = self.get_threshold_var(
-                name,
-                default=spec.get('default'),
-                value_type=spec.get('type') or 'str',
-            )
-        return values
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _is_become_enabled(self):
-        become_raw = self.get_application_credential_value('become', default=False)
-        return str(become_raw).strip().lower() == 'true'
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
 
-    def _mask_command_history(self, *secrets):
-        if not self._command_history:
-            return
-        masked_cmd = self._command_history[-1].get('cmd', '')
-        for secret in secrets:
-            if secret:
-                masked_cmd = masked_cmd.replace(secret, '*****')
-        self._command_history[-1]['cmd'] = masked_cmd
-
-    def _build_command(self, command):
+    def _build_become_command(self):
         if not self._is_become_enabled():
-            return command
+            return ''
 
-        become_method = str(self.get_application_credential_value('become_method', default='su -') or 'su -').strip().lower()
-        become_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        become_password = str(self.get_application_credential_value('become_password', default='') or '')
-        normalized_become_method = ' '.join(become_method.split())
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
 
-        if normalized_become_method not in ('su', 'su -'):
-            raise ValueError(f'unsupported become_method: {become_method}')
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
 
-        become_script = 'current_user=$(whoami); echo {marker}${{current_user}}; {command}'.format(
-            marker=BECOME_USER_MARKER,
-            command=command,
-        )
-        return "printf '%s\\n' {password} | su - {user} -c {command}".format(
-            password=shlex.quote(become_password),
-            user=shlex.quote(become_user),
-            command=shlex.quote(become_script),
-        )
+    def _build_check_command(self, become_command):        
+        become_password = self.get_connection_value('become_password', default='')                                        
+        become_base_command = [
+            {
+                'command': become_command,
+                'timeout': BECOME_COMMAND_TIMEOUT,
+                'ignore_prompt': True,                    
+            },
+            {
+                'command': become_password,
+                'hide_command': True,
+            }
+        ]        
+        if become_command:            
+            become_base_command.append({"command": CHECK_COMMAND})
+            return become_base_command
+        else:
+            return [{
+                "command": CHECK_COMMAND
+            }]   
 
-    def _strip_become_marker(self, output):
-        if not self._is_become_enabled():
-            return output or '', ''
+    def _find_check_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == CHECK_COMMAND:
+                return item
+        return None
 
-        lines = (output or '').splitlines()
-        marker_line = next((line.strip() for line in lines if line.strip().startswith(BECOME_USER_MARKER)), '')
-        if not marker_line:
-            raise ValueError('권한 상승 후 사용자 확인 결과를 찾지 못했습니다.')
+    def _parse_nwmgr(self, output: str, min_member_count: int = 2):     
+        # VMS2:root[/]# nwmgr -S apa
+        # Class    Mode        Load      Speed-               Membership
+        # Instance             Balancing Duplex
+        # ======== =========== ========= ==================== ===========================
+        # lan900   LAN_MONITOR LB_HS     1.000000 Gbps Full Duplex2,4
+        # lan901   LAN_MONITOR LB_HS     0.000000 Mbps        3*,5*
+        # lan902   LAN_MONITOR LB_HS     10.000000 Gbps Full Duplex12,1
+        # lan903   Not_Enabled LB_PORT   0.000000 Mbps         -
+        # lan904   Not_Enabled LB_PORT   0.000000 Mbps         -
+        results = []        
+        for line in output.splitlines():
+            line.strip()
+            
 
-        actual_user = marker_line.split(BECOME_USER_MARKER, 1)[1].strip()
-        expected_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        if actual_user != expected_user:
-            raise ValueError(f'권한 상승 사용자가 기대값과 다릅니다: expected={expected_user}, actual={actual_user}')
+            if not line.startswith("lan"):
+                continue            
+            if "LAN_MONITOR" not in line:
+                continue
 
-        cleaned_lines = [line for line in lines if not line.strip().startswith(BECOME_USER_MARKER)]
-        return '\n'.join(cleaned_lines).strip(), actual_user
+            member_match = re.search(r"(\d+\*?(?:,\d+\*?)*)\s*$", line)
+            
+            if not member_match:
+                continue
+            
+            members_raw = member_match.group(1)
 
-    def _run_commands(self):
-        outputs = []
-        mode = CONFIG.get('mode')
+            members = [
+                x.replace("*", "")
+                for x in members_raw.split(",")
+                if x.replace("*", "")
+            ]
 
-        for command in CONFIG.get('commands', []):
-            try:
-                actual_command = self._build_command(command)
-            except ValueError as exc:
-                return None, self.fail('권한 상승 설정 오류', message=str(exc))
+            agg_match = re.match("(lan\d+)", line)
+            aggregate = agg_match.group(1)
 
-            become_password = str(self.get_application_credential_value('become_password', default='') or '')
-            rc, out, err = self._ssh(actual_command)
-            self._mask_command_history(become_password)
-
-            if self._is_connection_error(rc, err):
-                return None, self.fail(
-                    '호스트 연결 실패',
-                    message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            try:
-                clean_out, actual_become_user = self._strip_become_marker(out)
-            except ValueError as exc:
-                return None, self.fail(
-                    '권한 상승 사용자 확인 실패',
-                    message=str(exc),
-                    stdout=(out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            log_no_match = mode == 'log' and rc == 1 and not (clean_out or '').strip()
-            if rc != 0 and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 실행에 실패했습니다.',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            command_error = self._detect_command_error(clean_out, err)
-            if command_error and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 출력에서 실행 오류가 확인되었습니다: {command_error}',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            outputs.append({
-                'command': command,
-                'rc': rc,
-                'stdout': (clean_out or '').strip(),
-                'stderr': (err or '').strip(),
-                'become_user': actual_become_user,
+            results.append({
+                "aggregate": aggregate,
+                "members": members,
+                "member_count": len(members),
+                "ok": len(members) >= min_member_count
             })
 
-        return outputs, None
-
-    def _split_list(self, value):
-        return [token.strip() for token in re.split(r'[|,\n]+', str(value or '')) if token.strip()]
-
-    def _parse_float(self, value, default=None):
-        try:
-            return float(str(value).strip().rstrip('%'))
-        except (TypeError, ValueError):
-            return default
-
-    def _parse_int(self, value, default=None):
-        parsed = self._parse_float(value, default=None)
-        if parsed is None:
-            return default
-        return int(parsed)
-
-    def _combined_stdout(self, outputs):
-        return '\n'.join(item.get('stdout', '') for item in outputs if item.get('stdout', '')).strip()
+        return results 
 
     def run(self):
-        outputs, error = self._run_commands()
-        if error:
-            return error
-        return self._evaluate(outputs)
+        try:
+            metrics = {}
 
-    def _evaluate(self, outputs):
-        thresholds = self._thresholds()
-        netstat = outputs[0]['stdout'] if outputs else ''
-        lanscan = outputs[1]['stdout'] if len(outputs) > 1 else ''
-        required_count = self._parse_int(thresholds.get('required_redundant_nic_count', 2), 2)
-        max_error = self._parse_int(thresholds.get('max_interface_error_count', 0), 0)
-        up_links = []
-        down_links = []
-        for line in lanscan.splitlines():
-            parts = line.split()
-            if len(parts) >= 5 and parts[0].lower().startswith('lan'):
-                (up_links if parts[-1].upper() == 'UP' else down_links).append(parts[0])
-        interface_errors = []
-        header = None
-        for line in netstat.splitlines():
-            parts = line.split()
-            if parts and parts[0] == 'Name':
-                header = parts
-                continue
-            if header and len(parts) >= len(header) and parts[0].lower().startswith('lan'):
-                try:
-                    ierrs = int(parts[header.index('Ierrs')])
-                    oerrs = int(parts[header.index('Oerrs')])
-                except Exception:
-                    continue
-                if ierrs > max_error or oerrs > max_error:
-                    interface_errors.append({'name': parts[0], 'ierrs': ierrs, 'oerrs': oerrs})
-        if len(up_links) < required_count or down_links or interface_errors:
-            return self.fail('NIC 이중화 상태 비정상', message=f'up_links={up_links}, down_links={down_links}, interface_errors={interface_errors}', stdout=self._combined_stdout(outputs))
-        return self.ok(metrics={'up_link_count': len(up_links), 'up_links': up_links, 'down_links': down_links, 'interface_errors': interface_errors}, thresholds={'required_redundant_nic_count': required_count, 'max_interface_error_count': max_error}, reasons='이중화 대상 NIC 링크와 오류 카운터가 정상입니다.', message='NIC 이중화 점검이 정상 수행되었습니다.')
+            min_member_count = self.get_threshold_var(key='MIN_MEMBER_COUNT', default=2, value_type='int')
+            become_command = self._build_become_command()            
+            check_commands = self._build_check_command(become_command)                        
+            results = self._run_paramiko_commands(check_commands)            
+            result = self._find_check_result(results)            
+            output = result.get('stdout', '')            
+           
+            parsed = self._parse_nwmgr(output, min_member_count)
+            metrics = parsed
 
+            ok_items = [item for item in metrics if item.get("ok", False)]
+            fail_items = [item for item in metrics if not item.get("ok", False)]
+
+            is_pass = True if ok_items and not fail_items else False
+
+            if is_pass:                
+                return self.ok(
+                    metrics = metrics,
+                    reasons = f"NIC 이중화 상태가 정상 입니다. {ok_items}",
+                    message = f"NIC 이중화 상태가 정상 입니다.",
+                )
+            else:
+                return self.fail(
+                    error="NIC 이중화 점검 실패",
+                    metrics = metrics,   
+                    message = f"NIC 이중화 상태 점검이 필요 합니다. {fail_items}",
+                )
+            
+        except Exception as e:
+            import traceback            
+            return self.fail(
+                error=f"NIC 이중화 점검 실패: {str(e)}",
+                message=f"NIC 이중화 점검 실패: {str(e)}",                
+            )
 
 CHECK_CLASS = Check

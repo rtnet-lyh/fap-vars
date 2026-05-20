@@ -12,14 +12,14 @@
       "threshold_list": [
         {
           "name": "process_name",
-          "value1": "webtob"
+          "value1": "exTMS"
         },
         {
           "name": "bad_process_states",
           "value1": "Z,D,T"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    DEFAULT_PROCESS_NAME = 'webtob'\n    DEFAULT_BAD_PROCESS_STATES = 'Z,D,T'\n    COMMAND_TIMEOUT = 10\n\n    def _parse_bad_states(self, raw_value):\n        return {\n            token.strip().upper()\n            for token in re.split(r'[,| ]+', str(raw_value or ''))\n            if token.strip()\n        }\n\n    def _parse_ps_rows(self, stdout):\n        rows = []\n        for line in str(stdout or '').splitlines():\n            parts = re.split(r'\\s+', line.strip(), maxsplit=10)\n            if len(parts) < 11 or not parts[1].isdigit():\n                continue\n            try:\n                rows.append({\n                    'user': parts[0],\n                    'pid': parts[1],\n                    'cpu_percent': float(parts[2]),\n                    'mem_percent': float(parts[3]),\n                    'stat': parts[7],\n                    'start': parts[8],\n                    'time': parts[9],\n                    'command': parts[10],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        process_name = str(\n            self.get_threshold_var('process_name', default=self.DEFAULT_PROCESS_NAME, value_type='str') or ''\n        ).strip() or self.DEFAULT_PROCESS_NAME\n        bad_states_raw = self.get_threshold_var(\n            'bad_process_states',\n            default=self.DEFAULT_BAD_PROCESS_STATES,\n            value_type='str',\n        )\n        bad_states = self._parse_bad_states(bad_states_raw)\n        command = 'ps aux | grep %s | grep -v grep' % process_name\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                'ps 명령 실행 실패',\n                message='WEB 프로세스 기동 상태를 확인하지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        rows = self._parse_ps_rows(stdout)\n        if not rows:\n            return self.fail(\n                '프로세스 정보 없음',\n                message='ps 출력에서 대상 프로세스를 찾지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        bad_rows = [\n            row for row in rows\n            if any(state in (row['stat'] or '').upper() for state in bad_states)\n        ]\n        metrics = {\n            'process_name': process_name,\n            'process_count': len(rows),\n            'pids': [row['pid'] for row in rows],\n            'states': sorted({row['stat'] for row in rows}),\n            'bad_process_count': len(bad_rows),\n            'bad_processes': bad_rows,\n            'processes': rows,\n        }\n        thresholds = {\n            'process_name': process_name,\n            'bad_process_states': sorted(bad_states),\n        }\n\n        if bad_rows:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='기동 중인 WEB 프로세스에서 비정상 상태가 발견되었습니다.',\n                message='WEB 프로세스 기동 경고: 비정상 상태 %s건, 기준 %s' % (\n                    len(bad_rows),\n                    ','.join(sorted(bad_states)),\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='유효한 PID가 있고 비정상 상태 코드가 없습니다.',\n            message='WEB 프로세스 기동 정상: %s개 프로세스 PID=%s' % (\n                len(rows),\n                ','.join(metrics['pids']),\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    DEFAULT_PROCESS_NAME = 'exTMS'\n    DEFAULT_BAD_PROCESS_STATES = 'Z,D,T'\n    COMMAND_TIMEOUT = 10\n\n    def _parse_bad_states(self, raw_value):\n        return {\n            token.strip().upper()\n            for token in re.split(r'[,| ]+', str(raw_value or ''))\n            if token.strip()\n        }\n\n    def _parse_ps_rows(self, stdout):\n        rows = []\n        for line in str(stdout or '').splitlines():\n            parts = re.split(r'\\s+', line.strip(), maxsplit=10)\n            if len(parts) < 11 or not parts[1].isdigit():\n                continue\n            try:\n                rows.append({\n                    'user': parts[0],\n                    'pid': parts[1],\n                    'cpu_percent': float(parts[2]),\n                    'mem_percent': float(parts[3]),\n                    'stat': parts[7],\n                    'start': parts[8],\n                    'time': parts[9],\n                    'command': parts[10],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        process_name = self.get_host_var(key='process_name')        \n        if not process_name:\n            process_name = self.get_threshold_var(\n                'process_name', \n                default=self.DEFAULT_PROCESS_NAME, \n                value_type='str'\n            ).strip()\n\n        bad_states_raw = self.get_threshold_var(\n            'bad_process_states',\n            default=self.DEFAULT_BAD_PROCESS_STATES,\n            value_type='str',\n        )\n        bad_states = self._parse_bad_states(bad_states_raw)\n        command = 'ps aux | grep %s | grep -v grep' % process_name\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                'ps 명령 실행 실패',\n                message='WEB 프로세스 기동 상태를 확인하지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        rows = self._parse_ps_rows(stdout)\n        if not rows:\n            return self.fail(\n                '프로세스 정보 없음',\n                message='ps 출력에서 대상 프로세스를 찾지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        bad_rows = [\n            row for row in rows\n            if any(state in (row['stat'] or '').upper() for state in bad_states)\n        ]\n\n        print(f\"bad_states: {bad_states}\")\n        print(f\"bad_rows: {bad_rows}\")\n\n        metrics = {\n            'process_name': process_name,\n            'process_count': len(rows),\n            'pids': [row['pid'] for row in rows],\n            'states': sorted({row['stat'] for row in rows}),\n            'bad_process_count': len(bad_rows),\n            'bad_processes': bad_rows,\n            'processes': rows,\n        }\n        thresholds = {\n            'process_name': process_name,\n            'bad_process_states': sorted(bad_states),\n        }\n\n        if bad_rows:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='기동 중인 WEB 프로세스에서 비정상 상태가 발견되었습니다.',\n                message='WEB 프로세스 기동 경고: 비정상 상태 %s건, 기준 %s' % (\n                    len(bad_rows),\n                    ','.join(sorted(bad_states)),\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='유효한 PID가 있고 비정상 상태 코드가 없습니다.',\n            message='WEB 프로세스 기동 정상: %s개 프로세스 PID=%s' % (\n                len(rows),\n                ','.join(metrics['pids']),\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -34,7 +34,7 @@
         "    PARAMIKO_PROFILE = 'linux'",
         "    PARAMIKO_REUSE_SESSION = False",
         "",
-        "    DEFAULT_PROCESS_NAME = 'webtob'",
+        "    DEFAULT_PROCESS_NAME = 'exTMS'",
         "    DEFAULT_BAD_PROCESS_STATES = 'Z,D,T'",
         "    COMMAND_TIMEOUT = 10",
         "",
@@ -67,9 +67,14 @@
         "        return rows",
         "",
         "    def run(self):",
-        "        process_name = str(",
-        "            self.get_threshold_var('process_name', default=self.DEFAULT_PROCESS_NAME, value_type='str') or ''",
-        "        ).strip() or self.DEFAULT_PROCESS_NAME",
+        "        process_name = self.get_host_var(key='process_name')        ",
+        "        if not process_name:",
+        "            process_name = self.get_threshold_var(",
+        "                'process_name', ",
+        "                default=self.DEFAULT_PROCESS_NAME, ",
+        "                value_type='str'",
+        "            ).strip()",
+        "",
         "        bad_states_raw = self.get_threshold_var(",
         "            'bad_process_states',",
         "            default=self.DEFAULT_BAD_PROCESS_STATES,",
@@ -107,6 +112,10 @@
         "            row for row in rows",
         "            if any(state in (row['stat'] or '').upper() for state in bad_states)",
         "        ]",
+        "",
+        "        print(f\"bad_states: {bad_states}\")",
+        "        print(f\"bad_rows: {bad_rows}\")",
+        "",
         "        metrics = {",
         "            'process_name': process_name,",
         "            'process_count': len(rows),",
@@ -160,7 +169,7 @@
       "threshold_list": [
         {
           "name": "process_name",
-          "value1": "webtob"
+          "value1": "exTMS"
         },
         {
           "name": "bad_process_states",
@@ -169,65 +178,67 @@
       ],
       "status": "ok",
       "metrics": {
-        "process_name": "webtob",
+        "process_name": "exTMS",
         "process_count": 4,
         "pids": [
-          "1476176",
-          "1480138",
-          "1480139",
-          "1480140"
+          "1473",
+          "1506",
+          "1709",
+          "2213"
         ],
         "states": [
           "S",
-          "Sl"
+          "Sl",
+          "Ss",
+          "Ssl"
         ],
         "bad_process_count": 0,
         "bad_processes": [],
         "processes": [
           {
-            "user": "exTMS",
-            "pid": "1476176",
+            "user": "exTMSagn",
+            "pid": "1473",
             "cpu_percent": 0.0,
-            "mem_percent": 5.8,
-            "stat": "Sl",
-            "start": "2025",
-            "time": "93:32",
-            "command": "/usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer"
+            "mem_percent": 0.0,
+            "stat": "Ss",
+            "start": "2월03",
+            "time": "0:34",
+            "command": "/usr/lib/systemd/systemd --user"
           },
           {
-            "user": "exTMS",
-            "pid": "1480138",
+            "user": "exTMSagn",
+            "pid": "1506",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
             "stat": "S",
-            "start": "2025",
-            "time": "8:27",
-            "command": "wsm -l 0x2 -I webtob1_1480137 -b 1480137"
+            "start": "2월03",
+            "time": "0:00",
+            "command": "(sd-pam)"
           },
           {
-            "user": "exTMS",
-            "pid": "1480139",
+            "user": "exTMSagn",
+            "pid": "1709",
+            "cpu_percent": 0.0,
+            "mem_percent": 2.2,
+            "stat": "Sl",
+            "start": "2월03",
+            "time": "57:26",
+            "command": "java -Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:MaxMetaspaceSize=192m -Dlock.port=47720 -Dagent.ip= -Dspring.profiles.active=CTR -jar ./tips_dash_agent.jar"
+          },
+          {
+            "user": "exTMSagn",
+            "pid": "2213",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "stat": "S",
-            "start": "2025",
-            "time": "2:40",
-            "command": "htl -l 0x2 -I webtob1_1480137 -b 1480137"
-          },
-          {
-            "user": "exTMS",
-            "pid": "1480140",
-            "cpu_percent": 0.0,
-            "mem_percent": 3.6,
-            "stat": "Sl",
-            "start": "2025",
-            "time": "3:13",
-            "command": "hth -l 0x2 -I webtob1_1480137 -b 1480137"
+            "stat": "Ssl",
+            "start": "2월03",
+            "time": "0:00",
+            "command": "/usr/bin/dbus-daemon --session --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only"
           }
         ]
       },
       "thresholds": {
-        "process_name": "webtob",
+        "process_name": "exTMS",
         "bad_process_states": [
           "D",
           "T",
@@ -235,17 +246,17 @@
         ]
       },
       "reasons": "유효한 PID가 있고 비정상 상태 코드가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps aux | grep webtob | grep -v grep\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: exTMS    1476176  0.0  5.8 6052980 940596 ?      Sl    2025  93:32 /usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer\nexTMS    1480138  0.0  0.0  19032  8728 ?        S     2025   8:27 wsm -l 0x2 -I webtob1_1480137 -b 1480137\nexTMS    1480139  0.0  0.0  12588   900 ?        S     2025   2:40 htl -l 0x2 -I webtob1_1480137 -b 1480137\nexTMS    1480140  0.0  3.6 1211928 596944 ?      Sl    2025   3:13 hth -l 0x2 -I webtob1_1480137 -b 1480137",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps aux | grep exTMS | grep -v grep\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: exTMSagn    1473  0.0  0.0  89856  9876 ?        Ss    2월03   0:34 /usr/lib/systemd/systemd --user\nexTMSagn    1506  0.0  0.0 153700  5588 ?        S     2월03   0:00 (sd-pam)\nexTMSagn    1709  0.0  2.2 4751224 365748 ?      Sl    2월03  57:26 java -Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:MaxMetaspaceSize=192m -Dlock.port=47720 -Dagent.ip= -Dspring.profiles.active=CTR -jar ./tips_dash_agent.jar\nexTMSagn    2213  0.0  0.0  64484  5420 ?        Ssl   2월03   0:00 /usr/bin/dbus-daemon --session --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: ps aux | grep webtob | grep -v grep",
+        " - 실행 명령어: ps aux | grep exTMS | grep -v grep",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: exTMS    1476176  0.0  5.8 6052980 940596 ?      Sl    2025  93:32 /usr/lib/jvm/jdk-1.8.0_431-oracle-x64/bin/java -DadminServer -Xms1024m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -d64 -Djeus.vm.bits=64 -Djeus.io.buffer.size-per-pool=81920 -Djeus.cdi.enabled=false -Djeus.jms.server.manager.produce-wait-strategy-type=blocking -Djeus.servlet.sortWebinfLibraries=name_asc -server -Xbootclasspath/p:/home/exTMS/tmax/jeus/lib/system/extension.jar -classpath /home/exTMS/tmax/jeus/lib/jbext/jbext_v8500_202502_2_unified.jar:/home/exTMS/tmax/jeus/lib/system/bootstrap.jar -Djava.security.policy=/home/exTMS/tmax/jeus/domains/jeus_domain/config/security/policy -Djava.library.path=/home/exTMS/tmax/jeus/lib/system:/home/exTMS/tmax/webtob/lib: -Djava.endorsed.dirs=/home/exTMS/tmax/jeus/lib/endorsed -Djeus.properties.replicate=jeus,sun.rmi,java.util,java.net -Djeus.jvm.version=hotspot -Djava.util.logging.config.file=/home/exTMS/tmax/jeus/bin/logging.properties -Dsun.rmi.dgc.server.gcInterval=3600000 -Djava.util.logging.manager=jeus.util.logging.JeusLogManager -Djeus.home=/home/exTMS/tmax/jeus -Djeus.launcher.log.home=/home/exTMS/tmax/jeus/log/launcher -Djava.net.preferIPv4Stack=true -Djeus.tm.checkReg=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Djeus.domain.name=jeus_domain -Djava.naming.factory.initial=jeus.jndi.JNSContextFactory -Djava.naming.factory.url.pkgs=jeus.jndi.jns.url -Djeus.server.protectmode=false -XX:+UnlockDiagnosticVMOptions -XX:+LogVMOutput -XX:LogFile=/home/exTMS/tmax/jeus/log/adminServer/jvm.log jeus.server.admin.DomainAdminServerBootstrapper -domain jeus_domain -u wasadmin -server adminServer",
-        "exTMS    1480138  0.0  0.0  19032  8728 ?        S     2025   8:27 wsm -l 0x2 -I webtob1_1480137 -b 1480137",
-        "exTMS    1480139  0.0  0.0  12588   900 ?        S     2025   2:40 htl -l 0x2 -I webtob1_1480137 -b 1480137",
-        "exTMS    1480140  0.0  3.6 1211928 596944 ?      Sl    2025   3:13 hth -l 0x2 -I webtob1_1480137 -b 1480137"
+        " - 출력 내용: exTMSagn    1473  0.0  0.0  89856  9876 ?        Ss    2월03   0:34 /usr/lib/systemd/systemd --user",
+        "exTMSagn    1506  0.0  0.0 153700  5588 ?        S     2월03   0:00 (sd-pam)",
+        "exTMSagn    1709  0.0  2.2 4751224 365748 ?      Sl    2월03  57:26 java -Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:MaxMetaspaceSize=192m -Dlock.port=47720 -Dagent.ip= -Dspring.profiles.active=CTR -jar ./tips_dash_agent.jar",
+        "exTMSagn    2213  0.0  0.0  64484  5420 ?        Ssl   2월03   0:00 /usr/bin/dbus-daemon --session --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only"
       ],
-      "message": "WEB 프로세스 기동 정상: 4개 프로세스 PID=1476176,1480138,1480139,1480140"
+      "message": "WEB 프로세스 기동 정상: 4개 프로세스 PID=1473,1506,1709,2213"
     }
   ],
   "failed_items": []

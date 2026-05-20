@@ -1,5 +1,5 @@
 {
-  "host": "192.168.1.163",
+  "host": "127.0.0.1",
   "port": 22,
   "user": "root",
   "password": "",
@@ -11,12 +11,12 @@
         "application_type_name": "HPUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
-          "become": "true",
+          "username": "root",
+          "password": "",
+          "become": "false",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": ""
         }
       }
     ]
@@ -45,11 +45,11 @@
     "action_content": "비정상 또는 경고 시 HP-UX 명령 출력, 시스템 로그, 벤더 관리도구 결과를 교차 확인 후 조치합니다.",
     "threshold_list": [
       {
-        "name": "bad_log_keywords",
+        "name": "power_bad_log_keywords",
         "value1": "psu.*fail|power\\s+supply.*fail|power.*failed|not\\s+detected"
       },
       {
-        "name": "ignore_log_keywords",
+        "name": "power_ignore_log_keywords",
         "value1": ""
       }
     ]

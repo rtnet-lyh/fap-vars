@@ -50,9 +50,14 @@ class Check(BaseCheck):
         return rows
 
     def run(self):
-        process_name = str(
-            self.get_threshold_var('process_name', default=self.DEFAULT_PROCESS_NAME, value_type='str') or ''
-        ).strip() or self.DEFAULT_PROCESS_NAME
+        process_name = self.get_host_var(key='process_name')
+        if not process_name:
+            process_name = self.get_threshold_var(
+                'process_name', 
+                default=self.DEFAULT_PROCESS_NAME, 
+                value_type='str'
+            ).strip()
+
         bad_states_raw = self.get_threshold_var(
             'bad_process_states',
             default=self.DEFAULT_BAD_PROCESS_STATES,

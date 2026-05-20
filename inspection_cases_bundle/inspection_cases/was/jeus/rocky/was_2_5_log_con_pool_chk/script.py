@@ -3,8 +3,7 @@
 from .common._base import BaseCheck
 
 
-COMMAND = 'grep -i "connection leak" /home/exTMS/tmax/jeus/log/adminServer/jdbc.log || true'
-
+COMMAND = 'grep -i "{bad_word}" "$(ls -t {admin_log_path}/*.log | head -1)"'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -14,9 +13,10 @@ class Check(BaseCheck):
 
     COMMAND_TIMEOUT = 20
 
-    def _run_jeus_command(self):
+    def _run_jeus_command(self, bad_word: str, admin_log_path: str):
+        command = COMMAND.format(bad_word=bad_word,admin_log_path=admin_log_path)
         result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
             become=True,
             profile='linux',
         )[0]
@@ -31,18 +31,22 @@ class Check(BaseCheck):
             )
         return stdout, stderr, None
 
-    FINDING_LABEL = 'connection leak'
 
     def run(self):
-        stdout, _stderr, error = self._run_jeus_command()
+        bad_word = self.get_threshold_var(key='bad_word', default='connection leak', value_type='str')
+        admin_log_path = self.get_threshold_var(key='admin_log_path', default='/home/exTMS/tmax/jeus/log/adminServer', value_type='str')
+        expected_matching_line_count = self.get_threshold_var(key='expected_matching_line_count', default=0, value_type='int')
+
+        stdout, _stderr, error = self._run_jeus_command(bad_word, admin_log_path)
         if error:
             return error
         lines = [line.strip() for line in stdout.splitlines() if line.strip()]
-        metrics = {'finding_label': self.FINDING_LABEL, 'matching_line_count': len(lines), 'sample_lines': lines[:20]}
-        thresholds = {'expected_matching_line_count': 0}
+        metrics = {'finding_label': bad_word, 'matching_line_count': len(lines), 'sample_lines': lines[:20]}
+        thresholds = {'expected_matching_line_count': expected_matching_line_count}
+        
         if lines:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='%s이 발견되었습니다.' % self.FINDING_LABEL, message='JEUS 로그 패턴 경고: %s count=%s' % (self.FINDING_LABEL, len(lines)))
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='%s이 발견되지 않았습니다.' % self.FINDING_LABEL, message='JEUS 로그 패턴 정상: %s 미검출' % self.FINDING_LABEL)
+            return self.warn(metrics=metrics, thresholds=thresholds, reasons='%s이 발견되었습니다.' % bad_word, message='JEUS 로그 패턴 경고: %s count=%s' % (bad_word, len(lines)))
+        return self.ok(metrics=metrics, thresholds=thresholds, reasons='%s이 발견되지 않았습니다.' % bad_word, message='JEUS 로그 패턴 정상: %s 미검출' % bad_word)
 
 
 CHECK_CLASS = Check

@@ -1,6 +1,6 @@
 {
-  "host": "192.168.1.123",
-  "port": 22,
+  "host": "172.18.9.3",
+  "port": 222,
   "user": "root",
   "password": "",
   "credentials": {
@@ -11,12 +11,12 @@
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
+          "username": "sysmng",
+          "password": "!ehfhrhdtk1",
           "become": "true",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "!ehfhrhdtk1"
         }
       }
     ]
@@ -39,7 +39,7 @@
     "threshold_list": [
       {
         "name": "ip_addr",
-        "value1": "172.18.9.3"
+        "value1": "127.0.0.1"
       },
       {
         "name": "webtob_service_port",

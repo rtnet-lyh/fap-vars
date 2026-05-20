@@ -20,16 +20,21 @@ class Check(BaseCheck):
         return 'grep -Ei "CRITICAL|FATAL|ERR-|error" $(ls %s/error.log*|sort|tail -n 1) | tail -20' % path
 
     def run(self):
-        error_log_path = str(
-            self.get_threshold_var('error_log_path', default=self.DEFAULT_ERROR_LOG_PATH, value_type='str') or ''
-        ).strip() or self.DEFAULT_ERROR_LOG_PATH
-        critical_patterns = str(
-            self.get_threshold_var(
+        error_log_path = self.get_host_var(key='error_log_path')
+
+        if not error_log_path:
+            error_log_path = self.get_threshold_var(
+                'error_log_path', 
+                default=self.DEFAULT_ERROR_LOG_PATH, 
+                value_type='str'
+            ).strip() or self.DEFAULT_ERROR_LOG_PATH
+
+        critical_patterns = self.get_threshold_var(
                 'critical_patterns',
                 default=self.DEFAULT_CRITICAL_PATTERNS,
                 value_type='str',
-            ) or ''
-        ).strip() or self.DEFAULT_CRITICAL_PATTERNS
+        ).strip()
+        
         command = self._build_command(error_log_path)
 
         result = self._run_paramiko_commands(

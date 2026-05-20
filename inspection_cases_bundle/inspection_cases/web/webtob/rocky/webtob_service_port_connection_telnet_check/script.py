@@ -9,19 +9,28 @@ class Check(BaseCheck):
     PARAMIKO_PROFILE = 'linux'
     PARAMIKO_REUSE_SESSION = False
 
-    DEFAULT_IP_ADDR = '172.18.9.3'
+    DEFAULT_IP_ADDR = '127.0.0.1'
     DEFAULT_SERVICE_PORT = 9080
     COMMAND_TIMEOUT = 10
 
     def run(self):
-        ip_addr = str(
-            self.get_threshold_var('ip_addr', default=self.DEFAULT_IP_ADDR, value_type='str') or ''
-        ).strip() or self.DEFAULT_IP_ADDR
-        service_port = self.get_threshold_var(
-            'webtob_service_port',
-            default=self.DEFAULT_SERVICE_PORT,
-            value_type='int',
-        )
+        ip_addr = self.get_host_var(key='ip_addr')
+        webtob_service_port = self.get_host_var(key='webtob_service_port')
+
+        if not ip_addr:
+            ip_addr = self.get_threshold_var(
+                'ip_addr', 
+                default=self.DEFAULT_IP_ADDR, 
+                value_type='str'
+            ).strip()
+
+        if not webtob_service_port:
+            service_port = self.get_threshold_var(
+                'webtob_service_port',
+                default=self.DEFAULT_SERVICE_PORT,
+                value_type='int',
+            )
+
         command = 'echo quit | telnet %s %s' % (ip_addr, service_port)
 
         result = self._run_paramiko_commands(

@@ -732,7 +732,6 @@ def get_check_attr(mod, name, default=None):
 
 def resolve_paramiko_options(mod):
     return {
-        'profile': get_check_attr(mod, 'PARAMIKO_PROFILE', 'generic_network'),
         'auth_method': get_check_attr(mod, 'PARAMIKO_AUTH_METHOD', 'auto'),
         'key_filename': get_check_attr(mod, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
         'private_key': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY', None),
@@ -779,16 +778,6 @@ def build_paramiko_connect_kwargs(host, port, user, password, options, auth_atte
         'allow_agent': bool(options.get('allow_agent', False)),
         'look_for_keys': bool(options.get('look_for_keys', False)),
     }
-    profile = (options or {}).get('profile')
-    if profile:
-        from items.common._base import BaseCheck
-
-        profile_check = BaseCheck({})
-        resolved_profile = profile_check._resolve_paramiko_profile(profile)
-        transport_factory = profile_check._build_paramiko_transport_factory(resolved_profile, paramiko_module)
-        if transport_factory is not None:
-            kwargs['transport_factory'] = transport_factory
-
     if auth_attempt == 'password':
         kwargs['password'] = password or None
         kwargs['allow_agent'] = False
@@ -945,7 +934,6 @@ def run_paramiko_su_precheck(
         'paramiko_client_factory': client_factory,
     })
     check.PARAMIKO_AUTH_METHOD = (options or {}).get('auth_method', 'auto')
-    check.PARAMIKO_PROFILE = (options or {}).get('profile', 'linux')
     check.PARAMIKO_KEY_FILENAME = (options or {}).get('key_filename', '~/.ssh/id_rsa.pub')
     check.PARAMIKO_PRIVATE_KEY = (options or {}).get('private_key')
     check.PARAMIKO_PRIVATE_KEY_PASSPHRASE = (options or {}).get('private_key_passphrase')
@@ -955,7 +943,7 @@ def run_paramiko_su_precheck(
     check.PARAMIKO_BANNER_TIMEOUT_SEC = float((options or {}).get('banner_timeout_sec', 10))
     check.PARAMIKO_AUTH_TIMEOUT_SEC = float((options or {}).get('auth_timeout_sec', 10))
 
-    verify_command = 'id'
+    verify_command = 'id'    
     results = check._run_paramiko_commands([
         {
             'command': su_command,
@@ -964,10 +952,12 @@ def run_paramiko_su_precheck(
         },
         {
             'command': str(become_password or ''),
-            'hide_command': True,
+            'hide_command': True, 
+            'ignore_prompt': True           
         },
         verify_command,
     ])
+    
     failed = [
         item for item in results
         if item.get('rc') != 0 and not (item.get('command') == su_command and item.get('timed_out'))
@@ -1317,7 +1307,7 @@ def execute_runner(
     logger.info('### Runner started.')
     logger.info('job_id=%s execution_id=%s host_id=%s host=%s port=%s user=%s', job_id, execution_id, host_id, host, port, user or '')
     logger.info('items_count=%s', len(items))
-    logger.info('item_sleep_sec=%s', item_sleep_sec)
+    logger.info('item_sleep_sec=%s', item_sleep_sec)    
 
     available, available_codes = load_available_items(logger)
     logger.info('available_items=%s available_codes=%s', len(available), len(available_codes))
@@ -1358,6 +1348,7 @@ def execute_runner(
                 continue
             connection_credential = select_connection_credential(credentials, method, lookup_payload)
             connection_values = resolve_connection_values(port, method, connection_credential, user, password)
+            
             if method == 'winrm':
                 shell = getattr(mod, 'WINRM_SHELL', None)
                 if shell is None and hasattr(mod, 'CHECK_CLASS'):
@@ -1425,6 +1416,7 @@ def execute_runner(
                 continue
             connection_credential = select_connection_credential(credentials, method, lookup_payload)
             connection_values = resolve_connection_values(port, method, connection_credential, user, password)
+
             app_credential = select_application_credential(credentials, lookup_payload)
             become_request = build_become_precheck_request(
                 method,
@@ -1433,6 +1425,7 @@ def execute_runner(
                 connection_credential,
                 app_credential,
             )
+
             if not become_request:
                 continue
             become_key = become_request['key']
@@ -1701,7 +1694,7 @@ def main():
     payload = json.load(sys.stdin)
     try:
         output = execute_runner(payload)
-    except ValueError as exc:
+    except ValueError as exc:        
         print(json.dumps({'error': str(exc)}, ensure_ascii=False))
         sys.exit(1)
     print(json.dumps(output, ensure_ascii=False))

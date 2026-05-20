@@ -2,9 +2,8 @@
 
 from .common._base import BaseCheck
 
-
-COMMAND = 'jeusadmin -u jeus -p jeus -f listApplications'
-
+COMMAND = 'jeusadmin -u {user} -p {pw} -f listApplications'
+# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus -f listApplications
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -14,9 +13,14 @@ class Check(BaseCheck):
 
     COMMAND_TIMEOUT = 20
 
-    def _run_jeus_command(self):
-        result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+    def _run_jeus_command(self, home_path, user, pw):
+        command = f"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw)}" 
+
+        result = self._run_paramiko_commands([{
+                    'command': command, 
+                    'timeout': self.COMMAND_TIMEOUT
+                },
+            ],
             become=True,
             profile='linux',
         )[0]
@@ -32,7 +36,12 @@ class Check(BaseCheck):
         return stdout, stderr, None
 
     def run(self):
-        stdout, _stderr, error = self._run_jeus_command()
+        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')
+        user = self.get_threshold_var(key='user', default='jeus', value_type='str')
+        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')
+
+        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw)
+
         if error:
             return error
         if not stdout.strip():
@@ -47,6 +56,5 @@ class Check(BaseCheck):
         if not_deployed:
             return self.warn(metrics=metrics, thresholds=thresholds, reasons='not deployed 상태 애플리케이션이 있습니다.', message='JEUS Deploy 상태 경고: not_deployed_count=%s' % len(not_deployed))
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='애플리케이션이 deployed 상태입니다.', message='JEUS Deploy 상태 정상: deployed_count=%s' % len(deployed))
-
 
 CHECK_CLASS = Check

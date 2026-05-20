@@ -1,162 +1,154 @@
 # -*- coding: utf-8 -*-
 
 import re
+import time
 
 from .common._base import BaseCheck
 
-
-SAR_CPU_COMMAND = 'sar -u 1 3'
-
+CHECK_COMMAND = 'sar -u 1 3'
+BECOME_COMMAND_TIMEOUT = 1
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
+    
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
 
-    def _parse_number(self, value):
-        try:
-            return float(str(value).strip().rstrip('%'))
-        except (TypeError, ValueError):
-            return None
+    def _build_become_command(self):
+        if not self._is_become_enabled():
+            return ''
 
-    def _parse_sar_cpu(self, text):
-        lines = [line.strip() for line in (text or '').splitlines() if line.strip()]
-        header = None
-        header_index = None
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
 
-        for idx, line in enumerate(lines):
-            tokens = re.split(r'\s+', line)
-            normalized = [token.lower() for token in tokens]
-            if '%idle' in normalized:
-                header = normalized
-                header_index = idx
-                break
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
 
-        if not header or header_index is None:
-            return None
+    def _build_check_command(self, become_command):
 
-        idle_index = header.index('%idle')
-        usr_index = header.index('%usr') if '%usr' in header else None
-        sys_index = header.index('%sys') if '%sys' in header else None
-        wio_index = header.index('%wio') if '%wio' in header else None
+        if become_command:
+            become_password = self.get_connection_value('become_password', default='')    
+            return [
+                {
+                    'command': become_command,
+                    'timeout': BECOME_COMMAND_TIMEOUT,
+                    'ignore_prompt': True,                    
+                },
+                {
+                    'command': become_password,
+                    'hide_command': True,
+                },
+                {
+                    'command': CHECK_COMMAND,
+                }
+            ]
+        else:
+            return [{'command': CHECK_COMMAND}]
 
-        samples = []
-        average = None
-        for line in lines[header_index + 1:]:
-            tokens = re.split(r'\s+', line)
-            if len(tokens) <= idle_index:
-                continue
+    def _find_check_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == CHECK_COMMAND:
+                return item
+        return None
 
-            idle_percent = self._parse_number(tokens[idle_index])
-            if idle_percent is None:
-                continue
+    def _parse_hpux_cpu_usage(self, output: str):
+        # VMS2:root[/]# sar -u 1 5
 
-            label = tokens[0]
-            entry = {
-                'label': label,
-                'usr_percent': self._parse_number(tokens[usr_index]) if usr_index is not None and len(tokens) > usr_index else None,
-                'sys_percent': self._parse_number(tokens[sys_index]) if sys_index is not None and len(tokens) > sys_index else None,
-                'wio_percent': self._parse_number(tokens[wio_index]) if wio_index is not None and len(tokens) > wio_index else None,
-                'idle_percent': round(idle_percent, 2),
-                'cpu_usage_percent': round(100.0 - idle_percent, 2),
-            }
+        # HP-UX VMS2 B.11.31 U ia64    05/08/26
 
-            if label.lower().startswith('average'):
-                average = entry
-            else:
-                samples.append(entry)
+        # 10:32:24    %usr    %sys    %wio   %idle
+        # 10:32:25       0       1       0      99
+        # 10:32:26       0       0       0     100
+        # 10:32:27       0       0       0     100
+        # 10:32:28       1       1       0     100
+        # 10:32:29       0       0       0      99
 
-        selected = samples[-1] if samples else average
-        if not selected:
-            return None
+        # Average        0       0       0     100
 
-        return {
-            'selected': selected,
-            'average': average,
-            'samples': samples,
-        }
+        results = {}
+
+        match = re.search(r"Average\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)", output)        
+        if match:
+            results["user"] = float(match.group(1))
+            results["sys"] = float(match.group(2))
+            results["wio"] = float(match.group(3))
+            results["idle"] = float(match.group(4))
+            results["cpu_usage"] = 100 - results["idle"]
+
+        return results
 
     def run(self):
-        max_cpu_usage_percent = self.get_threshold_var('CPU_MAX_PCT', default=70.0, value_type='float')
-        rc, out, err = self._ssh(SAR_CPU_COMMAND)
+        try:
 
-        if self._is_connection_error(rc, err):
+            become_command = self._build_become_command()
+            commands = self._build_check_command(become_command)
+
+            results = self._run_paramiko_commands(commands)
+            result = self._find_check_result(results)
+
+            metrics = {}
+
+            max_cpu_usage = self.get_threshold_var(key='MAX_CPU_USAGE', default=80, value_type='int')
+
+            if result is None:
+                failed_result = next((item for item in results if item.get('rc') != 0), None)
+                return self.fail(
+                    error='명령 결과 없음',
+                    message='명령 실행 결과를 찾지 못했습니다.',
+                    stdout=(failed_result.get('stdout') or '').strip() if failed_result else '',
+                    stderr=(failed_result.get('stderr') or '').strip() if failed_result else '',
+                    metrics={
+                        'executed_commands': [
+                            item.get('display_command') or item.get('command')
+                            for item in results
+                        ],
+                    },
+                )
+
+            output = result.get('stdout', '')            
+            parsed = self._parse_hpux_cpu_usage(output=output)                                              
+            metrics = parsed 
+            if parsed:                     
+                user = parsed.get("user")  
+                sys = parsed.get("sys")  
+                wio = parsed.get("wio")  
+                idle = parsed.get("idle")  
+                cpu_usage = parsed.get("cpu_usage")                                 
+                
+                is_pass = True if cpu_usage < max_cpu_usage else False                    
+                
+                if is_pass:
+                    return self.ok(
+                        metrics = metrics,
+                        reasons = f"CPU 사용률이 정상입니다. 임계치: {max_cpu_usage}% / 사용률: {cpu_usage}%",
+                        message = f"CPU 사용률이 정상입니다. 임계치: {max_cpu_usage}% / 사용률: {cpu_usage}%",
+                    )
+                else:
+                    return self.fail(
+                        error="CPU 사용률 임계치 초과",                        
+                        message=f"CPU 사용률 임계치 초과. 임계치: {max_cpu_usage}% / 사용률: {cpu_usage}%",
+                    )
+            else:
+                return self.fail(
+                    error="CPU 사용률 점검 실패",
+                    message=f"CPU 사용률 점검 실패: {parsed}",                
+                )
+
+        except Exception as e:
+            import traceback
+
             return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
+                error=f"CPU 사용률 점검 실패: {str(traceback.print_exc())}",
+                message=f"CPU 사용률 점검 실패: {str(traceback.print_exc())}",                
             )
-
-        if rc != 0:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message='sar -u 1 3 명령 실행에 실패했습니다.',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
-
-        command_error = self._detect_command_error(out, err)
-        if command_error:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=f'sar 명령 출력에서 실행 오류가 확인되었습니다: {command_error}',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
-
-        parsed = self._parse_sar_cpu(out)
-        if not parsed:
-            return self.fail(
-                'CPU 사용률 파싱 실패',
-                message='sar 출력에서 %idle 컬럼과 CPU 사용률 샘플을 해석할 수 없습니다.',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
-
-        selected = parsed['selected']
-        average = parsed['average'] or {}
-        cpu_usage_percent = selected['cpu_usage_percent']
-        selected_label = selected['label']
-        threshold_summary = f'CPU_MAX_PCT={max_cpu_usage_percent}%'
-
-        metrics = {
-            'cpu_usage_percent': cpu_usage_percent,
-            'selected_sample': selected_label,
-            'selected_idle_percent': selected['idle_percent'],
-            'sample_count': len(parsed['samples']),
-            'average_cpu_usage_percent': average.get('cpu_usage_percent'),
-            'average_idle_percent': average.get('idle_percent'),
-        }
-        thresholds = {
-            'CPU_MAX_PCT': max_cpu_usage_percent,
-        }
-
-        if cpu_usage_percent > max_cpu_usage_percent:
-            return self.fail(
-                'CPU 사용률 임계치 초과',
-                message=(
-                    'CPU 사용률이 기준치를 초과했습니다. '
-                    f'임계치 정보: {threshold_summary}. '
-                    f'판단근거: 선택 샘플({selected_label})의 CPU 사용률 '
-                    f'{cpu_usage_percent}%가 임계치 {max_cpu_usage_percent}%보다 큽니다.'
-                ),
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
-
-        return self.ok(
-            metrics=metrics,
-            thresholds=thresholds,
-            reasons=(
-                f'선택 샘플({selected_label})의 CPU 사용률 {cpu_usage_percent}%가 '
-                f'임계치 {max_cpu_usage_percent}% 이하입니다.'
-            ),
-            message=(
-                'sar 기준 HP-UX CPU 사용률 점검이 정상 수행되었습니다. '
-                f'임계치 정보: {threshold_summary}. '
-                f'판단근거: 선택 샘플({selected_label})의 CPU 사용률 '
-                f'{cpu_usage_percent}%가 임계치 {max_cpu_usage_percent}% 이하입니다.'
-            ),
-        )
-
 
 CHECK_CLASS = Check

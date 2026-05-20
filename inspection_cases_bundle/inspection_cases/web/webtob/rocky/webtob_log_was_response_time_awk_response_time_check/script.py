@@ -28,7 +28,7 @@ class Check(BaseCheck):
                 continue
             try:
                 response_time = int(float(parts[-1]))
-            except ValueError:
+            except ValueError:                
                 continue
             rows.append({
                 'response_time': response_time,
@@ -37,14 +37,20 @@ class Check(BaseCheck):
         return rows
 
     def run(self):
-        access_log_path = str(
-            self.get_threshold_var('access_log_path', default=self.DEFAULT_ACCESS_LOG_PATH, value_type='str') or ''
-        ).strip() or self.DEFAULT_ACCESS_LOG_PATH
+        access_log_path = self.get_host_vars(key='access_log_path')
+        if not access_log_path:
+            access_log_path = self.get_threshold_var(
+                'access_log_path', 
+                default=self.DEFAULT_ACCESS_LOG_PATH, 
+                value_type='str'
+            ).strip()
+
         max_response_time = self.get_threshold_var(
             'max_response_time',
             default=self.DEFAULT_MAX_RESPONSE_TIME,
             value_type='int',
         )
+
         command = self._build_command(access_log_path, max_response_time)
 
         result = self._run_paramiko_commands(

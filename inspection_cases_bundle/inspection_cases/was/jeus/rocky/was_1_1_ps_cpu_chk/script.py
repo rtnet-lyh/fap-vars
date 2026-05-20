@@ -3,8 +3,8 @@
 from .common._base import BaseCheck
 
 
-COMMAND = 'top -b -n 1 | egrep "PID|exTMS"'
-
+COMMAND = 'top -b -n 1 | egrep "PID|{process_name}"'
+DEFAULT_PROCESS_NAME = 'exTMS'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -15,8 +15,16 @@ class Check(BaseCheck):
     COMMAND_TIMEOUT = 20
 
     def _run_jeus_command(self):
+        process_name = self.get_threshold_var(
+            key='process_name',
+            default=DEFAULT_PROCESS_NAME,
+            value_type='str',
+        )
+
+        command = COMMAND.format(process_name=process_name)
+
         result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
             become=True,
             profile='linux',
         )[0]
@@ -61,7 +69,7 @@ class Check(BaseCheck):
         rows = self._parse_top_rows(stdout)
         if not rows:
             return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)
-        threshold = self.get_threshold_var('max_cpu_usage_percent', default=70.0, value_type='float')
+        threshold = self.get_threshold_var('max_cpu_usage_percent', default=80.0, value_type='float')
         max_row = max(rows, key=lambda row: row['cpu_percent'])
         over_rows = [row for row in rows if row['cpu_percent'] > threshold]
         metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'max_cpu_usage_percent': max_row['cpu_percent'], 'max_cpu_pid': max_row['pid'], 'max_cpu_command': max_row['command'], 'over_threshold_count': len(over_rows), 'processes': rows}

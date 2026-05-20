@@ -43,77 +43,87 @@ class Check(BaseCheck):
         return rows
 
     def run(self):
-        process_name = str(
-            self.get_threshold_var('process_name', default=self.DEFAULT_PROCESS_NAME, value_type='str') or ''
-        ).strip() or self.DEFAULT_PROCESS_NAME
-        max_cpu_usage_percent = self.get_threshold_var(
-            'max_cpu_usage_percent',
-            default=self.DEFAULT_MAX_CPU_USAGE_PERCENT,
-            value_type='float',
-        )
-        command = 'top -b -n 1 | egrep "PID|%s"' % process_name
+        try:
+            process_name = self.get_host_var(key='process_name')
+            if not process_name:
+                process_name = self.get_threshold_var(
+                    'process_name', 
+                    default=self.DEFAULT_PROCESS_NAME, 
+                    value_type='str'
+                ).strip()
 
-        result = self._run_paramiko_commands(
-            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
-            become=True,
-            profile='linux',
-        )[0]
-
-        stdout = (result.get('stdout') or '').strip()
-        stderr = (result.get('stderr') or '').strip()
-        if result.get('rc') != 0:
-            return self.fail(
-                'top 명령 실행 실패',
-                message='WEB 프로세스 CPU 사용률을 확인하지 못했습니다.',
-                stdout=stdout,
-                stderr=stderr,
+            max_cpu_usage_percent = self.get_threshold_var(
+                'max_cpu_usage_percent',
+                default=self.DEFAULT_MAX_CPU_USAGE_PERCENT,
+                value_type='float',
             )
 
-        rows = self._parse_top_rows(stdout)
-        if not rows:
-            return self.fail(
-                '프로세스 정보 없음',
-                message='top 출력에서 대상 프로세스를 찾지 못했습니다.',
-                stdout=stdout,
-                stderr=stderr,
-            )
+            command = 'top -b -n 1 | egrep "PID|%s"' % process_name
 
-        max_row = max(rows, key=lambda row: row['cpu_percent'])
-        over_rows = [row for row in rows if row['cpu_percent'] > max_cpu_usage_percent]
-        metrics = {
-            'process_name': process_name,
-            'process_count': len(rows),
-            'max_cpu_usage_percent': max_row['cpu_percent'],
-            'max_cpu_pid': max_row['pid'],
-            'max_cpu_command': max_row['command'],
-            'over_threshold_count': len(over_rows),
-            'processes': rows,
-        }
-        thresholds = {
-            'process_name': process_name,
-            'max_cpu_usage_percent': max_cpu_usage_percent,
-        }
+            result = self._run_paramiko_commands(
+                [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
+                become=True,
+                profile='linux',
+            )[0]
 
-        if over_rows:
-            return self.warn(
+            stdout = (result.get('stdout') or '').strip()
+            stderr = (result.get('stderr') or '').strip()
+
+            if result.get('rc') != 0:
+                return self.fail(
+                    'top 명령 실행 실패',
+                    message='WEB 프로세스 CPU 사용률을 확인하지 못했습니다.',
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+
+            rows = self._parse_top_rows(stdout)
+            if not rows:
+                return self.fail(
+                    '프로세스 정보 없음',
+                    message='top 출력에서 대상 프로세스를 찾지 못했습니다.',
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+
+            max_row = max(rows, key=lambda row: row['cpu_percent'])
+            over_rows = [row for row in rows if row['cpu_percent'] > max_cpu_usage_percent]
+            metrics = {
+                'process_name': process_name,
+                'process_count': len(rows),
+                'max_cpu_usage_percent': max_row['cpu_percent'],
+                'max_cpu_pid': max_row['pid'],
+                'max_cpu_command': max_row['command'],
+                'over_threshold_count': len(over_rows),
+                'processes': rows,
+            }
+            thresholds = {
+                'process_name': process_name,
+                'max_cpu_usage_percent': max_cpu_usage_percent,
+            }
+
+            if over_rows:
+                return self.warn(
+                    metrics=metrics,
+                    thresholds=thresholds,
+                    reasons='CPU 사용률 기준 초과 프로세스가 있습니다.',
+                    message='WEB 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (
+                        max_row['cpu_percent'],
+                        max_cpu_usage_percent,
+                    ),
+                )
+
+            return self.ok(
                 metrics=metrics,
                 thresholds=thresholds,
-                reasons='CPU 사용률 기준 초과 프로세스가 있습니다.',
-                message='WEB 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (
+                reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.',
+                message='WEB 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (
                     max_row['cpu_percent'],
                     max_cpu_usage_percent,
                 ),
             )
-
-        return self.ok(
-            metrics=metrics,
-            thresholds=thresholds,
-            reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.',
-            message='WEB 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (
-                max_row['cpu_percent'],
-                max_cpu_usage_percent,
-            ),
-        )
-
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
 
 CHECK_CLASS = Check

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
+import re
 
-
-COMMAND = 'top -b -n 1 | egrep "PID|exTMS"'
+COMMAND = 'top -b -n 1 | egrep "PID|{process_name}"'
+DEFAULT_PROCESS_NAME = 'exTMS'
 
 
 class Check(BaseCheck):
@@ -15,11 +16,20 @@ class Check(BaseCheck):
     COMMAND_TIMEOUT = 20
 
     def _run_jeus_command(self):
+        process_name = self.get_threshold_var(
+            key='process_name',
+            default=DEFAULT_PROCESS_NAME,
+            value_type='str',
+        )
+
+        command = COMMAND.format(process_name=process_name)
+
         result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
             become=True,
             profile='linux',
         )[0]
+
         stdout = (result.get('stdout') or '').strip()
         stderr = (result.get('stderr') or '').strip()
         if result.get('rc') != 0:
@@ -56,12 +66,21 @@ class Check(BaseCheck):
 
     def run(self):
         stdout, _stderr, error = self._run_jeus_command()
+        bad_states = self.get_threshold_var(key='bad_states', default='Z,D,T', value_type='str')
+        bad_states = {
+            x.strip().upper()
+            for x in re.split(r'[|,]+', bad_states)
+            if x.strip()
+        }        
+
         if error:
             return error
+
         rows = self._parse_top_rows(stdout)
+
         if not rows:
             return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)
-        bad_states = {'Z', 'D', 'T'}
+            
         bad_rows = [row for row in rows if (row['state'] or '').upper()[:1] in bad_states]
         metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'states': sorted({row['state'] for row in rows}), 'bad_process_count': len(bad_rows), 'bad_processes': bad_rows, 'processes': rows}
         thresholds = {'bad_process_states': sorted(bad_states)}

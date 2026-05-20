@@ -10,15 +10,14 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'jeusadmin -u jeus -p jeus -f listApplications'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        if not stdout.strip():\n            return self.fail('Deploy 상태 출력 없음', message='jeusadmin listApplications 출력이 비어 있습니다.', stdout=stdout)\n        if 'connection failed' in stdout.lower() or 'fail to connect' in stdout.lower():\n            return self.fail('jeusadmin 접속 실패', message='JEUS MBeanServer 접속에 실패했습니다.', stdout=stdout)\n        app_lines = [line.strip() for line in stdout.splitlines() if '|' in line and 'Deployment Status' not in line and '---' not in line]\n        not_deployed = [line for line in app_lines if 'not deployed' in line.lower()]\n        deployed = [line for line in app_lines if 'deployed' in line.lower() and line not in not_deployed]\n        metrics = {'application_count': len(app_lines), 'deployed_count': len(deployed), 'not_deployed_count': len(not_deployed), 'not_deployed_lines': not_deployed, 'application_lines': app_lines}\n        thresholds = {'required_deployment_status': 'deployed'}\n        if not_deployed:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='not deployed 상태 애플리케이션이 있습니다.', message='JEUS Deploy 상태 경고: not_deployed_count=%s' % len(not_deployed))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='애플리케이션이 deployed 상태입니다.', message='JEUS Deploy 상태 정상: deployed_count=%s' % len(deployed))\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\nCOMMAND = 'jeusadmin -u {user} -p {pw} -f listApplications'\n# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus -f listApplications\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self, home_path, user, pw):\n        command = f\"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw)}\" \n\n        result = self._run_paramiko_commands([{\n                    'command': command, \n                    'timeout': self.COMMAND_TIMEOUT\n                },\n            ],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')\n        user = self.get_threshold_var(key='user', default='jeus', value_type='str')\n        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')\n\n        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw)\n\n        if error:\n            return error\n        if not stdout.strip():\n            return self.fail('Deploy 상태 출력 없음', message='jeusadmin listApplications 출력이 비어 있습니다.', stdout=stdout)\n        if 'connection failed' in stdout.lower() or 'fail to connect' in stdout.lower():\n            return self.fail('jeusadmin 접속 실패', message='JEUS MBeanServer 접속에 실패했습니다.', stdout=stdout)\n        app_lines = [line.strip() for line in stdout.splitlines() if '|' in line and 'Deployment Status' not in line and '---' not in line]\n        not_deployed = [line for line in app_lines if 'not deployed' in line.lower()]\n        deployed = [line for line in app_lines if 'deployed' in line.lower() and line not in not_deployed]\n        metrics = {'application_count': len(app_lines), 'deployed_count': len(deployed), 'not_deployed_count': len(not_deployed), 'not_deployed_lines': not_deployed, 'application_lines': app_lines}\n        thresholds = {'required_deployment_status': 'deployed'}\n        if not_deployed:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='not deployed 상태 애플리케이션이 있습니다.', message='JEUS Deploy 상태 경고: not_deployed_count=%s' % len(not_deployed))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='애플리케이션이 deployed 상태입니다.', message='JEUS Deploy 상태 정상: deployed_count=%s' % len(deployed))\n\nCHECK_CLASS = Check",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
         "",
-        "",
-        "COMMAND = 'jeusadmin -u jeus -p jeus -f listApplications'",
-        "",
+        "COMMAND = 'jeusadmin -u {user} -p {pw} -f listApplications'",
+        "# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus -f listApplications",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -28,9 +27,14 @@
         "",
         "    COMMAND_TIMEOUT = 20",
         "",
-        "    def _run_jeus_command(self):",
-        "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "    def _run_jeus_command(self, home_path, user, pw):",
+        "        command = f\"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw)}\" ",
+        "",
+        "        result = self._run_paramiko_commands([{",
+        "                    'command': command, ",
+        "                    'timeout': self.COMMAND_TIMEOUT",
+        "                },",
+        "            ],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
@@ -46,7 +50,12 @@
         "        return stdout, stderr, None",
         "",
         "    def run(self):",
-        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')",
+        "        user = self.get_threshold_var(key='user', default='jeus', value_type='str')",
+        "        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')",
+        "",
+        "        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw)",
+        "",
         "        if error:",
         "            return error",
         "        if not stdout.strip():",
@@ -61,7 +70,6 @@
         "        if not_deployed:",
         "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='not deployed 상태 애플리케이션이 있습니다.', message='JEUS Deploy 상태 경고: not_deployed_count=%s' % len(not_deployed))",
         "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='애플리케이션이 deployed 상태입니다.', message='JEUS Deploy 상태 정상: deployed_count=%s' % len(deployed))",
-        "",
         "",
         "CHECK_CLASS = Check"
       ]
@@ -78,35 +86,29 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "status": "warn",
-      "metrics": {
-        "application_count": 2,
-        "deployed_count": 1,
-        "not_deployed_count": 1,
-        "not_deployed_lines": [
-          "otherApp            | not deployed      | 0"
-        ],
-        "application_lines": [
-          "myApp               | deployed          | 2 (server1, server2)",
-          "otherApp            | not deployed      | 0"
-        ]
-      },
-      "thresholds": {
-        "required_deployment_status": "deployed"
-      },
-      "reasons": "not deployed 상태 애플리케이션이 있습니다.",
-      "message": "JEUS Deploy 상태 경고: not_deployed_count=1",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: jeusadmin -u jeus -p jeus -f listApplications\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Application Name    | Deployment Status | Running Instances\n-----------------------------------------------------------\nmyApp               | deployed          | 2 (server1, server2)\notherApp            | not deployed      | 0",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "Attempting to connect to 127.0.0.1:9736.\nThe connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.\n[root@tips_was1:/home/exTMS]$",
+      "stdout_lines": [
+        "Attempting to connect to 127.0.0.1:9736.",
+        "The connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.",
+        "[root@tips_was1:/home/exTMS]$"
+      ],
+      "stderr": "PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus -f listApplications\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Attempting to connect to 127.0.0.1:9736.\nThe connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.\n[root@tips_was1:/home/exTMS]$\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: jeusadmin -u jeus -p jeus -f listApplications",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Application Name    | Deployment Status | Running Instances",
-        "-----------------------------------------------------------",
-        "myApp               | deployed          | 2 (server1, server2)",
-        "otherApp            | not deployed      | 0"
+        " - 실행 명령어: cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus -f listApplications",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Attempting to connect to 127.0.0.1:9736.",
+        "The connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.",
+        "[root@tips_was1:/home/exTMS]$",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received"
       ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-016"
+  ]
 }

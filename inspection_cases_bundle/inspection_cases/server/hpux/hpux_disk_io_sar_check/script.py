@@ -1,207 +1,173 @@
 # -*- coding: utf-8 -*-
 
 import re
-import shlex
+import time
 
 from .common._base import BaseCheck
 
-
-CONFIG = {'mode': 'disk_io',
- 'case_name': 'hpux_disk_io_sar_check',
- 'item_name': '디스크 I/O 상태 점검',
- 'commands': ['sar -d 1 3'],
- 'thresholds': [{'name': 'DISK_BUSY_MAX_PCT', 'default': 80, 'type': 'int'},
-                {'name': 'DISK_AVWAIT_MAX_MS', 'default': 50, 'type': 'int'},
-                {'name': 'DISK_AVSERV_MAX_MS', 'default': 50, 'type': 'int'}]}
-BECOME_USER_MARKER = '__BECOME_USER__:'
-
+CHECK_COMMAND = 'sar -d 1 3'
+BECOME_COMMAND_TIMEOUT = 1
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
-
-    def _thresholds(self):
-        values = {}
-        for spec in CONFIG.get('thresholds', []):
-            name = spec.get('name')
-            if not name:
-                continue
-            values[name] = self.get_threshold_var(
-                name,
-                default=spec.get('default'),
-                value_type=spec.get('type') or 'str',
-            )
-        return values
-
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
+    
     def _is_become_enabled(self):
-        become_raw = self.get_application_credential_value('become', default=False)
-        return str(become_raw).strip().lower() == 'true'
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
 
-    def _mask_command_history(self, *secrets):
-        if not self._command_history:
-            return
-        masked_cmd = self._command_history[-1].get('cmd', '')
-        for secret in secrets:
-            if secret:
-                masked_cmd = masked_cmd.replace(secret, '*****')
-        self._command_history[-1]['cmd'] = masked_cmd
-
-    def _build_command(self, command):
+    def _build_become_command(self):
         if not self._is_become_enabled():
-            return command
+            return ''
 
-        become_method = str(self.get_application_credential_value('become_method', default='su -') or 'su -').strip().lower()
-        become_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        become_password = str(self.get_application_credential_value('become_password', default='') or '')
-        normalized_become_method = ' '.join(become_method.split())
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
 
-        if normalized_become_method not in ('su', 'su -'):
-            raise ValueError(f'unsupported become_method: {become_method}')
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
 
-        become_script = 'current_user=$(whoami); echo {marker}${{current_user}}; {command}'.format(
-            marker=BECOME_USER_MARKER,
-            command=command,
+    def _build_check_command(self, become_command):
+
+        if become_command:
+            become_password = self.get_connection_value('become_password', default='')    
+            return [
+                {
+                    'command': become_command,
+                    'timeout': BECOME_COMMAND_TIMEOUT,
+                    'ignore_prompt': True,                    
+                },
+                {
+                    'command': become_password,
+                    'hide_command': True,
+                },
+                {
+                    'command': CHECK_COMMAND,
+                }
+            ]
+        else:
+            return [{'command': CHECK_COMMAND}]
+
+    def _find_check_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == CHECK_COMMAND:
+                return item
+        return None
+
+    def _parse_hpux_disk_io(self, output: str, max_busy_usage: float, max_avwait_ms: float, max_avserv_ms: float):
+        # VMS2:root[/]# sar -d 1 3
+
+        # HP-UX VMS2 B.11.31 U ia64    05/12/26
+
+        # 14:58:45   device   %busy   avque   r+w/s  blks/s  avwait  avserv
+        # 14:58:46    disk3    0.00    0.50       2      26    0.00    0.07
+        # 14:58:47    disk3    0.00    0.50       2      32    0.00    0.09
+        #             disk4    0.00    0.50       1       2    0.01    0.11
+        # 14:58:48    disk3    0.00    0.50       1      16    0.00    0.09
+
+        # Average     disk3    0.00    0.50       2      25    0.00    0.08
+        # Average     disk4    0.00    0.50       0       1    0.01    0.11
+
+        pattern = re.compile(
+            r"^Average\s+"            
+            r"(?P<device>\S+)\s+"
+            r"(?P<busy>\d+\.\d+)\s+"
+            r"(?P<avque>\d+\.\d+)\s+"
+            r"(?P<rw>\d+)\s+"
+            r"(?P<blks>\d+)\s+"
+            r"(?P<await>\d+\.\d+)\s+"
+            r"(?P<avserv>\d+\.\d+)",
+            re.MULTILINE
         )
-        return "printf '%s\\n' {password} | su - {user} -c {command}".format(
-            password=shlex.quote(become_password),
-            user=shlex.quote(become_user),
-            command=shlex.quote(become_script),
-        )
 
-    def _strip_become_marker(self, output):
-        if not self._is_become_enabled():
-            return output or '', ''
+        results = []
 
-        lines = (output or '').splitlines()
-        marker_line = next((line.strip() for line in lines if line.strip().startswith(BECOME_USER_MARKER)), '')
-        if not marker_line:
-            raise ValueError('권한 상승 후 사용자 확인 결과를 찾지 못했습니다.')
+        for match in pattern.finditer(output):
+            item = match.groupdict()
 
-        actual_user = marker_line.split(BECOME_USER_MARKER, 1)[1].strip()
-        expected_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        if actual_user != expected_user:
-            raise ValueError(f'권한 상승 사용자가 기대값과 다릅니다: expected={expected_user}, actual={actual_user}')
+            item["busy"] = float(item["busy"])
+            item["await"] = float(item["await"])
+            item["avserv"] = float(item["avserv"])
 
-        cleaned_lines = [line for line in lines if not line.strip().startswith(BECOME_USER_MARKER)]
-        return '\n'.join(cleaned_lines).strip(), actual_user
+            item["ok"] = (
+                item["busy"] < max_busy_usage
+                and item["await"] < max_avwait_ms
+                and item["avserv"] < max_avserv_ms
+            )
 
-    def _run_commands(self):
-        outputs = []
-        mode = CONFIG.get('mode')
+            results.append(item)
 
-        for command in CONFIG.get('commands', []):
-            try:
-                actual_command = self._build_command(command)
-            except ValueError as exc:
-                return None, self.fail('권한 상승 설정 오류', message=str(exc))
-
-            become_password = str(self.get_application_credential_value('become_password', default='') or '')
-            rc, out, err = self._ssh(actual_command)
-            self._mask_command_history(become_password)
-
-            if self._is_connection_error(rc, err):
-                return None, self.fail(
-                    '호스트 연결 실패',
-                    message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            try:
-                clean_out, actual_become_user = self._strip_become_marker(out)
-            except ValueError as exc:
-                return None, self.fail(
-                    '권한 상승 사용자 확인 실패',
-                    message=str(exc),
-                    stdout=(out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            log_no_match = mode == 'log' and rc == 1 and not (clean_out or '').strip()
-            if rc != 0 and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 실행에 실패했습니다.',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            command_error = self._detect_command_error(clean_out, err)
-            if command_error and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 출력에서 실행 오류가 확인되었습니다: {command_error}',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            outputs.append({
-                'command': command,
-                'rc': rc,
-                'stdout': (clean_out or '').strip(),
-                'stderr': (err or '').strip(),
-                'become_user': actual_become_user,
-            })
-
-        return outputs, None
-
-    def _split_list(self, value):
-        return [token.strip() for token in re.split(r'[|,\n]+', str(value or '')) if token.strip()]
-
-    def _parse_float(self, value, default=None):
-        try:
-            return float(str(value).strip().rstrip('%'))
-        except (TypeError, ValueError):
-            return default
-
-    def _parse_int(self, value, default=None):
-        parsed = self._parse_float(value, default=None)
-        if parsed is None:
-            return default
-        return int(parsed)
-
-    def _combined_stdout(self, outputs):
-        return '\n'.join(item.get('stdout', '') for item in outputs if item.get('stdout', '')).strip()
+        return results
 
     def run(self):
-        outputs, error = self._run_commands()
-        if error:
-            return error
-        return self._evaluate(outputs)
+        try:
 
-    def _evaluate(self, outputs):
-        thresholds = self._thresholds()
-        text = outputs[0]['stdout']
-        max_busy = self._parse_float(thresholds.get('DISK_BUSY_MAX_PCT', 80), 80.0)
-        max_wait = self._parse_float(thresholds.get('DISK_AVWAIT_MAX_MS', 50), 50.0)
-        max_serv = self._parse_float(thresholds.get('DISK_AVSERV_MAX_MS', 50), 50.0)
-        header = None
-        rows = []
-        for line in text.splitlines():
-            parts = line.split()
-            normalized = [part.lower() for part in parts]
-            if '%busy' in normalized and 'device' in normalized:
-                header = normalized
-                continue
-            if not header or len(parts) != len(header):
-                continue
-            try:
-                row = {
-                    'label': parts[0],
-                    'device': parts[1],
-                    'busy_percent': self._parse_float(parts[header.index('%busy')], 0.0),
-                    'avwait_ms': self._parse_float(parts[header.index('avwait')], 0.0),
-                    'avserv_ms': self._parse_float(parts[header.index('avserv')], 0.0),
-                }
-            except (ValueError, IndexError):
-                continue
-            rows.append(row)
-        if not rows:
-            return self.fail('Disk I/O 정보 없음', message='sar -d 결과에서 디스크 I/O 행을 찾지 못했습니다.', stdout=text)
-        bad = [row for row in rows if row['busy_percent'] > max_busy or row['avwait_ms'] > max_wait or row['avserv_ms'] > max_serv]
-        if bad:
-            return self.fail('Disk I/O 지연 임계치 초과', message='임계치 초과 디스크: ' + ', '.join(row['device'] for row in bad), stdout=text)
-        max_row = max(rows, key=lambda item: item['busy_percent'])
-        return self.ok(metrics={'disk_count': len(rows), 'max_busy_percent': max_row['busy_percent'], 'max_busy_device': max_row['device'], 'disks': rows}, thresholds={'DISK_BUSY_MAX_PCT': max_busy, 'DISK_AVWAIT_MAX_MS': max_wait, 'DISK_AVSERV_MAX_MS': max_serv}, reasons='디스크 I/O 값이 기준 이내입니다.', message='sar -d 기준 Disk I/O 점검이 정상 수행되었습니다.')
+            become_command = self._build_become_command()
+            commands = self._build_check_command(become_command)
 
+            results = self._run_paramiko_commands(commands)
+            result = self._find_check_result(results)
+
+            metrics = {}
+
+            max_busy_usage = self.get_threshold_var(key='MAX_BUSY_USAGE', default=80, value_type='float')
+            max_avwait_ms = self.get_threshold_var(key='MAX_AVWAIT_MS', default=20, value_type='float')
+            max_avserv_ms = self.get_threshold_var(key='MAX_AVSERV_MS', default=20, value_type='float')
+
+            if result is None:
+                failed_result = next((item for item in results if item.get('rc') != 0), None)
+                return self.fail(
+                    error='명령 결과 없음',
+                    message='명령 실행 결과를 찾지 못했습니다.',
+                    stdout=(failed_result.get('stdout') or '').strip() if failed_result else '',
+                    stderr=(failed_result.get('stderr') or '').strip() if failed_result else '',
+                    metrics={
+                        'executed_commands': [
+                            item.get('display_command') or item.get('command')
+                            for item in results
+                        ],
+                    },
+                )
+
+            output = result.get('stdout', '')            
+            parsed = self._parse_hpux_disk_io(
+                output=output,
+                max_busy_usage=max_busy_usage,
+                max_avwait_ms=max_avwait_ms,
+                max_avserv_ms=max_avserv_ms,
+            )
+                
+            metrics = parsed 
+
+            ok_items = [item for item in metrics if item.get("ok", False)]
+            fail_items = [item for item in metrics if not item.get("ok", False)]
+
+            is_pass = True if ok_items and not fail_items else False
+                
+            if is_pass:
+                return self.ok(
+                    metrics = metrics,
+                    reasons = f"DISK I/O 상태가 정상입니다. {ok_items}",
+                    message = f"DISK I/O 상태가 정상입니다. {ok_items}",
+                )
+            else:
+                return self.fail(
+                    error="DISK I/O 임계치 초과",                        
+                    metrics = metrics,
+                    reasons = f"DISK I/O 상태 점검이 필요 합니다. {fail_items}",
+                    message = f"DISK I/O 상태 점검이 필요 합니다. {fail_items}",
+                )
+
+        except Exception as e:
+            return self.fail(
+                error=f"DISK I/O 점검 실패: {str(e)}",
+                message=f"DISK I/O 점검 실패: {str(e)}",                
+            )
 
 CHECK_CLASS = Check

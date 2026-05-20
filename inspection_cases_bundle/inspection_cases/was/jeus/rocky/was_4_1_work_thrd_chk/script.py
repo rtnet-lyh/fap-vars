@@ -37,7 +37,7 @@ class Check(BaseCheck):
             return error
         thread_lines = [line for line in stdout.splitlines() if line.strip().startswith('"')]
         waiting_blocked_lines = [line.strip() for line in stdout.splitlines() if 'Thread.State: WAITING' in line or 'Thread.State: BLOCKED' in line]
-        threshold = self.get_threshold_var('max_thread_pool', default=10, value_type='int')
+        threshold = self.get_threshold_var('max_thread_pool', default=1000, value_type='int')
         metrics = {'thread_pool_stack_count': len(thread_lines), 'waiting_blocked_count': len(waiting_blocked_lines), 'waiting_blocked_lines': waiting_blocked_lines[:20]}
         thresholds = {'max_thread_pool': threshold}
         if len(thread_lines) > threshold:

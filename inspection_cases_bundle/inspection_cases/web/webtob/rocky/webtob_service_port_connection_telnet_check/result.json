@@ -12,14 +12,14 @@
       "threshold_list": [
         {
           "name": "ip_addr",
-          "value1": "172.18.9.3"
+          "value1": "127.0.0.1"
         },
         {
           "name": "webtob_service_port",
           "value1": "9080"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    DEFAULT_IP_ADDR = '172.18.9.3'\n    DEFAULT_SERVICE_PORT = 9080\n    COMMAND_TIMEOUT = 10\n\n    def run(self):\n        ip_addr = str(\n            self.get_threshold_var('ip_addr', default=self.DEFAULT_IP_ADDR, value_type='str') or ''\n        ).strip() or self.DEFAULT_IP_ADDR\n        service_port = self.get_threshold_var(\n            'webtob_service_port',\n            default=self.DEFAULT_SERVICE_PORT,\n            value_type='int',\n        )\n        command = 'echo quit | telnet %s %s' % (ip_addr, service_port)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                'telnet 명령 실행 실패',\n                message='WebtoB 서비스 포트 접속을 확인하지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        connected = 'Connected to' in stdout\n        metrics = {\n            'ip_addr': ip_addr,\n            'webtob_service_port': service_port,\n            'connected': connected,\n        }\n        thresholds = {\n            'ip_addr': ip_addr,\n            'webtob_service_port': service_port,\n            'success_marker': 'Connected to',\n        }\n\n        if not connected:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='telnet 출력에서 Connected to 문구를 찾지 못했습니다.',\n                message='WebtoB 서비스 포트 접속 경고: %s:%s 연결 확인 실패' % (\n                    ip_addr,\n                    service_port,\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='telnet 접속 출력에서 Connected to 문구를 확인했습니다.',\n            message='WebtoB 서비스 포트 접속 정상: %s:%s' % (\n                ip_addr,\n                service_port,\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    DEFAULT_IP_ADDR = '127.0.0.1'\n    DEFAULT_SERVICE_PORT = 9080\n    COMMAND_TIMEOUT = 10\n\n    def run(self):\n        ip_addr = self.get_host_var(key='ip_addr')\n        webtob_service_port = self.get_host_var(key='webtob_service_port')\n\n        if not ip_addr:\n            ip_addr = self.get_threshold_var(\n                'ip_addr', \n                default=self.DEFAULT_IP_ADDR, \n                value_type='str'\n            ).strip()\n\n        if not webtob_service_port:\n            service_port = self.get_threshold_var(\n                'webtob_service_port',\n                default=self.DEFAULT_SERVICE_PORT,\n                value_type='int',\n            )\n\n        command = 'echo quit | telnet %s %s' % (ip_addr, service_port)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                'telnet 명령 실행 실패',\n                message='WebtoB 서비스 포트 접속을 확인하지 못했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        connected = 'Connected to' in stdout\n        metrics = {\n            'ip_addr': ip_addr,\n            'webtob_service_port': service_port,\n            'connected': connected,\n        }\n        thresholds = {\n            'ip_addr': ip_addr,\n            'webtob_service_port': service_port,\n            'success_marker': 'Connected to',\n        }\n\n        if not connected:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='telnet 출력에서 Connected to 문구를 찾지 못했습니다.',\n                message='WebtoB 서비스 포트 접속 경고: %s:%s 연결 확인 실패' % (\n                    ip_addr,\n                    service_port,\n                ),\n            )\n\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='telnet 접속 출력에서 Connected to 문구를 확인했습니다.',\n            message='WebtoB 서비스 포트 접속 정상: %s:%s' % (\n                ip_addr,\n                service_port,\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -32,19 +32,28 @@
         "    PARAMIKO_PROFILE = 'linux'",
         "    PARAMIKO_REUSE_SESSION = False",
         "",
-        "    DEFAULT_IP_ADDR = '172.18.9.3'",
+        "    DEFAULT_IP_ADDR = '127.0.0.1'",
         "    DEFAULT_SERVICE_PORT = 9080",
         "    COMMAND_TIMEOUT = 10",
         "",
         "    def run(self):",
-        "        ip_addr = str(",
-        "            self.get_threshold_var('ip_addr', default=self.DEFAULT_IP_ADDR, value_type='str') or ''",
-        "        ).strip() or self.DEFAULT_IP_ADDR",
-        "        service_port = self.get_threshold_var(",
-        "            'webtob_service_port',",
-        "            default=self.DEFAULT_SERVICE_PORT,",
-        "            value_type='int',",
-        "        )",
+        "        ip_addr = self.get_host_var(key='ip_addr')",
+        "        webtob_service_port = self.get_host_var(key='webtob_service_port')",
+        "",
+        "        if not ip_addr:",
+        "            ip_addr = self.get_threshold_var(",
+        "                'ip_addr', ",
+        "                default=self.DEFAULT_IP_ADDR, ",
+        "                value_type='str'",
+        "            ).strip()",
+        "",
+        "        if not webtob_service_port:",
+        "            service_port = self.get_threshold_var(",
+        "                'webtob_service_port',",
+        "                default=self.DEFAULT_SERVICE_PORT,",
+        "                value_type='int',",
+        "            )",
+        "",
         "        command = 'echo quit | telnet %s %s' % (ip_addr, service_port)",
         "",
         "        result = self._run_paramiko_commands(",
@@ -114,7 +123,7 @@
       "threshold_list": [
         {
           "name": "ip_addr",
-          "value1": "172.18.9.3"
+          "value1": "127.0.0.1"
         },
         {
           "name": "webtob_service_port",
@@ -123,26 +132,30 @@
       ],
       "status": "ok",
       "metrics": {
-        "ip_addr": "172.18.9.3",
+        "ip_addr": "127.0.0.1",
         "webtob_service_port": 9080,
         "connected": true
       },
       "thresholds": {
-        "ip_addr": "172.18.9.3",
+        "ip_addr": "127.0.0.1",
         "webtob_service_port": 9080,
         "success_marker": "Connected to"
       },
       "reasons": "telnet 접속 출력에서 Connected to 문구를 확인했습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: echo quit | telnet 172.18.9.3 9080\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Trying 172.18.9.3...\nConnected to 172.18.9.3.\nEscape character is '^]'.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: echo quit | telnet 127.0.0.1 9080\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Trying 127.0.0.1...\n\nConnected to 127.0.0.1.\n\nEscape character is '^]'.\n\nConnection closed by foreign host.",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: echo quit | telnet 172.18.9.3 9080",
+        " - 실행 명령어: echo quit | telnet 127.0.0.1 9080",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Trying 172.18.9.3...",
-        "Connected to 172.18.9.3.",
-        "Escape character is '^]'."
+        " - 출력 내용: Trying 127.0.0.1...",
+        "",
+        "Connected to 127.0.0.1.",
+        "",
+        "Escape character is '^]'.",
+        "",
+        "Connection closed by foreign host."
       ],
-      "message": "WebtoB 서비스 포트 접속 정상: 172.18.9.3:9080"
+      "message": "WebtoB 서비스 포트 접속 정상: 127.0.0.1:9080"
     }
   ],
   "failed_items": []

@@ -23,15 +23,16 @@
           "value1": "2000"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_values(self, stdout):\n        values = {}\n        for line in stdout.splitlines():\n            if ':' not in line:\n                continue\n            key, value = line.split(':', 1)\n            if value.strip().isdigit():\n                values[key.strip()] = int(value.strip())\n        return values\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        values = self._parse_values(stdout)\n        missing = [key for key in ('Active Threads', 'Idle Threads', 'Task Count') if key not in values]\n        if missing:\n            return self.fail('Thread Pool 상태 파싱 실패', message='Thread Pool 출력에서 값을 확인하지 못했습니다: %s' % ', '.join(missing), stdout=stdout)\n        thresholds = {'max_active_threads': self.get_threshold_var('max_active_threads', default=20, value_type='int'), 'max_idle_thread': self.get_threshold_var('max_idle_thread', default=10, value_type='int'), 'max_task_count': self.get_threshold_var('max_task_count', default=2000, value_type='int')}\n        failed = []\n        if values['Active Threads'] > thresholds['max_active_threads']:\n            failed.append('Active Threads')\n        if values['Idle Threads'] > thresholds['max_idle_thread']:\n            failed.append('Idle Threads')\n        if values['Task Count'] > thresholds['max_task_count']:\n            failed.append('Task Count')\n        metrics = {'thread_pool_values': values, 'failed_checks': failed}\n        if failed:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 값이 기준을 초과했습니다.', message='JEUS Thread Pool 상태 경고: 기준 초과=%s' % ', '.join(failed))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 값이 기준 이하입니다.', message='JEUS Thread Pool 상태 정상: Active=%s, Idle=%s, Task=%s' % (values['Active Threads'], values['Idle Threads'], values['Task Count']))\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}'\n# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus show-thread-pool-status default\n# cd {home_path};source .bash_profile;jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self, home_path, user, pw, pool_name):\n        command = f\"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw, pool_name=pool_name)}\" \n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_values(self, stdout):\n        values = {}\n        for line in stdout.splitlines():\n            if ':' not in line:\n                continue\n            key, value = line.split(':', 1)\n            if value.strip().isdigit():\n                values[key.strip()] = int(value.strip())\n        return values\n\n    def run(self):\n        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')\n        user = self.get_threshold_var(key='user', default='jeus', value_type='str')\n        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')\n        pool_name = self.get_threshold_var(key='pool_name', default='default', value_type='str')\n\n        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw, pool_name)\n        if error:\n            return error\n        values = self._parse_values(stdout)\n        missing = [key for key in ('Active Threads', 'Idle Threads', 'Task Count') if key not in values]\n        if missing:\n            return self.fail('Thread Pool 상태 파싱 실패', message='Thread Pool 출력에서 값을 확인하지 못했습니다: %s' % ', '.join(missing), stdout=stdout)\n        thresholds = {'max_active_threads': self.get_threshold_var('max_active_threads', default=20, value_type='int'), 'max_idle_thread': self.get_threshold_var('max_idle_thread', default=10, value_type='int'), 'max_task_count': self.get_threshold_var('max_task_count', default=2000, value_type='int')}\n        failed = []\n        if values['Active Threads'] > thresholds['max_active_threads']:\n            failed.append('Active Threads')\n        if values['Idle Threads'] > thresholds['max_idle_thread']:\n            failed.append('Idle Threads')\n        if values['Task Count'] > thresholds['max_task_count']:\n            failed.append('Task Count')\n        metrics = {'thread_pool_values': values, 'failed_checks': failed}\n        if failed:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 값이 기준을 초과했습니다.', message='JEUS Thread Pool 상태 경고: 기준 초과=%s' % ', '.join(failed))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Thread Pool 값이 기준 이하입니다.', message='JEUS Thread Pool 상태 정상: Active=%s, Idle=%s, Task=%s' % (values['Active Threads'], values['Idle Threads'], values['Task Count']))\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
         "",
         "",
-        "COMMAND = 'jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"'",
-        "",
+        "COMMAND = 'jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}'",
+        "# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus show-thread-pool-status default",
+        "# cd {home_path};source .bash_profile;jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -41,9 +42,11 @@
         "",
         "    COMMAND_TIMEOUT = 20",
         "",
-        "    def _run_jeus_command(self):",
+        "    def _run_jeus_command(self, home_path, user, pw, pool_name):",
+        "        command = f\"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw, pool_name=pool_name)}\" ",
+        "",
         "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
@@ -69,7 +72,12 @@
         "        return values",
         "",
         "    def run(self):",
-        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')",
+        "        user = self.get_threshold_var(key='user', default='jeus', value_type='str')",
+        "        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')",
+        "        pool_name = self.get_threshold_var(key='pool_name', default='default', value_type='str')",
+        "",
+        "        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw, pool_name)",
         "        if error:",
         "            return error",
         "        values = self._parse_values(stdout)",
@@ -118,41 +126,29 @@
           "value1": "2000"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "thread_pool_values": {
-          "Active Threads": 15,
-          "Idle Threads": 5,
-          "Max Threads": 20,
-          "Queue Size": 10,
-          "Completed Tasks": 1000,
-          "Task Count": 1015,
-          "Largest Pool Size": 18
-        },
-        "failed_checks": []
-      },
-      "thresholds": {
-        "max_active_threads": 20,
-        "max_idle_thread": 10,
-        "max_task_count": 2000
-      },
-      "reasons": "Thread Pool 값이 기준 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Thread Pool Name: default\nActive Threads: 15\nIdle Threads: 5\nMax Threads: 20\nQueue Size: 10\nCompleted Tasks: 1000\nTask Count: 1015\nLargest Pool Size: 18",
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "Attempting to connect to 127.0.0.1:9736.\nThe connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.\n[root@tips_was1:/home/exTMS]$",
+      "stdout_lines": [
+        "Attempting to connect to 127.0.0.1:9736.",
+        "The connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.",
+        "[root@tips_was1:/home/exTMS]$"
+      ],
+      "stderr": "PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus show-thread-pool-status default\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Attempting to connect to 127.0.0.1:9736.\nThe connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.\n[root@tips_was1:/home/exTMS]$\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: jeusadmin -u jeus -p jeus \"show-thread-pool-status adminServer\"",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Thread Pool Name: default",
-        "Active Threads: 15",
-        "Idle Threads: 5",
-        "Max Threads: 20",
-        "Queue Size: 10",
-        "Completed Tasks: 1000",
-        "Task Count: 1015",
-        "Largest Pool Size: 18"
-      ],
-      "message": "JEUS Thread Pool 상태 정상: Active=15, Idle=5, Task=1015"
+        " - 실행 명령어: cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus show-thread-pool-status default",
+        " - 명령 종료코드: rc=124 (명령 시간 초과)",
+        " - 출력 내용(stdout): Attempting to connect to 127.0.0.1:9736.",
+        "The connection failed: fail to connect to 127.0.0.1:9736(/JeusMBeanServer), the node is not ready.",
+        "[root@tips_was1:/home/exTMS]$",
+        " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-017"
+  ]
 }

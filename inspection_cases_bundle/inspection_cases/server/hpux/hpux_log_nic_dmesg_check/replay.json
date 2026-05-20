@@ -1,18 +1,9 @@
 [
   {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
     "matcher_type": "regex",
-    "matcher_value": "^dmesg \\| egrep -i .+$"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "dmesg | egrep -i 'link\\s+down|status\\s+down|failover|lan[0-9]+.*down'\r\nlan0: Link Down\r\n#"
+    "matcher_value": "^dmesg \\| egrep -i .+$",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_dmesg_egrep_i_link_down_status_down_fail.stdout",
+    "stderr": ""
   }
 ]

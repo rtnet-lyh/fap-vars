@@ -1,18 +1,9 @@
 [
   {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
     "matcher_type": "regex",
-    "matcher_value": "^dmesg \\| egrep -i .+$"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "dmesg | egrep -i '\\btimeout\\b|i/o\\s+error|transport\\s+failed|media\\s+error'\r\nTimeout occurred while waiting for device\r\nI/O error on device /dev/dsk/c2t0d0\r\n#"
+    "matcher_value": "^dmesg \\| egrep -i .+$",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_dmesg_egrep_i_timeout_i_o_error_transpor.stdout",
+    "stderr": ""
   }
 ]

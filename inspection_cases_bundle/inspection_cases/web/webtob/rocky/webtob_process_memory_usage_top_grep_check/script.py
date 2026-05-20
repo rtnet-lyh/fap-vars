@@ -43,9 +43,14 @@ class Check(BaseCheck):
         return rows
 
     def run(self):
-        process_name = str(
-            self.get_threshold_var('process_name', default=self.DEFAULT_PROCESS_NAME, value_type='str') or ''
-        ).strip() or self.DEFAULT_PROCESS_NAME
+        proccess_name = self.get_host_var(key='process_name')
+        if not proccess_name:
+            process_name = self.get_threshold_var(
+                'process_name', 
+                default=self.DEFAULT_PROCESS_NAME, 
+                value_type='str'
+            ).strip() 
+
         max_mem_usage_percent = self.get_threshold_var(
             'max_mem_usage_percent',
             default=self.DEFAULT_MAX_MEM_USAGE_PERCENT,

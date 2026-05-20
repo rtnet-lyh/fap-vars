@@ -1,155 +1,182 @@
 # -*- coding: utf-8 -*-
 
 import re
+import time
+from collections import defaultdict
 
 from .common._base import BaseCheck
 
-
-IOSCAN_COMMAND = 'ioscan -m dsf'
-
+CHECK_COMMAND = 'ioscan -m dsf'
+BECOME_COMMAND_TIMEOUT = 1
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
-    def _parse_int(self, value, default=0):
-        try:
-            return int(str(value).strip())
-        except (TypeError, ValueError):
-            return default
+    def _is_become_enabled(self):
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
 
-    def _parse_ioscan_disks(self, text):
-        disks = []
-        current = None
+    def _build_become_command(self):
+        if not self._is_become_enabled():
+            return ''
 
-        for raw_line in (text or '').splitlines():
-            line = raw_line.rstrip()
-            stripped = line.strip()
-            if not stripped or stripped.startswith('Persistent DSF') or stripped.startswith('='):
-                continue
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
 
-            match = re.match(r'^(/dev/rdisk/\S+)\s+(.+)$', line)
-            if match:
-                current = {
-                    'persistent_dsf': match.group(1),
-                    'legacy_dsfs': re.findall(r'/dev/rdsk/\S+', match.group(2)),
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
+
+    def _build_check_command(self, become_command):
+
+        if become_command:
+            become_password = self.get_connection_value('become_password', default='')    
+            return [
+                {
+                    'command': become_command,
+                    'timeout': BECOME_COMMAND_TIMEOUT,
+                    'ignore_prompt': True,                    
+                },
+                {
+                    'command': become_password,
+                    'hide_command': True,
+                },
+                {
+                    'command': CHECK_COMMAND,
                 }
-                disks.append(current)
+            ]
+        else:
+            return [{'command': CHECK_COMMAND}]
+
+    def _parse_ioscan_m_dsf(self, output: str):
+        disks = defaultdict(list)
+        current_disk = None
+
+        for line in output.splitlines():
+            line = line.strip()
+
+            if not line:
                 continue
 
-            if current and line.startswith(' '):
-                current['legacy_dsfs'].extend(re.findall(r'/dev/rdsk/\S+', stripped))
+            if line.startswith("="):
+                continue
+            
+            if "Persistent DSF" in line or "Legacy DSF" in line:
+                continue
 
-        return disks
+            persistent_match = re.search(r"(/dev/rdisk/disk\d+)", line)
+            legacy_paths = re.findall(r"(/dev/rdsk/\S+)", line)
 
-    def _parse_scsimgr(self, text):
-        status_match = re.search(r'Generic Status:\s*(\S+)', text or '', re.IGNORECASE)
-        paths_match = re.search(r'Number of Paths:\s*(\d+)', text or '', re.IGNORECASE)
-        return {
-            'lun_status': status_match.group(1).upper() if status_match else '',
-            'path_count': self._parse_int(paths_match.group(1), 0) if paths_match else 0,
-        }
+            if persistent_match:
+                current_disk = persistent_match.group(1)
+
+                for path in legacy_paths:
+                    disks[current_disk].append(path)
+
+                continue
+
+            if current_disk and legacy_paths:
+                for path in legacy_paths:
+                    disks[current_disk].append(path)
+        
+        return dict(disks)
+
+    def _check_multipath(self, disks: dict, min_path_count=3):
+        results = []
+        
+        for disk, paths in disks.items():            
+            path_count = len(paths)
+
+            if path_count == 1:
+                continue
+
+            if path_count >= min_path_count:
+                status = True                
+            else:
+                status = False
+            
+            results.append({
+                "disk": disk,
+                "path_count": path_count,
+                "status": status,
+                "paths": paths,
+            })
+
+        return results 
+
+    def _find_check_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == CHECK_COMMAND:
+                return item
+        return None
 
     def run(self):
-        expected_path_count = self.get_threshold_var('expected_path_count', default=2, value_type='int')
-        required_lun_status = str(
-            self.get_threshold_var('required_lun_status', default='OPTIMAL', value_type='str')
-        ).strip().upper()
+        try:
 
-        rc, out, err = self._ssh(IOSCAN_COMMAND)
-        if self._is_connection_error(rc, err):
-            return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
-            )
-        if rc != 0:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message='ioscan -m dsf 명령 실행에 실패했습니다.',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
+            become_command = self._build_become_command()
+            commands = self._build_check_command(become_command)
 
-        disks = self._parse_ioscan_disks(out)
-        if not disks:
-            return self.fail(
-                'Path 매핑 정보 없음',
-                message='ioscan -m dsf 결과에서 /dev/rdisk persistent DSF를 찾지 못했습니다.',
-                stdout=(out or '').strip(),
-                stderr=(err or '').strip(),
-            )
+            results = self._run_paramiko_commands(commands)
+            result = self._find_check_result(results)
 
-        disk_results = []
-        failed_disks = []
-        for disk in disks:
-            device = disk['persistent_dsf']
-            command = f'scsimgr get_info -D {device}'
-            rc, scsi_out, scsi_err = self._ssh(command)
+            metrics = {}
 
-            if self._is_connection_error(rc, scsi_err):
+            min_path_count = self.get_threshold_var(key='MIN_PATH_COUNT', default=3, value_type='int')
+
+            if result is None:
+                failed_result = next((item for item in results if item.get('rc') != 0), None)
                 return self.fail(
-                    '호스트 연결 실패',
-                    message=(scsi_err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                    stderr=(scsi_err or '').strip(),
-                )
-            if rc != 0:
-                return self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 실행에 실패했습니다.',
-                    stdout=(scsi_out or '').strip(),
-                    stderr=(scsi_err or '').strip(),
+                    error='명령 결과 없음',
+                    message='명령 실행 결과를 찾지 못했습니다.',
+                    stdout=(failed_result.get('stdout') or '').strip() if failed_result else '',
+                    stderr=(failed_result.get('stderr') or '').strip() if failed_result else '',
+                    metrics={
+                        'executed_commands': [
+                            item.get('display_command') or item.get('command')
+                            for item in results
+                        ],
+                    },
                 )
 
-            parsed = self._parse_scsimgr(scsi_out)
-            legacy_path_count = len(disk['legacy_dsfs'])
-            result = {
-                'persistent_dsf': device,
-                'legacy_dsfs': disk['legacy_dsfs'],
-                'legacy_path_count': legacy_path_count,
-                'scsimgr_path_count': parsed['path_count'],
-                'lun_status': parsed['lun_status'],
-            }
-            disk_results.append(result)
+            output = result.get('stdout', '')            
+            parsed = self._parse_ioscan_m_dsf(output=output)                      
+            results = self._check_multipath(disks=parsed, min_path_count=min_path_count )                        
 
-            if (
-                legacy_path_count < expected_path_count
-                or parsed['path_count'] < expected_path_count
-                or parsed['lun_status'] != required_lun_status
-            ):
-                failed_disks.append(result)
-
-        thresholds = {
-            'expected_path_count': expected_path_count,
-            'required_lun_status': required_lun_status,
-        }
-        metrics = {
-            'disk_count': len(disk_results),
-            'failed_disk_count': len(failed_disks),
-            'disks': disk_results,
-            'failed_disks': failed_disks,
-        }
-
-        if failed_disks:
-            return self.fail(
-                'Path 이중화 상태 비정상',
-                message=(
-                    '경로 수 부족 또는 LUN 상태 비정상 디스크가 확인되었습니다: '
-                    + ', '.join(
-                        f"{item['persistent_dsf']}(legacy_paths={item['legacy_path_count']}, "
-                        f"scsimgr_paths={item['scsimgr_path_count']}, status={item['lun_status'] or 'unknown'})"
-                        for item in failed_disks
+            if results:
+                
+                is_pass = all(item["status"] for item in results)                
+                failed_items = [item for item in results if item["status"] is False]
+                
+                if is_pass:
+                    return self.ok(
+                        metrics = {"disk_count": len(results)},
+                        reasons = f"모든 rdisk 디스크({len(results)})가 이중화 되어있습니다.",
+                        message = f"모든 rdisk 디스크({len(results)})가 이중화 되어있습니다.",
+                        )
+                else:
+                    return self.fail(
+                        error="Path 이중화 점검 실패",
+                        metrics = {"results": failed_items},                
+                        message=f"Path 이중화 점검 실패: {failed_items}",                
                     )
-                ),
-                stdout='',
+            else:
+                return self.fail(
+                    error="Path 이중화 점검 실패",
+                    message=f"Path 이중화 점검 실패: {results}",                
+                )
+        except Exception as e:
+            import traceback
+
+            return self.fail(
+                error=f"Path 이중화 점검 실패: {str(traceback.print_exc())}",
+                message=f"Path 이중화 점검 실패: {results}",                
             )
-
-        return self.ok(
-            metrics=metrics,
-            thresholds=thresholds,
-            reasons='모든 persistent DSF의 legacy path 수, scsimgr path 수, LUN 상태가 기준을 만족합니다.',
-            message='ioscan/scsimgr 기준 Path 이중화 점검이 정상 수행되었습니다.',
-        )
-
 
 CHECK_CLASS = Check

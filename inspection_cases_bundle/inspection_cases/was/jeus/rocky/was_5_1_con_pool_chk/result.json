@@ -9,21 +9,14 @@
       "application_name": "JEUS",
       "application_family_name": "WAS",
       "host_vars": {},
-      "threshold_list": [
-        {
-          "name": "max_message_count",
-          "value1": "0"
-        }
-      ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        threshold = self.get_threshold_var('max_message_count', default=0, value_type='int')\n        metrics = {'message_count': len(lines), 'sample_lines': lines[:20]}\n        thresholds = {'max_message_count': threshold}\n        if len(lines) > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준을 초과했습니다.', message='Connection Pool 메시지 경고: count=%s, 기준=%s' % (len(lines), threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준 이하입니다.', message='Connection Pool 메시지 정상: count=%s, 기준=%s' % (len(lines), threshold))\n\n\nCHECK_CLASS = Check\n",
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\nCOMMAND = 'grep -i \"{search_keyword}\" \"$(ls -t {jeus_log_path}/*.log | head -1)\"'\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self, search_keyword, jeus_log_path):    \n        command = COMMAND.format(search_keyword=search_keyword, jeus_log_path=jeus_log_path)    \n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        return stdout, stderr, None\n\n    def run(self):\n        search_keyword = self.get_threshold_var(\n            key='search_keyword', \n            default='connection pool exhausted',\n            value_type='str',\n        )\n        \n        jeus_log_path = self.get_threshold_var(\n            key='jeus_log_path', \n            default='/home/exTMS/tmax/jeus/log/extms1',\n            value_type='str',\n        )\n\n        stdout, _stderr, error = self._run_jeus_command(search_keyword, jeus_log_path)\n        if error:\n            return error\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        threshold = self.get_threshold_var('max_message_count', default=0, value_type='int')\n        metrics = {'message_count': len(lines), 'sample_lines': lines[:20]}\n        thresholds = {'max_message_count': threshold}\n        if len(lines) > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{search_keyword} 메시지 수가 기준을 초과했습니다.', message='%s 메시지 경고: count=%s, 기준=%s' % (search_keyword, len(lines), threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons=f'{search_keyword} 메시지 수가 기준 이하입니다.', message='%s 메시지 정상: count=%s, 기준=%s' % (search_keyword, len(lines), threshold))\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
         "",
-        "",
-        "COMMAND = 'grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true'",
-        "",
+        "COMMAND = 'grep -i \"{search_keyword}\" \"$(ls -t {jeus_log_path}/*.log | head -1)\"'",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -33,14 +26,18 @@
         "",
         "    COMMAND_TIMEOUT = 20",
         "",
-        "    def _run_jeus_command(self):",
+        "    def _run_jeus_command(self, search_keyword, jeus_log_path):    ",
+        "        command = COMMAND.format(search_keyword=search_keyword, jeus_log_path=jeus_log_path)    ",
+        "",
         "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
+        "",
         "        stdout = (result.get('stdout') or '').strip()",
         "        stderr = (result.get('stderr') or '').strip()",
+        "",
         "        if result.get('rc') != 0:",
         "            return stdout, stderr, self.fail(",
         "                '점검 명령 실행 실패',",
@@ -48,10 +45,23 @@
         "                stdout=stdout,",
         "                stderr=stderr,",
         "            )",
+        "",
         "        return stdout, stderr, None",
         "",
         "    def run(self):",
-        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        search_keyword = self.get_threshold_var(",
+        "            key='search_keyword', ",
+        "            default='connection pool exhausted',",
+        "            value_type='str',",
+        "        )",
+        "        ",
+        "        jeus_log_path = self.get_threshold_var(",
+        "            key='jeus_log_path', ",
+        "            default='/home/exTMS/tmax/jeus/log/extms1',",
+        "            value_type='str',",
+        "        )",
+        "",
+        "        stdout, _stderr, error = self._run_jeus_command(search_keyword, jeus_log_path)",
         "        if error:",
         "            return error",
         "        lines = [line.strip() for line in stdout.splitlines() if line.strip()]",
@@ -59,8 +69,8 @@
         "        metrics = {'message_count': len(lines), 'sample_lines': lines[:20]}",
         "        thresholds = {'max_message_count': threshold}",
         "        if len(lines) > threshold:",
-        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준을 초과했습니다.', message='Connection Pool 메시지 경고: count=%s, 기준=%s' % (len(lines), threshold))",
-        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준 이하입니다.', message='Connection Pool 메시지 정상: count=%s, 기준=%s' % (len(lines), threshold))",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{search_keyword} 메시지 수가 기준을 초과했습니다.', message='%s 메시지 경고: count=%s, 기준=%s' % (search_keyword, len(lines), threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons=f'{search_keyword} 메시지 수가 기준 이하입니다.', message='%s 메시지 정상: count=%s, 기준=%s' % (search_keyword, len(lines), threshold))",
         "",
         "",
         "CHECK_CLASS = Check"
@@ -77,33 +87,23 @@
       "application_name": "JEUS",
       "application_family_name": "WAS",
       "host_vars": {},
-      "threshold_list": [
-        {
-          "name": "max_message_count",
-          "value1": "0"
-        }
-      ],
-      "status": "warn",
+      "threshold_list": [],
+      "status": "ok",
       "metrics": {
-        "message_count": 2,
-        "sample_lines": [
-          "2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
-          "2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30)."
-        ]
+        "message_count": 0,
+        "sample_lines": []
       },
       "thresholds": {
         "max_message_count": 0
       },
-      "reasons": "Connection pool exhausted 메시지 수가 기준을 초과했습니다.",
-      "message": "Connection Pool 메시지 경고: count=2, 기준=0",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).\n2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
+      "reasons": "connection pool exhausted 메시지 수가 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"connection pool exhausted\" \"$(ls -t /home/exTMS/tmax/jeus/log/extms1/*.log | head -1)\"\n - 명령 종료코드: rc=0 (정상 종료)",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: 2024-09-12 10:15:23,123 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30).",
-        "2024-09-12 10:17:45,456 ERROR [JDBC] Connection pool exhausted for datasource 'myPool'. Maximum connections reached (30)."
-      ]
+        " - 실행 명령어: grep -i \"connection pool exhausted\" \"$(ls -t /home/exTMS/tmax/jeus/log/extms1/*.log | head -1)\"",
+        " - 명령 종료코드: rc=0 (정상 종료)"
+      ],
+      "message": "connection pool exhausted 메시지 정상: count=0, 기준=0"
     }
   ],
   "failed_items": []

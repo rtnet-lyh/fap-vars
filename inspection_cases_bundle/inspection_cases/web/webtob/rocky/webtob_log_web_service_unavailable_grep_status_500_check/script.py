@@ -18,9 +18,15 @@ class Check(BaseCheck):
         return 'grep "%s" $(ls %s/error.log*|sort|tail -n 1)' % (status_code, path)
 
     def run(self):
-        error_log_path = str(
-            self.get_threshold_var('error_log_path', default=self.DEFAULT_ERROR_LOG_PATH, value_type='str') or ''
-        ).strip() or self.DEFAULT_ERROR_LOG_PATH
+        error_log_path = self.get_host_var(key='error_log_path')
+
+        if not error_log_path:
+            error_log_path = self.get_threshold_var(
+                'error_log_path', 
+                default=self.DEFAULT_ERROR_LOG_PATH, 
+                value_type='str'
+            ).strip() or self.DEFAULT_ERROR_LOG_PATH
+
         status_code = self.get_threshold_var(
             'warning_status_code',
             default=self.DEFAULT_WARNING_STATUS_CODE,

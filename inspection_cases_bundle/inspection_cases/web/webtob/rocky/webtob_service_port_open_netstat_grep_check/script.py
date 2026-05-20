@@ -32,11 +32,15 @@ class Check(BaseCheck):
         return rows
 
     def run(self):
-        service_port = self.get_threshold_var(
-            'webtob_service_port',
-            default=self.DEFAULT_SERVICE_PORT,
-            value_type='int',
-        )
+        service_port = self.get_host_var(key='webtob_service_port')
+
+        if not service_port:
+            service_port = self.get_threshold_var(
+                'webtob_service_port',
+                default=self.DEFAULT_SERVICE_PORT,
+                value_type='int',
+            )
+            
         allow_state = str(
             self.get_threshold_var('allow_state', default=self.DEFAULT_ALLOW_STATE, value_type='str') or ''
         ).strip().upper() or self.DEFAULT_ALLOW_STATE

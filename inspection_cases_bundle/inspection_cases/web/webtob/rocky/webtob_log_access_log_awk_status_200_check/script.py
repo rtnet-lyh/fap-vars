@@ -31,14 +31,21 @@ class Check(BaseCheck):
         return matches
 
     def run(self):
-        access_log_path = str(
-            self.get_threshold_var('access_log_path', default=self.DEFAULT_ACCESS_LOG_PATH, value_type='str') or ''
-        ).strip() or self.DEFAULT_ACCESS_LOG_PATH
+        access_log_path = self.get_host_var(key='access_log_path')
+        required_status_code = self.get_host_var(key='required_status_code')
+
+        access_log_path = self.get_threshold_var(
+            'access_log_path', 
+            default=self.DEFAULT_ACCESS_LOG_PATH, 
+            value_type='str'
+        ).strip()
+        
         status_code = self.get_threshold_var(
             'required_status_code',
             default=self.DEFAULT_REQUIRED_STATUS_CODE,
             value_type='int',
         )
+
         command = self._build_command(access_log_path, status_code)
 
         result = self._run_paramiko_commands(

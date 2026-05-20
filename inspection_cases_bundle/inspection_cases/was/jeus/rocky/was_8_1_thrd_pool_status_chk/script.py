@@ -3,8 +3,9 @@
 from .common._base import BaseCheck
 
 
-COMMAND = 'jeusadmin -u jeus -p jeus "show-thread-pool-status adminServer"'
-
+COMMAND = 'jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}'
+# cd /home/exTMS;source .bash_profile;jeusadmin -u jeus -p jeus show-thread-pool-status default
+# cd {home_path};source .bash_profile;jeusadmin -u {user} -p {pw} show-thread-pool-status {pool_name}
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -14,9 +15,11 @@ class Check(BaseCheck):
 
     COMMAND_TIMEOUT = 20
 
-    def _run_jeus_command(self):
+    def _run_jeus_command(self, home_path, user, pw, pool_name):
+        command = f"cd {home_path};source .bash_profile;{COMMAND.format(user=user, pw=pw, pool_name=pool_name)}" 
+
         result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
             become=True,
             profile='linux',
         )[0]
@@ -42,7 +45,12 @@ class Check(BaseCheck):
         return values
 
     def run(self):
-        stdout, _stderr, error = self._run_jeus_command()
+        home_path = self.get_threshold_var(key='home_path', default='/home/exTMS', value_type='str')
+        user = self.get_threshold_var(key='user', default='jeus', value_type='str')
+        pw = self.get_threshold_var(key='pw', default='jeus', value_type='str')
+        pool_name = self.get_threshold_var(key='pool_name', default='default', value_type='str')
+
+        stdout, _stderr, error = self._run_jeus_command(home_path, user, pw, pool_name)
         if error:
             return error
         values = self._parse_values(stdout)

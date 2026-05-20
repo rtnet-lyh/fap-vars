@@ -1,185 +1,153 @@
 # -*- coding: utf-8 -*-
 
 import re
-import shlex
+import time 
 
 from .common._base import BaseCheck
 
 
-CONFIG = {'mode': 'vgdisplay',
- 'case_name': 'hpux_disk_raid_vgdisplay_check',
- 'item_name': 'Disk 이중화 정상 여부',
- 'commands': ['vgdisplay -v'],
- 'thresholds': [{'name': 'expected_active_pv_count', 'default': 0, 'type': 'int'},
-                {'name': 'required_pv_status', 'default': 'available', 'type': 'str'}]}
-BECOME_USER_MARKER = '__BECOME_USER__:'
-
+CHECK_COMMAND = 'scsimgr lun_map | egrep "LUN|PATH COUNT|ACTIVE PATH"'
+BECOME_COMMAND_TIMEOUT = 1
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
-
-    def _thresholds(self):
-        values = {}
-        for spec in CONFIG.get('thresholds', []):
-            name = spec.get('name')
-            if not name:
-                continue
-            values[name] = self.get_threshold_var(
-                name,
-                default=spec.get('default'),
-                value_type=spec.get('type') or 'str',
-            )
-        return values
+    CONNECTION_METHOD = 'paramiko'
+    PARAMIKO_AUTH_TIMEOUT_SEC = 30
 
     def _is_become_enabled(self):
-        become_raw = self.get_application_credential_value('become', default=False)
-        return str(become_raw).strip().lower() == 'true'
+        value = self.get_connection_value('become', default=False)
+        return str(value).strip().lower() in ('1', 'true', 'y', 'yes', 'on')
 
-    def _mask_command_history(self, *secrets):
-        if not self._command_history:
-            return
-        masked_cmd = self._command_history[-1].get('cmd', '')
-        for secret in secrets:
-            if secret:
-                masked_cmd = masked_cmd.replace(secret, '*****')
-        self._command_history[-1]['cmd'] = masked_cmd
-
-    def _build_command(self, command):
+    def _build_become_command(self):
         if not self._is_become_enabled():
-            return command
+            return ''
 
-        become_method = str(self.get_application_credential_value('become_method', default='su -') or 'su -').strip().lower()
-        become_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        become_password = str(self.get_application_credential_value('become_password', default='') or '')
-        normalized_become_method = ' '.join(become_method.split())
+        method = str(self.get_connection_value('become_method', default='su -') or 'su -')
+        method = ' '.join(method.strip().lower().split())
+        user = str(self.get_connection_value('become_user', default='root') or 'root').strip() or 'root'
 
-        if normalized_become_method not in ('su', 'su -'):
-            raise ValueError(f'unsupported become_method: {become_method}')
+        if method == 'su':
+            return 'su ' + user
+        if method == 'su -':
+            return 'su - ' + user
+        if method == 'sudo':
+            return 'sudo -u ' + user + ' -i'
+        raise ValueError(f'unsupported become_method: {method}')
 
-        become_script = 'current_user=$(whoami); echo {marker}${{current_user}}; {command}'.format(
-            marker=BECOME_USER_MARKER,
-            command=command,
+    def _build_check_command(self, become_command):        
+        become_password = self.get_connection_value('become_password', default='')                                        
+        become_base_command = [
+            {
+                'command': become_command,
+                'timeout': BECOME_COMMAND_TIMEOUT,
+                'ignore_prompt': True,                    
+            },
+            {
+                'command': become_password,
+                'hide_command': True,
+            }
+        ]        
+        if become_command:            
+            become_base_command.append({"command": CHECK_COMMAND})
+            return become_base_command
+        else:
+            return [{
+                "command": CHECK_COMMAND
+            }]
+
+    def _find_check_result(self, results):
+        for item in reversed(results):
+            if item.get('command') == CHECK_COMMAND:
+                return item
+        return None
+
+    def _parse_scsimgr(self, output: str, min_multipath_count=1):   
+        # LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk3082
+        # Total number of LUN paths     = 3
+        # LUN path : lunpath1509
+        # LUN path : lunpath1320
+        # LUN path : lunpath2406
+        #         LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk3083
+        # Total number of LUN paths     = 2
+        # LUN path : lunpath1590
+        # LUN path : lunpath1318
+        #         LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk3086
+        # Total number of LUN paths     = 1
+        # LUN path : lunpath2675     
+        lun_blocks = re.findall(
+            r"LUN PATH INFORMATION FOR LUN\s*:\s*(.+?)(?=LUN PATH INFORMATION FOR LUN|\Z)",
+            output,
+            re.S
         )
-        return "printf '%s\\n' {password} | su - {user} -c {command}".format(
-            password=shlex.quote(become_password),
-            user=shlex.quote(become_user),
-            command=shlex.quote(become_script),
-        )
+        ok_items = []
+        failed_items = []
 
-    def _strip_become_marker(self, output):
-        if not self._is_become_enabled():
-            return output or '', ''
+        for block in lun_blocks:
+            disk_match = re.search(r"(/dev/rdisk/\S+)", block)            
+            path_count_match = re.search(r"Total number of LUN paths\s*=\s*(\d+)", block)            
+            paths = re.findall(r"LUN path\s*:\s*(\S+)", block)
 
-        lines = (output or '').splitlines()
-        marker_line = next((line.strip() for line in lines if line.strip().startswith(BECOME_USER_MARKER)), '')
-        if not marker_line:
-            raise ValueError('권한 상승 후 사용자 확인 결과를 찾지 못했습니다.')
+            if disk_match and path_count_match:
+                disk = disk_match.group(1)
+                path_count = int(path_count_match.group(1))            
+                multipath_ok = path_count >= min_multipath_count
 
-        actual_user = marker_line.split(BECOME_USER_MARKER, 1)[1].strip()
-        expected_user = str(self.get_application_credential_value('become_user', default='root') or 'root').strip() or 'root'
-        if actual_user != expected_user:
-            raise ValueError(f'권한 상승 사용자가 기대값과 다릅니다: expected={expected_user}, actual={actual_user}')
-
-        cleaned_lines = [line for line in lines if not line.strip().startswith(BECOME_USER_MARKER)]
-        return '\n'.join(cleaned_lines).strip(), actual_user
-
-    def _run_commands(self):
-        outputs = []
-        mode = CONFIG.get('mode')
-
-        for command in CONFIG.get('commands', []):
-            try:
-                actual_command = self._build_command(command)
-            except ValueError as exc:
-                return None, self.fail('권한 상승 설정 오류', message=str(exc))
-
-            become_password = str(self.get_application_credential_value('become_password', default='') or '')
-            rc, out, err = self._ssh(actual_command)
-            self._mask_command_history(become_password)
-
-            if self._is_connection_error(rc, err):
-                return None, self.fail(
-                    '호스트 연결 실패',
-                    message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            try:
-                clean_out, actual_become_user = self._strip_become_marker(out)
-            except ValueError as exc:
-                return None, self.fail(
-                    '권한 상승 사용자 확인 실패',
-                    message=str(exc),
-                    stdout=(out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            log_no_match = mode == 'log' and rc == 1 and not (clean_out or '').strip()
-            if rc != 0 and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 실행에 실패했습니다.',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            command_error = self._detect_command_error(clean_out, err)
-            if command_error and not log_no_match:
-                return None, self.fail(
-                    '점검 명령 실행 실패',
-                    message=f'{command} 명령 출력에서 실행 오류가 확인되었습니다: {command_error}',
-                    stdout=(clean_out or '').strip(),
-                    stderr=(err or '').strip(),
-                )
-
-            outputs.append({
-                'command': command,
-                'rc': rc,
-                'stdout': (clean_out or '').strip(),
-                'stderr': (err or '').strip(),
-                'become_user': actual_become_user,
-            })
-
-        return outputs, None
-
-    def _split_list(self, value):
-        return [token.strip() for token in re.split(r'[|,\n]+', str(value or '')) if token.strip()]
-
-    def _parse_float(self, value, default=None):
-        try:
-            return float(str(value).strip().rstrip('%'))
-        except (TypeError, ValueError):
-            return default
-
-    def _parse_int(self, value, default=None):
-        parsed = self._parse_float(value, default=None)
-        if parsed is None:
-            return default
-        return int(parsed)
-
-    def _combined_stdout(self, outputs):
-        return '\n'.join(item.get('stdout', '') for item in outputs if item.get('stdout', '')).strip()
-
+                if multipath_ok:
+                    ok_items.append({
+                        "disk": disk,
+                        "path_count": path_count,
+                        "paths": paths
+                    })
+                else:
+                    failed_items.append({
+                        "disk": disk,
+                        "path_count": path_count,
+                        "paths": paths
+                    })
+            
+        return ok_items, failed_items
+            
     def run(self):
-        outputs, error = self._run_commands()
-        if error:
-            return error
-        return self._evaluate(outputs)
+        try:
+            metrics = {}
 
-    def _evaluate(self, outputs):
-        thresholds = self._thresholds()
-        text = outputs[0]['stdout']
-        required_status = str(thresholds.get('required_pv_status', 'available')).lower()
-        expected_active = self._parse_int(thresholds.get('expected_active_pv_count', 0), 0)
-        vg_status = (re.search(r'^VG Status\s+(.+)$', text, re.MULTILINE) or [None, ''])[1].strip()
-        cur_pv = self._parse_int((re.search(r'^Cur PV\s+(\d+)', text, re.MULTILINE) or [None, '0'])[1], 0)
-        act_pv = self._parse_int((re.search(r'^Act PV\s+(\d+)', text, re.MULTILINE) or [None, '0'])[1], 0)
-        pv_statuses = re.findall(r'^PV Status\s+(.+)$', text, re.MULTILINE)
-        bad_statuses = [status.strip() for status in pv_statuses if status.strip().lower() != required_status]
-        if vg_status.lower() != 'available' or cur_pv != act_pv or bad_statuses or (expected_active and act_pv < expected_active):
-            return self.fail('디스크 이중화 상태 비정상', message=f'VG/PV 상태가 비정상입니다: vg_status={vg_status}, cur_pv={cur_pv}, act_pv={act_pv}, bad_pv={bad_statuses}', stdout=text)
-        return self.ok(metrics={'vg_status': vg_status, 'cur_pv': cur_pv, 'act_pv': act_pv, 'pv_statuses': pv_statuses}, thresholds={'expected_active_pv_count': expected_active, 'required_pv_status': required_status}, reasons='VG와 PV 상태가 available입니다.', message='vgdisplay 기준 Disk 이중화 점검이 정상 수행되었습니다.')
+            min_multipath_count = self.get_threshold_var(key='MIN_MULTIPATH_COUNT', default=2, value_type='int')
 
+            become_command = self._build_become_command()            
+            check_commands = self._build_check_command(become_command)                        
+            results = self._run_paramiko_commands(check_commands)            
+            result = self._find_check_result(results)            
+            output = result.get('stdout', '')
+
+
+            ok_items, failed_items = self._parse_scsimgr(output=output, min_multipath_count=min_multipath_count)
+            
+            is_pass = True if (ok_items and not failed_items) else False
+
+            metrics = {
+                "total_disk_count": len(ok_items) + len(failed_items),                
+                "min_multipath_count": min_multipath_count,
+                "failed_items": failed_items
+            }
+
+            if is_pass:                
+                return self.ok(
+                    metrics = metrics,
+                    reasons = f"디스크 이중화 상태가 정상 입니다. 최소 LUN path: {min_multipath_count}",
+                    message = f"디스크 이중화 상태가 정상 입니다. 최소 LUN path: {min_multipath_count}",
+                )
+            else:
+                return self.warn(                    
+                    metrics = metrics,         
+                    reasons = f"디스크 중에 LUN path의 개수가 {min_multipath_count} 보다 적은 디스크가 존재 합니다.",
+                    message = f"디스크 중에 LUN path의 개수가 {min_multipath_count} 보다 적은 디스크가 존재 합니다."
+                )
+            
+        except Exception as e:
+            import traceback
+            return self.fail(
+                error=f"공유 볼룸상태 점검 실패: {str(e)}",
+                message=f"공유 볼룸상태 점검 실패: {str(e)}",                
+            )
 
 CHECK_CLASS = Check

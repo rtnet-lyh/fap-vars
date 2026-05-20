@@ -9,21 +9,14 @@
       "application_name": "JEUS",
       "application_family_name": "WAS",
       "host_vars": {},
-      "threshold_list": [
-        {
-          "name": "max_frequency",
-          "value1": "2"
-        }
-      ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        try:\n            full_gc_count = int(stdout.split()[0])\n        except (IndexError, ValueError):\n            return self.fail('Full GC 횟수 파싱 실패', message='Full GC 횟수 값을 확인하지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_frequency', default=2, value_type='int')\n        metrics = {'full_gc_count': full_gc_count}\n        thresholds = {'max_frequency': threshold}\n        if full_gc_count > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준을 초과했습니다.', message='Full GC 발생 빈도 경고: count=%s, 기준=%s' % (full_gc_count, threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준 이하입니다.', message='Full GC 발생 빈도 정상: count=%s, 기준=%s' % (full_gc_count, threshold))\n\n\nCHECK_CLASS = Check\n",
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\nCOMMAND = 'grep -i \"Full GC\" $(ls -t {gc_log_path}/*gc.log* | head -1) | wc -l'\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 5\n\n    def _run_jeus_command(self, gc_log_path):\n        command = COMMAND.format(gc_log_path=gc_log_path)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        gc_log_path = self.get_threshold_var(\n            key='gc_log_path', \n            default='/home/exTMS/tmax/jeus/log/gclog', \n            value_type='str'\n        )\n\n        stdout, _stderr, error = self._run_jeus_command(gc_log_path)\n        if error:\n            return error\n        try:\n            full_gc_count = int(stdout.split()[0])\n        except (IndexError, ValueError):\n            return self.fail('Full GC 횟수 파싱 실패', message='Full GC 횟수 값을 확인하지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_frequency', default=200, value_type='int')\n        metrics = {'full_gc_count': full_gc_count}\n        thresholds = {'max_frequency': threshold}\n        if full_gc_count > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준을 초과했습니다.', message='Full GC 발생 빈도 경고: count=%s, 기준=%s' % (full_gc_count, threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Full GC 발생 횟수가 기준 이하입니다.', message='Full GC 발생 빈도 정상: count=%s, 기준=%s' % (full_gc_count, threshold))\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
         "",
-        "",
-        "COMMAND = 'grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l'",
-        "",
+        "COMMAND = 'grep -i \"Full GC\" $(ls -t {gc_log_path}/*gc.log* | head -1) | wc -l'",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -31,11 +24,13 @@
         "    PARAMIKO_PROFILE = 'linux'",
         "    PARAMIKO_REUSE_SESSION = False",
         "",
-        "    COMMAND_TIMEOUT = 20",
+        "    COMMAND_TIMEOUT = 5",
         "",
-        "    def _run_jeus_command(self):",
+        "    def _run_jeus_command(self, gc_log_path):",
+        "        command = COMMAND.format(gc_log_path=gc_log_path)",
+        "",
         "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
@@ -51,14 +46,20 @@
         "        return stdout, stderr, None",
         "",
         "    def run(self):",
-        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        gc_log_path = self.get_threshold_var(",
+        "            key='gc_log_path', ",
+        "            default='/home/exTMS/tmax/jeus/log/gclog', ",
+        "            value_type='str'",
+        "        )",
+        "",
+        "        stdout, _stderr, error = self._run_jeus_command(gc_log_path)",
         "        if error:",
         "            return error",
         "        try:",
         "            full_gc_count = int(stdout.split()[0])",
         "        except (IndexError, ValueError):",
         "            return self.fail('Full GC 횟수 파싱 실패', message='Full GC 횟수 값을 확인하지 못했습니다.', stdout=stdout)",
-        "        threshold = self.get_threshold_var('max_frequency', default=2, value_type='int')",
+        "        threshold = self.get_threshold_var('max_frequency', default=200, value_type='int')",
         "        metrics = {'full_gc_count': full_gc_count}",
         "        thresholds = {'max_frequency': threshold}",
         "        if full_gc_count > threshold:",
@@ -80,28 +81,23 @@
       "application_name": "JEUS",
       "application_family_name": "WAS",
       "host_vars": {},
-      "threshold_list": [
-        {
-          "name": "max_frequency",
-          "value1": "2"
-        }
-      ],
+      "threshold_list": [],
       "status": "ok",
       "metrics": {
-        "full_gc_count": 1
+        "full_gc_count": 24
       },
       "thresholds": {
-        "max_frequency": 2
+        "max_frequency": 200
       },
       "reasons": "Full GC 발생 횟수가 기준 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 1",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"Full GC\" $(ls -t /home/exTMS/tmax/jeus/log/gclog/*gc.log* | head -1) | wc -l\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 24",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: grep -i \"Full GC\" $(ls /home/exTMS/tmax/jeus/log/gclog/*gc.log*|sort|tail -n 1) | wc -l",
+        " - 실행 명령어: grep -i \"Full GC\" $(ls -t /home/exTMS/tmax/jeus/log/gclog/*gc.log* | head -1) | wc -l",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: 1"
+        " - 출력 내용: 24"
       ],
-      "message": "Full GC 발생 빈도 정상: count=1, 기준=2"
+      "message": "Full GC 발생 빈도 정상: count=24, 기준=200"
     }
   ],
   "failed_items": []

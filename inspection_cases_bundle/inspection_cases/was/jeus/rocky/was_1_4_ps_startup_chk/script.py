@@ -3,7 +3,8 @@
 from .common._base import BaseCheck
 
 
-COMMAND = '/home/exTMS/tmax/jeus/bin/jeusctl status'
+# COMMAND = '/home/exTMS/tmax/jeus/bin/jeusctl status'
+COMMAND = 'ps -ef | grep "{java_name}" | grep "{jeus_name}" | grep -v grep'
 
 
 class Check(BaseCheck):
@@ -15,8 +16,25 @@ class Check(BaseCheck):
     COMMAND_TIMEOUT = 20
 
     def _run_jeus_command(self):
+        java_name = self.get_threshold_var(
+            key='java_name',
+            default='java',
+            value_type='str',
+        )
+
+        jeus_name = self.get_threshold_var(
+            key='jeus_name',
+            default='jeus',
+            value_type='str',
+        )
+
+        command = COMMAND.format(
+            java_name=java_name,
+            jeus_name=jeus_name,
+        )
+        
         result = self._run_paramiko_commands(
-            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],
+            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],
             become=True,
             profile='linux',
         )[0]
@@ -38,13 +56,13 @@ class Check(BaseCheck):
         lines = [line.strip() for line in stdout.splitlines() if line.strip()]
         if not lines:
             return self.fail('JEUS 상태 정보 없음', message='jeusctl status 출력이 비어 있습니다.', stdout=stdout)
-        running_lines = [line for line in lines if 'RUNNING' in line.upper()]
-        abnormal_lines = [line for line in lines if any(word in line.upper() for word in ('STOPPED', 'DOWN', 'FAILED'))]
-        metrics = {'status_lines': lines, 'running_count': len(running_lines), 'abnormal_count': len(abnormal_lines), 'abnormal_lines': abnormal_lines}
-        thresholds = {'required_status': 'RUNNING'}
-        if not running_lines or abnormal_lines:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='RUNNING이 아닌 JEUS 상태가 있습니다.', message='JEUS 기동 상태 경고: running=%s, abnormal=%s' % (len(running_lines), len(abnormal_lines)))
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='JEUS 상태가 RUNNING입니다.', message='JEUS 기동 상태 정상: running=%s' % len(running_lines))
-
+        
+        metrics = {'output': lines, 'output_count': len(lines)}        
+        
+        return self.ok(
+            metrics=metrics, 
+            reasons='JEUS 프로세스 정보 조회 확인', 
+            message='JEUS 프로세스 정보 조회 확인',
+        )
 
 CHECK_CLASS = Check

@@ -1,18 +1,9 @@
 [
   {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "#"
-  },
-  {
-    "channel": "terminal",
-    "action": "send",
     "matcher_type": "regex",
-    "matcher_value": "^dmesg \\| egrep -i .+$"
-  },
-  {
-    "channel": "terminal",
-    "action": "recv",
-    "stdout": "dmesg | egrep -i 'fan.*fail|fan.*failed|not\\s+spinning|over[- ]?temp'\r\nFAN failed: Over-temperature detected\r\n#"
+    "matcher_value": "^dmesg \\| egrep -i .+$",
+    "rc": 0,
+    "stdout_file": "outputs/command_1_dmesg_egrep_i_fan_over_temp_not_spinning.stdout",
+    "stderr": ""
   }
 ]

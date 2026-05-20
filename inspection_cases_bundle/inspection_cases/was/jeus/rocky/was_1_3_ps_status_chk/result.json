@@ -10,14 +10,15 @@
       "application_family_name": "WAS",
       "host_vars": {},
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_top_rows(self, stdout):\n        rows = []\n        header = []\n        for line in stdout.splitlines():\n            parts = line.split()\n            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:\n                header = parts\n                continue\n            if not header or len(parts) < len(header):\n                continue\n            try:\n                rows.append({\n                    'pid': parts[header.index('PID')],\n                    'user': parts[header.index('USER')],\n                    'state': parts[header.index('S')],\n                    'cpu_percent': float(parts[header.index('%CPU')]),\n                    'mem_percent': float(parts[header.index('%MEM')]),\n                    'command': parts[header.index('COMMAND')],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        rows = self._parse_top_rows(stdout)\n        if not rows:\n            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)\n        bad_states = {'Z', 'D', 'T'}\n        bad_rows = [row for row in rows if (row['state'] or '').upper()[:1] in bad_states]\n        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'states': sorted({row['state'] for row in rows}), 'bad_process_count': len(bad_rows), 'bad_processes': bad_rows, 'processes': rows}\n        thresholds = {'bad_process_states': sorted(bad_states)}\n        if bad_rows:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='비정상 프로세스 상태가 발견되었습니다.', message='JEUS 프로세스 상태 경고: 비정상 상태 %s건' % len(bad_rows))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 상태에 Z/D/T 상태가 없습니다.', message='JEUS 프로세스 상태 정상: 상태=%s' % ','.join(metrics['states']))\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\nimport re\n\nCOMMAND = 'top -b -n 1 | egrep \"PID|{process_name}\"'\nDEFAULT_PROCESS_NAME = 'exTMS'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        process_name = self.get_threshold_var(\n            key='process_name',\n            default=DEFAULT_PROCESS_NAME,\n            value_type='str',\n        )\n\n        command = COMMAND.format(process_name=process_name)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_top_rows(self, stdout):\n        rows = []\n        header = []\n        for line in stdout.splitlines():\n            parts = line.split()\n            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:\n                header = parts\n                continue\n            if not header or len(parts) < len(header):\n                continue\n            try:\n                rows.append({\n                    'pid': parts[header.index('PID')],\n                    'user': parts[header.index('USER')],\n                    'state': parts[header.index('S')],\n                    'cpu_percent': float(parts[header.index('%CPU')]),\n                    'mem_percent': float(parts[header.index('%MEM')]),\n                    'command': parts[header.index('COMMAND')],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        bad_states = self.get_threshold_var(key='bad_states', default='Z,D,T', value_type='str')\n        bad_states = {\n            x.strip().upper()\n            for x in re.split(r'[|,]+', bad_states)\n            if x.strip()\n        }\n        print(bad_states)\n        # bad_states = {'Z', 'D', 'T'}\n\n        if error:\n            return error\n\n        rows = self._parse_top_rows(stdout)\n\n        if not rows:\n            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)\n            \n        bad_rows = [row for row in rows if (row['state'] or '').upper()[:1] in bad_states]\n        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'states': sorted({row['state'] for row in rows}), 'bad_process_count': len(bad_rows), 'bad_processes': bad_rows, 'processes': rows}\n        thresholds = {'bad_process_states': sorted(bad_states)}\n        if bad_rows:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='비정상 프로세스 상태가 발견되었습니다.', message='JEUS 프로세스 상태 경고: 비정상 상태 %s건' % len(bad_rows))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 상태에 Z/D/T 상태가 없습니다.', message='JEUS 프로세스 상태 정상: 상태=%s' % ','.join(metrics['states']))\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
+        "import re",
         "",
-        "",
-        "COMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'",
+        "COMMAND = 'top -b -n 1 | egrep \"PID|{process_name}\"'",
+        "DEFAULT_PROCESS_NAME = 'exTMS'",
         "",
         "",
         "class Check(BaseCheck):",
@@ -29,11 +30,20 @@
         "    COMMAND_TIMEOUT = 20",
         "",
         "    def _run_jeus_command(self):",
+        "        process_name = self.get_threshold_var(",
+        "            key='process_name',",
+        "            default=DEFAULT_PROCESS_NAME,",
+        "            value_type='str',",
+        "        )",
+        "",
+        "        command = COMMAND.format(process_name=process_name)",
+        "",
         "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
+        "",
         "        stdout = (result.get('stdout') or '').strip()",
         "        stderr = (result.get('stderr') or '').strip()",
         "        if result.get('rc') != 0:",
@@ -70,12 +80,23 @@
         "",
         "    def run(self):",
         "        stdout, _stderr, error = self._run_jeus_command()",
+        "        bad_states = self.get_threshold_var(key='bad_states', default='Z,D,T', value_type='str')",
+        "        bad_states = {",
+        "            x.strip().upper()",
+        "            for x in re.split(r'[|,]+', bad_states)",
+        "            if x.strip()",
+        "        }",
+        "        print(bad_states)",
+        "        # bad_states = {'Z', 'D', 'T'}",
+        "",
         "        if error:",
         "            return error",
+        "",
         "        rows = self._parse_top_rows(stdout)",
+        "",
         "        if not rows:",
         "            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)",
-        "        bad_states = {'Z', 'D', 'T'}",
+        "            ",
         "        bad_rows = [row for row in rows if (row['state'] or '').upper()[:1] in bad_states]",
         "        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'states': sorted({row['state'] for row in rows}), 'bad_process_count': len(bad_rows), 'bad_processes': bad_rows, 'processes': rows}",
         "        thresholds = {'bad_process_states': sorted(bad_states)}",
@@ -110,11 +131,11 @@
         "bad_processes": [],
         "processes": [
           {
-            "pid": "419081",
+            "pid": "1712382",
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 6.2,
-            "mem_percent": 11.1,
+            "mem_percent": 10.2,
             "command": "java"
           },
           {
@@ -138,7 +159,7 @@
             "user": "exTMSagn",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 1.2,
+            "mem_percent": 1.0,
             "command": "java"
           },
           {
@@ -147,15 +168,7 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "dbus-da+"
-          },
-          {
-            "pid": "738307",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 38.1,
-            "command": "java"
+            "command": "dbus-daemon"
           },
           {
             "pid": "1150460",
@@ -179,7 +192,7 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "dbus-da+"
+            "command": "dbus-daemon"
           },
           {
             "pid": "1151048",
@@ -202,7 +215,7 @@
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 3.5,
+            "mem_percent": 3.4,
             "command": "java"
           },
           {
@@ -211,14 +224,22 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "startNo+"
+            "command": "startNodeManage"
           },
           {
             "pid": "1158124",
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 0.7,
+            "mem_percent": 0.5,
+            "command": "java"
+          },
+          {
+            "pid": "1567015",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 0.0,
+            "mem_percent": 37.9,
             "command": "java"
           }
         ]
@@ -231,26 +252,26 @@
         ]
       },
       "reasons": "대상 프로세스 상태에 Z/D/T 상태가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java\n   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd\n   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)\n   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java\n   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+\n 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java\n1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd\n1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)\n1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+\n1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+\n1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash\n1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java\n1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+\n1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n1712382 exTMS     20   0   11.5g   2.4g  23864 S   6.2  10.2 483:00.52 java\n   1715 exTMSagn  20   0   89852   9028   7800 S   0.0   0.0   0:43.34 systemd\n   1744 exTMSagn  20   0  153960   3596      0 S   0.0   0.0   0:00.00 (sd-pam)\n   1931 exTMSagn  20   0 5088156 248284  15084 S   0.0   1.0  70:29.89 java\n   2366 exTMSagn  20   0   64484   4924   4612 S   0.0   0.0   0:00.00 dbus-daemon\n1150460 exTMS     20   0   89872   9488   7968 S   0.0   0.0   0:33.84 systemd\n1150464 exTMS     20   0  301424   3600      0 S   0.0   0.0   0:00.00 (sd-pam)\n1150575 exTMS     20   0   64484   5344   4920 S   0.0   0.0   0:00.00 dbus-daemon\n1151048 exTMS     20   0  243708   4588   2488 S   0.0   0.0   0:03.76 tmux: server\n1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash\n1158057 exTMS     20   0 8012564 824440  23308 S   0.0   3.4 144:34.03 java\n1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNodeManage\n1158124 exTMS     20   0 4969008 127068  16320 S   0.0   0.5  93:54.91 java\n1567015 exTMS     20   0   15.6g   8.8g  23828 S   0.0  37.9 754:40.06 java",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
-        " 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java",
-        "   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd",
-        "   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java",
-        "   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+",
-        " 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java",
-        "1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd",
-        "1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+",
-        "1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+",
+        "1712382 exTMS     20   0   11.5g   2.4g  23864 S   6.2  10.2 483:00.52 java",
+        "   1715 exTMSagn  20   0   89852   9028   7800 S   0.0   0.0   0:43.34 systemd",
+        "   1744 exTMSagn  20   0  153960   3596      0 S   0.0   0.0   0:00.00 (sd-pam)",
+        "   1931 exTMSagn  20   0 5088156 248284  15084 S   0.0   1.0  70:29.89 java",
+        "   2366 exTMSagn  20   0   64484   4924   4612 S   0.0   0.0   0:00.00 dbus-daemon",
+        "1150460 exTMS     20   0   89872   9488   7968 S   0.0   0.0   0:33.84 systemd",
+        "1150464 exTMS     20   0  301424   3600      0 S   0.0   0.0   0:00.00 (sd-pam)",
+        "1150575 exTMS     20   0   64484   5344   4920 S   0.0   0.0   0:00.00 dbus-daemon",
+        "1151048 exTMS     20   0  243708   4588   2488 S   0.0   0.0   0:03.76 tmux: server",
         "1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash",
-        "1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java",
-        "1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+",
-        "1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java"
+        "1158057 exTMS     20   0 8012564 824440  23308 S   0.0   3.4 144:34.03 java",
+        "1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNodeManage",
+        "1158124 exTMS     20   0 4969008 127068  16320 S   0.0   0.5  93:54.91 java",
+        "1567015 exTMS     20   0   15.6g   8.8g  23828 S   0.0  37.9 754:40.06 java"
       ],
       "message": "JEUS 프로세스 상태 정상: 상태=S"
     }

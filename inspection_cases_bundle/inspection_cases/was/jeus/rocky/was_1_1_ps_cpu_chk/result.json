@@ -15,15 +15,15 @@
           "value1": "70"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_top_rows(self, stdout):\n        rows = []\n        header = []\n        for line in stdout.splitlines():\n            parts = line.split()\n            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:\n                header = parts\n                continue\n            if not header or len(parts) < len(header):\n                continue\n            try:\n                rows.append({\n                    'pid': parts[header.index('PID')],\n                    'user': parts[header.index('USER')],\n                    'state': parts[header.index('S')],\n                    'cpu_percent': float(parts[header.index('%CPU')]),\n                    'mem_percent': float(parts[header.index('%MEM')]),\n                    'command': parts[header.index('COMMAND')],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        rows = self._parse_top_rows(stdout)\n        if not rows:\n            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_cpu_usage_percent', default=70.0, value_type='float')\n        max_row = max(rows, key=lambda row: row['cpu_percent'])\n        over_rows = [row for row in rows if row['cpu_percent'] > threshold]\n        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'max_cpu_usage_percent': max_row['cpu_percent'], 'max_cpu_pid': max_row['pid'], 'max_cpu_command': max_row['command'], 'over_threshold_count': len(over_rows), 'processes': rows}\n        thresholds = {'max_cpu_usage_percent': threshold}\n        if over_rows:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='CPU 사용률 기준 초과 프로세스가 있습니다.', message='JEUS 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.', message='JEUS 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'top -b -n 1 | egrep \"PID|{process_name}\"'\nDEFAULT_PROCESS_NAME = 'exTMS'\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        process_name = self.get_threshold_var(\n            key='process_name',\n            default=DEFAULT_PROCESS_NAME,\n            value_type='str',\n        )\n\n        command = COMMAND.format(process_name=process_name)\n\n        result = self._run_paramiko_commands(\n            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_top_rows(self, stdout):\n        rows = []\n        header = []\n        for line in stdout.splitlines():\n            parts = line.split()\n            if 'PID' in parts and '%CPU' in parts and '%MEM' in parts:\n                header = parts\n                continue\n            if not header or len(parts) < len(header):\n                continue\n            try:\n                rows.append({\n                    'pid': parts[header.index('PID')],\n                    'user': parts[header.index('USER')],\n                    'state': parts[header.index('S')],\n                    'cpu_percent': float(parts[header.index('%CPU')]),\n                    'mem_percent': float(parts[header.index('%MEM')]),\n                    'command': parts[header.index('COMMAND')],\n                })\n            except (ValueError, IndexError):\n                continue\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        rows = self._parse_top_rows(stdout)\n        if not rows:\n            return self.fail('프로세스 정보 없음', message='top 출력에서 대상 프로세스를 찾지 못했습니다.', stdout=stdout)\n        threshold = self.get_threshold_var('max_cpu_usage_percent', default=70.0, value_type='float')\n        max_row = max(rows, key=lambda row: row['cpu_percent'])\n        over_rows = [row for row in rows if row['cpu_percent'] > threshold]\n        metrics = {'process_name': 'exTMS', 'process_count': len(rows), 'max_cpu_usage_percent': max_row['cpu_percent'], 'max_cpu_pid': max_row['pid'], 'max_cpu_command': max_row['command'], 'over_threshold_count': len(over_rows), 'processes': rows}\n        thresholds = {'max_cpu_usage_percent': threshold}\n        if over_rows:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='CPU 사용률 기준 초과 프로세스가 있습니다.', message='JEUS 프로세스 CPU 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='대상 프로세스 CPU 사용률이 기준 이하입니다.', message='JEUS 프로세스 CPU 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (max_row['cpu_percent'], threshold))\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
         "from .common._base import BaseCheck",
         "",
         "",
-        "COMMAND = 'top -b -n 1 | egrep \"PID|exTMS\"'",
-        "",
+        "COMMAND = 'top -b -n 1 | egrep \"PID|{process_name}\"'",
+        "DEFAULT_PROCESS_NAME = 'exTMS'",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -34,8 +34,16 @@
         "    COMMAND_TIMEOUT = 20",
         "",
         "    def _run_jeus_command(self):",
+        "        process_name = self.get_threshold_var(",
+        "            key='process_name',",
+        "            default=DEFAULT_PROCESS_NAME,",
+        "            value_type='str',",
+        "        )",
+        "",
+        "        command = COMMAND.format(process_name=process_name)",
+        "",
         "        result = self._run_paramiko_commands(",
-        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            [{'command': command, 'timeout': self.COMMAND_TIMEOUT}],",
         "            become=True,",
         "            profile='linux',",
         "        )[0]",
@@ -114,17 +122,25 @@
       "metrics": {
         "process_name": "exTMS",
         "process_count": 14,
-        "max_cpu_usage_percent": 6.2,
-        "max_cpu_pid": "419081",
+        "max_cpu_usage_percent": 25.0,
+        "max_cpu_pid": "1712382",
         "max_cpu_command": "java",
         "over_threshold_count": 0,
         "processes": [
           {
-            "pid": "419081",
+            "pid": "1712382",
+            "user": "exTMS",
+            "state": "S",
+            "cpu_percent": 25.0,
+            "mem_percent": 10.2,
+            "command": "java"
+          },
+          {
+            "pid": "1567015",
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 6.2,
-            "mem_percent": 11.1,
+            "mem_percent": 37.9,
             "command": "java"
           },
           {
@@ -148,7 +164,7 @@
             "user": "exTMSagn",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 1.2,
+            "mem_percent": 1.0,
             "command": "java"
           },
           {
@@ -157,15 +173,7 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "dbus-da+"
-          },
-          {
-            "pid": "738307",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 38.1,
-            "command": "java"
+            "command": "dbus-daemon"
           },
           {
             "pid": "1150460",
@@ -189,7 +197,7 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "dbus-da+"
+            "command": "dbus-daemon"
           },
           {
             "pid": "1151048",
@@ -212,7 +220,7 @@
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 3.5,
+            "mem_percent": 3.4,
             "command": "java"
           },
           {
@@ -221,14 +229,14 @@
             "state": "S",
             "cpu_percent": 0.0,
             "mem_percent": 0.0,
-            "command": "startNo+"
+            "command": "startNodeManage"
           },
           {
             "pid": "1158124",
             "user": "exTMS",
             "state": "S",
             "cpu_percent": 0.0,
-            "mem_percent": 0.7,
+            "mem_percent": 0.5,
             "command": "java"
           }
         ]
@@ -237,28 +245,28 @@
         "max_cpu_usage_percent": 70.0
       },
       "reasons": "대상 프로세스 CPU 사용률이 기준 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java\n   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd\n   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)\n   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java\n   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+\n 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java\n1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd\n1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)\n1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+\n1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+\n1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash\n1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java\n1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+\n1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n1712382 exTMS     20   0   11.5g   2.4g  23864 S  25.0  10.2 481:31.18 java\n1567015 exTMS     20   0   15.6g   8.8g  23828 S   6.2  37.9 752:48.24 java\n   1715 exTMSagn  20   0   89852   9028   7800 S   0.0   0.0   0:43.32 systemd\n   1744 exTMSagn  20   0  153960   3596      0 S   0.0   0.0   0:00.00 (sd-pam)\n   1931 exTMSagn  20   0 5088156 248260  15084 S   0.0   1.0  70:29.41 java\n   2366 exTMSagn  20   0   64484   4924   4612 S   0.0   0.0   0:00.00 dbus-daemon\n1150460 exTMS     20   0   89872   9488   7968 S   0.0   0.0   0:33.83 systemd\n1150464 exTMS     20   0  301424   3600      0 S   0.0   0.0   0:00.00 (sd-pam)\n1150575 exTMS     20   0   64484   5344   4920 S   0.0   0.0   0:00.00 dbus-daemon\n1151048 exTMS     20   0  243708   4588   2488 S   0.0   0.0   0:03.76 tmux: server\n1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash\n1158057 exTMS     20   0 8012564 824388  23308 S   0.0   3.4 144:32.03 java\n1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNodeManage\n1158124 exTMS     20   0 4969008 127068  16320 S   0.0   0.5  93:53.85 java",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
-        " 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java",
-        "   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd",
-        "   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java",
-        "   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+",
-        " 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java",
-        "1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd",
-        "1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+",
-        "1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+",
+        "1712382 exTMS     20   0   11.5g   2.4g  23864 S  25.0  10.2 481:31.18 java",
+        "1567015 exTMS     20   0   15.6g   8.8g  23828 S   6.2  37.9 752:48.24 java",
+        "   1715 exTMSagn  20   0   89852   9028   7800 S   0.0   0.0   0:43.32 systemd",
+        "   1744 exTMSagn  20   0  153960   3596      0 S   0.0   0.0   0:00.00 (sd-pam)",
+        "   1931 exTMSagn  20   0 5088156 248260  15084 S   0.0   1.0  70:29.41 java",
+        "   2366 exTMSagn  20   0   64484   4924   4612 S   0.0   0.0   0:00.00 dbus-daemon",
+        "1150460 exTMS     20   0   89872   9488   7968 S   0.0   0.0   0:33.83 systemd",
+        "1150464 exTMS     20   0  301424   3600      0 S   0.0   0.0   0:00.00 (sd-pam)",
+        "1150575 exTMS     20   0   64484   5344   4920 S   0.0   0.0   0:00.00 dbus-daemon",
+        "1151048 exTMS     20   0  243708   4588   2488 S   0.0   0.0   0:03.76 tmux: server",
         "1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash",
-        "1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java",
-        "1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+",
-        "1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java"
+        "1158057 exTMS     20   0 8012564 824388  23308 S   0.0   3.4 144:32.03 java",
+        "1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNodeManage",
+        "1158124 exTMS     20   0 4969008 127068  16320 S   0.0   0.5  93:53.85 java"
       ],
-      "message": "JEUS 프로세스 CPU 사용률 정상: 최대 6.2%, 기준 70.0%"
+      "message": "JEUS 프로세스 CPU 사용률 정상: 최대 25.0%, 기준 70.0%"
     }
   ],
   "failed_items": []

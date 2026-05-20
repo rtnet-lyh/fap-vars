@@ -171,13 +171,13 @@
           "value1": "80"
         }
       ],
-      "status": "warn",
+      "status": "ok",
       "metrics": {
         "web_engine_fs_path": "/home/exTMS/tmax/webtob",
         "web_engine_fs_path_source": "threshold_list",
         "filesystem": "/dev/mapper/rl-root",
         "mounted_on": "/",
-        "use_percent": 92,
+        "use_percent": 28,
         "max_use_percent": 80
       },
       "thresholds": {
@@ -185,16 +185,16 @@
         "web_engine_fs_path_source": "threshold_list",
         "max_use_percent": 80
       },
-      "reasons": "파일시스템 사용률 92%가 기준 80%를 초과했습니다.",
-      "message": "WEB 엔진 파일시스템 사용률 경고: /home/exTMS/tmax/webtob 사용률 92%, 기준 80%",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: df -h /home/exTMS/tmax/webtob\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem           Size  Used Avail Use% Mounted on\n/dev/mapper/rl-root   30G   28G  2.6G  92% /",
+      "reasons": "파일시스템 사용률이 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: df -h /home/exTMS/tmax/webtob\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem           Size  Used Avail Use% Mounted on\n/dev/mapper/rl-root   30G  8.3G   22G  28% /",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: df -h /home/exTMS/tmax/webtob",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: Filesystem           Size  Used Avail Use% Mounted on",
-        "/dev/mapper/rl-root   30G   28G  2.6G  92% /"
-      ]
+        "/dev/mapper/rl-root   30G  8.3G   22G  28% /"
+      ],
+      "message": "WEB 엔진 파일시스템 사용률 정상: /home/exTMS/tmax/webtob 사용률 28%, 기준 80%"
     }
   ],
   "failed_items": []

@@ -124,32 +124,26 @@
           "value1": "RUNNING"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "connection_status": "RUNNING",
-        "webtob_ctl_values": {
-          "Status": "RUNNING",
-          "MaxConnections": "1000",
-          "MaxRequestPerConnection": "50",
-          "MaxWorkerThreads": "200"
-        }
-      },
-      "thresholds": {
-        "connection_status": "RUNNING"
-      },
-      "reasons": "WEB-WAS 연동 상태가 RUNNING입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: webtob_ctl status\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Status: RUNNING\nMaxConnections: 1000\nMaxRequestPerConnection: 50\nMaxWorkerThreads: 200",
+      "status": "fail",
+      "error": "WEB-WAS 상태 파싱 실패",
+      "message": "webtob_ctl status 출력에서 Status 값을 확인하지 못했습니다.",
+      "stdout": "bash: webtob_ctl: 명령을 찾을 수 없습니다...\n파일 검색에 실패했습니다: cannot update repo 'appstream': Cannot prepare internal mirrorlist: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]; Last error: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]",
+      "stdout_lines": [
+        "bash: webtob_ctl: 명령을 찾을 수 없습니다...",
+        "파일 검색에 실패했습니다: cannot update repo 'appstream': Cannot prepare internal mirrorlist: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]; Last error: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]"
+      ],
+      "stderr": "",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: webtob_ctl status\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: bash: webtob_ctl: 명령을 찾을 수 없습니다...\n파일 검색에 실패했습니다: cannot update repo 'appstream': Cannot prepare internal mirrorlist: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]; Last error: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: webtob_ctl status",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Status: RUNNING",
-        "MaxConnections: 1000",
-        "MaxRequestPerConnection: 50",
-        "MaxWorkerThreads: 200"
-      ],
-      "message": "WEB-WAS 연동 상태 정상: status=RUNNING"
+        " - 출력 내용: bash: webtob_ctl: 명령을 찾을 수 없습니다...",
+        "파일 검색에 실패했습니다: cannot update repo 'appstream': Cannot prepare internal mirrorlist: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]; Last error: Curl error (6): Couldn't resolve host name for https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-8 [Could not resolve host: mirrors.rockylinux.org]"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WEBTOB-ROCKY-REPLAY-010"
+  ]
 }
