@@ -1,6 +1,13 @@
 {
   "total_cases": 177,
-  "failed_cases": [],
+  "failed_cases": [
+    "server/esxi/esxi_datastore_path_check",
+    "server/esxi/esxi_status_agent_service_check",
+    "server/esxi/esxi_status_basic_check",
+    "server/esxi/esxi_status_hardware_health_check",
+    "server/esxi/esxi_status_vcenter_agent_check",
+    "server/esxi/esxi_status_vm_list_check"
+  ],
   "cases": [
     {
       "case_name": "network/cisco_ios/cisco_ios_자원사용률점검_CPU사용률",
@@ -11,38 +18,50 @@
     {
       "case_name": "server/esxi/esxi_datastore_path_check",
       "result_file": "server/esxi/esxi_datastore_path_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-DATASTORE-PATH-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/esxi/esxi_status_agent_service_check",
       "result_file": "server/esxi/esxi_status_agent_service_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-STATUS-AGENT-SERVICE-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/esxi/esxi_status_basic_check",
       "result_file": "server/esxi/esxi_status_basic_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-STATUS-API-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/esxi/esxi_status_hardware_health_check",
       "result_file": "server/esxi/esxi_status_hardware_health_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-STATUS-HARDWARE-HEALTH-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/esxi/esxi_status_vcenter_agent_check",
       "result_file": "server/esxi/esxi_status_vcenter_agent_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-STATUS-VCENTER-AGENT-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/esxi/esxi_status_vm_list_check",
       "result_file": "server/esxi/esxi_status_vm_list_check/result.json",
-      "failed_items": [],
-      "is_success": true
+      "failed_items": [
+        "ESXI-STATUS-VM-LIST-01"
+      ],
+      "is_success": false
     },
     {
       "case_name": "server/hpux/hpux_cluster_daemon_cmviewcl_check",

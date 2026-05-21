@@ -258,49 +258,13 @@
           "value1": "90"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "filesystem_count": 3,
-        "max_inode_usage_percent": 81,
-        "max_inode_usage_mount_point": "/opt",
-        "checked_filesystems": [
-          {
-            "filesystem": "/dev/vg00/lvol3",
-            "usage_percent": 5,
-            "mount_point": "/",
-            "raw_line": "/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /"
-          },
-          {
-            "filesystem": "/dev/vg00/lvol4",
-            "usage_percent": 81,
-            "mount_point": "/opt",
-            "raw_line": "/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt"
-          },
-          {
-            "filesystem": "/dev/vg00/lvol5",
-            "usage_percent": 15,
-            "mount_point": "/var",
-            "raw_line": "/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var"
-          }
-        ],
-        "skipped_lines": []
-      },
-      "thresholds": {
-        "INODE_USED_MAX_PCT": 90.0
-      },
-      "reasons": "최대 I-Node 사용률 81%가 기준 미만입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: bdf -i\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on\n/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /\n/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt\n/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var",
-      "raw_output_lines": [
-        "[점검 단계 1]",
-        " - 실행 명령어: bdf -i",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Filesystem          kbytes    used   avail %used iused ifree %iuse Mounted on",
-        "/dev/vg00/lvol3   20971520  8300000 12671520  40%  4210 95000    5% /",
-        "/dev/vg00/lvol4   52428800 42000000 10428800  80% 81200 18800   81% /opt",
-        "/dev/vg00/lvol5  104857600 70000000 34857600  67% 14300 85700   15% /var"
-      ],
-      "message": "bdf -i 기준 I-Node 사용률 점검이 정상 수행되었습니다."
+      "status": "fail",
+      "error": "호스트 연결 실패",
+      "message": "SSH 연결 실패: Unable to negotiate with 192.168.1.163 port 22: no matching key exchange method found. Their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1",
+      "raw_output": "Unable to negotiate with 192.168.1.163 port 22: no matching key exchange method found. Their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1"
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "HPUX-REPLAY-05"
+  ]
 }

@@ -110,156 +110,20 @@
           "value1": "70"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "process_name": "exTMS",
-        "process_count": 14,
-        "max_cpu_usage_percent": 6.2,
-        "max_cpu_pid": "419081",
-        "max_cpu_command": "java",
-        "over_threshold_count": 0,
-        "processes": [
-          {
-            "pid": "419081",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 6.2,
-            "mem_percent": 11.1,
-            "command": "java"
-          },
-          {
-            "pid": "1715",
-            "user": "exTMSagn",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "systemd"
-          },
-          {
-            "pid": "1744",
-            "user": "exTMSagn",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "(sd-pam)"
-          },
-          {
-            "pid": "1931",
-            "user": "exTMSagn",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 1.2,
-            "command": "java"
-          },
-          {
-            "pid": "2366",
-            "user": "exTMSagn",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "dbus-da+"
-          },
-          {
-            "pid": "738307",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 38.1,
-            "command": "java"
-          },
-          {
-            "pid": "1150460",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "systemd"
-          },
-          {
-            "pid": "1150464",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "(sd-pam)"
-          },
-          {
-            "pid": "1150575",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "dbus-da+"
-          },
-          {
-            "pid": "1151048",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "tmux:"
-          },
-          {
-            "pid": "1151049",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "bash"
-          },
-          {
-            "pid": "1158057",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 3.5,
-            "command": "java"
-          },
-          {
-            "pid": "1158123",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.0,
-            "command": "startNo+"
-          },
-          {
-            "pid": "1158124",
-            "user": "exTMS",
-            "state": "S",
-            "cpu_percent": 0.0,
-            "mem_percent": 0.7,
-            "command": "java"
-          }
-        ]
-      },
-      "thresholds": {
-        "max_cpu_usage_percent": 70.0
-      },
-      "reasons": "대상 프로세스 CPU 사용률이 기준 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java\n   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd\n   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)\n   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java\n   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+\n 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java\n1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd\n1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)\n1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+\n1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+\n1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash\n1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java\n1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+\n1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java",
+      "status": "fail",
+      "error": "프로세스 정보 없음",
+      "message": "top 출력에서 대상 프로세스를 찾지 못했습니다.",
+      "stdout": "PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: top -b -n 1 | egrep \"PID|exTMS\"",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
-        " 419081 exTMS     20   0   11.5g   2.6g  34080 S   6.2  11.1 402:35.78 java",
-        "   1715 exTMSagn  20   0   89852   9564   8176 S   0.0   0.0   0:39.25 systemd",
-        "   1744 exTMSagn  20   0  153960   4064      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "   1931 exTMSagn  20   0 5088156 290296  17504 S   0.0   1.2  65:25.02 java",
-        "   2366 exTMSagn  20   0   64484   4932   4612 S   0.0   0.0   0:00.00 dbus-da+",
-        " 738307 exTMS     20   0   15.6g   8.9g  33672 S   0.0  38.1 397:00.07 java",
-        "1150460 exTMS     20   0   89872   9944   8320 S   0.0   0.0   0:29.51 systemd",
-        "1150464 exTMS     20   0  301424   4456      4 S   0.0   0.0   0:00.00 (sd-pam)",
-        "1150575 exTMS     20   0   64484   5424   4920 S   0.0   0.0   0:00.00 dbus-da+",
-        "1151048 exTMS     20   0  243708   5316   2884 S   0.0   0.0   0:03.28 tmux: s+",
-        "1151049 exTMS     20   0  226456   3484   3480 S   0.0   0.0   0:00.02 bash",
-        "1158057 exTMS     20   0 8012564 845004  27620 S   0.0   3.5 127:58.28 java",
-        "1158123 exTMS     20   0  222604   3092   3092 S   0.0   0.0   0:00.00 startNo+",
-        "1158124 exTMS     20   0 4969008 167684  19060 S   0.0   0.7  83:03.42 java"
-      ],
-      "message": "JEUS 프로세스 CPU 사용률 정상: 최대 6.2%, 기준 70.0%"
+        " - 출력 내용: PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-001"
+  ]
 }

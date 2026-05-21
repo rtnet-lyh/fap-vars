@@ -179,23 +179,13 @@
           "value1": ""
         }
       ],
-      "status": "warn",
-      "metrics": {
-        "active_path_count": 0,
-        "failed_path_count": 0,
-        "mpio_available": false
-      },
-      "thresholds": {},
-      "reasons": "MPIO가 미설치 또는 미지원 상태라 대상미해당 또는 추가 확인 대상으로 분류했습니다.",
-      "message": "Windows MPIO가 설치되어 있지 않거나 지원되지 않아 경로 이중화 점검을 추가 확인 대상으로 분류했습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); if (Get-Command Get-MPIOSetting -ErrorAction SilentlyContinue) { Get-MPIOSetting | Select-Object PathVerificationState,PathVerificationPeriod,RetryCount,RetryInterval,DiskTimeoutValue,@{N='LoadBalancePolicy';E={Get-MSDSMGlobalDefaultLoadBalancePolicy 2>$null}} | Format-List; mpclaim.exe -s -d } else { 'MPIO 미설치 또는 미지원' }\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: MPIO 미설치 또는 미지원",
-      "raw_output_lines": [
-        "[점검 단계 1]",
-        " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); if (Get-Command Get-MPIOSetting -ErrorAction SilentlyContinue) { Get-MPIOSetting | Select-Object PathVerificationState,PathVerificationPeriod,RetryCount,RetryInterval,DiskTimeoutValue,@{N='LoadBalancePolicy';E={Get-MSDSMGlobalDefaultLoadBalancePolicy 2>$null}} | Format-List; mpclaim.exe -s -d } else { 'MPIO 미설치 또는 미지원' }",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: MPIO 미설치 또는 미지원"
-      ]
+      "status": "fail",
+      "error": "호스트 연결 실패",
+      "message": "WINRM 연결 실패: WINRM_EXEC_ERROR: the specified credentials were rejected by the server",
+      "raw_output": "WINRM_EXEC_ERROR: the specified credentials were rejected by the server"
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "W-REPLAY-OS-PATH-HA-01"
+  ]
 }

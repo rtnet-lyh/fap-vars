@@ -281,11 +281,15 @@
         "cluster_log_execpt_keywords": "unknown kernel command line|unknown numa node|error record serialization table|online controller reset|online cpus|sata link down"
       },
       "reasons": "클러스터 로그 검색 결과에서 장애 키워드가 검출되지 않았습니다. 키워드별 검출 건수: resource status unknown=0건, resource status offline=0건, resource status online=0건, cluster error=0건, cluster failed=0건, failover failed=0건, quorum lost=0건, node down=0건, node offline=0건, fencing failed=0건, stonith failed=0건, split brain=0건. 제외 로그 0건.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -Fi -e 'resource status unknown' -e 'resource status offline' -e 'resource status online' -e 'cluster error' -e 'cluster failed' -e 'failover failed' -e 'quorum lost' -e 'node down' -e 'node offline' -e 'fencing failed' -e 'stonith failed' -e 'split brain'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: dmesg | grep -Fi -e 'resource status unknown' -e 'resource status offline' -e 'resource status online' -e 'cluster error' -e 'cluster failed' -e 'failover failed' -e 'quorum lost' -e 'node down' -e 'node offline' -e 'fencing failed' -e 'stonith failed' -e 'split brain'\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.\n** WARNING: connection is not using a post-quantum key exchange algorithm.\n** This session may be vulnerable to \"store now, decrypt later\" attacks.\n** The server may need to be upgraded. See https://openssh.com/pq.html",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: dmesg | grep -Fi -e 'resource status unknown' -e 'resource status offline' -e 'resource status online' -e 'cluster error' -e 'cluster failed' -e 'failover failed' -e 'quorum lost' -e 'node down' -e 'node offline' -e 'fencing failed' -e 'stonith failed' -e 'split brain'",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)"
+        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
+        " - 출력 내용: Warning: Permanently added '192.168.1.123' (ED25519) to the list of known hosts.",
+        "** WARNING: connection is not using a post-quantum key exchange algorithm.",
+        "** This session may be vulnerable to \"store now, decrypt later\" attacks.",
+        "** The server may need to be upgraded. See https://openssh.com/pq.html"
       ],
       "message": "클러스터 로그 점검이 정상 수행되었습니다. 미검출 키워드 현황: resource status unknown=0건, resource status offline=0건, resource status online=0건, cluster error=0건, cluster failed=0건, failover failed=0건, quorum lost=0건, node down=0건, node offline=0건, fencing failed=0건, stonith failed=0건, split brain=0건. 제외 로그 0건. 임계치: cluster_log_fail_keywords=resource status unknown|resource status offline|resource status online|cluster error|cluster failed|failover failed|quorum lost|node down|node offline|fencing failed|stonith failed|split brain; cluster_log_execpt_keywords=unknown kernel command line|unknown numa node|error record serialization table|online controller reset|online cpus|sata link down"
     }

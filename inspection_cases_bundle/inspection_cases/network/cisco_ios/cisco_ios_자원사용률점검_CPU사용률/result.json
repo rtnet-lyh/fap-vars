@@ -277,107 +277,13 @@
           "value1": "80"
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "cpu_usage_5sec_percent": 2.0,
-        "cpu_usage_5sec_interrupt_percent": 0.0,
-        "cpu_usage_1min_percent": 2.0,
-        "cpu_usage_5min_percent": 1.0,
-        "top_processes": [
-          {
-            "pid": 274,
-            "runtime_ms": 17150928,
-            "invoked": 11694587,
-            "usecs": 1466,
-            "cpu_5sec_percent": 0.95,
-            "cpu_1min_percent": 0.12,
-            "cpu_5min_percent": 0.08,
-            "tty": "0",
-            "process": "SNMP ENGINE"
-          },
-          {
-            "pid": 186,
-            "runtime_ms": 284944,
-            "invoked": 2724828251,
-            "usecs": 0,
-            "cpu_5sec_percent": 0.31,
-            "cpu_1min_percent": 0.37,
-            "cpu_5min_percent": 0.39,
-            "tty": "0",
-            "process": "HQF Shaper Backg"
-          },
-          {
-            "pid": 40,
-            "runtime_ms": 32492,
-            "invoked": 45353675,
-            "usecs": 0,
-            "cpu_5sec_percent": 0.15,
-            "cpu_1min_percent": 0.03,
-            "cpu_5min_percent": 0.0,
-            "tty": "0",
-            "process": "TTY Background"
-          },
-          {
-            "pid": 19,
-            "runtime_ms": 26831924,
-            "invoked": 261178291,
-            "usecs": 102,
-            "cpu_5sec_percent": 0.07,
-            "cpu_1min_percent": 0.05,
-            "cpu_5min_percent": 0.07,
-            "tty": "0",
-            "process": "ARP Input"
-          },
-          {
-            "pid": 121,
-            "runtime_ms": 13091468,
-            "invoked": 84738198,
-            "usecs": 154,
-            "cpu_5sec_percent": 0.07,
-            "cpu_1min_percent": 0.07,
-            "cpu_5min_percent": 0.03,
-            "tty": "0",
-            "process": "IP Input"
-          }
-        ]
-      },
-      "thresholds": {
-        "max_cpu_usage_percent": 80.0
-      },
-      "reasons": "5분 평균 CPU 사용률 1.0%가 임계치 80.0% 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: enable\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: *******\nTranslating \"*******\"\n\n% Bad IP address or host name\n% Unknown command or computer name, or unable to find computer address\n\n[점검 단계 3]\n - 실행 명령어: terminal length 0\n - 명령 종료코드: rc=0 (정상 종료)\n\n[점검 단계 4]\n - 실행 명령어: show processes cpu sorted\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CPU utilization for five seconds: 2%/0%; one minute: 2%; five minutes: 1%\n PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process \n 274    17150928    11694587       1466  0.95%  0.12%  0.08%   0 SNMP ENGINE      \n 186      284944  2724828251          0  0.31%  0.37%  0.39%   0 HQF Shaper Backg \n  40       32492    45353675          0  0.15%  0.03%  0.00%   0 TTY Background   \n  19    26831924   261178291        102  0.07%  0.05%  0.07%   0 ARP Input        \n 121    13091468    84738198        154  0.07%  0.07%  0.03%   0 IP Input         \n 209     3546604    23284828        152  0.07%  0.01%  0.00%   0 IP SNMP",
-      "raw_output_lines": [
-        "[점검 단계 1]",
-        " - 실행 명령어: enable",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        "",
-        "[점검 단계 2]",
-        " - 실행 명령어: *******",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: *******",
-        "Translating \"*******\"",
-        "",
-        "% Bad IP address or host name",
-        "% Unknown command or computer name, or unable to find computer address",
-        "",
-        "[점검 단계 3]",
-        " - 실행 명령어: terminal length 0",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        "",
-        "[점검 단계 4]",
-        " - 실행 명령어: show processes cpu sorted",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CPU utilization for five seconds: 2%/0%; one minute: 2%; five minutes: 1%",
-        " PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process ",
-        " 274    17150928    11694587       1466  0.95%  0.12%  0.08%   0 SNMP ENGINE      ",
-        " 186      284944  2724828251          0  0.31%  0.37%  0.39%   0 HQF Shaper Backg ",
-        "  40       32492    45353675          0  0.15%  0.03%  0.00%   0 TTY Background   ",
-        "  19    26831924   261178291        102  0.07%  0.05%  0.07%   0 ARP Input        ",
-        " 121    13091468    84738198        154  0.07%  0.07%  0.03%   0 IP Input         ",
-        " 209     3546604    23284828        152  0.07%  0.01%  0.00%   0 IP SNMP"
-      ],
-      "message": "Cisco IOS CPU 사용률 점검이 정상 수행되었습니다. 5초=2.0%, 1분=2.0%, 5분=1.0%, 기준=80.0%."
+      "status": "fail",
+      "error": "호스트 연결 실패",
+      "message": "PARAMIKO 연결 실패: PARAMIKO_CONNECTION_ERROR: Incompatible ssh peer (no acceptable kex algorithm)",
+      "raw_output": "PARAMIKO_CONNECTION_ERROR: Incompatible ssh peer (no acceptable kex algorithm)"
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "NETWORK-CISCO-CPU-01"
+  ]
 }

@@ -269,45 +269,42 @@
           "value1": ""
         }
       ],
-      "status": "ok",
-      "metrics": {
-        "socket_count": 1,
-        "total_core_count": 4,
-        "total_logical_processor_count": 8,
-        "threads_per_core": 2.0,
-        "processor_name": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
-        "socket_designation": "U3E1",
-        "manufacturer": "GenuineIntel",
-        "max_clock_speed_mhz": 2419,
-        "processor_names": [
-          "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz"
-        ],
-        "socket_designations": [
-          "U3E1"
-        ],
-        "matched_failure_keywords": []
-      },
-      "thresholds": {
-        "min_socket_count": 1,
-        "min_total_core_count": 4,
-        "min_total_logical_processor_count": 8,
-        "failure_keywords": []
-      },
-      "reasons": "물리 CPU 소켓 수, 물리 코어 수, 논리 프로세서 수가 모두 기준 범위 내입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\nSocketDesignation         : U3E1\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2419\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 8",
+      "status": "fail",
+      "error": "CPU 코어 수 기준 미달",
+      "message": "확인된 물리 CPU 코어 수가 기준치 미만입니다. 기준치 4개 이상 필요하지만 현재 2개입니다.",
+      "stdout": "Name                      : QEMU Virtual CPU version 2.5+\nSocketDesignation         : CPU 0\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2095\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 2",
+      "stdout_lines": [
+        "Name                      : QEMU Virtual CPU version 2.5+",
+        "SocketDesignation         : CPU 0",
+        "Manufacturer              : GenuineIntel",
+        "MaxClockSpeed             : 2095",
+        "NumberOfCores             : 2",
+        "NumberOfLogicalProcessors : 2"
+      ],
+      "stderr": "#< CLIXML\n<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>",
+      "stderr_lines": [
+        "#< CLIXML",
+        "<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>"
+      ],
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용(stdout): \n\nName                      : QEMU Virtual CPU version 2.5+\nSocketDesignation         : CPU 0\nManufacturer              : GenuineIntel\nMaxClockSpeed             : 2095\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 2\n - 출력 내용(stderr): #< CLIXML\n<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_Processor | Select-Object Name,SocketDesignation,Manufacturer,MaxClockSpeed,NumberOfCores,NumberOfLogicalProcessors | Format-List",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Name                      : 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
-        "SocketDesignation         : U3E1",
+        " - 출력 내용(stdout): ",
+        "",
+        "Name                      : QEMU Virtual CPU version 2.5+",
+        "SocketDesignation         : CPU 0",
         "Manufacturer              : GenuineIntel",
-        "MaxClockSpeed             : 2419",
-        "NumberOfCores             : 4",
-        "NumberOfLogicalProcessors : 8"
-      ],
-      "message": "Windows CPU 코어 상태 점검이 정상입니다. 현재 상태: CPU=\"11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\", 소켓 1개 (기준 1개 이상), 물리 코어 4개 (기준 4개 이상), 논리 프로세서 8개 (기준 8개 이상), 스레드/코어 2.0, 최대 클럭 2419MHz."
+        "MaxClockSpeed             : 2095",
+        "NumberOfCores             : 2",
+        "NumberOfLogicalProcessors : 2",
+        " - 출력 내용(stderr): #< CLIXML",
+        "<Objs Version=\"1.1.0.1\" xmlns=\"http://schemas.microsoft.com/powershell/2004/04\"><Obj S=\"progress\" RefId=\"0\"><TN RefId=\"0\"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N=\"SourceId\">1</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S=\"progress\" RefId=\"1\"><TNRef RefId=\"0\" /><MS><I64 N=\"SourceId\">2</I64><PR N=\"Record\"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "W-REPLAY-CPU-CORE-01"
+  ]
 }

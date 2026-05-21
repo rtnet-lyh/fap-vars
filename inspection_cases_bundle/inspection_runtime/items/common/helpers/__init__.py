@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Domain-specific helper facades used by BaseCheck and item scripts."""
 
 from .network import NetworkHelper
 from .vmware import VMwareHelper

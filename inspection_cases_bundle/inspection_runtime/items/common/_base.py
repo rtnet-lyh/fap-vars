@@ -1,20 +1,85 @@
 # -*- coding: utf-8 -*-
 
-import codecs
-import io
 import os
 import re
 import shlex
 import time
 # 2026-05-07 생성 [조정희]
-# [FAP 변경] Paramiko 세션 재사용 기능에서 프로세스 종료 정리(atexit)와 세션 키 해시(hashlib)를 사용하기 위해 추가했습니다.
+# [FAP 변경] Paramiko 세션 재사용 기능에서 프로세스 종료 정리(atexit)를 사용하기 위해 추가했습니다.
 import atexit
-import hashlib
 
 from .helpers import NetworkHelper, VMwareHelper, WebHelper
+from . import base_wrappers as _base_wrappers
+from .utils.encoding import ANSI_ESCAPE_RE, decode_bytes, normalize_terminal_text
+from .utils.options import (
+    append_unique_preserve_order,
+    build_paramiko_options_from_object,
+    normalize_csv_tuple,
+    parse_bool_option,
+    parse_bool_strict,
+    threshold_list_to_map,
+)
+from .utils.credentials import (
+    credential_or_empty,
+    credential_context_data,
+    credential_value,
+    preferred_credential_value,
+)
+from .utils.thresholds import (
+    cast_threshold_value,
+    get_threshold_value,
+)
+from .utils.command_result import (
+    build_command_history_raw_output as _build_command_history_raw_output_value,
+    build_paramiko_result as _build_paramiko_result_value,
+    build_terminal_history_raw_output as _build_terminal_history_raw_output_value,
+    build_virtual_raw_output as _build_virtual_raw_output_value,
+    describe_rc as _describe_rc_value,
+    detect_command_error as _detect_command_error_value,
+    evaluate_policy_text as _evaluate_policy_text_value,
+    extract_lines as _extract_lines_value,
+    is_connection_error as _is_connection_error_value,
+    is_not_applicable as _is_not_applicable_value,
+    record_command as _record_command_value,
+    record_terminal_event as _record_terminal_event_value,
+    resolve_raw_output as _resolve_raw_output_value,
+    strip_paramiko_command_output as _strip_paramiko_command_output_value,
+)
+from .utils.become import (
+    normalize_become_method as _normalize_become_method_value,
+    parse_unix_id_uid as _parse_unix_id_uid_value,
+    validate_become_user as _validate_become_user_value,
+)
+from .utils.paramiko_config import (
+    paramiko_auth_attempts as _paramiko_auth_attempts_value,
+    load_paramiko_private_key as _load_paramiko_private_key_value,
+)
+from .utils.paramiko_session import (
+    build_paramiko_become_key as _build_paramiko_become_key_value,
+    build_paramiko_profile_key as _build_paramiko_profile_key_value,
+    build_paramiko_session_key as _build_paramiko_session_key_value,
+    close_paramiko_session as _close_paramiko_session_value,
+    is_paramiko_session_alive as _is_paramiko_session_alive_value,
+    paramiko_secret_hash as _paramiko_secret_hash_value,
+)
+from .utils.paramiko_commands import (
+    compile_paramiko_patterns as _compile_paramiko_patterns_value,
+    extract_paramiko_prompt as _extract_paramiko_prompt_value,
+    normalize_paramiko_commands as _normalize_paramiko_commands_value,
+    paramiko_buffer_endswith_prompt as _paramiko_buffer_endswith_prompt_value,
+    paramiko_channel_closed as _paramiko_channel_closed_value,
+    paramiko_command_matches_line as _paramiko_command_matches_line_value,
+    paramiko_recv_ready as _paramiko_recv_ready_value,
+    paramiko_sendline as _paramiko_sendline_value,
+    redact_paramiko_command_text as _redact_paramiko_command_text_value,
+)
+from .utils.remote_execution import (
+    build_solaris_become_commands as _build_solaris_become_commands_value,
+    normalize_solaris_command_specs as _normalize_solaris_command_specs_value,
+    verify_solaris_become_result as _verify_solaris_become_result_value,
+)
 
 
-ANSI_ESCAPE_RE = re.compile(r'(?:\x1B\[[0-?]*[ -/]*[@-~]|\x1B\][^\x07]*(?:\x07|\x1B\\))')
 DEFAULT_PASSWORD_PROMPT_PATTERNS = [r'(?:[Pp]assword|암호):\s*$']
 SOLARIS_LEGACY_KEX_ALGORITHMS = (
     'diffie-hellman-group-exchange-sha1',
@@ -74,29 +139,11 @@ _PARAMIKO_SESSION_CACHE = {}
 
 
 def _paramiko_secret_hash(value):
-    if value in (None, ''):
-        return ''
-    return hashlib.sha1(str(value).encode('utf-8')).hexdigest()
+    return _paramiko_secret_hash_value(value)
 
 
 def _close_cached_paramiko_session(session):
-    if not isinstance(session, dict):
-        return
-
-    channel = session.get('channel')
-    client = session.get('client')
-
-    if channel is not None:
-        try:
-            channel.close()
-        except Exception:
-            pass
-
-    if client is not None:
-        try:
-            client.close()
-        except Exception:
-            pass
+    return _close_paramiko_session_value(session)
 
 
 def close_all_paramiko_sessions():
@@ -110,43 +157,11 @@ atexit.register(close_all_paramiko_sessions)
 
 
 def decode_paramiko_bytes(value, preferred_encodings=None):
-    if value is None:
-        return value
-    if not isinstance(value, bytes):
-        return str(value)
-    if not value:
-        return ''
-
-    candidates = []
-    if value.startswith(codecs.BOM_UTF8):
-        candidates.append('utf-8-sig')
-    candidates.append('utf-8')
-    if value.startswith(codecs.BOM_UTF16_LE):
-        candidates.append('utf-16-le')
-    elif value.startswith(codecs.BOM_UTF16_BE):
-        candidates.append('utf-16-be')
-    elif b'\x00' in value:
-        candidates.extend(['utf-16-le', 'utf-16-be'])
-    for encoding in preferred_encodings or ():
-        if encoding:
-            candidates.append(str(encoding).strip())
-    candidates.extend(['cp949', 'euc-kr', 'cp1252'])
-
-    seen = set()
-    for encoding in candidates:
-        if not encoding or encoding in seen:
-            continue
-        seen.add(encoding)
-        try:
-            return value.decode(encoding)
-        except (LookupError, UnicodeDecodeError):
-            continue
-    return value.decode('utf-8', 'replace')
+    return decode_bytes(value, preferred_encodings=preferred_encodings)
 
 
 def normalize_paramiko_text(text):
-    normalized = str(text or '').replace('\r\n', '\n').replace('\r', '\n')
-    return ANSI_ESCAPE_RE.sub('', normalized)
+    return normalize_terminal_text(text, ansi_escape_re=ANSI_ESCAPE_RE)
 
 
 class BaseCheck:
@@ -272,21 +287,7 @@ class BaseCheck:
         return prefix + suffix, display_prefix + suffix
 
     def _paramiko_options(self):
-        return {
-            'profile': getattr(self, 'PARAMIKO_PROFILE', 'generic_network'),
-            'auth_method': getattr(self, 'PARAMIKO_AUTH_METHOD', 'auto'),
-            'key_filename': getattr(self, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
-            'private_key': getattr(self, 'PARAMIKO_PRIVATE_KEY', None),
-            'private_key_passphrase': getattr(self, 'PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
-            'allow_agent': getattr(self, 'PARAMIKO_ALLOW_AGENT', False),
-            'look_for_keys': getattr(self, 'PARAMIKO_LOOK_FOR_KEYS', False),
-            'timeout_sec': getattr(self, 'PARAMIKO_TIMEOUT_SEC', 10),
-            'banner_timeout_sec': getattr(self, 'PARAMIKO_BANNER_TIMEOUT_SEC', 10),
-            'auth_timeout_sec': getattr(self, 'PARAMIKO_AUTH_TIMEOUT_SEC', 10),
-            'read_timeout_sec': getattr(self, 'PARAMIKO_READ_TIMEOUT_SEC', 0.5),
-            'probe_prompt': getattr(self, 'PARAMIKO_PROBE_PROMPT', True),
-            'continue_on_timeout': getattr(self, 'PARAMIKO_CONTINUE_ON_TIMEOUT', False),
-        }
+        return build_paramiko_options_from_object(self)
 
     def _resolve_paramiko_profile(self, profile=None):
         raw_profile = profile if profile is not None else getattr(self, 'PARAMIKO_PROFILE', 'generic_network')
@@ -303,20 +304,10 @@ class BaseCheck:
         return resolved
 
     def _normalize_paramiko_algorithm_list(self, values):
-        if isinstance(values, str):
-            values = values.split(',')
-        return tuple(
-            text
-            for text in (str(value or '').strip() for value in (values or ()))
-            if text
-        )
+        return normalize_csv_tuple(values)
 
     def _append_paramiko_algorithms(self, base_values, extra_values):
-        merged = list(base_values or ())
-        for value in extra_values or ():
-            if value not in merged:
-                merged.append(value)
-        return tuple(merged)
+        return append_unique_preserve_order(base_values, extra_values)
 
     def _configure_paramiko_legacy_kex_algorithms(self, transport, extra_kex_algorithms):
         if not extra_kex_algorithms:
@@ -414,138 +405,41 @@ class BaseCheck:
         return transport_factory
 
     def _normalize_paramiko_commands(self, commands):
-        if isinstance(commands, str):
-            raw_commands = commands.splitlines()
-        elif isinstance(commands, (list, tuple)):
-            raw_commands = commands
-        else:
-            raw_commands = [commands]
-
-        normalized = []
-        for idx, command in enumerate(raw_commands, 1):
-            if isinstance(command, dict):
-                text = str(command.get('command') or '').strip()
-                if not text:
-                    raise ValueError(f'paramiko command #{idx} requires non-empty command')
-
-                item = {
-                    'command': text,
-                    'display_command': text,
-                    'hide_command': False,
-                }
-                if command.get('timeout') is not None:
-                    try:
-                        timeout = float(command.get('timeout'))
-                    except Exception as exc:
-                        raise ValueError(f'invalid paramiko timeout in command #{idx}: {command.get("timeout")}') from exc
-                    if timeout < 0:
-                        raise ValueError(f'invalid paramiko timeout in command #{idx}: {command.get("timeout")}')
-                    item['timeout'] = timeout
-
-                if 'ignore_prompt' in command:
-                    item['ignore_prompt'] = self._parse_paramiko_bool_option(
-                        command.get('ignore_prompt'),
-                        option_name='ignore_prompt',
-                        command_index=idx,
-                    )
-
-                raw_hide_command = command.get('hide_command')
-                if raw_hide_command is not None:
-                    item['hide_command'] = self._parse_paramiko_bool_option(
-                        raw_hide_command,
-                        option_name='hide_command',
-                        command_index=idx,
-                    )
-                    if item['hide_command']:
-                        item['display_command'] = '*******'
-
-                normalized.append(item)
-                continue
-
-            text = str(command or '').strip()
-            if text:
-                normalized.append({
-                    'command': text,
-                    'display_command': text,
-                    'hide_command': False,
-                })
-        return normalized
+        return _normalize_paramiko_commands_value(
+            commands,
+            bool_option_parser=self._parse_paramiko_bool_option,
+        )
 
     def _compile_paramiko_patterns(self, patterns):
-        return [re.compile(str(pattern), re.MULTILINE) for pattern in (patterns or [])]
+        return _compile_paramiko_patterns_value(patterns)
 
     def _parse_paramiko_bool_option(self, raw_value, option_name, command_index):
-        if isinstance(raw_value, bool):
-            return raw_value
-
-        text_value = str(raw_value or '').strip().lower()
-        if text_value in ('1', 'true', 'yes', 'y', 'on'):
-            return True
-        if text_value in ('0', 'false', 'no', 'n', 'off'):
-            return False
-        raise ValueError(f'invalid paramiko {option_name} in command #{command_index}: {raw_value}')
+        try:
+            return parse_bool_strict(raw_value)
+        except ValueError as exc:
+            raise ValueError(f'invalid paramiko {option_name} in command #{command_index}: {raw_value}') from exc
 
     def _paramiko_command_matches_line(self, command, line):
-        command_text = str(command or '').strip()
-        line_text = str(line or '').strip()
-        if not command_text or not line_text:
-            return False
-        return line_text == command_text or line_text.endswith(command_text)
+        return _paramiko_command_matches_line_value(command, line)
 
     def _redact_paramiko_command_text(self, text, command, display_command):
-        body = str(text or '')
-        command_text = str(command or '')
-        masked = str(display_command or command or '')
-        if not body or not command_text or command_text == masked:
-            return body
-        return body.replace(command_text, masked)
+        return _redact_paramiko_command_text_value(text, command, display_command)
 
     def _extract_paramiko_prompt(self, text, command=None):
-        lines = str(text or '').splitlines()
-        for line in reversed(lines):
-            candidate = line.rstrip()
-            if not candidate.strip():
-                continue
-            if self._paramiko_command_matches_line(command, candidate):
-                continue
-            return candidate
-        return ''
+        return _extract_paramiko_prompt_value(
+            text,
+            command=command,
+            command_matches_line_func=self._paramiko_command_matches_line,
+        )
 
     def _paramiko_buffer_endswith_prompt(self, text, prompt):
-        prompt_text = str(prompt or '').rstrip()
-        if not prompt_text:
-            return False
-        return str(text or '').rstrip().endswith(prompt_text)
+        return _paramiko_buffer_endswith_prompt_value(text, prompt)
 
     def _paramiko_auth_attempts(self, auth_method):
-        method = str(auth_method or 'auto').strip().lower()
-        if method == 'auto':
-            return ['key', 'password']
-        if method in ('key', 'password'):
-            return [method]
-        raise ValueError(f'unsupported paramiko auth_method: {auth_method}')
+        return _paramiko_auth_attempts_value(auth_method)
 
     def _load_paramiko_private_key(self, private_key, passphrase, paramiko_module):
-        key_stream = io.StringIO(str(private_key))
-        key_classes = [
-            paramiko_module.RSAKey,
-            paramiko_module.ECDSAKey,
-            paramiko_module.Ed25519Key,
-        ]
-        dss_key = getattr(paramiko_module, 'DSSKey', None)
-        if dss_key:
-            key_classes.append(dss_key)
-
-        last_error = None
-        for key_cls in key_classes:
-            key_stream.seek(0)
-            try:
-                return key_cls.from_private_key(key_stream, password=passphrase or None)
-            except Exception as exc:
-                last_error = exc
-        if last_error:
-            raise last_error
-        raise ValueError('unsupported private key')
+        return _load_paramiko_private_key_value(private_key, passphrase, paramiko_module)
 
     def _build_paramiko_connect_kwargs(self, options, auth_attempt, paramiko_module):
         resolved_profile = options.get('resolved_profile') or self._resolve_paramiko_profile(options.get('profile'))
@@ -603,16 +497,13 @@ class BaseCheck:
         raise RuntimeError('paramiko authentication attempt was not configured')
 
     def _paramiko_recv_ready(self, channel):
-        try:
-            return bool(channel.recv_ready())
-        except Exception:
-            return False
+        return _paramiko_recv_ready_value(channel)
 
     def _paramiko_channel_closed(self, channel):
-        return bool(getattr(channel, 'closed', False))
+        return _paramiko_channel_closed_value(channel)
 
     def _paramiko_sendline(self, channel, text):
-        channel.send(str(text or '') + '\n')
+        return _paramiko_sendline_value(channel, text)
 
     def _paramiko_expect(
         self,
@@ -745,16 +636,12 @@ class BaseCheck:
             time.sleep(0.02)
 
     def _strip_paramiko_command_output(self, command, text, prompt):
-        body = str(text or '').rstrip()
-        prompt_text = str(prompt or '').rstrip()
-        if prompt_text and body.endswith(prompt_text):
-            body = body[:-len(prompt_text)].rstrip()
-        lines = body.splitlines()
-        while lines and not lines[0].strip():
-            lines = lines[1:]
-        if lines and self._paramiko_command_matches_line(command, lines[0]):
-            lines = lines[1:]
-        return '\n'.join(lines).strip()
+        return _strip_paramiko_command_output_value(
+            command,
+            text,
+            prompt,
+            command_matches_line_func=self._paramiko_command_matches_line,
+        )
 
     def _build_paramiko_result(
         self,
@@ -768,52 +655,36 @@ class BaseCheck:
         display_command='',
         hide_command=False,
     ):
-        return {
-            'command': command,
-            'display_command': display_command or command,
-            'hide_command': bool(hide_command),
-            'rc': rc,
-            'stdout': stdout or '',
-            'stderr': stderr or '',
-            'raw_output': raw_output or '',
-            'timed_out': bool(timed_out),
-            'prompt': prompt or '',
-        }
+        return _build_paramiko_result_value(
+            command,
+            rc,
+            stdout=stdout,
+            stderr=stderr,
+            raw_output=raw_output,
+            timed_out=timed_out,
+            prompt=prompt,
+            display_command=display_command,
+            hide_command=hide_command,
+        )
 
     # 2026-05-07 생성 [조정희]
     # [FAP 변경 시작] 아래 helper들은 세션 재사용 여부 판정, 세션 키 생성, 캐시 조회/폐기를 위해 추가했습니다.
     def _paramiko_bool_option(self, value, default=False):
-        if value is None:
-            return default
-        if isinstance(value, bool):
-            return value
-        text = str(value).strip().lower()
-        if text in ('1', 'true', 'yes', 'y', 'on'):
-            return True
-        if text in ('0', 'false', 'no', 'n', 'off'):
-            return False
-        return default
+        return parse_bool_option(value, default)
 
     def _get_preferred_credential_value(self, key, default=None):
-        for data in (
+        return preferred_credential_value(
             self.get_application_credential_data(),
             self.get_connection_credential_data(),
-        ):
-            if not isinstance(data, dict) or key not in data:
-                continue
-            value = data.get(key)
-            if value not in (None, ''):
-                return value
-        return default
+            key,
+            default,
+        )
 
     def _normalize_become_method(self, value):
-        return ' '.join(str(value or '').strip().lower().split())
+        return _normalize_become_method_value(value)
 
     def _validate_become_user(self, user):
-        text = str(user or 'root').strip() or 'root'
-        if not re.match(r'^[A-Za-z0-9_.-]+$', text):
-            raise ValueError('invalid become_user: ' + text)
-        return text
+        return _validate_become_user_value(user, error_prefix='invalid become_user')
 
     def _build_paramiko_become_config(self, become=None):
         if isinstance(become, dict):
@@ -865,20 +736,10 @@ class BaseCheck:
         }
 
     def _paramiko_become_key(self, become_config):
-        if not become_config:
-            return (False, '', '', '')
-        return (
-            True,
-            str(become_config.get('method') or ''),
-            str(become_config.get('user') or ''),
-            _paramiko_secret_hash(become_config.get('password') or ''),
-        )
+        return _build_paramiko_become_key_value(become_config)
 
     def _parse_unix_id_uid(self, output):
-        match = re.search(r'(?:^|\s)uid=(\d+)(?:\(([^)]*)\))?', str(output or ''))
-        if not match:
-            return '', ''
-        return match.group(1), match.group(2) or ''
+        return _parse_unix_id_uid_value(output, missing_uid='')
 
     def _paramiko_become_command(self, become_config):
         method = become_config.get('method')
@@ -1013,10 +874,7 @@ class BaseCheck:
 
     def _validate_solaris_become_user(self, user):
         """su 명령에 사용할 사용자명을 보수적으로 검증한다."""
-        text = str(user or 'root').strip() or 'root'
-        if not re.match(r'^[A-Za-z0-9_.-]+$', text):
-            raise ValueError('invalid solaris become_user: ' + text)
-        return text
+        return _validate_become_user_value(user, error_prefix='invalid solaris become_user')
 
     def _normalize_solaris_command_specs(self, command_specs):
         """Solaris 점검 명령 spec을 검증하고 정규화한다.
@@ -1024,37 +882,7 @@ class BaseCheck:
         모든 실제 점검 명령은 {'command': '...', 'timeout': N} 형태여야 한다.
         timeout 누락을 허용하지 않아 항목별 대기 시간이 코드에 명확히 남도록 한다.
         """
-        if isinstance(command_specs, dict):
-            raw_items = [command_specs]
-        elif isinstance(command_specs, (list, tuple)):
-            raw_items = list(command_specs)
-        else:
-            raise ValueError('solaris command_specs must be a list of command dictionaries')
-
-        normalized = []
-        for idx, item in enumerate(raw_items, 1):
-            if not isinstance(item, dict):
-                raise ValueError('solaris command #%s must be a command dictionary with timeout' % idx)
-
-            command = str(item.get('command') or '').strip()
-            if not command:
-                raise ValueError('solaris command #%s requires non-empty command' % idx)
-            if item.get('timeout') is None:
-                raise ValueError('solaris command #%s requires timeout' % idx)
-
-            try:
-                timeout = float(item.get('timeout'))
-            except Exception as exc:
-                raise ValueError('invalid solaris timeout in command #%s: %s' % (idx, item.get('timeout'))) from exc
-            if timeout < 0:
-                raise ValueError('invalid solaris timeout in command #%s: %s' % (idx, item.get('timeout')))
-
-            copied = dict(item)
-            copied['command'] = command
-            copied['timeout'] = timeout
-            normalized.append(copied)
-
-        return normalized
+        return _normalize_solaris_command_specs_value(command_specs)
 
     def _build_solaris_become_commands(self):
         """Solaris su/su - 기반 권한상승 command sequence를 만든다.
@@ -1062,103 +890,14 @@ class BaseCheck:
         SOLARIS_PATH를 export하거나 PATH를 강제로 확장하지 않는다.
         root 로그인 환경이 필요한 명령은 su - 를 통해 실행한다.
         """
-        config = self._get_solaris_become_config()
-        method = config.get('method') or 'su -'
-        if method not in ('su', 'su -'):
-            raise ValueError('unsupported solaris become_method: ' + str(method))
-
-        user = self._validate_solaris_become_user(config.get('user') or 'root')
-        password = config.get('password') or ''
-        if password == '':
-            raise ValueError('solaris become_password is required for ' + method)
-
-        su_command = 'su - ' + user if method == 'su -' else 'su ' + user
-        return [
-            {
-                'command': su_command,
-                'timeout': 3,
-                'ignore_prompt': True,
-            },
-            {
-                'command': password,
-                'display_command': '*******',
-                'timeout': 5,
-                'hide_command': True,
-            },
-            {
-                'command': '/usr/bin/id',
-                'display_command': 'id',
-                'timeout': 5,
-            },
-        ]
+        return _build_solaris_become_commands_value(
+            self._get_solaris_become_config(),
+            validate_user_func=self._validate_solaris_become_user,
+        )
 
     def _verify_solaris_become_result(self, results):
         """su - 이후 /usr/bin/id 결과로 root 전환 성공 여부를 검증한다."""
-        copied_results = list(results or [])
-        combined_stdout = '\n'.join(str(item.get('stdout') or '') for item in copied_results if isinstance(item, dict))
-        combined_stderr = '\n'.join(str(item.get('stderr') or '') for item in copied_results if isinstance(item, dict))
-        combined_raw = '\n'.join(str(item.get('raw_output') or '') for item in copied_results if isinstance(item, dict))
-        combined_text = '\n'.join(part for part in (combined_stdout, combined_stderr, combined_raw) if part)
-        combined_lower = combined_text.lower()
-
-        auth_failure_markers = (
-            'authentication failure',
-            'sorry',
-            'incorrect password',
-            'permission denied',
-            'su: failed',
-            'su: incorrect',
-            'su: authentication',
-        )
-        for marker in auth_failure_markers:
-            if marker in combined_lower:
-                return {
-                    'ok': False,
-                    'message': 'Solaris su 권한상승 실패: ' + marker,
-                    'stdout': combined_stdout,
-                    'stderr': combined_stderr,
-                    'raw_output': combined_text,
-                }
-
-        id_result = None
-        for item in copied_results:
-            if not isinstance(item, dict):
-                continue
-            command = str(item.get('command') or '')
-            display_command = str(item.get('display_command') or '')
-            if command.endswith('/usr/bin/id') or display_command == 'id':
-                id_result = item
-
-        if id_result is None:
-            return {
-                'ok': False,
-                'message': 'Solaris su 권한상승 검증 실패: id 결과가 없습니다.',
-                'stdout': combined_stdout,
-                'stderr': combined_stderr,
-                'raw_output': combined_text,
-            }
-
-        id_text = '\n'.join(part for part in (
-            str(id_result.get('stdout') or ''),
-            str(id_result.get('raw_output') or ''),
-            str(id_result.get('stderr') or ''),
-        ) if part)
-        if re.search(r'(?:^|\s)uid=0(?:\(|\s|$)', id_text):
-            return {
-                'ok': True,
-                'message': 'Solaris su 권한상승 성공',
-                'stdout': combined_stdout,
-                'stderr': combined_stderr,
-                'raw_output': combined_text,
-            }
-
-        return {
-            'ok': False,
-            'message': 'Solaris su 권한상승 검증 실패: uid=0(root)가 아닙니다.',
-            'stdout': combined_stdout,
-            'stderr': combined_stderr,
-            'raw_output': combined_text,
-        }
+        return _verify_solaris_become_result_value(results)
 
     def _run_solaris_commands(self, command_specs, become_required=False, timeout_sec=None, include_become_results=False):
         """Solaris 점검 명령을 Paramiko interactive shell로 실행한다.
@@ -1241,63 +980,24 @@ class BaseCheck:
         return self._paramiko_bool_option(getattr(self, 'PARAMIKO_REUSE_SESSION', False), False)
 
     def _paramiko_profile_key(self, resolved_profile):
-        if isinstance(resolved_profile, dict):
-            pager_patterns = tuple(str(x) for x in (resolved_profile.get('pager_patterns') or []))
-            pager_response = str(resolved_profile.get('pager_response', ' '))
-            extra_kex_algorithms = self._normalize_paramiko_algorithm_list(
-                resolved_profile.get('extra_kex_algorithms')
-            )
-            extra_host_key_algorithms = self._normalize_paramiko_algorithm_list(
-                resolved_profile.get('extra_host_key_algorithms')
-            )
-            return (
-                pager_patterns,
-                pager_response,
-                extra_kex_algorithms,
-                extra_host_key_algorithms,
-            )
-        return str(resolved_profile or '')
+        return _build_paramiko_profile_key_value(
+            resolved_profile,
+            normalize_algorithm_list_func=self._normalize_paramiko_algorithm_list,
+        )
 
     def _paramiko_session_key(self, options, resolved_profile, enable_required, become_config=None):
-        return (
-            self.ctx.get('host'),
-            int(self.ctx.get('port') or 22),
-            self.ctx.get('user') or '',
-            _paramiko_secret_hash(self.ctx.get('password') or ''),
-            str(options.get('auth_method') or 'auto'),
-            str(options.get('key_filename') or ''),
-            _paramiko_secret_hash(options.get('private_key') or ''),
-            _paramiko_secret_hash(options.get('private_key_passphrase') or ''),
-            bool(options.get('allow_agent', False)),
-            bool(options.get('look_for_keys', False)),
-            self._paramiko_profile_key(resolved_profile),
-            bool(enable_required),
-            self._paramiko_become_key(become_config),
+        return _build_paramiko_session_key_value(
+            self.ctx,
+            options,
+            resolved_profile,
+            enable_required,
+            profile_key_func=self._paramiko_profile_key,
+            become_key_func=self._paramiko_become_key,
+            become_config=become_config,
         )
 
     def _paramiko_session_alive(self, session):
-        if not isinstance(session, dict):
-            return False
-
-        client = session.get('client')
-        channel = session.get('channel')
-        if client is None or channel is None:
-            return False
-
-        try:
-            if getattr(channel, 'closed', False):
-                return False
-        except Exception:
-            return False
-
-        try:
-            transport = client.get_transport()
-            if transport is None or not transport.is_active():
-                return False
-        except Exception:
-            return False
-
-        return True
+        return _is_paramiko_session_alive_value(session)
 
     def _discard_paramiko_session(self, key):
         if key is None:
@@ -1612,12 +1312,18 @@ class BaseCheck:
         return self.network_helper.has(text, pattern)
 
     # Web helper wrappers
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _source_dicts(self):
         return self.web_helper.source_dicts()
 
     def _get_source_value(self, *keys, **kwargs):
         return self.web_helper.get_source_value(*keys, **kwargs)
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _get_list_value(self, *keys, **kwargs):
         return self.web_helper.get_list_value(*keys, **kwargs)
 
@@ -1627,6 +1333,9 @@ class BaseCheck:
     def _build_url(self, path_or_url=None):
         return self.web_helper.build_url(path_or_url=path_or_url)
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _new_cookie_jar(self):
         return self.web_helper.new_cookie_jar()
 
@@ -1642,18 +1351,30 @@ class BaseCheck:
             timeout=timeout,
         )
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _find_markers(self, text, markers):
         return self.web_helper.find_markers(text, markers)
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _get_session_cookie_values(self, response=None, cookie_jar=None):
         return self.web_helper.get_session_cookie_values(response=response, cookie_jar=cookie_jar)
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _extract_cookie_tokens(self, response=None, cookie_jar=None):
         return self.web_helper.extract_cookie_tokens(response=response, cookie_jar=cookie_jar)
 
     def _login(self, cookie_jar=None):
         return self.web_helper.login(cookie_jar=cookie_jar)
 
+    ## UNUSED_IN_CURRENT_CASES:
+    ## inspection_cases.zip 기준 직접 호출 없음.
+    ## 운영 DB inline script 호환성을 위해 유지.
     def _make_multipart(self, fields, file_field, filename, content, content_type='application/octet-stream'):
         return self.web_helper.make_multipart(
             fields=fields,
@@ -1669,159 +1390,31 @@ class BaseCheck:
 
     # 텍스트 결과를 정책 mode 기준으로 공통 판정한다.
     def _evaluate_policy_text(self, mode, text, rule, rc=None):
-        if mode == 'pass_if_output':
-            return bool(text)
-        if mode == 'pass_if_no_output':
-            return not bool(text)
-        if mode == 'pass_if_regex':
-            pattern = rule.get('pattern', '')
-            return bool(re.search(pattern, text, re.IGNORECASE | re.MULTILINE))
-        if mode == 'pass_if_not_regex':
-            pattern = rule.get('pattern', '')
-            return not bool(re.search(pattern, text, re.IGNORECASE | re.MULTILINE))
-        if mode == 'pass_if_int_le':
-            match = re.search(r'(-?\d+)', text)
-            if not match:
-                return False
-            try:
-                return int(match.group(1)) <= int(rule.get('threshold', 0))
-            except Exception:
-                return False
-        if mode == 'pass_if_int_ge':
-            match = re.search(r'(-?\d+)', text)
-            if not match:
-                return False
-            try:
-                return int(match.group(1)) >= int(rule.get('threshold', 0))
-            except Exception:
-                return False
-        return rc == 0 if rc is not None else False
+        return _base_wrappers.evaluate_policy_text(mode, text, rule, rc=rc)
 
     def _extract_lines(self, text, pattern):
-        return [ln.strip() for ln in (text or '').splitlines() if re.search(pattern, ln, re.IGNORECASE)]
+        return _base_wrappers.extract_lines(text, pattern)
 
     def _detect_command_error(self, *texts, extra_patterns=None):
-        patterns = [
-            'illegal option',
-            'invalid option',
-            'unknown option',
-            'usage:',
-            'command not found',
-            'not found',
-            'no such file',
-            'cannot',
-            '명령을 찾을 수 없습니다',
-            '찾을 수 없습니다',
-        ]
-        if extra_patterns:
-            patterns.extend([str(pattern).lower() for pattern in extra_patterns if pattern])
-
-        for raw in texts:
-            output = (raw or '').strip()
-            if not output:
-                continue
-            output_lower = output.lower()
-            for pattern in patterns:
-                if pattern in output_lower:
-                    return output.splitlines()[0].strip()
-        return None
+        return _base_wrappers.detect_command_error(*texts, extra_patterns=extra_patterns)
 
     def _to_mb(self, value):
-        text = str(value or '').strip()
-        if not text:
-            return None
-        match = re.match(r'^([0-9]+(?:\.[0-9]+)?)([kmgt]?i?b?|)$', text, re.IGNORECASE)
-        if not match:
-            return None
-
-        number = float(match.group(1))
-        unit = match.group(2).lower()
-        if unit in ('', 'm', 'mb', 'mi', 'mib'):
-            return number
-        if unit in ('k', 'kb', 'ki', 'kib'):
-            return number / 1024.0
-        if unit in ('g', 'gb', 'gi', 'gib'):
-            return number * 1024.0
-        if unit in ('t', 'tb', 'ti', 'tib'):
-            return number * 1024.0 * 1024.0
-        if unit in ('b',):
-            return number / (1024.0 * 1024.0)
-        return None
+        return _base_wrappers.to_mb(value)
 
     def _parse_mpstat_field(self, text, field_name):
-        target = field_name.lower().lstrip('%')
-        lines = [line.strip() for line in (text or '').splitlines() if line.strip()]
-        header = None
-        data = None
-
-        for line in lines:
-            lower = line.lower()
-            if '%' + target in lower:
-                header = re.split(r'\s+', line)
-                continue
-            if re.search(r'(^|\s)(average:)?\s*all(\s|$)', lower):
-                data = re.split(r'\s+', line)
-
-        if not header or not data:
-            return None
-
-        normalized = [token.lower() for token in header]
-        column = '%' + target
-        if column not in normalized:
-            return None
-
-        index = normalized.index(column)
-        if index >= len(data):
-            return None
-
-        try:
-            return round(float(data[index]), 2)
-        except Exception:
-            return None
+        return _base_wrappers.parse_mpstat_field(text, field_name)
 
     def _is_not_applicable(self, rc, err):
-        text = (err or '').strip()
-        if rc in (901, 902):
-            return True
-        if 'WINRM_UNAVAILABLE' in text or 'WINRM_EXEC_ERROR' in text:
-            return True
-        return False
+        return _is_not_applicable_value(rc, err)
 
     def _is_connection_error(self, rc, err):
-        text = (err or '').strip().lower()
-        if rc in (255, 901, 902):
-            return True
-        markers = (
-            'no route to host',
-            'network is unreachable',
-            'connection refused',
-            'connection timed out',
-            'operation timed out',
-            'could not resolve hostname',
-            'host key verification failed',
-            'permission denied',
-            'connection reset by peer',
-            'sshpass not installed',
-            'winrm_unavailable',
-            'winrm_exec_error',
-            'paramiko_connection_error',
-        )
-        return any(marker in text for marker in markers)
+        return _is_connection_error_value(rc, err)
 
     def _record_command(self, cmd, rc, out, err):
-        self._command_history.append({
-            'cmd': cmd,
-            'rc': rc,
-            'stdout': out if out is not None else '',
-            'stderr': err if err is not None else '',
-        })
+        return _base_wrappers.record_command(self._command_history, cmd, rc, out, err)
 
     def _record_terminal_event(self, event):
-        if not isinstance(event, dict):
-            return
-        copied = dict(event)
-        copied['text'] = copied.get('text') if copied.get('text') is not None else ''
-        self._terminal_history.append(copied)
+        return _base_wrappers.record_terminal_event(self._terminal_history, event)
 
     def get_threshold_list_map(self):
         """item_payload.threshold_list를 {name: value1} 딕셔너리로 변환한다."""
@@ -1830,19 +1423,8 @@ class BaseCheck:
 
         payload = self.ctx.get('item_payload') or {}
         threshold_list = payload.get('threshold_list') or []
-        mapped = {}
-
-        if isinstance(threshold_list, list):
-            for item in threshold_list:
-                if not isinstance(item, dict):
-                    continue
-                name = str(item.get('name', '')).strip()
-                if not name:
-                    continue
-                mapped[name] = item.get('value1')
-
-        self._threshold_list_map_cache = mapped
-        return mapped
+        self._threshold_list_map_cache = threshold_list_to_map(threshold_list)
+        return self._threshold_list_map_cache
 
     # application 계정이 필요한 항목은 아래 헬퍼로 조회한다.
     # 예)
@@ -1857,84 +1439,39 @@ class BaseCheck:
     #   enable_password = self.get_connection_value('en_password')
     def get_application_credential(self):
         """현재 항목에 매핑된 application credential 원본을 반환한다."""
-        cred = self.ctx.get('application_credential') or {}
-        if isinstance(cred, dict):
-            return cred
-        return {}
+        return credential_or_empty(self.ctx.get('application_credential'))
 
     def get_connection_credential(self):
         """현재 항목에 매핑된 connection credential 원본을 반환한다."""
-        cred = self.ctx.get('connection_credential') or {}
-        if isinstance(cred, dict):
-            return cred
-        return {}
+        return credential_or_empty(self.ctx.get('connection_credential'))
 
     def get_connection_credential_data(self):
         """현재 항목에 매핑된 connection credential data를 반환한다."""
-        data = self.ctx.get('connection_credential_data') or {}
-        if isinstance(data, dict):
-            return data
-        cred = self.get_connection_credential()
-        data = cred.get('data') or {}
-        if isinstance(data, dict):
-            return data
-        return {}
+        return credential_context_data(
+            self.ctx,
+            'connection_credential_data',
+            fallback_credential=self.get_connection_credential(),
+        )
 
     def get_connection_value(self, key, default=None):
         """connection credential data에서 key 값을 조회한다."""
-        data = self.get_connection_credential_data()
-        return data.get(key, default)
+        return credential_value(self.get_connection_credential_data(), key, default)
 
     def get_application_credential_data(self):
         """현재 항목에 매핑된 application credential data를 반환한다."""
-        data = self.ctx.get('application_credential_data') or {}
-        if isinstance(data, dict):
-            return data
-        cred = self.get_application_credential()
-        data = cred.get('data') or {}
-        if isinstance(data, dict):
-            return data
-        return {}
+        return credential_context_data(
+            self.ctx,
+            'application_credential_data',
+            fallback_credential=self.get_application_credential(),
+        )
 
     def get_application_credential_value(self, key, default=None):
         """application credential data에서 key 값을 조회한다."""
-        data = self.get_application_credential_data()
-        return data.get(key, default)
+        return credential_value(self.get_application_credential_data(), key, default)
 
     def _cast_threshold_var(self, raw_value, default, value_type=None):
         """원시 value1 값을 지정 타입으로 변환한다."""
-        if value_type is None:
-            if isinstance(default, bool):
-                value_type = 'bool'
-            elif isinstance(default, int):
-                value_type = 'int'
-            elif isinstance(default, float):
-                value_type = 'float'
-            else:
-                value_type = 'str'
-
-        if isinstance(value_type, type):
-            if value_type is bool:
-                value_type = 'bool'
-            elif value_type is int:
-                value_type = 'int'
-            elif value_type is float:
-                value_type = 'float'
-            else:
-                value_type = 'str'
-
-        value_type = str(value_type).lower()
-
-        if value_type == 'int':
-            return int(str(raw_value).strip())
-        if value_type == 'float':
-            return float(str(raw_value).strip())
-        if value_type == 'bool':
-            text = str(raw_value).strip().lower()
-            return text in ('1', 'true', 'y', 'yes', 'on')
-        if value_type == 'raw':
-            return raw_value
-        return str(raw_value)
+        return _base_wrappers.cast_threshold_var(raw_value, default, value_type=value_type)
 
     def get_threshold_var(self, key, default=None, value_type=None, return_source=False):
         """threshold_list에서 key(name) 기준으로 값을 조회한다.
@@ -1942,29 +1479,13 @@ class BaseCheck:
         - key가 없거나 변환 실패 시 default 반환
         - value_type 미지정 시 default 타입으로 자동 추론
         """
-        mapped = self.get_threshold_list_map()
-        raw_value = mapped.get(key)
-
-        has_raw = (
-            key in mapped and
-            raw_value is not None and
-            (not isinstance(raw_value, str) or raw_value.strip() != '')
+        return get_threshold_value(
+            self.get_threshold_list_map(),
+            key,
+            default=default,
+            value_type=value_type,
+            return_source=return_source,
         )
-
-        if not has_raw:
-            if return_source:
-                return default, 'default'
-            return default
-
-        try:
-            value = self._cast_threshold_var(raw_value, default, value_type=value_type)
-            if return_source:
-                return value, 'api'
-            return value
-        except Exception:
-            if return_source:
-                return default, 'default'
-            return default
 
     def get_host_vars(self):
         payload = self.ctx.get('item_payload') or {}
@@ -1976,125 +1497,25 @@ class BaseCheck:
 
 
     def _describe_rc(self, rc):
-        # 쉘/SSH에서 자주 쓰이는 종료 코드를 한글 설명으로 매핑한다.
-        rc_map = {
-            0: '정상 종료',
-            1: '일반 오류 또는 결과 없음/미일치',
-            2: '잘못된 사용/실행 오류',
-            126: '권한 없음 또는 실행 불가',
-            127: '명령어를 찾을 수 없음',
-            124: '명령 시간 초과',
-            130: '사용자 인터럽트(Ctrl+C)',
-            255: 'SSH/원격 실행 오류',
-        }
-        if rc in rc_map:
-            return rc_map[rc]
-        if isinstance(rc, int) and rc < 0:
-            return '프로세스 비정상 종료'
-        return '비정상 종료'
+        return _describe_rc_value(rc)
 
     def _build_history_raw_output(self):
-        if not self._command_history:
-            return ""
-        parts = []
-        for idx, item in enumerate(self._command_history, 1):
-            rc = item.get('rc')
-            rc_desc = self._describe_rc(rc)
-            stdout = (item.get('stdout') or "").rstrip()
-            stderr = (item.get('stderr') or "").rstrip()
-
-            section = [
-                f"[점검 단계 {idx}]",
-                f" - 실행 명령어: {item.get('cmd', '')}",
-                f" - 명령 종료코드: rc={rc} ({rc_desc})",
-            ]
-            # stdout/stderr가 비어 있지 않을 때만 출력 내용을 기록한다.
-            if stdout and stderr:
-                section.extend([
-                    f" - 출력 내용(stdout): {stdout}",
-                    f" - 출력 내용(stderr): {stderr}",
-                ])
-            elif stdout:
-                section.append(f" - 출력 내용: {stdout}")
-            elif stderr:
-                section.append(f" - 출력 내용: {stderr}")
-            parts.append("\n".join(section).rstrip())
-        return "\n\n".join(parts).strip()
+        return _base_wrappers.build_history_raw_output(self._command_history)
 
     def _build_virtual_raw_output(self, raw_output=None, stdout=None, stderr=None):
-        """명령 이력이 없을 때도 출력 형식을 통일한다.
-
-        - 점검 스크립트에서 `_ssh`를 통하지 않았거나
-        - 로컬 계산값만 있는 경우에 fallback으로 사용한다.
-        """
-        out = (stdout or "").rstrip()
-        err = (stderr or "").rstrip()
-        raw = (raw_output or "").rstrip()
-
-        section = [
-            "[점검 단계 1]",
-            " - 실행 명령어: (명령 이력 없음)",
-            " - 명령 종료코드: rc=unknown (명령 이력 없음)",
-        ]
-        if out and err:
-            section.extend([
-                f" - 출력 내용(stdout): {out}",
-                f" - 출력 내용(stderr): {err}",
-            ])
-        elif out:
-            section.append(f" - 출력 내용: {out}")
-        elif err:
-            section.append(f" - 출력 내용: {err}")
-        elif raw:
-            section.append(f" - 출력 내용: {raw}")
-
-        return "\n".join(section).rstrip()
+        return _base_wrappers.build_virtual_raw_output(raw_output=raw_output, stdout=stdout, stderr=stderr)
 
     def _build_terminal_history_raw_output(self):
-        if not self._terminal_history:
-            return ""
-
-        parts = []
-        for idx, item in enumerate(self._terminal_history, 1):
-            kind = str(item.get('kind') or '').strip().lower()
-            raw_text = str(item.get('text') or '')
-            text = '<space>' if raw_text == ' ' else raw_text.rstrip()
-            section = [f"[점검 단계 {idx}]"]
-
-            if kind == 'send':
-                send_label = '자동 응답' if item.get('auto') else '터미널 송신'
-                section.append(f" - {send_label}: {text}")
-            elif kind == 'recv':
-                recv_label = '터미널 수신(timeout)' if item.get('timeout') else '터미널 수신'
-                section.append(f" - {recv_label}: {text}")
-            else:
-                section.append(f" - 터미널 이벤트: {text}")
-
-            parts.append("\n".join(section).rstrip())
-
-        return "\n\n".join(parts).strip()
+        return _base_wrappers.build_terminal_history_raw_output(self._terminal_history)
 
     def _resolve_raw_output(self, raw_output=None, stdout=None, stderr=None):
-        # 미구현 항목은 사용자 요청에 따라 문자열을 그대로 저장한다.
-        if raw_output == '점검 스크립트 없음':
-            return raw_output
-
-        # 1순위: 실제 명령 이력(점검 단계 포맷)
-        history_text = self._build_history_raw_output()
-        terminal_text = self._build_terminal_history_raw_output()
-        if history_text and terminal_text:
-            return f'{history_text}\n\n{terminal_text}'.strip()
-        if history_text:
-            return history_text
-        if terminal_text:
-            return terminal_text
-
-        # 2순위: 명령 이력이 없더라도 동일 포맷으로 fallback
-        if raw_output not in (None, '') or stdout not in (None, '') or stderr not in (None, ''):
-            return self._build_virtual_raw_output(raw_output=raw_output, stdout=stdout, stderr=stderr)
-
-        # 3순위: 남길 데이터가 없어도 포맷은 통일한다.
-        return self._build_virtual_raw_output()
+        return _base_wrappers.resolve_raw_output(
+            self._command_history,
+            self._terminal_history,
+            raw_output=raw_output,
+            stdout=stdout,
+            stderr=stderr,
+        )
 
     def ok(self, metrics=None, thresholds=None, reasons=None, raw_output=None, message=None):
         # 정상 결과 포맷
