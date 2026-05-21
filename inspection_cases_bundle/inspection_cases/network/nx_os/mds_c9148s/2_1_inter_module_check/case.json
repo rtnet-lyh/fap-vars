@@ -1,0 +1,41 @@
+{
+  "host": "192.168.1.55",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80501,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81504,
+  "host_id": 81501,
+  "job_id": 81501,
+  "item": {
+    "inspection_code": "NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01",
+    "item_id": 98504,
+    "application_id": 80501,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "NX_OS_MDS_C9148S",
+    "application_family_name": "NX_OS_MDS_C9148S",
+    "threshold_list": [
+      {
+        "name": "up_interface",
+        "value1": "fc1/1,fc1/2,fc1/4,fc1/5,fc1/6,fc1/7,fc1/8,fc1/9,fc1/10"
+      }
+    ]
+  }
+}

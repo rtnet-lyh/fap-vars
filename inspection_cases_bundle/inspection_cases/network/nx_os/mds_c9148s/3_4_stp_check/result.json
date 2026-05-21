@@ -1,0 +1,61 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-STP-01",
+      "item_id": 98509,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = False\n\n    def run(self):\n        return self.ok(\n            metrics={'applicable': False},\n            thresholds={},\n            reasons='해당 장비는 Ethernet STP 점검 대상이 아닙니다.',\n            message='점검 대상이 아닙니다.',\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = False",
+        "",
+        "    def run(self):",
+        "        return self.ok(",
+        "            metrics={'applicable': False},",
+        "            thresholds={},",
+        "            reasons='해당 장비는 Ethernet STP 점검 대상이 아닙니다.',",
+        "            message='점검 대상이 아닙니다.',",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-STP-01",
+      "item_id": 98509,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "applicable": false
+      },
+      "thresholds": {},
+      "reasons": "해당 장비는 Ethernet STP 점검 대상이 아닙니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: (명령 이력 없음)",
+        " - 명령 종료코드: rc=unknown (명령 이력 없음)"
+      ],
+      "message": "점검 대상이 아닙니다."
+    }
+  ],
+  "failed_items": []
+}

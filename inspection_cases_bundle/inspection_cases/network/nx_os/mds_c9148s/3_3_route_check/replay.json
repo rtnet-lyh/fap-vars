@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show ip route",
+    "rc": 0,
+    "stdout_file": "outputs/show_ip_route.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,10 @@
+fc1/10 is up
+    Hardware is Fibre Channel, SFP is short wave laser w/o OFC (SN)
+    Speed is 8 Gbps
+    5 minutes input rate 18940800 bits/sec,2367600 bytes/sec, 2254 frames/sec
+    5 minutes output rate 64165888 bits/sec,8020736 bytes/sec, 4478 frames/sec
+
+fc1/11 is down (Link failure or not-connected)
+    Hardware is Fibre Channel, SFP is short wave laser w/o OFC (SN)
+    5 minutes input rate 0 bits/sec,0 bytes/sec, 0 frames/sec
+    5 minutes output rate 0 bits/sec,0 bytes/sec, 0 frames/sec

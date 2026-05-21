@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show processes cpu sort",
+    "rc": 0,
+    "stdout_file": "outputs/show_processes_cpu_sort.stdout",
+    "stderr": ""
+  }
+]

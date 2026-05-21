@@ -1,0 +1,41 @@
+{
+  "host": "192.168.1.55",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80501,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81505,
+  "host_id": 81501,
+  "job_id": 81501,
+  "item": {
+    "inspection_code": "NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01",
+    "item_id": 98505,
+    "application_id": 80501,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "NX_OS_MDS_C9148S",
+    "application_family_name": "NX_OS_MDS_C9148S",
+    "threshold_list": [
+      {
+        "name": "active_vsan",
+        "value1": "10"
+      }
+    ]
+  }
+}

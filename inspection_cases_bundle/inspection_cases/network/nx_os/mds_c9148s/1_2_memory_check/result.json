@@ -1,0 +1,113 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-MEMORY-01",
+      "item_id": 98502,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "max_mem_usage_percent",
+          "value1": "90"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show system resources'\nMEMORY_RE = re.compile(r'Memory usage:\\s*(\\d+)K total,\\s*(\\d+)K used,\\s*(\\d+)K free')\nSTATUS_RE = re.compile(r'Current memory status:\\s*(\\S+)', re.IGNORECASE)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        max_usage = self.get_threshold_var('max_mem_usage_percent', default=90.0, value_type='float')\n        thresholds = {'max_mem_usage_percent': max_usage}\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)\n\n        text = (out or '').strip()\n        memory = MEMORY_RE.search(text)\n        status = STATUS_RE.search(text)\n        if not memory or not status:\n            return self.fail('메모리 사용률 파싱 실패', message='Memory usage 또는 Current memory status 값을 해석하지 못했습니다.', stdout=text, thresholds=thresholds)\n\n        total_kb, used_kb, free_kb = [int(memory.group(i)) for i in (1, 2, 3)]\n        usage = round(used_kb / total_kb * 100, 2) if total_kb else 0.0\n        metrics = {\n            'memory_total_kb': total_kb,\n            'memory_used_kb': used_kb,\n            'memory_free_kb': free_kb,\n            'memory_usage_percent': usage,\n            'current_memory_status': status.group(1),\n        }\n        if status.group(1).upper() != 'OK':\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Current memory status가 OK가 아닙니다.', message=f'Current memory status={status.group(1)}')\n        if usage > max_usage:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'메모리 사용률 {usage}%가 임계치 {max_usage}%를 초과했습니다.', message=f'메모리 사용률 기준 초과: {usage}%')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons=f'메모리 사용률 {usage}%가 임계치 {max_usage}% 이하입니다.', message=f'메모리 사용률 점검이 정상 수행되었습니다. usage={usage}%.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'show system resources'",
+        "MEMORY_RE = re.compile(r'Memory usage:\\s*(\\d+)K total,\\s*(\\d+)K used,\\s*(\\d+)K free')",
+        "STATUS_RE = re.compile(r'Current memory status:\\s*(\\S+)', re.IGNORECASE)",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def run(self):",
+        "        max_usage = self.get_threshold_var('max_mem_usage_percent', default=90.0, value_type='float')",
+        "        thresholds = {'max_mem_usage_percent': max_usage}",
+        "        rc, out, err = self._ssh(COMMAND)",
+        "        if rc != 0:",
+        "            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)",
+        "",
+        "        text = (out or '').strip()",
+        "        memory = MEMORY_RE.search(text)",
+        "        status = STATUS_RE.search(text)",
+        "        if not memory or not status:",
+        "            return self.fail('메모리 사용률 파싱 실패', message='Memory usage 또는 Current memory status 값을 해석하지 못했습니다.', stdout=text, thresholds=thresholds)",
+        "",
+        "        total_kb, used_kb, free_kb = [int(memory.group(i)) for i in (1, 2, 3)]",
+        "        usage = round(used_kb / total_kb * 100, 2) if total_kb else 0.0",
+        "        metrics = {",
+        "            'memory_total_kb': total_kb,",
+        "            'memory_used_kb': used_kb,",
+        "            'memory_free_kb': free_kb,",
+        "            'memory_usage_percent': usage,",
+        "            'current_memory_status': status.group(1),",
+        "        }",
+        "        if status.group(1).upper() != 'OK':",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Current memory status가 OK가 아닙니다.', message=f'Current memory status={status.group(1)}')",
+        "        if usage > max_usage:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'메모리 사용률 {usage}%가 임계치 {max_usage}%를 초과했습니다.', message=f'메모리 사용률 기준 초과: {usage}%')",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons=f'메모리 사용률 {usage}%가 임계치 {max_usage}% 이하입니다.', message=f'메모리 사용률 점검이 정상 수행되었습니다. usage={usage}%.')",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-MEMORY-01",
+      "item_id": 98502,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "max_mem_usage_percent",
+          "value1": "90"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "memory_total_kb": 4155776,
+        "memory_used_kb": 795688,
+        "memory_free_kb": 3360088,
+        "memory_usage_percent": 19.15,
+        "current_memory_status": "OK"
+      },
+      "thresholds": {
+        "max_mem_usage_percent": 90.0
+      },
+      "reasons": "메모리 사용률 19.15%가 임계치 90.0% 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show system resources\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show system resources\nLoad average:   1 minute: 0.14   5 minutes: 0.15   15 minutes: 0.16\nProcesses   :   181 total, 1 running\nCPU states  :   2.48% user,   4.47% kernel,   93.03% idle\n        CPU0 states  :   2.00% user,   2.00% kernel,   96.00% idle\n        CPU1 states  :   2.97% user,   6.93% kernel,   90.09% idle\nMemory usage:   4155776K total,   795688K used,   3360088K free\nCurrent memory status: OK",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: show system resources",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: CITS-SAN1# show system resources",
+        "Load average:   1 minute: 0.14   5 minutes: 0.15   15 minutes: 0.16",
+        "Processes   :   181 total, 1 running",
+        "CPU states  :   2.48% user,   4.47% kernel,   93.03% idle",
+        "        CPU0 states  :   2.00% user,   2.00% kernel,   96.00% idle",
+        "        CPU1 states  :   2.97% user,   6.93% kernel,   90.09% idle",
+        "Memory usage:   4155776K total,   795688K used,   3360088K free",
+        "Current memory status: OK"
+      ],
+      "message": "메모리 사용률 점검이 정상 수행되었습니다. usage=19.15%."
+    }
+  ],
+  "failed_items": []
+}

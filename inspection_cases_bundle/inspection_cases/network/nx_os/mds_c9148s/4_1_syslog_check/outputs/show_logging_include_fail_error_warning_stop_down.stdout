@@ -1,0 +1,6 @@
+CITS-SAN1# show logging | include fail|error|warning|stop|down
+3(errors)               4(warnings)     5(notifications)
+2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)
+2026 Apr 15 15:47:57 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from console - login
+2026 May 19 17:00:17 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[21938]
+2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]

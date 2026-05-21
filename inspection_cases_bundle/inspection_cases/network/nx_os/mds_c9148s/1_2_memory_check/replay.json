@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show system resources",
+    "rc": 0,
+    "stdout_file": "outputs/show_system_resources.stdout",
+    "stderr": ""
+  }
+]

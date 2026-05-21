@@ -1,0 +1,145 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01",
+      "item_id": 98504,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "up_interface",
+          "value1": "fc1/1,fc1/2,fc1/4,fc1/5,fc1/6,fc1/7,fc1/8,fc1/9,fc1/10"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show interface brief'\nROW_RE = re.compile(r'^(fc\\S+)\\s+\\S+\\s+\\S+\\s+\\S+\\s+(\\S+)')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _split(self, value):\n        return [item for item in re.split(r'[\\s,]+', str(value or '').strip()) if item]\n\n    def run(self):\n        expected = self._split(self.get_threshold_var('up_interface', default='', value_type='str'))\n        thresholds = {'up_interface': expected}\n        if not expected:\n            return self.fail('임계치 미정의', message='up_interface 값이 필요합니다.', thresholds=thresholds)\n\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)\n\n        statuses = {m.group(1): m.group(2) for m in (ROW_RE.match(line.strip()) for line in (out or '').splitlines()) if m}\n        if not statuses:\n            return self.fail('인터페이스 상태 파싱 실패', message='show interface brief 결과를 해석하지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)\n\n        bad = [{'interface': name, 'status': statuses.get(name, 'missing')} for name in expected if statuses.get(name) != 'up']\n        metrics = {'checked_interface_count': len(expected), 'bad_interfaces': bad, 'interface_statuses': statuses}\n        if bad:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{len(bad)}개 운영대상 인터페이스가 up 상태가 아닙니다.', message='운영대상 인터페이스 상태 기준 미달')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='운영대상 인터페이스가 모두 up 상태입니다.', message='인터페이스 상태 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'show interface brief'",
+        "ROW_RE = re.compile(r'^(fc\\S+)\\s+\\S+\\s+\\S+\\s+\\S+\\s+(\\S+)')",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def _split(self, value):",
+        "        return [item for item in re.split(r'[\\s,]+', str(value or '').strip()) if item]",
+        "",
+        "    def run(self):",
+        "        expected = self._split(self.get_threshold_var('up_interface', default='', value_type='str'))",
+        "        thresholds = {'up_interface': expected}",
+        "        if not expected:",
+        "            return self.fail('임계치 미정의', message='up_interface 값이 필요합니다.', thresholds=thresholds)",
+        "",
+        "        rc, out, err = self._ssh(COMMAND)",
+        "        if rc != 0:",
+        "            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)",
+        "",
+        "        statuses = {m.group(1): m.group(2) for m in (ROW_RE.match(line.strip()) for line in (out or '').splitlines()) if m}",
+        "        if not statuses:",
+        "            return self.fail('인터페이스 상태 파싱 실패', message='show interface brief 결과를 해석하지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)",
+        "",
+        "        bad = [{'interface': name, 'status': statuses.get(name, 'missing')} for name in expected if statuses.get(name) != 'up']",
+        "        metrics = {'checked_interface_count': len(expected), 'bad_interfaces': bad, 'interface_statuses': statuses}",
+        "        if bad:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{len(bad)}개 운영대상 인터페이스가 up 상태가 아닙니다.', message='운영대상 인터페이스 상태 기준 미달')",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='운영대상 인터페이스가 모두 up 상태입니다.', message='인터페이스 상태 점검이 정상 수행되었습니다.')",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01",
+      "item_id": 98504,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "up_interface",
+          "value1": "fc1/1,fc1/2,fc1/4,fc1/5,fc1/6,fc1/7,fc1/8,fc1/9,fc1/10"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "checked_interface_count": 9,
+        "bad_interfaces": [],
+        "interface_statuses": {
+          "fc1/1": "up",
+          "fc1/2": "up",
+          "fc1/3": "notConnected",
+          "fc1/4": "up",
+          "fc1/5": "up",
+          "fc1/6": "up",
+          "fc1/7": "up",
+          "fc1/8": "up",
+          "fc1/9": "up",
+          "fc1/10": "up",
+          "fc1/11": "notConnected",
+          "fc1/12": "errDisabled",
+          "fc1/13": "sfpAbsent",
+          "fc1/14": "licenseNotAv",
+          "fc1/15": "sfpAbsent"
+        }
+      },
+      "thresholds": {
+        "up_interface": [
+          "fc1/1",
+          "fc1/2",
+          "fc1/4",
+          "fc1/5",
+          "fc1/6",
+          "fc1/7",
+          "fc1/8",
+          "fc1/9",
+          "fc1/10"
+        ]
+      },
+      "reasons": "운영대상 인터페이스가 모두 up 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show interface brief\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show interface brief\n\n-------------------------------------------------------------------------------\nInterface  Vsan   Admin  Admin   Status       SFP    Oper  Oper   Port\n                  Mode   Trunk                       Mode  Speed  Channel\n                         Mode                              (Gbps)\n-------------------------------------------------------------------------------\nfc1/1      10     auto   on      up           swl   F      8      --\nfc1/2      10     auto   on      up           swl   F      8      --\nfc1/3      10     auto   on      notConnected swl    --    --     --\nfc1/4      10     auto   on      up           swl   F      8      --\nfc1/5      10     auto   on      up           swl   F      8      --\nfc1/6      10     auto   on      up           swl   F      8      --\nfc1/7      10     auto   on      up           swl   F      8      --\nfc1/8      10     auto   on      up           swl   F      8      --\nfc1/9      10     auto   on      up           swl   F      8      --\nfc1/10     10     auto   on      up           swl   F      8      --\nfc1/11     10     auto   on      notConnected swl    --    --     --\nfc1/12     10     auto   on      errDisabled  swl    --    --     --\nfc1/13     1      auto   on      sfpAbsent    --     --    --     --\nfc1/14     1      auto   on      licenseNotAv --     --    --     --\nfc1/15     1      auto   on      sfpAbsent    --     --    --     --",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: show interface brief",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: CITS-SAN1# show interface brief",
+        "",
+        "-------------------------------------------------------------------------------",
+        "Interface  Vsan   Admin  Admin   Status       SFP    Oper  Oper   Port",
+        "                  Mode   Trunk                       Mode  Speed  Channel",
+        "                         Mode                              (Gbps)",
+        "-------------------------------------------------------------------------------",
+        "fc1/1      10     auto   on      up           swl   F      8      --",
+        "fc1/2      10     auto   on      up           swl   F      8      --",
+        "fc1/3      10     auto   on      notConnected swl    --    --     --",
+        "fc1/4      10     auto   on      up           swl   F      8      --",
+        "fc1/5      10     auto   on      up           swl   F      8      --",
+        "fc1/6      10     auto   on      up           swl   F      8      --",
+        "fc1/7      10     auto   on      up           swl   F      8      --",
+        "fc1/8      10     auto   on      up           swl   F      8      --",
+        "fc1/9      10     auto   on      up           swl   F      8      --",
+        "fc1/10     10     auto   on      up           swl   F      8      --",
+        "fc1/11     10     auto   on      notConnected swl    --    --     --",
+        "fc1/12     10     auto   on      errDisabled  swl    --    --     --",
+        "fc1/13     1      auto   on      sfpAbsent    --     --    --     --",
+        "fc1/14     1      auto   on      licenseNotAv --     --    --     --",
+        "fc1/15     1      auto   on      sfpAbsent    --     --    --     --"
+      ],
+      "message": "인터페이스 상태 점검이 정상 수행되었습니다."
+    }
+  ],
+  "failed_items": []
+}

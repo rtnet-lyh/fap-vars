@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show interface brief",
+    "rc": 0,
+    "stdout_file": "outputs/show_interface_brief.stdout",
+    "stderr": ""
+  }
+]

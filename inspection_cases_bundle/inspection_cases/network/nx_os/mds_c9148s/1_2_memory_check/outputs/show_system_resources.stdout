@@ -1,0 +1,8 @@
+CITS-SAN1# show system resources
+Load average:   1 minute: 0.14   5 minutes: 0.15   15 minutes: 0.16
+Processes   :   181 total, 1 running
+CPU states  :   2.48% user,   4.47% kernel,   93.03% idle
+        CPU0 states  :   2.00% user,   2.00% kernel,   96.00% idle
+        CPU1 states  :   2.97% user,   6.93% kernel,   90.09% idle
+Memory usage:   4155776K total,   795688K used,   3360088K free
+Current memory status: OK

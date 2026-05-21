@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show logging | include fail|error|warning|stop|down",
+    "rc": 0,
+    "stdout_file": "outputs/show_logging_include_fail_error_warning_stop_down.stdout",
+    "stderr": ""
+  }
+]

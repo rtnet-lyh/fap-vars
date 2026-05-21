@@ -1,0 +1,84 @@
+{
+  "total_cases": 13,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "1_1_cpu_check",
+      "result_file": "1_1_cpu_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "1_2_memory_check",
+      "result_file": "1_2_memory_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "1_3_interface_check",
+      "result_file": "1_3_interface_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "2_1_inter_module_check",
+      "result_file": "2_1_inter_module_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "2_2_vlan_check",
+      "result_file": "2_2_vlan_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_1_lb_check",
+      "result_file": "3_1_lb_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_2_mac_check",
+      "result_file": "3_2_mac_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_3_route_check",
+      "result_file": "3_3_route_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_4_stp_check",
+      "result_file": "3_4_stp_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_5_vrrp_check",
+      "result_file": "3_5_vrrp_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_6_ping_check",
+      "result_file": "3_6_ping_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "4_1_syslog_check",
+      "result_file": "4_1_syslog_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "5_1_etc_check",
+      "result_file": "5_1_etc_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

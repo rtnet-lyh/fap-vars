@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ping 193.1.0.207 count 5",
+    "rc": 0,
+    "stdout_file": "outputs/ping_193_1_0_207_count_5.stdout",
+    "stderr": ""
+  }
+]

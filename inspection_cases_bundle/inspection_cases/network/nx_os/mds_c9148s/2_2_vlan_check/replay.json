@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "show vsan",
+    "rc": 0,
+    "stdout_file": "outputs/show_vsan.stdout",
+    "stderr": ""
+  }
+]

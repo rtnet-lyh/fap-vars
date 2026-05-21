@@ -1,0 +1,48 @@
+CITS-SAN1# show environment
+Power Supply:
+Voltage: 12 Volts
+-----------------------------------------------------
+PS  Model                Power       Power     Status
+                         (Watts)     (Amp)
+-----------------------------------------------------
+1   DS-C48S-300AC         300.00     25.00     Ok
+2   DS-C48S-300AC         300.00     25.00     Ok
+
+Mod Model                Power     Power       Power     Power       Status
+                         Requested Requested   Allocated Allocated
+                         (Watts)   (Amp)       (Watts)   (Amp)
+--- -------------------  -------   ----------  --------- ----------  ----------
+1    DS-C9148S-K9-SUP     150.00    12.50      150.00    12.50       Powered-Up
+
+Power Usage Summary:
+--------------------
+Power Supply redundancy mode:                 Redundant
+Power Supply redundancy operational mode:     Redundant
+
+Clock:
+----------------------------------------------------------
+Clock           Model                Hw         Status
+----------------------------------------------------------
+A               Clock Module         --         NotSupported/None
+
+Fan:
+------------------------------------------------------
+Fan             Model                Hw         Status
+------------------------------------------------------
+ChassisFan1     FAN Module 1         --         Ok
+ChassisFan2     FAN Module 2         --         Ok
+ChassisFan3     FAN Module 3         --         Ok
+ChassisFan4     FAN Module 4         --         Ok
+Fan_in_PS1      --                   --         Ok
+Fan_in_PS2      --                   --         Ok
+
+Temperature:
+--------------------------------------------------------------------
+Module   Sensor        MajorThresh   MinorThres   CurTemp     Status
+                       (Celsius)     (Celsius)    (Celsius)
+--------------------------------------------------------------------
+1        Outlet1  (s1)   75              60          34         Ok
+1        Outlet2  (s2)   75              60          32         Ok
+1        Intake1  (s3)   75              60          32         Ok
+1        Intake2  (s4)   75              60          32         Ok
+1        FC-SOC1  (s5)   115             105         40         Ok

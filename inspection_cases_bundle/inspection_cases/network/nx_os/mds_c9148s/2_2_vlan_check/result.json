@@ -1,0 +1,134 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01",
+      "item_id": 98505,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "active_vsan",
+          "value1": "10"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show vsan'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _split(self, value):\n        return [item for item in re.split(r'[\\s,]+', str(value or '').strip()) if item]\n\n    def _parse(self, text):\n        vsans = {}\n        current = None\n        for line in (text or '').splitlines():\n            info = re.search(r'^vsan\\s+(\\d+)\\s+information', line.strip(), re.IGNORECASE)\n            state = re.search(r'name:\\S+\\s+state:(\\S+)', line.strip(), re.IGNORECASE)\n            if info:\n                current = info.group(1)\n                vsans[current] = {}\n            elif current and state:\n                vsans[current]['state'] = state.group(1)\n        return vsans\n\n    def run(self):\n        expected = self._split(self.get_threshold_var('active_vsan', default='', value_type='str'))\n        thresholds = {'active_vsan': expected}\n        if not expected:\n            return self.fail('임계치 미정의', message='active_vsan 값이 필요합니다.', thresholds=thresholds)\n\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)\n\n        vsans = self._parse(out)\n        if not vsans:\n            return self.fail('VSAN 상태 파싱 실패', message='show vsan 결과를 해석하지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)\n\n        bad = [{'vsan': name, 'state': vsans.get(name, {}).get('state', 'missing')} for name in expected if vsans.get(name, {}).get('state') != 'active']\n        metrics = {'checked_vsan_count': len(expected), 'bad_vsans': bad, 'vsans': vsans}\n        if bad:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{len(bad)}개 운영대상 VSAN이 active 상태가 아닙니다.', message='운영대상 VSAN 상태 기준 미달')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='운영대상 VSAN이 모두 active 상태입니다.', message='VSAN 상태 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'show vsan'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def _split(self, value):",
+        "        return [item for item in re.split(r'[\\s,]+', str(value or '').strip()) if item]",
+        "",
+        "    def _parse(self, text):",
+        "        vsans = {}",
+        "        current = None",
+        "        for line in (text or '').splitlines():",
+        "            info = re.search(r'^vsan\\s+(\\d+)\\s+information', line.strip(), re.IGNORECASE)",
+        "            state = re.search(r'name:\\S+\\s+state:(\\S+)', line.strip(), re.IGNORECASE)",
+        "            if info:",
+        "                current = info.group(1)",
+        "                vsans[current] = {}",
+        "            elif current and state:",
+        "                vsans[current]['state'] = state.group(1)",
+        "        return vsans",
+        "",
+        "    def run(self):",
+        "        expected = self._split(self.get_threshold_var('active_vsan', default='', value_type='str'))",
+        "        thresholds = {'active_vsan': expected}",
+        "        if not expected:",
+        "            return self.fail('임계치 미정의', message='active_vsan 값이 필요합니다.', thresholds=thresholds)",
+        "",
+        "        rc, out, err = self._ssh(COMMAND)",
+        "        if rc != 0:",
+        "            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)",
+        "",
+        "        vsans = self._parse(out)",
+        "        if not vsans:",
+        "            return self.fail('VSAN 상태 파싱 실패', message='show vsan 결과를 해석하지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)",
+        "",
+        "        bad = [{'vsan': name, 'state': vsans.get(name, {}).get('state', 'missing')} for name in expected if vsans.get(name, {}).get('state') != 'active']",
+        "        metrics = {'checked_vsan_count': len(expected), 'bad_vsans': bad, 'vsans': vsans}",
+        "        if bad:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'{len(bad)}개 운영대상 VSAN이 active 상태가 아닙니다.', message='운영대상 VSAN 상태 기준 미달')",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='운영대상 VSAN이 모두 active 상태입니다.', message='VSAN 상태 점검이 정상 수행되었습니다.')",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01",
+      "item_id": 98505,
+      "application_id": 80501,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "NX_OS_MDS_C9148S",
+      "application_family_name": "NX_OS_MDS_C9148S",
+      "threshold_list": [
+        {
+          "name": "active_vsan",
+          "value1": "10"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "checked_vsan_count": 1,
+        "bad_vsans": [],
+        "vsans": {
+          "1": {
+            "state": "active"
+          },
+          "10": {
+            "state": "active"
+          }
+        }
+      },
+      "thresholds": {
+        "active_vsan": [
+          "10"
+        ]
+      },
+      "reasons": "운영대상 VSAN이 모두 active 상태입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show vsan\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show vsan\nvsan 1 information\n         name:VSAN0001  state:active\n         interoperability mode:default\n         loadbalancing:src-id/dst-id/oxid\n         operational state:down\n\nvsan 10 information\n         name:VSAN0010  state:active\n         interoperability mode:default\n         loadbalancing:src-id/dst-id/oxid\n         operational state:up\n\nvsan 4079:evfp_isolated_vsan\n\nvsan 4094:isolated_vsan",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: show vsan",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: CITS-SAN1# show vsan",
+        "vsan 1 information",
+        "         name:VSAN0001  state:active",
+        "         interoperability mode:default",
+        "         loadbalancing:src-id/dst-id/oxid",
+        "         operational state:down",
+        "",
+        "vsan 10 information",
+        "         name:VSAN0010  state:active",
+        "         interoperability mode:default",
+        "         loadbalancing:src-id/dst-id/oxid",
+        "         operational state:up",
+        "",
+        "vsan 4079:evfp_isolated_vsan",
+        "",
+        "vsan 4094:isolated_vsan"
+      ],
+      "message": "VSAN 상태 점검이 정상 수행되었습니다."
+    }
+  ],
+  "failed_items": []
+}

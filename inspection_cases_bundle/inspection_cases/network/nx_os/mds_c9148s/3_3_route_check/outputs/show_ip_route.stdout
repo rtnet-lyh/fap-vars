@@ -1,0 +1,7 @@
+CITS-SAN1# show ip route
+
+Codes: C - connected, S - static
+
+Default gateway is 193.1.0.254
+
+C 193.1.0.0/19 is directly connected, mgmt0

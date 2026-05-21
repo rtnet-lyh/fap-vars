@@ -1,0 +1,22 @@
+CITS-SAN1# show interface brief
+
+-------------------------------------------------------------------------------
+Interface  Vsan   Admin  Admin   Status       SFP    Oper  Oper   Port
+                  Mode   Trunk                       Mode  Speed  Channel
+                         Mode                              (Gbps)
+-------------------------------------------------------------------------------
+fc1/1      10     auto   on      up           swl   F      8      --
+fc1/2      10     auto   on      up           swl   F      8      --
+fc1/3      10     auto   on      notConnected swl    --    --     --
+fc1/4      10     auto   on      up           swl   F      8      --
+fc1/5      10     auto   on      up           swl   F      8      --
+fc1/6      10     auto   on      up           swl   F      8      --
+fc1/7      10     auto   on      up           swl   F      8      --
+fc1/8      10     auto   on      up           swl   F      8      --
+fc1/9      10     auto   on      up           swl   F      8      --
+fc1/10     10     auto   on      up           swl   F      8      --
+fc1/11     10     auto   on      notConnected swl    --    --     --
+fc1/12     10     auto   on      errDisabled  swl    --    --     --
+fc1/13     1      auto   on      sfpAbsent    --     --    --     --
+fc1/14     1      auto   on      licenseNotAv --     --    --     --
+fc1/15     1      auto   on      sfpAbsent    --     --    --     --
