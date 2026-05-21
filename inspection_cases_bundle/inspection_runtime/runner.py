@@ -1385,7 +1385,8 @@ def execute_runner(
                     ssh_options,
                     DEFAULT_SSH_COMMAND_TIMEOUT_SEC,
                 )
-            if rc != 0:
+            # rc:16 --> cisco 장비 연결됨에도 불구하고 미지원 커맨드('true')로 에러나는 케이스
+            if rc not in [0, 16]:
                 precheck_errors[method] = (err or out or '').strip() or '연결 실패'
                 logger.error(
                     'host precheck failed: method=%s inspection_code=%s application_type=%s application=%s message=%s',
