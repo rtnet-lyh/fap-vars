@@ -117,6 +117,26 @@ CHECK_CLASS = Check
 """
 
 
+SERVER_SSH_NO_CONTROL_MASTER_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
+
+    def run(self):
+        rc, out, err = self._ssh('actual-check')
+        if rc != 0:
+            return self.fail('actual failed', stderr=err)
+        return self.ok(message='actual ok')
+
+
+CHECK_CLASS = Check
+"""
+
+
 SERVER_PARAMIKO_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
 from .common._base import BaseCheck
 
@@ -469,6 +489,50 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
         self.assertNotIn('actual-check', calls)
         self.assertEqual([res['status'] for res in output['results']], ['fail', 'fail'])
         self.assertEqual([res['error'] for res in output['results']], ['권한 상승 실패', '권한 상승 실패'])
+
+    def test_ssh_control_master_can_be_disabled_per_script(self):
+        calls = []
+
+        def ssh_executor(cmd, host, port, user, password, ssh_options, timeout_sec=None):
+            del host, port, user, password, timeout_sec
+            calls.append({
+                'cmd': cmd,
+                'ssh_options': ssh_options,
+            })
+            return 0, 'ok', ''
+
+        payload = self.server_payload(
+            [
+                self.server_item('U-TEST-SSH-DEFAULT', 1),
+                self.server_item('U-TEST-SSH-NO-CONTROL-MASTER', 2, SERVER_SSH_NO_CONTROL_MASTER_SCRIPT_TEXT),
+            ],
+            {'become': False},
+        )
+
+        output = self.run_payload(payload, ssh_executor=ssh_executor)
+
+        prechecks = [call for call in calls if call['cmd'] == 'true']
+        default_prechecks = [
+            call for call in prechecks
+            if '-o ControlMaster=auto' in call['ssh_options']
+        ]
+        isolated_prechecks = [
+            call for call in prechecks
+            if '-o ControlMaster=auto' not in call['ssh_options']
+        ]
+        isolated_checks = [
+            call for call in calls
+            if call['cmd'] == 'actual-check'
+            and '-o ControlMaster=auto' not in call['ssh_options']
+        ]
+
+        self.assertEqual([res['status'] for res in output['results']], ['ok', 'ok'])
+        self.assertEqual(len(default_prechecks), 1)
+        self.assertEqual(len(isolated_prechecks), 1)
+        self.assertEqual(len(isolated_checks), 1)
+        self.assertIn('-o ConnectTimeout=3', isolated_checks[0]['ssh_options'])
+        self.assertNotIn('ControlPersist', isolated_checks[0]['ssh_options'])
+        self.assertNotIn('ControlPath', isolated_checks[0]['ssh_options'])
 
     def test_paramiko_sudo_precheck_failure_blocks_paramiko_commands_once(self):
         clients = []

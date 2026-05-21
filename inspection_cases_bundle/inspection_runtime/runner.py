@@ -68,6 +68,7 @@ POWERSHELL_UTF8_PREFIX = (
 )
 SUPPORTED_BECOME_PRECHECK_METHODS = ('sudo', 'su', 'su -')
 TRUTHY_VALUES = ('1', 'true', 'y', 'yes', 'on')
+SSH_CONTROL_MASTER_OPTION_NAMES = ('controlmaster', 'controlpersist', 'controlpath')
 
 
 def decode_stream_bytes(value, preferred_encodings=None):
@@ -992,6 +993,60 @@ def ensure_ssh_options_defaults(ssh_options):
     return text
 
 
+def is_falsey(value):
+    if isinstance(value, str):
+        return value.strip().lower() in ('0', 'false', 'n', 'no', 'off')
+    return value is False
+
+
+def get_ssh_option_name(option):
+    return str(option or '').split('=', 1)[0].strip().lower()
+
+
+def strip_ssh_control_master_options(ssh_options):
+    tokens = str(ssh_options or '').split()
+    filtered = []
+    idx = 0
+
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token == '-o' and idx + 1 < len(tokens):
+            option = tokens[idx + 1]
+            if get_ssh_option_name(option) in SSH_CONTROL_MASTER_OPTION_NAMES:
+                idx += 2
+                continue
+            filtered.extend((token, option))
+            idx += 2
+            continue
+        if token.startswith('-o') and get_ssh_option_name(token[2:]) in SSH_CONTROL_MASTER_OPTION_NAMES:
+            idx += 1
+            continue
+        filtered.append(token)
+        idx += 1
+
+    return ' '.join(filtered)
+
+
+def resolve_item_ssh_options(mod, ssh_options):
+    item_ssh_options = ensure_ssh_options_defaults(ssh_options)
+    if is_falsey(get_check_attr(mod, 'SSH_CONTROL_MASTER', None)):
+        item_ssh_options = strip_ssh_control_master_options(item_ssh_options)
+    return item_ssh_options
+
+
+def build_host_precheck_key(method, ssh_options):
+    if method == 'ssh':
+        return method, str(ssh_options or '')
+    return method
+
+
+def build_become_precheck_key(become_request, method, ssh_options):
+    key = become_request['key']
+    if method == 'ssh':
+        return key, str(ssh_options or '')
+    return key
+
+
 @lru_cache(maxsize=64)
 def _winrm_session(host, port, user, password, transport, server_cert_validation, operation_timeout_sec, read_timeout_sec):
     import winrm
@@ -1344,7 +1399,9 @@ def execute_runner(
             if not mod or not needs_host_connection(mod):
                 continue
             method = get_connection_method(mod, lookup_payload)
-            if method in checked_methods or method in precheck_errors:
+            item_ssh_options = resolve_item_ssh_options(mod, ssh_options)
+            precheck_key = build_host_precheck_key(method, item_ssh_options)
+            if precheck_key in checked_methods or precheck_key in precheck_errors:
                 continue
             connection_credential = select_connection_credential(credentials, method, lookup_payload)
             connection_values = resolve_connection_values(port, method, connection_credential, user, password)
@@ -1382,22 +1439,22 @@ def execute_runner(
                     connection_values.get('port'),
                     connection_values.get('user'),
                     connection_values.get('password'),
-                    ssh_options,
+                    item_ssh_options,
                     DEFAULT_SSH_COMMAND_TIMEOUT_SEC,
                 )
             # rc:16 --> cisco 장비 연결됨에도 불구하고 미지원 커맨드('true')로 에러나는 케이스
             if rc not in [0, 16]:
-                precheck_errors[method] = (err or out or '').strip() or '연결 실패'
+                precheck_errors[precheck_key] = (err or out or '').strip() or '연결 실패'
                 logger.error(
                     'host precheck failed: method=%s inspection_code=%s application_type=%s application=%s message=%s',
                     method,
                     module_key[0] if module_key else code,
                     module_key[1] if module_key else COMMON_TOKEN,
                     module_key[2] if module_key else COMMON_TOKEN,
-                    precheck_errors[method],
+                    precheck_errors[precheck_key],
                 )
                 continue
-            checked_methods.add(method)
+            checked_methods.add(precheck_key)
             logger.info(
                 'host precheck ok: method=%s source=%s inspection_code=%s application_type=%s application=%s',
                 method,
@@ -1413,7 +1470,9 @@ def execute_runner(
             if not mod or not needs_host_connection(mod):
                 continue
             method = get_connection_method(mod, lookup_payload)
-            if method in precheck_errors:
+            item_ssh_options = resolve_item_ssh_options(mod, ssh_options)
+            precheck_key = build_host_precheck_key(method, item_ssh_options)
+            if precheck_key in precheck_errors:
                 continue
             connection_credential = select_connection_credential(credentials, method, lookup_payload)
             connection_values = resolve_connection_values(port, method, connection_credential, user, password)
@@ -1429,7 +1488,7 @@ def execute_runner(
 
             if not become_request:
                 continue
-            become_key = become_request['key']
+            become_key = build_become_precheck_key(become_request, method, item_ssh_options)
             if become_key in checked_become_prechecks or become_key in become_precheck_errors:
                 continue
             if method == 'paramiko' and become_request.get('become_method') in ('su', 'su -'):
@@ -1462,7 +1521,7 @@ def execute_runner(
                     connection_values.get('port'),
                     connection_values.get('user'),
                     connection_values.get('password'),
-                    ssh_options,
+                    item_ssh_options,
                     DEFAULT_SSH_COMMAND_TIMEOUT_SEC,
                 )
             if rc != 0:
@@ -1502,6 +1561,8 @@ def execute_runner(
         ssh_command_timeout_sec = None
         if mod and method == 'ssh':
             ssh_command_timeout_sec = resolve_ssh_command_timeout_sec(mod)
+        item_ssh_options = resolve_item_ssh_options(mod, ssh_options)
+        precheck_key = build_host_precheck_key(method, item_ssh_options)
         connection_credential = select_connection_credential(credentials, method, lookup_payload)
         connection_values = resolve_connection_values(port, method, connection_credential, user, password)
         app_credential = select_application_credential(credentials, lookup_payload)
@@ -1524,8 +1585,8 @@ def execute_runner(
             (item_payload or {}).get('application_id'),
             'yes' if app_credential else 'no',
         )
-        if method in precheck_errors:
-            res = build_precheck_fail_result(code, item_id, item_payload, method, precheck_errors[method])
+        if precheck_key in precheck_errors:
+            res = build_precheck_fail_result(code, item_id, item_payload, method, precheck_errors[precheck_key])
             results.append(res)
             logger.info('    result_json=\n%s', json.dumps(res, ensure_ascii=False, indent=2))
             continue
@@ -1538,13 +1599,15 @@ def execute_runner(
                 connection_credential,
                 app_credential,
             )
-        if become_request and become_request['key'] in become_precheck_errors:
+        if become_request:
+            become_key = build_become_precheck_key(become_request, method, item_ssh_options)
+        if become_request and become_key in become_precheck_errors:
             res = build_become_precheck_fail_result(
                 code,
                 item_id,
                 item_payload,
                 method,
-                become_precheck_errors[become_request['key']],
+                become_precheck_errors[become_key],
             )
             results.append(res)
             logger.info('    result_json=\n%s', json.dumps(res, ensure_ascii=False, indent=2))
@@ -1591,7 +1654,7 @@ def execute_runner(
             'password': connection_values.get('password'),
             'os_user': connection_values.get('user'),
             'os_password': connection_values.get('password'),
-            'ssh_options': ssh_options,
+            'ssh_options': item_ssh_options,
             'thresholds': thresholds.get(code, {}),
             'inspection_code': code,
             'item_id': item_id,

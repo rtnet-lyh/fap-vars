@@ -150,6 +150,8 @@ class BaseCheck:
     CONNECTION_METHOD = 'ssh'
     # SSH 명령 최대 대기 시간(초), None이면 runner 기본값 사용
     SSH_COMMAND_TIMEOUT_SEC = None
+    # False면 runner 기본 SSH multiplexing(ControlMaster) 옵션을 끈다.
+    SSH_CONTROL_MASTER = None
     # WinRM 사용 시 기본 쉘
     WINRM_SHELL = 'powershell'
     # Paramiko interactive shell defaults. Override in script.py when needed.
