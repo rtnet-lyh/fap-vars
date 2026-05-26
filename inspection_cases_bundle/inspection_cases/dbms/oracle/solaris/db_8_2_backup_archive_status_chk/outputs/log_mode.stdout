@@ -1,0 +1,11 @@
+sqlplus -S /nolog <<EOF
+connect / as sysdba
+set feedback off
+select log_mode from v\$database;
+exit;
+EOF
+
+LOG_MODE
+------------
+ARCHIVELOG
+oratips@exTMStotalDB1:~$

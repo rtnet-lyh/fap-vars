@@ -1,0 +1,18 @@
+sqlplus -S / as sysdba <<EOF
+ALTER SESSION SET NLS_LANGUAGE = 'AMERICAN';
+set pagesize 100 linesize 300 feedback off heading on;
+col destination format a40
+col error format a30 
+
+SELECT destination, status, error 
+FROM v\$archive_dest 
+WHERE destination IS NOT NULL;
+exit
+EOF
+
+Session altered.
+
+DESTINATION                              STATUS    ERROR
+---------------------------------------- --------- ------------------------------
+/TTIPS_ARCH                              VALID
+oratips@exTMStotalDB1:~$

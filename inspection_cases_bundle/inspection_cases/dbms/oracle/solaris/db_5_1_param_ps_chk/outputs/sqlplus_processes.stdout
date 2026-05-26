@@ -1,0 +1,17 @@
+sqlplus -S / as sysdba << EOF
+set linesize 200 pagesize 100 feedback off
+
+SELECT
+    TO_NUMBER(value) AS "Max Processes",
+    (SELECT COUNT(*) FROM v\$session) AS "Current Sessions",
+    ROUND(((SELECT COUNT(*) FROM v\$session) / TO_NUMBER(value)) * 100, 2) AS "Usage Percentage"
+FROM    v\$parameter
+WHERE
+    name = 'processes';
+EXIT;
+EOF
+
+Max Processes Current Sessions Usage Percentage
+------------- ---------------- ----------------
+        10000             2363            23.63
+oratips@exTMStotalDB1:~$

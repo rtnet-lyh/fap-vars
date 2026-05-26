@@ -1,0 +1,15 @@
+sqlplus -S /nolog <<EOF
+connect / as sysdba
+set feedback off
+select GROUP#, MEMBERS, BYTES/1024/1024 AS SIZE_MB, STATUS
+from V\$log;
+exit;
+EOF
+
+    GROUP#    MEMBERS    SIZE_MB STATUS
+---------- ---------- ---------- ----------------
+         1          2       2048 INACTIVE
+         2          2       2048 ACTIVE
+         3          2       2048 INACTIVE
+         4          2       2048 CURRENT
+oratips@exTMStotalDB1:~$

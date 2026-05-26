@@ -1,0 +1,13 @@
+sqlplus -S /nolog <<EOF
+CONNECT / AS SYSDBA
+set linesize 200
+col name format a40
+SELECT * FROM V\$controlfile;
+EXIT;
+EOF
+
+STATUS  NAME                                     IS_ BLOCK_SIZE FILE_SIZE_BLKS     CON_ID
+------- ---------------------------------------- --- ---------- -------------- ----------
+        /TTIPS_DATA01/TTIPS/control01.ctl        NO       16384           1494          0
+        /TTIPS_DATA02/TTIPS/control02.ctl        NO       16384           1494          0
+oratips@exTMStotalDB1:~$

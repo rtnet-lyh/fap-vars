@@ -1,0 +1,57 @@
+{
+  "host": "172.18.8.91",
+  "port": 22,
+  "user": "oratips",
+  "password": "f3dtop0!",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 501,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "oratips",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 51,
+  "host_id": 510,
+  "job_id": 5100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-SOLARIS-REPLAY-001",
+    "item_id": 95001,
+    "application_id": 501,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "DB 엔진 파일시스템 사용률",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "Oracle 계정으로 전환한 뒤 Solaris ORACLE_HOME 파일시스템의 사용률을 df -k 명령으로 점검합니다.",
+    "inspection_command": "su - <oracle_account>; whoami; df -k $ORACLE_HOME",
+    "is_service_affect": "N",
+    "action_content": "DB 엔진 파일시스템 사용률이 기준을 초과하면 불필요 파일 정리 또는 공간 증설 필요 여부를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "oratips"
+      },
+      {
+        "name": "max_used_percent",
+        "value1": "80"
+      }
+    ]
+  }
+}

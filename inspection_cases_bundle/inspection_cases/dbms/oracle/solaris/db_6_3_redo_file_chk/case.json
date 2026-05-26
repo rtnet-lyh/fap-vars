@@ -1,0 +1,41 @@
+{
+  "host": "172.18.8.91",
+  "port": 22,
+  "user": "oratips",
+  "password": "f3dtop0!",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 501,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "oratips",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-SOLARIS-REPLAY-017",
+    "item_id": 95017,
+    "application_id": 501,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "리두로그 파일 이중화",
+    "inspection_command": "su - <oracle_account>; whoami; sqlplus V$logfile query",
+    "threshold_list": [
+      {"name": "oracle_account", "value1": "oratips"},
+      {"name": "redo_group_member_count", "value1": "2"}
+    ]
+  }
+}

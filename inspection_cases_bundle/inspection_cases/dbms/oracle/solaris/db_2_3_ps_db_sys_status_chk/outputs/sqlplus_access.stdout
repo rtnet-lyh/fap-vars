@@ -1,0 +1,10 @@
+sqlplus -S /nolog << EOF
+connect / as sysdba
+select 'DB is accessible' from dual;
+exit;
+EOF
+
+'DBISACCESSIBLE'
+----------------
+DB is accessible
+oratips@exTMStotalDB1:~$

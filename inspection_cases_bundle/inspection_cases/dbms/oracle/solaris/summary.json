@@ -1,0 +1,142 @@
+{
+  "total_cases": 22,
+  "failed_cases": [
+    "db_7_1_table_space_chk"
+  ],
+  "cases": [
+    {
+      "case_name": "db_1_1_fs_engine_chk",
+      "result_file": "db_1_1_fs_engine_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_1_2_fs_archive_log_chk",
+      "result_file": "db_1_2_fs_archive_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_1_3_fs_db_sys_log_chk",
+      "result_file": "db_1_3_fs_db_sys_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_2_1_ps_main_status_chk",
+      "result_file": "db_2_1_ps_main_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_2_2_ps_lsnr_status_chk",
+      "result_file": "db_2_2_ps_lsnr_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_2_3_ps_db_sys_status_chk",
+      "result_file": "db_2_3_ps_db_sys_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_3_1_os_mem_chk",
+      "result_file": "db_3_1_os_mem_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_3_2_os_cpu_chk",
+      "result_file": "db_3_2_os_cpu_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_4_1_log_db_chk",
+      "result_file": "db_4_1_log_db_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_4_2_log_lsnr_chk",
+      "result_file": "db_4_2_log_lsnr_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_4_3_log_dump_chk",
+      "result_file": "db_4_3_log_dump_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_4_4_log_engine_chk",
+      "result_file": "db_4_4_log_engine_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_5_1_param_ps_chk",
+      "result_file": "db_5_1_param_ps_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_5_2_param_sga_chk",
+      "result_file": "db_5_2_param_sga_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_6_1_active_standby_chk",
+      "result_file": "db_6_1_active_standby_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_6_2_ctrl_file_chk",
+      "result_file": "db_6_2_ctrl_file_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_6_3_redo_file_chk",
+      "result_file": "db_6_3_redo_file_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_7_1_table_space_chk",
+      "result_file": "db_7_1_table_space_chk/result.json",
+      "failed_items": [
+        "DBMS-ORACLE-SOLARIS-REPLAY-018"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "db_8_1_backup_status_chk",
+      "result_file": "db_8_1_backup_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_8_2_backup_archive_status_chk",
+      "result_file": "db_8_2_backup_archive_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_8_3_backup_config_chk",
+      "result_file": "db_8_3_backup_config_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "db_9_1_transaction_log_chk",
+      "result_file": "db_9_1_transaction_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

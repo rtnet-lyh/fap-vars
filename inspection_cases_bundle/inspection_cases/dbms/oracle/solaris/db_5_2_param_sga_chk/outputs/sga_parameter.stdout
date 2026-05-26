@@ -1,0 +1,24 @@
+echo "=====Physical Memory====="
+PHYS_MEM=$(prtconf | awk '/Memory size:/ {printf "%.0f\n", $3/1024}')
+echo "${PHYS_MEM} GB"
+echo ""
+echo "=====Oracle SGA Parameter====="
+echo "
+show parameter sga
+exit;
+" | sqlplus -S / as sysdba
+=====Physical Memory=====
+254 GB
+
+=====Oracle SGA Parameter=====
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+allow_group_access_to_sga            boolean     TRUE
+lock_sga                             boolean     FALSE
+pre_page_sga                         boolean     TRUE
+sga_max_size                         big integer 100G
+sga_min_size                         big integer 0
+sga_target                           big integer 100G
+unified_audit_sga_queue_size         integer     1048576
+oratips@exTMStotalDB1:~$

@@ -1,0 +1,9 @@
+ps -eo pid,comm,pcpu | grep ora_
+ 1004 ora_diag_TTIPS1                                                                   0.0
+ 1058 ora_dbw6_TTIPS1                                                                    0.0
+ 3442 ora_p000_TTIPS1                                                                    0.0
+ 1028 ora_lms3_TTIPS1                                                                    0.1
+ 1014 ora_ping_TTIPS1                                                                    0.0
+ 1011 ora_dbrm_TTIPS1                                                                    0.1
+ 1023 ora_lms0_TTIPS1                                                                    0.2
+oratips@exTMStotalDB1:~$

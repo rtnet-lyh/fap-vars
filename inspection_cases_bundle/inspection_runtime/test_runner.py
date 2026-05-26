@@ -278,6 +278,93 @@ class RunnerWinrmTest(unittest.TestCase):
         self.assertEqual((rc, out, err), (0, '', ''))
 
 
+class SolarisAccountCommandTest(unittest.TestCase):
+    def make_check(self):
+        return BaseCheck({
+            'host': '10.0.0.10',
+            'port': 22,
+            'user': 'inspector',
+            'password': 'ssh-password',
+            'ssh_options': '',
+            'inspection_code': 'DBMS-ORACLE-SOLARIS-TEST',
+            'item_id': 1,
+            'item_payload': {},
+        })
+
+    def test_solaris_account_commands_use_root_become_then_whoami(self):
+        check = self.make_check()
+        command_results = [
+            {
+                'command': 'su - oratips',
+                'rc': 124,
+                'stdout': '',
+                'stderr': 'PARAMIKO_COMMAND_TIMEOUT: prompt was not received',
+                'timed_out': True,
+            },
+            {
+                'command': 'whoami',
+                'rc': 0,
+                'stdout': 'oratips',
+                'stderr': '',
+            },
+            {
+                'command': 'df -k $ORACLE_HOME',
+                'rc': 0,
+                'stdout': 'df output',
+                'stderr': '',
+            },
+        ]
+
+        with mock.patch.object(check, '_run_solaris_commands', return_value=command_results) as run_commands:
+            results = check._run_solaris_account_commands(
+                'oratips',
+                [{'command': 'df -k $ORACLE_HOME', 'timeout': 10}],
+            )
+
+        self.assertEqual(results, [command_results[2]])
+        self.assertEqual(check._solaris_last_account_switch_verification['actual_user'], 'oratips')
+        commands = run_commands.call_args.args[0]
+        self.assertEqual(commands[0]['command'], 'su - oratips')
+        self.assertTrue(commands[0]['ignore_prompt'])
+        self.assertEqual(commands[1]['command'], 'whoami')
+        self.assertEqual(commands[2]['command'], 'df -k $ORACLE_HOME')
+        self.assertIs(run_commands.call_args.kwargs['become_required'], True)
+
+    def test_solaris_account_commands_fail_when_whoami_user_differs(self):
+        check = self.make_check()
+        command_results = [
+            {
+                'command': 'su - oratips',
+                'rc': 0,
+                'stdout': '',
+                'stderr': '',
+            },
+            {
+                'command': 'whoami',
+                'rc': 0,
+                'stdout': 'root',
+                'stderr': '',
+            },
+            {
+                'command': 'df -k $ORACLE_HOME',
+                'rc': 0,
+                'stdout': 'df output',
+                'stderr': '',
+            },
+        ]
+
+        with mock.patch.object(check, '_run_solaris_commands', return_value=command_results):
+            results = check._run_solaris_account_commands(
+                'oratips',
+                [{'command': 'df -k $ORACLE_HOME', 'timeout': 10}],
+            )
+
+        self.assertEqual(results[0]['command'], 'df -k $ORACLE_HOME')
+        self.assertEqual(results[0]['rc'], 1)
+        self.assertIn('expected_user=oratips, actual_user=root', results[0]['stderr'])
+        self.assertFalse(check._solaris_last_account_switch_verification['ok'])
+
+
 class BaseCheckSshBecomeTest(unittest.TestCase):
     def make_check(self, app_data=None, conn_data=None, response=(0, 'ok', '')):
         calls = []

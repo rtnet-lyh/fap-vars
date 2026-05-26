@@ -1,0 +1,5 @@
+df -k $ORACLE_HOME
+Filesystem           1024-blocks        Used   Available Capacity  Mounted on
+/dev/vx/dsk/ttips_home01dg/ttips_homevol01
+                       104806400    12304871    86732892    13%    /TTIPS_HOME
+oratips@exTMStotalDB1:~$

@@ -1,0 +1,20 @@
+rman target / <<EOF
+LIST BACKUP SUMMARY;
+EXIT;
+EOF
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Thu May 21 15:03:00 2026
+connected to target database: TTIPS (DBID=179220281)
+
+RMAN> LIST BACKUP SUMMARY;
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time #Pieces #Copies Compressed Tag
+------- -- -- - ----------- --------------- ------- ------- ---------- ---
+29528   B  F  A SBT_TAPE    06-MAY-26       1       1       NO         TAG20260506T033323
+32737   B  F  A SBT_TAPE    21-MAY-26       1       1       NO         TAG20260521T034240
+32740   B  F  A SBT_TAPE    21-MAY-26       1       1       NO         TAG20260521T130029
+
+RMAN> EXIT;
+Recovery Manager complete.
+oratips@exTMStotalDB1:~$

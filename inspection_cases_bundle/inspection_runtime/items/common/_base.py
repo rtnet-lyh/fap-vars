@@ -1093,6 +1093,126 @@ class BaseCheck:
             return all_results
         return command_results
 
+    def _verify_solaris_account_switch_result(self, expected_user, switch_result, whoami_result):
+        """root 세션에서 su 전환 후 whoami 결과가 요청 계정인지 검증한다."""
+        switched = switch_result if isinstance(switch_result, dict) else {}
+        switch_rc = switched.get('rc', 1)
+        switch_prompt_changed = switch_rc == 124 and switched.get('timed_out')
+        if switch_rc != 0 and not switch_prompt_changed:
+            return {
+                'ok': False,
+                'actual_user': '',
+                'message': 'Solaris 계정 전환 실패: su 명령이 정상 종료되지 않았습니다.',
+                'stdout': str(switched.get('stdout') or ''),
+                'stderr': str(switched.get('stderr') or ''),
+                'raw_output': str(switched.get('raw_output') or ''),
+            }
+
+        checked = whoami_result if isinstance(whoami_result, dict) else {}
+        if checked.get('rc', 1) != 0:
+            return {
+                'ok': False,
+                'actual_user': '',
+                'message': 'Solaris 계정 전환 검증 실패: whoami 명령이 정상 종료되지 않았습니다.',
+                'stdout': str(checked.get('stdout') or ''),
+                'stderr': str(checked.get('stderr') or ''),
+                'raw_output': str(checked.get('raw_output') or ''),
+            }
+
+        stdout = str(checked.get('stdout') or '')
+        output_lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+        actual_user = output_lines[-1] if output_lines else ''
+        if actual_user == expected_user:
+            return {
+                'ok': True,
+                'actual_user': actual_user,
+                'message': 'Solaris 계정 전환 성공',
+                'stdout': stdout,
+                'stderr': str(checked.get('stderr') or ''),
+                'raw_output': str(checked.get('raw_output') or ''),
+            }
+
+        return {
+            'ok': False,
+            'actual_user': actual_user,
+            'message': (
+                'Solaris 계정 전환 검증 실패: expected_user=%s, actual_user=%s'
+                % (expected_user, actual_user or '')
+            ),
+            'stdout': stdout,
+            'stderr': str(checked.get('stderr') or ''),
+            'raw_output': str(checked.get('raw_output') or ''),
+        }
+
+    def _run_solaris_account_commands(
+        self,
+        user,
+        command_specs,
+        timeout_sec=None,
+        include_switch_results=False,
+    ):
+        """Paramiko root become 후 Solaris 계정으로 su 전환해 점검 명령을 실행한다."""
+        normalized_specs = self._normalize_solaris_command_specs(command_specs)
+        expected_user = self._validate_solaris_become_user(user)
+        switch_spec = {
+            'command': 'su - ' + expected_user,
+            'timeout': 5,
+            'ignore_prompt': True,
+        }
+        whoami_spec = {
+            'command': 'whoami',
+            'timeout': 5,
+        }
+        all_results = self._run_solaris_commands(
+            [switch_spec, whoami_spec] + normalized_specs,
+            timeout_sec=timeout_sec,
+            become_required=True,
+        )
+
+        switch_result = all_results[0] if all_results else {}
+        whoami_result = all_results[1] if len(all_results) > 1 else {}
+        command_results = all_results[2:]
+        verification = self._verify_solaris_account_switch_result(
+            expected_user,
+            switch_result,
+            whoami_result,
+        )
+        self._solaris_last_account_switch_result = switch_result
+        self._solaris_last_account_whoami_result = whoami_result
+        self._solaris_last_account_switch_verification = verification
+
+        if not verification.get('ok'):
+            first_command = normalized_specs[0]
+            failed_rc = switch_result.get('rc', 1) if isinstance(switch_result, dict) else 1
+            if failed_rc == 0:
+                failed_rc = whoami_result.get('rc', 1) if isinstance(whoami_result, dict) else 1
+            if failed_rc == 0:
+                failed_rc = 1
+            failed_result = self._build_paramiko_result(
+                first_command.get('command'),
+                failed_rc,
+                stdout=verification.get('stdout') or '',
+                stderr=verification.get('stderr') or verification.get('message') or 'Solaris 계정 전환 실패',
+                raw_output=verification.get('raw_output') or '',
+                display_command=first_command.get('display_command') or first_command.get('command'),
+                hide_command=bool(first_command.get('hide_command', False)),
+            )
+            if not failed_result.get('stderr'):
+                failed_result['stderr'] = verification.get('message') or 'Solaris 계정 전환 실패'
+            self._record_command(
+                failed_result.get('display_command') or failed_result.get('command'),
+                failed_result.get('rc'),
+                failed_result.get('stdout'),
+                failed_result.get('stderr'),
+            )
+            if include_switch_results:
+                return [item for item in (switch_result, whoami_result, failed_result) if item]
+            return [failed_result]
+
+        if include_switch_results:
+            return all_results
+        return command_results
+
     def _paramiko_reuse_session_enabled(self):
         # 우선순위:
         # 1) runner ctx의 paramiko_reuse_session

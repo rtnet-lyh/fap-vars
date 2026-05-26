@@ -1,0 +1,19 @@
+sqlplus -S /nolog <<EOF
+CONNECT / AS SYSDBA
+set linesize 200 pagesize 100 feedback off
+col member format a40
+col status format a10
+col type format a10
+SELECT * FROM V\$logfile;
+EXIT;
+EOF
+
+    GROUP# STATUS     TYPE       MEMBER                                   IS_     CON_ID
+---------- ---------- ---------- ---------------------------------------- --- ----------
+         1            ONLINE     /TTIPS_ORA01/TTIPS/redo01a.log           NO           0
+         1            ONLINE     /TTIPS_ORA02/TTIPS/redo01b.log           NO           0
+         2            ONLINE     /TTIPS_ORA01/TTIPS/redo02a.log           NO           0
+         2            ONLINE     /TTIPS_ORA02/TTIPS/redo02b.log           NO           0
+         3            ONLINE     /TTIPS_ORA01/TTIPS/redo03a.log           NO           0
+         3            ONLINE     /TTIPS_ORA02/TTIPS/redo03b.log           NO           0
+oratips@exTMStotalDB1:~$

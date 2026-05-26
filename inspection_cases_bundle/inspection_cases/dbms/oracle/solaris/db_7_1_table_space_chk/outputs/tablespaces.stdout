@@ -1,0 +1,18 @@
+sqlplus -S /nolog <<EOF
+connect / as sysdba
+set feedback off
+col usage_percent format 990.99
+select tablespace_name, round(used_percent,2) as USAGE_PERCENT
+from dba_tablespace_usage_metrics;
+exit;
+EOF
+
+TABLESPACE_NAME                USAGE_PERCENT
+------------------------------ -------------
+ECRS_DATA                              47.55
+EXTLNK                                 70.13
+TIPSA_IDX                              80.47
+UNDOTBS1                               99.67
+UNDOTBS2                               88.04
+USERS                                   0.23
+oratips@exTMStotalDB1:~$

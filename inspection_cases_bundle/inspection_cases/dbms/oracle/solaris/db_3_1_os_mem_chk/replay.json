@@ -1,0 +1,15 @@
+[
+  {"channel": "terminal", "action": "recv", "stdout": "oratips@exTMStotalDB1:~$"},
+  {"channel": "terminal", "action": "send", "matcher_value": "su - root"},
+  {"channel": "terminal", "action": "recv", "stdout": "su - root\r\nPassword:"},
+  {"channel": "terminal", "action": "send", "redacted": true},
+  {"channel": "terminal", "action": "recv", "stdout": "Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\n#"},
+  {"channel": "terminal", "action": "send", "matcher_value": "/usr/bin/id"},
+  {"channel": "terminal", "action": "recv", "stdout": "/usr/bin/id\r\nuid=0(root) gid=0(root)\r\n#"},
+  {"channel": "terminal", "action": "send", "matcher_value": "su - oratips"},
+  {"channel": "terminal", "action": "recv", "stdout": "su - oratips\r\nOracle Corporation      SunOS 5.10      Generic Patch   January 2005\r\noratips@exTMStotalDB1:~$"},
+  {"channel": "terminal", "action": "send", "matcher_value": "whoami"},
+  {"channel": "terminal", "action": "recv", "stdout": "whoami\r\noratips\r\noratips@exTMStotalDB1:~$"},
+  {"channel": "terminal", "action": "send", "matcher_value": "ps -eo pid,comm,pmem,rss,vsz | grep ora_"},
+  {"channel": "terminal", "action": "recv", "stdout_file": "outputs/ps_memory.stdout"}
+]

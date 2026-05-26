@@ -1,0 +1,43 @@
+{
+  "host": "172.18.8.91",
+  "port": 22,
+  "user": "oratips",
+  "password": "f3dtop0!",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 501,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "oratips",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-SOLARIS-REPLAY-013",
+    "item_id": 95013,
+    "application_id": 501,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "프로세스 개수 파라미터",
+    "inspection_command": "su - <oracle_account>; whoami; sqlplus processes usage query",
+    "threshold_list": [
+      {"name": "oracle_account", "value1": "oratips"},
+      {"name": "max_process_count", "value1": "100"},
+      {"name": "max_current_sessions", "value1": "9000"},
+      {"name": "max_usage_percentage", "value1": "90"}
+    ]
+  }
+}

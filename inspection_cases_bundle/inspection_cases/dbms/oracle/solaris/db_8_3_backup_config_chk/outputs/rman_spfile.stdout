@@ -1,0 +1,20 @@
+rman target / <<EOF
+LIST BACKUP OF SPFILE;
+EXIT;
+EOF
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Thu May 21 15:22:43 2026
+connected to target database: TTIPS (DBID=179220281)
+
+RMAN> LIST BACKUP OF SPFILE;
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ---------------
+32740   Full    23.50M     SBT_TAPE    00:00:09     21-MAY-26
+        BP Key: 32740   Status: AVAILABLE  Compressed: NO  Tag: TAG20260521T130029
+  SPFILE Included: Modification time: 20-MAY-26
+  SPFILE db_unique_name: TTIPS
+
+RMAN> EXIT;
+Recovery Manager complete.
+oratips@exTMStotalDB1:~$

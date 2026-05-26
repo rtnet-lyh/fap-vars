@@ -1,0 +1,4 @@
+ps aux | grep ora_smon
+oratips   9379  0.0  0.010128 6640 pts/7    S 18:09:11  0:00 grep ora_smon
+oratips  24703  0.0 39.8105663208105637024 ?        S 04:11:11  0:21 ora_smon_TTIPS2
+oratips@exTMStotalDB1:~$

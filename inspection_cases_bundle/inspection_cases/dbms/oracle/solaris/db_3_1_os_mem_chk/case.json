@@ -1,0 +1,40 @@
+{
+  "host": "172.18.8.91",
+  "port": 22,
+  "user": "oratips",
+  "password": "f3dtop0!",
+  "credentials": {
+    "SOLARIS": [
+      {
+        "application_id": 501,
+        "application_type_id": 40,
+        "application_type_name": "SOLARIS",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "oratips",
+          "password": "f3dtop0!",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-SOLARIS-REPLAY-007",
+    "item_id": 95007,
+    "application_id": 501,
+    "application_type_id": 40,
+    "application_type_name": "SOLARIS",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "물리적 메모리 사용률",
+    "inspection_command": "su - <oracle_account>; whoami; ps -eo pid,comm,pmem,rss,vsz | grep ora_",
+    "threshold_list": [
+      {"name": "oracle_account", "value1": "oratips"}
+    ]
+  }
+}
