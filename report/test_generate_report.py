@@ -1,10 +1,13 @@
 import tempfile
 import unittest
+import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Set
 
 from report.generate_report import (
     DefaultInspectionReportGenerator,
+    GovernmentChecklistReportGenerator,
     PreventiveInspectionReportGenerator,
     build_mock_report_rows,
     build_output_path,
@@ -19,6 +22,7 @@ from report.generate_report import (
     normalize_output_name,
     normalize_sheet_name,
     parse_args,
+    save_government_checklist_docx_reports,
 )
 from report.generate_report import DetailRow, SummaryRow
 
@@ -144,6 +148,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=1,
                 host_name="host-a",
                 host_ip="10.0.0.1",
+                inspection_code="LIN-001",
                 inspection_item_name="SSH 설정",
                 type_name="계정관리",
                 category_name="패스워드",
@@ -167,6 +172,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=2,
                 host_name="host-b",
                 host_ip="10.0.0.2",
+                inspection_code="LIN-002",
                 inspection_item_name="계정 잠금",
                 type_name="계정관리",
                 category_name="인증",
@@ -190,6 +196,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=2,
                 host_name="host-b",
                 host_ip="10.0.0.2",
+                inspection_code="LIN-003",
                 inspection_item_name="로깅 설정",
                 type_name="로그관리",
                 category_name="감사",
@@ -245,14 +252,26 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertEqual(format_importance("critical"), "critical")
 
     def test_get_report_generator_supports_preventive(self) -> None:
-        self.assertIsInstance(get_report_generator("preventive"), PreventiveInspectionReportGenerator)
+        self.assertIsInstance(get_report_generator("preventive"), GovernmentChecklistReportGenerator)
+
+    def test_get_report_generator_uses_government_checklist_for_default(self) -> None:
+        self.assertIsInstance(get_report_generator("default"), GovernmentChecklistReportGenerator)
+
+    def test_get_report_generator_supports_government_checklist(self) -> None:
+        self.assertIsInstance(get_report_generator("government-checklist"), GovernmentChecklistReportGenerator)
 
     def test_parse_args_uses_default_output_name(self) -> None:
         args = parse_args(["--job-id", "10"])
 
         self.assertEqual(args.output_name, "점검보고서")
+        self.assertEqual(args.output_format, "xlsx")
         self.assertEqual(args.mock_host_count, 0)
         self.assertEqual(args.mock_items_per_host, 3)
+
+    def test_parse_args_accepts_docx_output_format(self) -> None:
+        args = parse_args(["--job-id", "10", "--output-format", "docx"])
+
+        self.assertEqual(args.output_format, "docx")
 
     def test_normalize_output_name_uses_filename_stem(self) -> None:
         self.assertEqual(normalize_output_name("custom.xlsx"), "custom")
@@ -315,6 +334,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=1,
                 host_name="host-a",
                 host_ip="10.0.0.1",
+                inspection_code="LIN-001",
                 inspection_item_name="SSH 설정",
                 type_name="계정관리",
                 category_name="패스워드",
@@ -338,6 +358,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=1,
                 host_name="host-a",
                 host_ip="10.0.0.1",
+                inspection_code="LIN-002",
                 inspection_item_name="로그 설정",
                 type_name="로그관리",
                 category_name="감사",
@@ -401,10 +422,13 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertFalse(detail_sheet["A3"].font.italic)
         self.assertEqual(detail_sheet["A5"].value, "유형")
         self.assertEqual(detail_sheet["D6"].value, "하")
+        self.assertEqual(detail_sheet["E6"].value, "LIN-001")
+        self.assertEqual(detail_sheet["F6"].value, "SSH 설정")
+        self.assertEqual(detail_sheet["G6"].value, "PASS")
         self.assertEqual(detail_sheet["A6"].alignment.horizontal, "left")
         self.assertEqual(detail_sheet["A6"].alignment.vertical, "center")
         self.assertEqual(detail_sheet["D6"].fill.fgColor.rgb, "00D9EAD3")
-        self.assertEqual(detail_sheet["F6"].fill.fgColor.rgb, "00DDEBF7")
+        self.assertEqual(detail_sheet["G6"].fill.fgColor.rgb, "00DDEBF7")
 
     def test_preventive_build_workbook_applies_block_layout(self) -> None:
         summary_rows = [
@@ -434,6 +458,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=1,
                 host_name="host-a",
                 host_ip="10.0.0.1",
+                inspection_code="LIN-001",
                 inspection_item_name="SSH 설정",
                 type_name="계정관리",
                 category_name="패스워드",
@@ -457,6 +482,7 @@ class GenerateReportHelpersTest(unittest.TestCase):
                 host_id=1,
                 host_name="host-a",
                 host_ip="10.0.0.1",
+                inspection_code="LIN-002",
                 inspection_item_name="로그 설정",
                 type_name="로그관리",
                 category_name="감사",
@@ -495,10 +521,12 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertEqual(detail_sheet["H6"].value, "9.7")
         self.assertEqual(detail_sheet["A7"].value, "점검결과")
         self.assertEqual(detail_sheet["B7"].value, "PASS")
-        self.assertEqual(detail_sheet["E7"].value, "중요도")
-        self.assertEqual(detail_sheet["F7"].value, "하")
+        self.assertEqual(detail_sheet["D7"].value, "중요도")
+        self.assertEqual(detail_sheet["E7"].value, "하")
+        self.assertEqual(detail_sheet["G7"].value, "점검코드")
+        self.assertEqual(detail_sheet["H7"].value, "LIN-001")
         self.assertEqual(detail_sheet["B7"].fill.fgColor.rgb, "00DDEBF7")
-        self.assertEqual(detail_sheet["F7"].fill.fgColor.rgb, "00D9EAD3")
+        self.assertEqual(detail_sheet["E7"].fill.fgColor.rgb, "00D9EAD3")
         self.assertEqual(detail_sheet["A10"].value, "상세")
         self.assertEqual(detail_sheet["A11"].value, "메세지")
         self.assertEqual(detail_sheet["A12"].value, "설명")
@@ -539,6 +567,310 @@ class GenerateReportHelpersTest(unittest.TestCase):
         detail_sheet = workbook["host-a"]
 
         self.assertEqual(detail_sheet["A5"].value, "상세 데이터가 없습니다.")
+
+    def test_government_checklist_build_workbook_uses_checklist_summary_and_preventive_details(self) -> None:
+        summary_rows = [
+            SummaryRow(
+                job_id=10,
+                category_type_name="Linux",
+                run_status="done",
+                started_time="2026-03-17 08:00:00",
+                finished_time=None,
+                host_id=1,
+                host_name="host-a",
+                host_ip="10.0.0.1",
+                host_status="done",
+                total_items=3,
+                vuln_items=1,
+                error_items=1,
+                score=80.0,
+                host_started="2026-03-17 09:00:00",
+                host_finished=None,
+                duration_sec=10,
+                error_message="",
+            ),
+            SummaryRow(
+                job_id=10,
+                category_type_name="Linux",
+                run_status="done",
+                started_time="2026-03-17 08:10:00",
+                finished_time=None,
+                host_id=2,
+                host_name="host-b",
+                host_ip="10.0.0.2",
+                host_status="done",
+                total_items=1,
+                vuln_items=1,
+                error_items=0,
+                score=100.0,
+                host_started=None,
+                host_finished=None,
+                duration_sec=10,
+                error_message="",
+            ),
+            SummaryRow(
+                job_id=10,
+                category_type_name="Linux",
+                run_status="done",
+                started_time="2026-03-17 08:20:00",
+                finished_time=None,
+                host_id=3,
+                host_name="host-c",
+                host_ip="10.0.0.3",
+                host_status="done",
+                total_items=1,
+                vuln_items=1,
+                error_items=0,
+                score=100.0,
+                host_started=None,
+                host_finished=None,
+                duration_sec=10,
+                error_message="",
+            ),
+        ]
+        detail_rows = [
+            DetailRow(
+                job_id=10,
+                host_id=1,
+                host_name="host-a",
+                host_ip="10.0.0.1",
+                inspection_code="LIN-001",
+                inspection_item_name="SSH 설정",
+                type_name="계정관리",
+                category_name="패스워드",
+                area_name="시스템",
+                importance="1",
+                is_required=True,
+                application_type_name="system",
+                application_name="sshd",
+                application_version="9.7",
+                result_status="PASS",
+                message="ok",
+                raw_output="raw",
+                description="desc",
+                inspection_command="cmd",
+                is_service_affect="무",
+                action_content="",
+                checked_time=None,
+            ),
+            DetailRow(
+                job_id=10,
+                host_id=1,
+                host_name="host-a",
+                host_ip="10.0.0.1",
+                inspection_code="LIN-002",
+                inspection_item_name="로그 설정",
+                type_name="로그관리",
+                category_name="감사",
+                area_name="보안",
+                importance="3",
+                is_required=True,
+                application_type_name="service",
+                application_name="rsyslog",
+                application_version="8.24",
+                result_status="취약",
+                message="warn",
+                raw_output="raw-2",
+                description="desc-2",
+                inspection_command="cmd-2",
+                is_service_affect="유",
+                action_content="조치-1",
+                checked_time=None,
+            ),
+            DetailRow(
+                job_id=10,
+                host_id=1,
+                host_name="host-a",
+                host_ip="10.0.0.1",
+                inspection_code="LIN-003",
+                inspection_item_name="백업 설정",
+                type_name="백업관리",
+                category_name="백업",
+                area_name="시스템",
+                importance="2",
+                is_required=True,
+                application_type_name="service",
+                application_name="backup",
+                application_version="1.0",
+                result_status="미실행",
+                message="skip",
+                raw_output="raw-3",
+                description="desc-3",
+                inspection_command="cmd-3",
+                is_service_affect="무",
+                action_content="조치-2",
+                checked_time=None,
+            ),
+            DetailRow(
+                job_id=10,
+                host_id=2,
+                host_name="host-b",
+                host_ip="10.0.0.2",
+                inspection_code="LIN-001",
+                inspection_item_name="SSH 설정",
+                type_name="계정관리",
+                category_name="패스워드",
+                area_name="시스템",
+                importance="1",
+                is_required=True,
+                application_type_name="system",
+                application_name="sshd",
+                application_version="9.7",
+                result_status="취약",
+                message="warn",
+                raw_output="raw",
+                description="desc",
+                inspection_command="cmd",
+                is_service_affect="무",
+                action_content="조치-1",
+                checked_time="2026-03-17 09:20:00",
+            ),
+            DetailRow(
+                job_id=10,
+                host_id=2,
+                host_name="host-b",
+                host_ip="10.0.0.2",
+                inspection_code="LIN-003",
+                inspection_item_name="백업 설정",
+                type_name="백업관리",
+                category_name="백업",
+                area_name="시스템",
+                importance="2",
+                is_required=True,
+                application_type_name="service",
+                application_name="backup",
+                application_version="1.0",
+                result_status="ok",
+                message="ok-b",
+                raw_output="raw",
+                description="desc",
+                inspection_command="cmd",
+                is_service_affect="무",
+                action_content="",
+                checked_time="2026-03-17 09:21:00",
+            ),
+            DetailRow(
+                job_id=10,
+                host_id=3,
+                host_name="host-c",
+                host_ip="10.0.0.3",
+                inspection_code="LIN-001",
+                inspection_item_name="SSH 설정",
+                type_name="계정관리",
+                category_name="패스워드",
+                area_name="시스템",
+                importance="1",
+                is_required=True,
+                application_type_name="system",
+                application_name="sshd",
+                application_version="9.7",
+                result_status="ok",
+                message="ok-c",
+                raw_output="raw",
+                description="desc",
+                inspection_command="cmd",
+                is_service_affect="무",
+                action_content="",
+                checked_time="2026-03-17 09:22:00",
+            ),
+        ]
+
+        workbook = GovernmentChecklistReportGenerator().build_workbook(summary_rows, detail_rows)
+        summary_sheet = workbook["요약"]
+        detail_sheet = workbook["host-a"]
+
+        self.assertEqual(summary_sheet.page_setup.orientation, "portrait")
+        self.assertEqual(summary_sheet["A1"].value, "시스템 점검 일지")
+        self.assertEqual(summary_sheet["A2"].value, "□ 시스템 점검")
+        self.assertEqual(summary_sheet["A3"].value, "○ 장비명: host-a, host-b, host-c")
+        self.assertEqual(summary_sheet["A4"].value, "○ 점검 일자: 2026-03-17 09:00:00")
+        self.assertEqual(
+            [summary_sheet.cell(row=5, column=column).value for column in range(1, 6)],
+            ["번호", "점검항목", "host-a", None, None],
+        )
+        self.assertEqual(summary_sheet["F5"].value, "host-b")
+        self.assertEqual(summary_sheet["I5"].value, "host-c")
+        self.assertEqual(
+            [summary_sheet.cell(row=6, column=column).value for column in range(3, 12)],
+            ["정상", "비정상", "비고", "정상", "비정상", "비고", "정상", "비정상", "비고"],
+        )
+        self.assertEqual(
+            [summary_sheet.cell(row=row, column=2).value for row in range(7, 9)],
+            ["SSH 설정", "백업 설정"],
+        )
+        self.assertEqual(
+            (summary_sheet["C7"].value, summary_sheet["D7"].value, summary_sheet["E7"].value),
+            ("[✔]", "[ ]", "ok"),
+        )
+        self.assertEqual(
+            (summary_sheet["F7"].value, summary_sheet["G7"].value, summary_sheet["H7"].value),
+            ("[ ]", "[✔]", "warn"),
+        )
+        self.assertEqual(
+            (summary_sheet["I7"].value, summary_sheet["J7"].value, summary_sheet["K7"].value),
+            ("[✔]", "[ ]", "ok-c"),
+        )
+        self.assertEqual(
+            (summary_sheet["C8"].value, summary_sheet["D8"].value, summary_sheet["E8"].value),
+            ("[ ]", "[ ]", "skip\n결과: 미실행"),
+        )
+        self.assertEqual(
+            (summary_sheet["F8"].value, summary_sheet["G8"].value, summary_sheet["H8"].value),
+            ("[✔]", "[ ]", "ok-b"),
+        )
+        self.assertEqual(
+            (summary_sheet["I8"].value, summary_sheet["J8"].value, summary_sheet["K8"].value),
+            ("[ ]", "[ ]", "-"),
+        )
+        self.assertEqual(summary_sheet["A9"].value, "□ 점검 결과 요약")
+        self.assertEqual(summary_sheet["A10"].value, "총 5건 / 정상 3건 / 비정상 1건 / 확인필요 1건")
+        self.assertEqual(summary_sheet["A11"].value, "□ 주요 조치내역")
+        self.assertEqual(summary_sheet["A12"].value, "1. host-a: 조치-2\n2. host-b: 조치-1")
+        self.assertEqual(summary_sheet["A13"].value, "점검자")
+        self.assertEqual(summary_sheet["J13"].value, "확인자")
+        self.assertEqual(summary_sheet["A16"].value, "보안 점검 일지")
+        self.assertEqual(summary_sheet["A17"].value, "□ 보안 점검")
+        self.assertEqual(summary_sheet["B22"].value, "로그 설정")
+        self.assertEqual(summary_sheet["D22"].value, "[✔]")
+        self.assertEqual(detail_sheet["A1"].value, "요약으로 돌아가기")
+        self.assertEqual(detail_sheet.freeze_panes, "A5")
+        self.assertEqual(detail_sheet["A5"].value, "유형")
+        self.assertEqual(detail_sheet["A6"].value, "애플리케이션유형")
+
+    def test_save_government_checklist_docx_reports_writes_one_document_per_area(self) -> None:
+        summary_rows, detail_rows = build_mock_report_rows(job_id=10, host_count=2, items_per_host=2)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            report_path = save_government_checklist_docx_reports(
+                summary_rows,
+                detail_rows,
+                Path(tmp_dir) / "점검보고서.docx",
+            )
+            document_dir = Path(tmp_dir) / "점검보고서"
+            docx_paths = sorted(document_dir.glob("*.docx"))
+
+            self.assertEqual(report_path.name, "점검보고서.zip")
+            self.assertEqual(len(docx_paths), 2)
+            with zipfile.ZipFile(report_path) as zip_handle:
+                self.assertEqual(sorted(zip_handle.namelist()), sorted(path.name for path in docx_paths))
+            with zipfile.ZipFile(docx_paths[0]) as docx_handle:
+                package_names = set(docx_handle.namelist())
+                self.assertIn("docProps/core.xml", package_names)
+                self.assertIn("docProps/app.xml", package_names)
+                self.assertIn("word/_rels/document.xml.rels", package_names)
+                self.assertIn("word/settings.xml", package_names)
+                self.assertIn("word/fontTable.xml", package_names)
+                for package_name in package_names:
+                    if package_name.endswith(".xml"):
+                        ET.fromstring(docx_handle.read(package_name))
+                document_xml = docx_handle.read("word/document.xml").decode("utf-8")
+
+        self.assertIn("영역-1 점검 일지", document_xml)
+        self.assertIn("MOCK-HOST-001", document_xml)
+        self.assertIn("MOCK-HOST-002", document_xml)
+        self.assertIn("정상", document_xml)
+        self.assertIn("비정상", document_xml)
+        self.assertIn("비고", document_xml)
 
     def test_build_workbook_creates_one_detail_sheet_per_host(self) -> None:
         duplicate_host_rows = [

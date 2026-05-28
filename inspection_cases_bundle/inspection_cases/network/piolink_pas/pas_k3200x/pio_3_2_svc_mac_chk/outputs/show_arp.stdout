@@ -1,0 +1,58 @@
+Center_PAS-K3200X_A# show arp
+
+================================================================================
+  ARP
+ ------------------------------------------------------------------------------
+    Timeout (sec)               : 30
+    Locktime (1/100 sec)        : 100
+    Proxy Arp Status            : disable
+    Proxy Arp Delay (1/100 sec) : 0
+    Proxy Arp Running           : disable
+
+    Static                      :
+
+    Dynamic
+       IP Address     MAC Address       Interface State
+       172.18.8.1     04:32:01:5a:2a:c0 V808      REACHABLE
+       172.18.8.4     00:62:0b:9e:e9:86 V808      STALE
+       172.18.8.11    54:80:28:40:1b:38 V808      REACHABLE
+       172.18.8.14    d8:d3:85:f8:4a:b0 V808      REACHABLE
+       172.18.8.15    14:02:ec:74:e2:10 V808      DELAY
+       172.18.8.17    48:df:37:59:78:40 V808      REACHABLE
+       172.18.8.19    68:05:ca:e4:2c:8c V808      REACHABLE
+       172.18.8.20    68:05:ca:e4:28:1c V808      REACHABLE
+       172.18.8.22    68:05:ca:e4:2b:d4 V808      REACHABLE
+       172.18.8.23    d8:d3:85:f8:4b:68 V808      REACHABLE
+       172.18.8.24    54:80:28:40:1b:14 V808      REACHABLE
+       172.18.8.25    80:18:44:e9:4d:88 V808      REACHABLE
+       172.18.8.26    d0:94:66:15:5b:38 V808      REACHABLE
+       172.18.8.27    a4:bf:01:0f:e5:b1 V808      REACHABLE
+       172.18.8.28    a4:bf:01:75:0a:7c V808      REACHABLE
+       172.18.8.29    68:05:ca:e0:be:bc V808      REACHABLE
+       172.18.8.30    ec:e7:a7:06:0d:d8 V808      REACHABLE
+       172.18.8.31    d8:d3:85:f8:e4:11 V808      REACHABLE
+       172.18.8.34    d4:f5:ef:0d:f6:54 V808      STALE
+       172.18.8.41    a0:36:9f:df:6d:08 V808      REACHABLE
+       172.18.8.45    d8:d3:85:f7:ec:0e V808      REACHABLE
+       172.18.8.52    68:05:ca:e4:2b:38 V808      REACHABLE
+       172.18.8.53    68:05:ca:e4:2b:f8 V808      REACHABLE
+       172.18.8.54    68:05:ca:e4:2c:08 V808      DELAY
+       172.18.8.71    40:a6:b7:29:25:dc V808      REACHABLE
+       172.18.8.81    b4:96:91:97:35:cf V808      REACHABLE
+       172.18.8.82    b4:96:91:97:37:35 V808      REACHABLE
+       172.18.8.87    68:05:ca:fd:2c:2c V808      REACHABLE
+       172.18.8.88    68:05:ca:fd:28:fc V808      DELAY
+       172.18.8.91    b4:96:91:97:35:cf V808      REACHABLE
+       172.18.8.92    b4:96:91:97:37:35 V808      REACHABLE
+       172.18.8.93    68:05:ca:e4:2c:d4 V808      DELAY
+       172.18.8.97    68:05:ca:fd:2c:2c V808      REACHABLE
+       172.18.8.98    68:05:ca:fd:28:fc V808      REACHABLE
+       172.18.8.191   40:5b:7f:6d:53:60 V808      REACHABLE
+       172.18.8.211   f4:bf:a8:ed:ad:e1 V808      REACHABLE
+       172.18.8.212   c8:fe:6a:91:c0:21 V808      REACHABLE
+       172.18.8.230   44:8a:5b:dc:44:02 V808      STALE
+       172.18.8.253   00:06:c4:90:0d:77 V808      STALE
+       172.31.247.123 00:10:f3:a4:1e:d9 V422      STALE
+       172.31.247.126 00:10:f3:a4:1e:d9 V422      DELAY
+================================================================================
+Center_PAS-K3200X_A#

@@ -1,0 +1,45 @@
+{
+  "host": "192.0.2.7",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80601,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81607,
+  "host_id": 81607,
+  "job_id": 81607,
+  "item": {
+    "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-SERVICE-MAC-ARP-01",
+    "item_id": 98607,
+    "application_id": 80601,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "PIOLINK_PAS_K3200X",
+    "application_family_name": "PIOLINK_PAS_K3200X",
+    "threshold_list": [
+      {
+        "name": "expected_mac_status",
+        "value1": "forward"
+      },
+      {
+        "name": "valid_arp_state",
+        "value1": "REACHABLE,STALE,DELAY"
+      }
+    ]
+  }
+}

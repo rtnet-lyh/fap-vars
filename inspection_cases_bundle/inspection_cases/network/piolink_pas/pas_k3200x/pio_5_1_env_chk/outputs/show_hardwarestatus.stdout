@@ -1,0 +1,37 @@
+Center_PAS-K3200X_A# show hardwarestatus
+
+================================================================================
+  HARDWARESTATUS
+ ------------------------------------------------------------------------------
+    Temperature
+       Name   Degree
+       Switch +31.5 C
+       Core 0 +48.0 C  (high = +82.0 C, crit = +104.0 C)
+       Core 1 +48.0 C  (high = +82.0 C, crit = +104.0 C)
+       Core 2 +47.0 C  (high = +82.0 C, crit = +104.0 C)
+       Core 3 +47.0 C  (high = +82.0 C, crit = +104.0 C)
+
+    LED
+        Stat             : OFF
+
+    Voltage
+        Power1           : ON
+        Power2           : ON
+
+    Fan
+       Name   Status
+       CPU    ON
+       Rear 1 ON
+       Rear 2 ON
+       Rear 3 ON
+       Switch ON
+       Module ON
+
+    Accelerator
+        SSL/TLS          : OFF
+        Health           : None
+
+    Storage
+        Condition        : Good
+================================================================================
+Center_PAS-K3200X_A#

@@ -1,0 +1,12 @@
+Center_PAS-K3200X_A# show log
+2026/05/27 16:32:58 Center_PAS-K3200X_A (notice) sshd[28319]: (AUDIT)  pam_unix(sshd:session): session opened for service sshd
+2026/05/27 16:32:58 Center_PAS-K3200X_A (notice) sshd[28319]: (AUDIT)  pam_unix(sshd:session): session opened for user falcon by (uid=0)
+2026/05/27 16:32:58 Center_PAS-K3200X_A (notice) sshd[28319]: (AUDIT)  notice: Accepted password for falcon from 172.18.8.191 port 34156 ssh2
+2026/05/27 16:29:04 Center_PAS-K3200X_A (notice) sshd[24761]: (AUDIT)  pam_unix(sshd:session): session closed for user falcon by (uid=0)
+2026/05/27 16:23:32 Center_PAS-K3200X_A (notice) [amss.cli.backend] (AUDIT)  last message repeated 2 times
+2026/05/27 16:22:04 Center_PAS-K3200X_A (notice) [amss.cli.backend] (AUDIT)  Config Success: Done [172.18.8.191]
+2026/05/27 16:19:15 Center_PAS-K3200X_A (notice) [amss.cli.backend] (AUDIT)  Config Success: Done [172.18.8.191]
+2026/05/27 16:19:02 Center_PAS-K3200X_A (notice) sshd[24761]: (AUDIT)  pam_unix(sshd:session): session opened for service sshd
+2026/05/27 16:19:02 Center_PAS-K3200X_A (notice) sshd[24761]: (AUDIT)  pam_unix(sshd:session): session opened for user falcon by (uid=0)
+2026/05/27 16:19:02 Center_PAS-K3200X_A (notice) sshd[24761]: (AUDIT)  notice: Accepted password for falcon from 172.18.8.191 port 48804 ssh2
+Center_PAS-K3200X_A#

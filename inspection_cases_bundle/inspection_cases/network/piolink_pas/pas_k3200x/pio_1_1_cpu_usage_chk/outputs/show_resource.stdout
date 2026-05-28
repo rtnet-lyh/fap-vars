@@ -1,0 +1,31 @@
+Center_PAS-K3200X_A# show resource
+================================================================================
+  RESOURCE
+--------------------------------------------------------------------------------
+    Management Processor
+        CPU
+                Usage     : 2.43%
+
+        Memory
+                Total     : 1572864 kB
+                Used      : 443092 kB
+                Free      : 1129772 kB
+                Usage     : 28.17%
+
+    Packet Processor
+        CPU
+                Usage     : 2.68%
+
+        Memory
+                Total     : 14518804 kB
+                Used      : 2134320 kB
+                Free      : 12384484 kB
+                Usage     : 14.70%
+
+    Log Storage
+                Total     : 218043 MB
+                Used      : 1650 MB
+                Free      : 205316 MB
+                Usage     : 1%
+================================================================================
+Center_PAS-K3200X_A#

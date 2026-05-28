@@ -1,0 +1,29 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Center_PAS-K3200X_A#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show mac"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_mac.stdout"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show arp"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_arp.stdout"
+  }
+]

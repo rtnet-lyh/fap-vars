@@ -1,0 +1,14 @@
+Center_PAS-K3200X_A# show real
+
+================================================================================
+REAL Configuration
+ ------------------------------------------------------------------------------
+  ID    Name            RIP         Rport SSL-Rport Weight Backup Status SVC-IP
+  1     extms_prcs1     172.18.8.52                 1             enable
+  2     extms_prcs2     172.18.8.53                 1             enable
+  3     external_relay1 172.18.8.19                 1             enable
+  4     external_relay2 172.18.8.20                 1             enable
+  5                     3.3.3.3                     1             enable
+  6                     3.3.3.4                     1             enable
+================================================================================
+Center_PAS-K3200X_A#

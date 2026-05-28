@@ -1,0 +1,83 @@
+접속정보
+172.18.8.27 / admin / its809!@#$ / !Ehfhrhdtk1
+172.18.8.28 / admin / its809!@#$ / its809!@#$
+172.18.8.30 / admin / its809!@#$ / its809!@#$
+
+
+---
+
+atmsbackup.Main_Menu> Support
+Entering NetBackup support view...
+
+Checkpoint      Appliance Checkpoint Management.
+Cleanup         Clean or reset specific appliance monitoring data.
+Collect         Collect appliance details and transmit to Veritas.
+DataCollect     Gather appliance DataCollect logs.
+Disk            Gather disk information.
+Errors          Display NetBackup errors.
+Exit            Log out and exit from the current shell.
+FactoryReset    Reset this system to factory install image
+FibreTransport  Advanced settings.
+ImportISO       Import the ISO file from /inst/share to the SSD ISO partition.
+InfraServices   Show/control infrastructure services.
+InstantAccess   Set the operational level of Instant Access and show the status.
+iostat          Execute the iostat command.
+IPMI            Remote management port configuration.
+KillRemoteCall  Terminate running or hung remote calls on peer compute nodes.
+LogBrowser      Show/control log transfer console processes.
+Logs            Set level, unshare, view, and upload debug logs.
+Maintenance     Launch maintenance shell.
+Messages        Display the messages file.
+NBDNA           Network traces with NBDNA tool (Select Create or Remove).
+Nbperfchk       Execute the disk IO or network bandwidth check.
+NBSU            Manage NetBackup support data files (Select Create or Remove).
+Processes       Show/control NetBackup and Admin Console processes.
+Reboot          Reboot the system.
+RecoverStorage  View or delete directories backed up during appliance re-image.
+Return          Return to the previous menu.
+Service         Service management.
+ShelfOrdering   View or reset the Expansion Storage Shelf order.
+Shell           Shell operations.
+Show            Display information.
+Shutdown        Power off the system.
+Storage         Storage data and configuration
+Test            Test the current status of various appliance components.
+
+atmsbackup.Support> Maintenance
+<!-- Maintenance Mode --!>
+maintenance's password:
+maintenance-!> /opt/Symantec/sdcssagent/IPS/sisipsoverride.sh
+Symantec Data Center Security Server Policy Override
+
+    Agent Version: 6.9.2 (build 2167)
+   Current Policy: NetBackup Appliance Prevention Policy, r268
+Policy Prevention: Enabled
+  Policy Override: Allowed
+   Override State: Not overridden
+
+To override the policy and disable protection, enter your login password.
+Password:
+
+Choose the type of override that you wish to perform:
+ 1. Override Prevention except for Self-Protection
+ 2. Override Prevention Completely
+Choice? [1]
+
+Choose the amount of time after which to automatically re-enable:
+ 1. 15 minutes
+ 2. 30 minutes
+ 3. 1 hour
+ 4. 2 hours
+ 5. 4 hours
+ 6. 8 hours
+Choice? [1]
+
+Enter a comment. Press Enter to continue.
+
+
+Please wait while the policy is being overridden.
+...........................
+
+The policy was successfully overridden.
+maintenance-!> elevate
+atmsbackup:/home/maintenance #

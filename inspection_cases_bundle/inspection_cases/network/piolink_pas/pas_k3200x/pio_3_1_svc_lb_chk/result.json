@@ -1,0 +1,146 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-SERVICE-LB-01",
+      "item_id": 98606,
+      "application_id": 80601,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "PIOLINK_PAS_K3200X",
+      "application_family_name": "PIOLINK_PAS_K3200X",
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show real'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_real_servers(self, text):\n        servers = []\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if len(parts) < 4 or not parts[0].isdigit():\n                continue\n            servers.append({\n                'id': int(parts[0]),\n                'status': parts[-1].lower(),\n                'raw': line.strip(),\n            })\n        return servers\n\n    def run(self):\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        servers = self._parse_real_servers(stdout)\n        if not servers:\n            return self.fail('Real Server 파싱 실패', message='show real 출력에서 Real Server 행을 찾지 못했습니다.', stdout=stdout)\n\n        disabled_servers = [item for item in servers if item['status'] != 'enable']\n        metrics = {\n            'real_server_count': len(servers),\n            'disabled_real_servers': disabled_servers,\n            'real_servers': servers,\n        }\n        if disabled_servers:\n            return self.warn(metrics=metrics, thresholds={}, reasons='Status가 enable이 아닌 Real Server가 있습니다.', message=f'LB 상태 경고: 비정상 Real Server {len(disabled_servers)}개.')\n        return self.ok(metrics=metrics, thresholds={}, reasons='모든 Real Server Status가 enable입니다.', message=f'LB 상태 점검 정상: Real Server {len(servers)}개.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'show real'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'generic_network'",
+        "    PARAMIKO_REUSE_SESSION = True",
+        "",
+        "    def _run_command(self):",
+        "        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)",
+        "        if not results:",
+        "            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')",
+        "        result = results[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)",
+        "        return stdout, None",
+        "",
+        "    def _parse_real_servers(self, text):",
+        "        servers = []",
+        "        for line in (text or '').splitlines():",
+        "            parts = line.split()",
+        "            if len(parts) < 4 or not parts[0].isdigit():",
+        "                continue",
+        "            servers.append({",
+        "                'id': int(parts[0]),",
+        "                'status': parts[-1].lower(),",
+        "                'raw': line.strip(),",
+        "            })",
+        "        return servers",
+        "",
+        "    def run(self):",
+        "        stdout, error = self._run_command()",
+        "        if error:",
+        "            return error",
+        "",
+        "        servers = self._parse_real_servers(stdout)",
+        "        if not servers:",
+        "            return self.fail('Real Server 파싱 실패', message='show real 출력에서 Real Server 행을 찾지 못했습니다.', stdout=stdout)",
+        "",
+        "        disabled_servers = [item for item in servers if item['status'] != 'enable']",
+        "        metrics = {",
+        "            'real_server_count': len(servers),",
+        "            'disabled_real_servers': disabled_servers,",
+        "            'real_servers': servers,",
+        "        }",
+        "        if disabled_servers:",
+        "            return self.warn(metrics=metrics, thresholds={}, reasons='Status가 enable이 아닌 Real Server가 있습니다.', message=f'LB 상태 경고: 비정상 Real Server {len(disabled_servers)}개.')",
+        "        return self.ok(metrics=metrics, thresholds={}, reasons='모든 Real Server Status가 enable입니다.', message=f'LB 상태 점검 정상: Real Server {len(servers)}개.')",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-SERVICE-LB-01",
+      "item_id": 98606,
+      "application_id": 80601,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "PIOLINK_PAS_K3200X",
+      "application_family_name": "PIOLINK_PAS_K3200X",
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "real_server_count": 6,
+        "disabled_real_servers": [],
+        "real_servers": [
+          {
+            "id": 1,
+            "status": "enable",
+            "raw": "1     extms_prcs1     172.18.8.52                 1             enable"
+          },
+          {
+            "id": 2,
+            "status": "enable",
+            "raw": "2     extms_prcs2     172.18.8.53                 1             enable"
+          },
+          {
+            "id": 3,
+            "status": "enable",
+            "raw": "3     external_relay1 172.18.8.19                 1             enable"
+          },
+          {
+            "id": 4,
+            "status": "enable",
+            "raw": "4     external_relay2 172.18.8.20                 1             enable"
+          },
+          {
+            "id": 5,
+            "status": "enable",
+            "raw": "5                     3.3.3.3                     1             enable"
+          },
+          {
+            "id": 6,
+            "status": "enable",
+            "raw": "6                     3.3.3.4                     1             enable"
+          }
+        ]
+      },
+      "thresholds": {},
+      "reasons": "모든 Real Server Status가 enable입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show real\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\nREAL Configuration\n ------------------------------------------------------------------------------\n  ID    Name            RIP         Rport SSL-Rport Weight Backup Status SVC-IP\n  1     extms_prcs1     172.18.8.52                 1             enable\n  2     extms_prcs2     172.18.8.53                 1             enable\n  3     external_relay1 172.18.8.19                 1             enable\n  4     external_relay2 172.18.8.20                 1             enable\n  5                     3.3.3.3                     1             enable\n  6                     3.3.3.4                     1             enable\n================================================================================",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: show real",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ================================================================================",
+        "REAL Configuration",
+        " ------------------------------------------------------------------------------",
+        "  ID    Name            RIP         Rport SSL-Rport Weight Backup Status SVC-IP",
+        "  1     extms_prcs1     172.18.8.52                 1             enable",
+        "  2     extms_prcs2     172.18.8.53                 1             enable",
+        "  3     external_relay1 172.18.8.19                 1             enable",
+        "  4     external_relay2 172.18.8.20                 1             enable",
+        "  5                     3.3.3.3                     1             enable",
+        "  6                     3.3.3.4                     1             enable",
+        "================================================================================"
+      ],
+      "message": "LB 상태 점검 정상: Real Server 6개."
+    }
+  ],
+  "failed_items": []
+}

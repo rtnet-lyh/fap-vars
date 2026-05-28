@@ -1,0 +1,41 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80601,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81601,
+  "host_id": 81601,
+  "job_id": 81601,
+  "item": {
+    "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-CPU-USAGE-01",
+    "item_id": 98601,
+    "application_id": 80601,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "PIOLINK_PAS_K3200X",
+    "application_family_name": "PIOLINK_PAS_K3200X",
+    "threshold_list": [
+      {
+        "name": "max_used_percent",
+        "value1": "80"
+      }
+    ]
+  }
+}

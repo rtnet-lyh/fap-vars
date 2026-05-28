@@ -1,0 +1,44 @@
+Center_PAS-K3200X_A# show failover
+
+================================================================================
+  FAILOVER
+ ------------------------------------------------------------------------------
+    A-A Failover Method  : disable
+    Redirect Vlan        :
+    Delay-Time           : 10
+
+    Session-Sync
+        Status                     : disable
+        Live update interval (10 msec) : 100
+        Full update interval (sec) : 30
+        Update method              : live
+        Peer                       : node2
+
+        Interface
+            Name                   :
+            IPv4 Address           :
+            Peer IP Address        :
+            Hc-Retry               : 3
+            Health                 : inact
+
+    Vrrp
+       VRID  Mode           Running Status Total Priority VLAN  VIP            VMAC
+       254   active-standby master  enable 111   105      V422  172.31.247.113 00:00:5e:00:01:fe
+                                                          V808  172.18.8.254   00:00:5e:00:01:fe
+
+    Vrrp6                :
+
+    Ha
+        Running                   : stop
+        Status                    : disable
+
+        Interface                 :
+
+        Node                      :
+
+        Default State             : master
+        Heartbeat Interval (100 msec) : 10
+        Retry                     : 3
+        VMAC                      : enable
+================================================================================
+Center_PAS-K3200X_A#

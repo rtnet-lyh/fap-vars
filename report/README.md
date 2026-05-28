@@ -36,7 +36,10 @@ python3 report/generate_report.py --job-id 464
 - `--user-id`: 실행 사용자 ID를 결과 JSON에 포함
   - 생략 시 환경변수 `FAP_REPORT_USER_ID`, `FAP_USER_ID`, `REPORT_USER_ID`, `USER_ID` 순서로 대체 시도
 - `--report-type`: 기본값 `default`
-  - 지원 타입: `default`, `inspection`(default alias), `preventive`
+  - 지원 타입: `default`(범정부 점검 일지형), `government-checklist`, `preventive`, `inspection`, `preventive-detail`
+- `--output-format`: 기본값 `xlsx`
+  - `xlsx`: 엑셀 보고서를 생성
+  - `docx`: 한글에서 열 수 있는 DOCX 문서를 점검 영역별로 생성
 - `--output-dir`: 보고서 저장 루트 지정
 - `--output-name`: 파일명 prefix 지정, 기본값 `점검보고서`
 - `--file-name`: 저장할 정확한 파일명 지정. 지정 시 timestamp를 붙이지 않음
@@ -50,11 +53,19 @@ python3 report/generate_report.py --job-id 464
 python3 report/generate_report.py --job-id 464 --user-id sysadm --output-path /tmp/reports --file-name custom_report.xlsx
 ```
 
-`preventive` 보고서 예시:
+범정부 점검 일지형 보고서 예시:
 
 ```bash
 python3 report/generate_report.py --job-id 464 --report-type preventive
 ```
+
+한글 문서용 DOCX 보고서 예시:
+
+```bash
+python3 report/generate_report.py --job-id 464 --output-format docx
+```
+
+DOCX 출력은 점검 영역별로 문서 1개를 생성한다. 점검 영역이 여러 개면 생성된 DOCX 파일들을 ZIP으로 묶고, `report_path`에는 ZIP 경로를 반환한다.
 
 DB 데이터 없이 분할 저장을 확인하려면:
 
@@ -70,6 +81,7 @@ python3 report/generate_report.py --job-id 999 --mock-host-count 260 --output-na
 - 추가 키로 `job_id`, `report_type`, `generated_at` 을 포함한다.
 - `--user-id`를 전달하면 `user_id`도 함께 포함한다.
 - 분할 저장이 발생하면 생성된 `.xlsx` 파일들을 `.zip`으로 압축하고, `report_path`는 `.zip` 경로를 반환한다.
+- `--output-format docx`에서 점검 영역이 여러 개면 생성된 `.docx` 파일들을 `.zip`으로 압축하고, `report_path`는 `.zip` 경로를 반환한다.
 
 성공 예시:
 
@@ -148,6 +160,13 @@ python3 report/generate_report.py --job-id 999 --mock-host-count 260 --output-na
 - 분할된 각 파일은 해당 파일에 포함된 호스트의 요약 테이블과 상세 시트만 포함한다.
 - 상단 요약 지표는 전체 작업 기준으로 동일하게 유지한다.
 
+### DOCX 한글 문서 출력
+- `--output-format docx`를 사용하면 범정부 점검 일지형 내용을 DOCX 문서로 생성한다.
+- 엑셀과 달리 한 문서 안에서 많은 영역을 자유롭게 배치하지 않고, 점검 영역별로 문서 1개를 생성한다.
+- 각 문서는 `서버 점검 일지`처럼 `{점검 영역} 점검 일지` 제목을 사용한다.
+- 표는 PDF 서식처럼 `번호`, `점검항목` 뒤에 서버별 `정상`, `비정상`, `비고` 컬럼을 가로로 반복한다.
+- 점검 영역이 여러 개면 개별 DOCX를 저장한 뒤 ZIP으로 묶어 반환한다.
+
 ### 2. 호스트별 상세 시트
 - 시트명은 관리명을 기준으로 생성한다.
 - 엑셀 제약을 만족하도록 시트명 표준화 함수를 사용한다.
@@ -180,7 +199,10 @@ python3 report/generate_report.py --job-id 999 --mock-host-count 260 --output-na
 
 ## 보고서 유형 확장
 - 스크립트 내부에 report type registry를 두고 있다.
-- 현재 등록된 타입은 `default`, `inspection`, `preventive` 이다.
+- 현재 등록된 타입은 `default`, `government-checklist`, `preventive`, `inspection`, `preventive-detail` 이다.
+- `default`, `government-checklist`, `preventive`는 범정부 점검 일지형 요약 시트를 사용한다.
+- 기존 표준 요약/상세 보고서는 `inspection` 타입을 사용한다.
+- 기존 preventive 요약과 블록 상세 조합이 필요하면 `preventive-detail` 타입을 사용한다.
 - 새 유형이 필요하면 generator 클래스를 추가하고 alias를 registry에 등록한다.
 
 ## 리포트 데이터 API

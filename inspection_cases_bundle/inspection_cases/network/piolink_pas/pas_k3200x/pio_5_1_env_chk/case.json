@@ -1,0 +1,36 @@
+{
+  "host": "192.0.2.13",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80601,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81613,
+  "host_id": 81613,
+  "job_id": 81613,
+  "item": {
+    "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-ENVIRONMENT-01",
+    "item_id": 98613,
+    "application_id": 80601,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "PIOLINK_PAS_K3200X",
+    "application_family_name": "PIOLINK_PAS_K3200X",
+    "threshold_list": []
+  }
+}

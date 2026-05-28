@@ -1,0 +1,48 @@
+Center_PAS-K3200X_A# show stp
+
+================================================================================
+  STP
+ ------------------------------------------------------------------------------
+    Status               : disable
+    Priority             : 8
+    Instance Name        :
+    Path Cost            :
+    Root Max Age         :
+    Root Hello Time      :
+    Root Forward Delay   :
+    Root ID              :
+    Root Port            :
+    Bridge ID            :
+    Bridge Max Age       : 20
+    Bridge Hello Time    : 2
+    Bridge Forward Delay : 15
+    Bpdu-Guard           : disable
+
+    Port
+       Name  Status  Link  State Priority Path Cost Portfast Bpdu-Guard Bpdu-Filter Root-Guard
+       1     disable down  -     8                  disable  disable    disable     disable
+       2     disable down  -     8                  disable  disable    disable     disable
+       3     disable down  -     8                  disable  disable    disable     disable
+       4     disable down  -     8                  disable  disable    disable     disable
+       5     disable down  -     8                  disable  disable    disable     disable
+       6     disable down  -     8                  disable  disable    disable     disable
+       7     disable down  -     8                  disable  disable    disable     disable
+       8     disable down  -     8                  disable  disable    disable     disable
+       9     disable down  -     8                  disable  disable    disable     disable
+       10    disable down  -     8                  disable  disable    disable     disable
+       11    disable down  -     8                  disable  disable    disable     disable
+       12    enable  up    -     8                  disable  disable    disable     disable
+       13    enable  up    -     8                  disable  disable    disable     disable
+       14    enable  up    -     8                  disable  disable    disable     disable
+       15    enable  up    -     8                  disable  disable    disable     disable
+       16    enable  up    -     8                  disable  disable    disable     disable
+       17    disable down  -     8                  disable  disable    disable     disable
+       18    enable  up    -     8                  disable  disable    disable     disable
+       19    disable down  -     8                  disable  disable    disable     disable
+       20    disable down  -     8                  disable  disable    disable     disable
+       21    disable down  -     8                  disable  disable    disable     disable
+       22    disable down  -     8                  disable  disable    disable     disable
+       23    disable down  -     8                  disable  disable    disable     disable
+       24    disable down  -     8                  disable  disable    disable     disable
+================================================================================
+Center_PAS-K3200X_A#

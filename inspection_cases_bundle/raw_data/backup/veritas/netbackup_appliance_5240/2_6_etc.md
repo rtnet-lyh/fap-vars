@@ -1,0 +1,52 @@
+# 영역
+물리 점검
+
+# 세부 점검항목
+장비 기타 물리장치 점검
+
+# 점검 내용
+Power Supply 이중화 상태, FAN 등 상태 점검
+
+# 구분
+필수
+
+# 명령어
+```bash
+ipmitool sdr elist all
+```
+
+# 출력 결과
+```text
+
+netbackup:/home/maintenance # ipmitool sdr elist all
+System Airflow   | 11h | ok  | 23.1 | 41 CFM
+BB Lft Rear Temp | 14h | ok  |  7.1 | 34 degrees C
+Riser 3 Temp     | 17h | ok  | 16.3 | 37 degrees C
+BB P1 VR Temp    | 20h | ok  |  7.1 | 44 degrees C
+Front Panel Temp | 21h | ok  | 12.1 | 16 degrees C
+SSB Temp         | 22h | ok  |  7.1 | 55 degrees C
+BB P2 VR Temp    | 23h | ok  |  7.2 | 41 degrees C
+BB BMC Temp      | 24h | ok  |  7.1 | 43 degrees C
+BB Rt Rear Temp  | 25h | ok  |  7.1 | 42 degrees C
+OCP Mod Temp     | 26h | ok  | 44.1 | 38 degrees C
+Riser 1 Temp     | 27h | ok  | 16.1 | 41 degrees C
+HSBP 1 Temp      | 29h | ok  | 15.1 | 34 degrees C
+Riser 2 Temp     | 2Ch | ok  | 16.2 | 32 degrees C
+SAS Mod Temp     | 2Dh | ok  | 44.1 | 42 degrees C
+Exit Air Temp    | 2Eh | ok  |  7.1 | 54 degrees C
+System Fan 1     | 30h | ok  | 29.1 | 5618 RPM
+
+
+```
+# 설명
+- 명령어: 장비의 Sensor Data Record 정보를 조회하여 하드웨어 상태를 확인하는 명령어.
+- 컬럼 값: 센서명|센서ID|상태값|인스턴스번호|상태 설명
+
+
+# 임계치
+
+
+# 판단기준
+- **양호**: 상태값 컬럼 내 값이 'ok','ns'인 경우.
+- **경고**: 상태값 컬럼 내 값이 'ok','ns'이 아닌 경우.
+- **확인 필요**: 명령어 실패 및 파싱 불가.

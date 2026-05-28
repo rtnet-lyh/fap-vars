@@ -1,0 +1,84 @@
+{
+  "total_cases": 13,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "pio_1_1_cpu_usage_chk",
+      "result_file": "pio_1_1_cpu_usage_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_1_2_mem_usage_chk",
+      "result_file": "pio_1_2_mem_usage_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_1_3_interface_chk",
+      "result_file": "pio_1_3_interface_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_2_1_hw_interface_chk",
+      "result_file": "pio_2_1_hw_interface_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_2_2_hw_vlan_chk",
+      "result_file": "pio_2_2_hw_vlan_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_1_svc_lb_chk",
+      "result_file": "pio_3_1_svc_lb_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_2_svc_mac_chk",
+      "result_file": "pio_3_2_svc_mac_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_3_svc_route_chk",
+      "result_file": "pio_3_3_svc_route_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_4_svc_stp_chk",
+      "result_file": "pio_3_4_svc_stp_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_5_svc_failover_chk",
+      "result_file": "pio_3_5_svc_failover_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_3_6_svc_ping_chk",
+      "result_file": "pio_3_6_svc_ping_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_4_1_log_chk",
+      "result_file": "pio_4_1_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "pio_5_1_env_chk",
+      "result_file": "pio_5_1_env_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

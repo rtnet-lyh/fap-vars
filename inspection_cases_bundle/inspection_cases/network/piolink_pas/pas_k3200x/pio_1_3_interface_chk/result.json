@@ -1,0 +1,295 @@
+{
+  "items": [
+    {
+      "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-INTERFACE-USAGE-01",
+      "item_id": 98603,
+      "application_id": 80601,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "PIOLINK_PAS_K3200X",
+      "application_family_name": "PIOLINK_PAS_K3200X",
+      "threshold_list": [
+        {
+          "name": "rx_rate_warn_bps",
+          "value1": "700000000"
+        },
+        {
+          "name": "tx_rate_warn_bps",
+          "value1": "700000000"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show port-monitoring'\nPORT_RATE_RE = re.compile(r'^\\s*(?P<port>\\S+)\\s+(?P<rx_bps>\\d+)\\s+\\d+\\s+(?P<tx_bps>\\d+)\\s+\\d+\\s*$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_ports(self, text):\n        rows = []\n        for line in (text or '').splitlines():\n            match = PORT_RATE_RE.match(line)\n            if not match:\n                continue\n            rows.append({\n                'port': match.group('port'),\n                'rx_rate_bps': int(match.group('rx_bps')),\n                'tx_rate_bps': int(match.group('tx_bps')),\n            })\n        return rows\n\n    def run(self):\n        rx_rate_warn_bps = self.get_threshold_var('rx_rate_warn_bps', default=700000000, value_type='int')\n        tx_rate_warn_bps = self.get_threshold_var('tx_rate_warn_bps', default=700000000, value_type='int')\n        thresholds = {'rx_rate_warn_bps': rx_rate_warn_bps, 'tx_rate_warn_bps': tx_rate_warn_bps}\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        ports = self._parse_ports(stdout)\n        if not ports:\n            return self.fail('포트 사용률 파싱 실패', message='show port-monitoring 출력에서 포트별 RxRate/TxRate 값을 찾지 못했습니다.', stdout=stdout, thresholds=thresholds)\n\n        over_threshold = [\n            item for item in ports\n            if item['rx_rate_bps'] >= rx_rate_warn_bps or item['tx_rate_bps'] >= tx_rate_warn_bps\n        ]\n        max_rx = max(ports, key=lambda item: item['rx_rate_bps'])\n        max_tx = max(ports, key=lambda item: item['tx_rate_bps'])\n        metrics = {\n            'port_count': len(ports),\n            'max_rx_rate_bps': max_rx['rx_rate_bps'],\n            'max_rx_port': max_rx['port'],\n            'max_tx_rate_bps': max_tx['tx_rate_bps'],\n            'max_tx_port': max_tx['port'],\n            'over_threshold_ports': over_threshold,\n            'ports': ports,\n        }\n        if over_threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='일부 포트의 RxRate 또는 TxRate가 임계치 이상입니다.', message=f'인터페이스 사용률 경고: 기준 초과 포트 {len(over_threshold)}개.')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='모든 포트의 RxRate/TxRate가 임계치 미만입니다.', message=f'인터페이스 사용률 점검 정상: Rx 최대 {max_rx[\"rx_rate_bps\"]}bps, Tx 최대 {max_tx[\"tx_rate_bps\"]}bps.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'show port-monitoring'",
+        "PORT_RATE_RE = re.compile(r'^\\s*(?P<port>\\S+)\\s+(?P<rx_bps>\\d+)\\s+\\d+\\s+(?P<tx_bps>\\d+)\\s+\\d+\\s*$')",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'generic_network'",
+        "    PARAMIKO_REUSE_SESSION = True",
+        "",
+        "    def _run_command(self):",
+        "        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)",
+        "        if not results:",
+        "            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')",
+        "        result = results[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)",
+        "        return stdout, None",
+        "",
+        "    def _parse_ports(self, text):",
+        "        rows = []",
+        "        for line in (text or '').splitlines():",
+        "            match = PORT_RATE_RE.match(line)",
+        "            if not match:",
+        "                continue",
+        "            rows.append({",
+        "                'port': match.group('port'),",
+        "                'rx_rate_bps': int(match.group('rx_bps')),",
+        "                'tx_rate_bps': int(match.group('tx_bps')),",
+        "            })",
+        "        return rows",
+        "",
+        "    def run(self):",
+        "        rx_rate_warn_bps = self.get_threshold_var('rx_rate_warn_bps', default=700000000, value_type='int')",
+        "        tx_rate_warn_bps = self.get_threshold_var('tx_rate_warn_bps', default=700000000, value_type='int')",
+        "        thresholds = {'rx_rate_warn_bps': rx_rate_warn_bps, 'tx_rate_warn_bps': tx_rate_warn_bps}",
+        "        stdout, error = self._run_command()",
+        "        if error:",
+        "            return error",
+        "",
+        "        ports = self._parse_ports(stdout)",
+        "        if not ports:",
+        "            return self.fail('포트 사용률 파싱 실패', message='show port-monitoring 출력에서 포트별 RxRate/TxRate 값을 찾지 못했습니다.', stdout=stdout, thresholds=thresholds)",
+        "",
+        "        over_threshold = [",
+        "            item for item in ports",
+        "            if item['rx_rate_bps'] >= rx_rate_warn_bps or item['tx_rate_bps'] >= tx_rate_warn_bps",
+        "        ]",
+        "        max_rx = max(ports, key=lambda item: item['rx_rate_bps'])",
+        "        max_tx = max(ports, key=lambda item: item['tx_rate_bps'])",
+        "        metrics = {",
+        "            'port_count': len(ports),",
+        "            'max_rx_rate_bps': max_rx['rx_rate_bps'],",
+        "            'max_rx_port': max_rx['port'],",
+        "            'max_tx_rate_bps': max_tx['tx_rate_bps'],",
+        "            'max_tx_port': max_tx['port'],",
+        "            'over_threshold_ports': over_threshold,",
+        "            'ports': ports,",
+        "        }",
+        "        if over_threshold:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='일부 포트의 RxRate 또는 TxRate가 임계치 이상입니다.', message=f'인터페이스 사용률 경고: 기준 초과 포트 {len(over_threshold)}개.')",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='모든 포트의 RxRate/TxRate가 임계치 미만입니다.', message=f'인터페이스 사용률 점검 정상: Rx 최대 {max_rx[\"rx_rate_bps\"]}bps, Tx 최대 {max_tx[\"tx_rate_bps\"]}bps.')",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-INTERFACE-USAGE-01",
+      "item_id": 98603,
+      "application_id": 80601,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "PIOLINK_PAS_K3200X",
+      "application_family_name": "PIOLINK_PAS_K3200X",
+      "threshold_list": [
+        {
+          "name": "rx_rate_warn_bps",
+          "value1": "700000000"
+        },
+        {
+          "name": "tx_rate_warn_bps",
+          "value1": "700000000"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "port_count": 24,
+        "max_rx_rate_bps": 394318400,
+        "max_rx_port": "16",
+        "max_tx_rate_bps": 394554320,
+        "max_tx_port": "13",
+        "over_threshold_ports": [],
+        "ports": [
+          {
+            "port": "1",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "2",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "3",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "4",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "5",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "6",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "7",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "8",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "9",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "10",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "11",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "12",
+            "rx_rate_bps": 5872,
+            "tx_rate_bps": 8368
+          },
+          {
+            "port": "13",
+            "rx_rate_bps": 85699200,
+            "tx_rate_bps": 394554320
+          },
+          {
+            "port": "14",
+            "rx_rate_bps": 464,
+            "tx_rate_bps": 1496
+          },
+          {
+            "port": "15",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "16",
+            "rx_rate_bps": 394318400,
+            "tx_rate_bps": 85579280
+          },
+          {
+            "port": "17",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "18",
+            "rx_rate_bps": 7848,
+            "tx_rate_bps": 3664
+          },
+          {
+            "port": "19",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "20",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "21",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "22",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "23",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          },
+          {
+            "port": "24",
+            "rx_rate_bps": 0,
+            "tx_rate_bps": 0
+          }
+        ]
+      },
+      "thresholds": {
+        "rx_rate_warn_bps": 700000000,
+        "tx_rate_warn_bps": 700000000
+      },
+      "reasons": "모든 포트의 RxRate/TxRate가 임계치 미만입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show port-monitoring\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  PORT-MONITORING\n ------------------------------------------------------------------------------\n    Port-Monitoring\n       Name  RxRate(bps) RxRate(pps) TxRate(bps) TxRate(pps)\n       1     0           0           0           0\n       2     0           0           0           0\n       3     0           0           0           0\n       4     0           0           0           0\n       5     0           0           0           0\n       6     0           0           0           0\n       7     0           0           0           0\n       8     0           0           0           0\n       9     0           0           0           0\n       10    0           0           0           0\n       11    0           0           0           0\n       12    5872        4           8368        6\n       13    85699200    23890       394554320   45370\n       14    464         0           1496        2\n       15    0           0           0           0\n       16    394318400   45356       85579280    23885\n       17    0           0           0           0\n       18    7848        5           3664        6\n       19    0           0           0           0\n       20    0           0           0           0\n       21    0           0           0           0\n       22    0           0           0           0\n       23    0           0           0           0\n       24    0           0           0           0\n================================================================================",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: show port-monitoring",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: ================================================================================",
+        "  PORT-MONITORING",
+        " ------------------------------------------------------------------------------",
+        "    Port-Monitoring",
+        "       Name  RxRate(bps) RxRate(pps) TxRate(bps) TxRate(pps)",
+        "       1     0           0           0           0",
+        "       2     0           0           0           0",
+        "       3     0           0           0           0",
+        "       4     0           0           0           0",
+        "       5     0           0           0           0",
+        "       6     0           0           0           0",
+        "       7     0           0           0           0",
+        "       8     0           0           0           0",
+        "       9     0           0           0           0",
+        "       10    0           0           0           0",
+        "       11    0           0           0           0",
+        "       12    5872        4           8368        6",
+        "       13    85699200    23890       394554320   45370",
+        "       14    464         0           1496        2",
+        "       15    0           0           0           0",
+        "       16    394318400   45356       85579280    23885",
+        "       17    0           0           0           0",
+        "       18    7848        5           3664        6",
+        "       19    0           0           0           0",
+        "       20    0           0           0           0",
+        "       21    0           0           0           0",
+        "       22    0           0           0           0",
+        "       23    0           0           0           0",
+        "       24    0           0           0           0",
+        "================================================================================"
+      ],
+      "message": "인터페이스 사용률 점검 정상: Rx 최대 394318400bps, Tx 최대 394554320bps."
+    }
+  ],
+  "failed_items": []
+}

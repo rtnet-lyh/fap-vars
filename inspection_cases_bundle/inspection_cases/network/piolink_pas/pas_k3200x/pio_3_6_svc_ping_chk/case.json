@@ -1,0 +1,49 @@
+{
+  "host": "192.0.2.11",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80601,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81611,
+  "host_id": 81611,
+  "job_id": 81611,
+  "item": {
+    "inspection_code": "NETWORK-PIOLINK-PAS-K3200X-SERVICE-PING-01",
+    "item_id": 98611,
+    "application_id": 80601,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "PIOLINK_PAS_K3200X",
+    "application_family_name": "PIOLINK_PAS_K3200X",
+    "threshold_list": [
+      {
+        "name": "ip_address",
+        "value1": "172.31.247.114"
+      },
+      {
+        "name": "max_packet_loss_percent",
+        "value1": "0"
+      },
+      {
+        "name": "max_avg_response_time_ms",
+        "value1": "100"
+      }
+    ]
+  }
+}

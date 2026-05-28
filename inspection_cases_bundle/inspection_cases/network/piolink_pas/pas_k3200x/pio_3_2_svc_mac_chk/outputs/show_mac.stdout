@@ -1,0 +1,55 @@
+Center_PAS-K3200X_A# show mac
+
+================================================================================
+  MAC
+ ------------------------------------------------------------------------------
+    Ageing Time          : 300
+
+    Mac Table
+       Port  Vid   Mac Address       Status  Type
+       12    808   40:5b:7f:6d:53:60 forward dynamic
+       13    808   00:06:c4:90:0d:77 forward dynamic
+                   00:62:0b:9e:e9:86 forward dynamic
+                   0e:00:e8:15:06:38 forward dynamic
+                   14:02:ec:74:e2:10 forward dynamic
+                   40:a6:b7:29:25:dc forward dynamic
+                   44:8a:5b:dc:44:02 forward dynamic
+                   48:df:37:59:78:40 forward dynamic
+                   48:df:37:59:78:d0 forward dynamic
+                   54:80:28:40:1b:14 forward dynamic
+                   54:80:28:40:1b:38 forward dynamic
+                   68:05:ca:e0:be:bc forward dynamic
+                   68:05:ca:e4:28:1c forward dynamic
+                   68:05:ca:e4:2b:38 forward dynamic
+                   68:05:ca:e4:2b:d4 forward dynamic
+                   68:05:ca:e4:2b:f8 forward dynamic
+                   68:05:ca:e4:2c:08 forward dynamic
+                   68:05:ca:e4:2c:8c forward dynamic
+                   68:05:ca:e4:2c:d4 forward dynamic
+                   68:05:ca:fd:28:fc forward dynamic
+                   68:05:ca:fd:2c:2c forward dynamic
+                   80:18:44:e9:4d:88 forward dynamic
+                   88:90:09:93:70:80 forward dynamic
+                   a0:36:9f:df:6d:08 forward dynamic
+                   a4:bf:01:0f:e5:b1 forward dynamic
+                   a4:bf:01:75:0a:7c forward dynamic
+                   b4:96:91:97:35:cf forward dynamic
+                   b4:96:91:97:37:35 forward dynamic
+                   c8:fe:6a:91:c0:21 forward dynamic
+                   d0:94:66:15:5b:38 forward dynamic
+                   d0:94:66:15:5b:3a forward dynamic
+                   d4:f5:ef:0d:f6:54 forward dynamic
+                   d8:d3:85:f7:ec:0e forward dynamic
+                   d8:d3:85:f8:4a:b0 forward dynamic
+                   d8:d3:85:f8:4b:68 forward dynamic
+                   d8:d3:85:f8:e4:11 forward dynamic
+                   ec:e7:a7:06:0d:d8 forward dynamic
+                   f4:bf:a8:ed:ad:e1 forward dynamic
+                   f4:bf:a8:ed:ad:ff forward dynamic
+                   f4:bf:a8:ed:ae:40 forward dynamic
+       16    422   00:10:f3:a4:1e:d9 forward dynamic
+       18    808   04:32:01:5a:2a:c0 forward dynamic
+       agg1  422   00:06:c4:90:0d:77 forward dynamic
+                   00:10:f3:a4:22:f1 forward dynamic
+================================================================================
+Center_PAS-K3200X_A#

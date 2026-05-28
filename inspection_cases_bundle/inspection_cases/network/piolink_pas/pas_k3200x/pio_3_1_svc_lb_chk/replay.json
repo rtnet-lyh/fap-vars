@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Center_PAS-K3200X_A#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show real"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_real.stdout"
+  }
+]

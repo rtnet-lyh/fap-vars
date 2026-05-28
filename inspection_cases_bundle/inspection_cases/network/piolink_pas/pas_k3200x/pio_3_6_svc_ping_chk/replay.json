@@ -1,0 +1,28 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Center_PAS-K3200X_A#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "ping 172.31.247.114"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/ping_start.stdout"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/ping_ctrl_c.stdout"
+  }
+]
