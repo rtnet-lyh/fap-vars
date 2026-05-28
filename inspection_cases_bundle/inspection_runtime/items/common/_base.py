@@ -132,7 +132,7 @@ def decode_paramiko_bytes(value, preferred_encodings=None):
 
 
 def normalize_paramiko_text(text):
-    normalized = str(text or '').replace('\r\n', '\n').replace('\r', '\n')
+    normalized = str(text or '').replace('\x00', '').replace('\r\n', '\n').replace('\r', '\n')
     return ANSI_ESCAPE_RE.sub('', normalized)
 
 
@@ -173,7 +173,9 @@ class BaseCheck:
     PARAMIKO_BECOME_METHOD = ''
     PARAMIKO_BECOME_USER = ''
     PARAMIKO_BECOME_PASSWORD = None
-
+    # AOS 용으로 추가
+    PARAMIKO_IS_ELEVATED = False
+    PARAMIKO_ELEVATE_FAILED = False
 
     # 2026-05-07 생성 [조정희]
     # [FAP 변경 시작] 세션 재사용 on/off 스위치입니다.
@@ -310,6 +312,7 @@ class BaseCheck:
                     'command': text,
                     'display_command': text,
                     'hide_command': False,
+                    'delay': command.get('delay', 0)
                 }
                 if command.get('timeout') is not None:
                     try:
@@ -485,7 +488,8 @@ class BaseCheck:
     def _paramiko_channel_closed(self, channel):
         return bool(getattr(channel, 'closed', False))
 
-    def _paramiko_sendline(self, channel, text):
+    def _paramiko_sendline(self, channel, text, delay=0):        
+        time.sleep(delay)
         channel.send(str(text or '') + '\n')
 
     def _paramiko_expect(
@@ -946,7 +950,7 @@ class BaseCheck:
         if password == '':
             raise ValueError('solaris become_password is required for ' + method)
 
-        su_command = 'su - ' + user if method == 'su -' else 'su ' + user
+        su_command = 'su - ' + user if method == 'su -' else 'su - ' + user
         return [
             {
                 'command': su_command,
@@ -1109,7 +1113,7 @@ class BaseCheck:
             }
 
         checked = whoami_result if isinstance(whoami_result, dict) else {}
-        if checked.get('rc', 1) != 0:
+        if checked.get('rc', 1) not in [0, 124]:
             return {
                 'ok': False,
                 'actual_user': '',
@@ -1120,9 +1124,10 @@ class BaseCheck:
             }
 
         stdout = str(checked.get('stdout') or '')
+        is_actual_user = re.search(expected_user.lower(), stdout)
         output_lines = [line.strip() for line in stdout.splitlines() if line.strip()]
         actual_user = output_lines[-1] if output_lines else ''
-        if actual_user == expected_user:
+        if is_actual_user: # actual_user == expected_user:
             return {
                 'ok': True,
                 'actual_user': actual_user,
@@ -1156,12 +1161,13 @@ class BaseCheck:
         expected_user = self._validate_solaris_become_user(user)
         switch_spec = {
             'command': 'su - ' + expected_user,
-            'timeout': 5,
+            'timeout': 2,
             'ignore_prompt': True,
         }
         whoami_spec = {
             'command': 'whoami',
-            'timeout': 5,
+            'timeout': 2,
+            'ignore_prompt': True,
         }
         all_results = self._run_solaris_commands(
             [switch_spec, whoami_spec] + normalized_specs,
@@ -1463,6 +1469,7 @@ class BaseCheck:
                 raise RuntimeError('cached paramiko session is invalid')
 
             for command_item in command_items:
+                delay = command_item.get('delay', 0)
                 command = command_item['command']
                 display_command = command_item.get('display_command', command)
                 hide_command = bool(command_item.get('hide_command'))
@@ -1471,7 +1478,7 @@ class BaseCheck:
                 if ignore_prompt is None:
                     ignore_prompt = continue_on_timeout
 
-                self._paramiko_sendline(channel, command)
+                self._paramiko_sendline(channel, command, delay=delay)
                 received = self._paramiko_expect(
                     channel,
                     item_timeout,
@@ -2160,6 +2167,45 @@ class BaseCheck:
             data['item_id'] = self.ctx.get('item_id')
         return data
 
+    def get_elevate_for_aos(self, become_password=None):
+        become_password = self.get_application_credential_value("become_password")
+
+        if BaseCheck.PARAMIKO_ELEVATE_FAILED:
+            raise RuntimeError("previous elevate failed")
+
+        if BaseCheck.PARAMIKO_IS_ELEVATED:
+            return True, "session reused"
+
+        if not become_password:
+            BaseCheck.PARAMIKO_ELEVATE_FAILED = True
+            raise ValueError("become password is not defined")
+
+        result = self._run_paramiko_commands([{'command': 'whoami'}])
+
+        if 'root' in result[-1]['stdout']:          
+            BaseCheck.PARAMIKO_IS_ELEVATED = True
+            return True, 'already elevated'
+        
+        result = self._run_paramiko_commands([
+            {'command': 'Support', 'timeout': 5, 'ignore_prompt': True, 'delay': 10},            
+            {'command': 'Maintenance', 'timeout': 1, 'ignore_prompt': True},
+            {'command': become_password, 'timeout': 1, 'ignore_prompt': True, 'hide_command': True},
+            {'command': '/opt/Symantec/sdcssagent/IPS/sisipsoverride.sh', 'timeout': 1, 'ignore_prompt': True},
+            {'command': become_password, 'timeout': 1, 'ignore_prompt': True, 'hide_command': True},
+            {'command': '2', 'timeout': 3, 'ignore_prompt': True},
+            {'command': become_password, 'timeout': 1, 'ignore_prompt': True, 'hide_command': True},
+            {'command': '1', 'timeout': 3, 'ignore_prompt': True},
+            {'command': '1', 'timeout': 5, 'ignore_prompt': True},
+            {'command': 'elevate', 'timeout': 5, 'ignore_prompt': True, 'delay': 20},
+            {'command': 'whoami', 'timeout': 5, 'ignore_prompt': True},
+        ])
+
+        if 'root' in result[-1]['stdout']:
+            BaseCheck.PARAMIKO_IS_ELEVATED = True
+            return True, 'new session'
+            
+        BaseCheck.PARAMIKO_ELEVATE_FAILED = True
+        raise RuntimeError("failed elevate")
 
 class ShellCheck(BaseCheck):
     """Shell 기반 점검 항목 베이스 클래스."""

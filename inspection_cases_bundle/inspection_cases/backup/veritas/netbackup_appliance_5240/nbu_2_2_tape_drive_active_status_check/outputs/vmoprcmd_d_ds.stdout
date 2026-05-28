@@ -1,0 +1,8 @@
+atmsbackup.Main_Menu> vmoprcmd -d ds
+
+                                  DRIVE STATUS
+
+Drv Type   Control  User      Label  RecMID  ExtMID  Ready   Wr.Enbl.  ReqId
+  0 hcart3 DOWN-TLD             -                     No       -         0
+  1 hcart3 DOWN-TLD             -                     No       -         0
+atmsbackup.Main_Menu>

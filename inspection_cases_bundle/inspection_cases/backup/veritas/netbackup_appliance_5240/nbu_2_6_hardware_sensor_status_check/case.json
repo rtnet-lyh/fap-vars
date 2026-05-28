@@ -1,0 +1,44 @@
+{
+  "host": "192.0.2.108",
+  "port": 22,
+  "user": "admin",
+  "password": "CHANGE_ME",
+  "credentials": {
+    "BACKUP": [
+      {
+        "application_id": 70001,
+        "application_type_id": 60,
+        "application_type_name": "BACKUP",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "admin",
+          "password": "CHANGE_ME",
+          "become": "true",
+          "become_method": "aos",
+          "become_user": "root",
+          "become_password": "CHANGE_ME",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 70108,
+  "host_id": 70108,
+  "job_id": 70108,
+  "item": {
+    "inspection_code": "BACKUP-VERITAS-NBU5240-REPLAY-008",
+    "item_id": 97108,
+    "application_id": 70001,
+    "application_type_id": 60,
+    "application_type_name": "BACKUP",
+    "application_name": "NETBACKUP_APPLIANCE",
+    "application_family_name": "VERITAS",
+    "inspection_item_name": "하드웨어 센서 상태 점검",
+    "inspection_command": "ipmitool sdr elist all",
+    "host_vars": {},
+    "threshold_list": []
+  }
+}

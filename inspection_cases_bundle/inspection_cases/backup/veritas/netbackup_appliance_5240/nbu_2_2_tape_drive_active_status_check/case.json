@@ -1,0 +1,49 @@
+{
+  "host": "192.0.2.104",
+  "port": 22,
+  "user": "admin",
+  "password": "CHANGE_ME",
+  "credentials": {
+    "BACKUP": [
+      {
+        "application_id": 70001,
+        "application_type_id": 60,
+        "application_type_name": "BACKUP",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "admin",
+          "password": "CHANGE_ME",
+          "become": "true",
+          "become_method": "aos",
+          "become_user": "root",
+          "become_password": "CHANGE_ME",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 70104,
+  "host_id": 70104,
+  "job_id": 70104,
+  "item": {
+    "inspection_code": "BACKUP-VERITAS-NBU5240-REPLAY-004",
+    "item_id": 97104,
+    "application_id": 70001,
+    "application_type_id": 60,
+    "application_type_name": "BACKUP",
+    "application_name": "NETBACKUP_APPLIANCE",
+    "application_family_name": "VERITAS",
+    "inspection_item_name": "Tape Drive Active 상태 점검",
+    "inspection_command": "vmoprcmd -d ds",
+    "host_vars": {},
+    "threshold_list": [
+      {
+        "name": "control_values",
+        "value1": "TLD,ACS,TLH,AVR"
+      }
+    ]
+  }
+}
