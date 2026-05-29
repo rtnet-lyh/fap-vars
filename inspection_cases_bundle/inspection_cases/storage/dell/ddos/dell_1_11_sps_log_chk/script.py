@@ -5,10 +5,13 @@ import re
 from .common._base import BaseCheck
 
 
-CONFIG = {'kind': 'alert_keywords', 'commands': ['system show hardware'], 'defaults': {'device_key': 'power_device_keywords', 'status_key': 'power_status_keywords', 'power_device_keywords': ['power', 'psu', 'sps', 'voltage', 'power supply'], 'power_status_keywords': ['failed', 'fault', 'offline', 'error', 'critical']}}
-COMMAND_ERROR_RE = re.compile(r'(syntax error|unknown command|invalid command|command not found)', re.IGNORECASE)
-BAD_DISK_WORDS = ('failed', 'failure', 'error', 'offline', 'degraded')
-OK_STATUSES = ('ok',)
+COMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')
+COMMAND = 'system show hardware'
+DEVICE_KEY = 'power_device_keywords'
+STATUS_KEY = 'power_status_keywords'
+DEFAULT_DEVICE_KEYWORDS = ['power', 'psu', 'sps', 'voltage', 'power supply']
+DEFAULT_STATUS_KEYWORDS = ['failed', 'fault', 'offline', 'error', 'critical']
+FAIL_ON_ANY_ALERT = False
 
 
 class Check(BaseCheck):
@@ -17,278 +20,74 @@ class Check(BaseCheck):
     PARAMIKO_PROFILE = 'generic_network'
     PARAMIKO_REUSE_SESSION = True
 
-    def _split_list(self, value):
-        return [item.strip() for item in re.split(r'[,|\n]+', str(value or '')) if item.strip()]
-
-    def _threshold_list(self, key):
-        defaults = CONFIG.get('defaults', {})
-        default_value = defaults.get(key, [])
-        if isinstance(default_value, list):
-            default_value = ','.join(default_value)
-        return self._split_list(self.get_threshold_var(key, default=str(default_value or ''), value_type='str'))
-
-    def _run_commands(self):
-        commands = CONFIG.get('commands') or []
-        results = self._run_paramiko_commands(commands, profile=self.PARAMIKO_PROFILE)
-        if not results:
-            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')
-        if len(results) < len(commands):
-            return None, self.fail('점검 명령 실행 실패', message='일부 점검 명령 결과를 수신하지 못했습니다.')
-        for result in results:
-            stdout = (result.get('stdout') or '').strip()
-            stderr = (result.get('stderr') or '').strip()
-            command = result.get('display_command') or result.get('command')
-            if result.get('rc') != 0:
-                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)
-            error_text = self._detect_cli_error(stdout, stderr)
-            if error_text:
-                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)
-        return results, None
-
     def _detect_cli_error(self, *texts):
         for text in texts:
             for line in str(text or '').splitlines():
                 stripped = line.strip()
-                if stripped and COMMAND_ERROR_RE.search(stripped):
+                lowered = stripped.lower()
+                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):
                     return stripped
         return ''
 
-    def _combined_stdout(self, results):
-        return '\n\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()).strip()
+    def _run_command(self):
+        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)
+        if not results:
+            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')
+        result = results[0]
+        stdout = (result.get('stdout') or '').strip()
+        stderr = (result.get('stderr') or '').strip()
+        if result.get('rc') != 0:
+            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)
+        error_text = self._detect_cli_error(stdout, stderr)
+        if error_text:
+            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)
+        return stdout, None
+
+    def _split_list(self, value):
+        return [item.strip() for item in re.split(r'[,|\n]+', str(value or '')) if item.strip()]
+
+    def _threshold_list(self, key, default_values):
+        default_text = ','.join(default_values)
+        return self._split_list(self.get_threshold_var(key, default=default_text, value_type='str'))
 
     def _normalize(self, value):
         return re.sub(r'[^a-z0-9]+', '', str(value or '').lower())
 
     def _contains_keyword(self, text, keyword):
-        normalized_text = self._normalize(text)
         normalized_keyword = self._normalize(keyword)
         if not normalized_keyword:
             return False
-        if normalized_keyword == 'fc':
-            return 'fibrechannel' in normalized_text or 'gbfc' in normalized_text or re.search(r'\bfc\b', str(text or '').lower()) is not None
-        return normalized_keyword in normalized_text
+        return normalized_keyword in self._normalize(text)
 
-    def _alert_metrics(self, text, device_keywords=None, status_keywords=None):
+    def _parse_alerts(self, text, device_keywords, status_keywords):
         active_match = re.search(r'There\s+(?:is|are)\s+(\d+)\s+active alert', text, re.IGNORECASE)
         active_alert_count = int(active_match.group(1)) if active_match else 0
-        severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\b(ERROR|CRITICAL)\b', line, re.IGNORECASE)]
-        paired_lines = []
+        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\b(ERROR|CRITICAL)\b', line, re.IGNORECASE)]
+        keyword_lines = []
         for line in text.splitlines():
-            if any(self._contains_keyword(line, keyword) for keyword in (device_keywords or [])) and any(self._contains_keyword(line, keyword) for keyword in (status_keywords or [])):
-                paired_lines.append(line.strip())
+            if any(self._contains_keyword(line, keyword) for keyword in device_keywords) and any(self._contains_keyword(line, keyword) for keyword in status_keywords):
+                keyword_lines.append(line.strip())
         return {
             'active_alert_count': active_alert_count,
-            'bad_severity_lines': severity_lines,
-            'keyword_matched_alert_lines': paired_lines,
+            'bad_severity_lines': bad_severity_lines,
+            'keyword_matched_alert_lines': keyword_lines,
         }
-
-    def _evaluate_alert_text(self, text, device_key='', status_key='', fail_on_any_alert=True):
-        device_keywords = self._threshold_list(device_key) if device_key else []
-        status_keywords = self._threshold_list(status_key) if status_key else []
-        thresholds = {}
-        if device_key:
-            thresholds[device_key] = device_keywords
-        if status_key:
-            thresholds[status_key] = status_keywords
-        metrics = self._alert_metrics(text, device_keywords, status_keywords)
-        has_bad_alert = bool(metrics['keyword_matched_alert_lines'])
-        if fail_on_any_alert:
-            has_bad_alert = has_bad_alert or metrics['active_alert_count'] > 0 or bool(metrics['bad_severity_lines'])
-        if has_bad_alert:
-            return self.fail('Alert 상태 기준 미달', message='Active Alert, ERROR/CRITICAL Severity 또는 장애 키워드가 확인되었습니다.', stdout=text, metrics=metrics, thresholds=thresholds)
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='장애 Alert 조건이 확인되지 않았습니다.', message='Alert 상태 점검 정상.')
-
-    def _parse_hardware_rows(self, text):
-        rows = []
-        for line in text.splitlines():
-            stripped = line.rstrip()
-            if not stripped or stripped.startswith('Slot') or set(stripped.strip()) <= {'-'}:
-                continue
-            parts = re.split(r'\s{2,}', stripped.strip())
-            if len(parts) < 3:
-                continue
-            slot, vendor, device = parts[:3]
-            if slot.lower() in ('slot', '----') or vendor.lower() == 'vendor':
-                continue
-            ports = parts[3] if len(parts) >= 4 else ''
-            rows.append({'slot': slot, 'vendor': vendor, 'device': device, 'ports': ports})
-        return rows
-
-    def _valid_ports(self, value):
-        text = str(value or '').strip()
-        return bool(text and text.lower() != '(empty)')
-
-    def _evaluate_hardware(self, text, keyword_key, alert_device_key='', alert_status_key='', check_alerts=False):
-        keywords = self._threshold_list(keyword_key)
-        thresholds = {keyword_key: keywords}
-        rows = self._parse_hardware_rows(text)
-        matching = [row for row in rows if any(self._contains_keyword(row['device'], keyword) for keyword in keywords)]
-        rows_with_ports = [row for row in matching if self._valid_ports(row.get('ports'))]
-        alert_metrics = {}
-        if check_alerts:
-            alert_device_keywords = self._threshold_list(alert_device_key)
-            alert_status_keywords = self._threshold_list(alert_status_key)
-            thresholds[alert_device_key] = alert_device_keywords
-            thresholds[alert_status_key] = alert_status_keywords
-            alert_metrics = self._alert_metrics(text, alert_device_keywords, alert_status_keywords)
-        metrics = {
-            'hardware_row_count': len(rows),
-            'matching_device_count': len(matching),
-            'matching_devices_with_ports_count': len(rows_with_ports),
-            'matching_devices': matching,
-        }
-        if alert_metrics:
-            metrics.update(alert_metrics)
-        has_alert_failure = alert_metrics and (
-            alert_metrics['active_alert_count'] > 0 or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']
-        )
-        if not matching or not rows_with_ports or has_alert_failure:
-            return self.fail('하드웨어 상태 기준 미달', message='필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.', stdout=text, metrics=metrics, thresholds=thresholds)
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='하드웨어 상태 점검 정상.')
-
-    def _evaluate_disk(self, text):
-        defaults = CONFIG.get('defaults', {})
-        valid_status = str(self.get_threshold_var('valid_disk_status', default=defaults.get('valid_disk_status', 'Normal - Storage operational'), value_type='str')).strip()
-        bad_lines = [line.strip() for line in text.splitlines() if any(word in line.lower() for word in BAD_DISK_WORDS)]
-        has_valid_status = valid_status.lower() in text.lower()
-        metrics = {'has_valid_disk_status': has_valid_status, 'bad_disk_lines': bad_lines}
-        thresholds = {'valid_disk_status': valid_status, 'bad_disk_words': list(BAD_DISK_WORDS)}
-        if not has_valid_status or bad_lines:
-            return self.fail('Disk 상태 기준 미달', message='Storage 정상 문구가 없거나 디스크 장애 키워드가 확인되었습니다.', stdout=text, metrics=metrics, thresholds=thresholds)
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Storage 정상 문구가 있고 디스크 장애 키워드가 없습니다.', message='Disk 상태 점검 정상.')
-
-    def _parse_nvram_battery_statuses(self, text):
-        statuses = []
-        in_section = False
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped.startswith('NVRAM Batteries'):
-                in_section = True
-                continue
-            if not in_section or not stripped or stripped.startswith(('----', 'Card', 'Status')):
-                continue
-            if re.match(r'^\d+\s+\d+\s+\S+', stripped):
-                parts = stripped.split()
-                statuses.append({'card': parts[0], 'battery': parts[1], 'status': parts[2]})
-        return statuses
-
-    def _evaluate_nvram_battery(self, text):
-        statuses = self._parse_nvram_battery_statuses(text)
-        bad = [item for item in statuses if item['status'].lower() not in OK_STATUSES]
-        metrics = {'battery_status_count': len(statuses), 'bad_battery_statuses': bad, 'battery_statuses': statuses}
-        if not statuses or bad:
-            return self.fail('NVRAM Battery 상태 기준 미달', message='NVRAM Battery Status가 없거나 ok가 아닌 값이 확인되었습니다.', stdout=text, metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)})
-        return self.ok(metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)}, reasons='NVRAM Battery Status가 모두 ok입니다.', message='NVRAM Battery 상태 점검 정상.')
-
-    def _parse_power_statuses(self, text):
-        statuses = []
-        for line in text.splitlines():
-            match = re.match(r'^(\d+)\s+(Power module\s+\S+)\s+(\S+)\s*$', line.strip(), re.IGNORECASE)
-            if match:
-                statuses.append({'enclosure': match.group(1), 'description': match.group(2), 'status': match.group(3)})
-        return statuses
-
-    def _evaluate_power_supply(self, text):
-        statuses = self._parse_power_statuses(text)
-        bad = [item for item in statuses if item['status'].lower() not in OK_STATUSES]
-        metrics = {'power_status_count': len(statuses), 'bad_power_statuses': bad, 'power_statuses': statuses}
-        if not statuses or bad:
-            return self.fail('Power Supply 상태 기준 미달', message='Power module Status가 없거나 OK가 아닌 값이 확인되었습니다.', stdout=text, metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)})
-        return self.ok(metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)}, reasons='Power module Status가 모두 OK입니다.', message='전원공급 장치 점검 정상.')
-
-    def _parse_enclosure_statuses(self, text):
-        statuses = []
-        section = ''
-        target_sections = {'Fans', 'Temperature', 'Power Supply', 'Controller', 'NVRAM Batteries'}
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped.rstrip(':') in target_sections:
-                section = stripped.rstrip(':')
-                continue
-            if stripped.endswith(':'):
-                section = ''
-                continue
-            if not section or not stripped or stripped.startswith(('Description', 'Card', 'Status')):
-                continue
-            compact = stripped.replace(' ', '')
-            if compact and set(compact) <= {'-'}:
-                continue
-            if section == 'NVRAM Batteries' and re.match(r'^\d+\s+\d+\s+\S+', stripped):
-                parts = stripped.split()
-                statuses.append({'section': section, 'item': 'card %s battery %s' % (parts[0], parts[1]), 'status': parts[2]})
-                continue
-            if section == 'Controller' and stripped.lower().startswith('status'):
-                parts = stripped.split()
-                if len(parts) >= 2:
-                    statuses.append({'section': section, 'item': 'Controller', 'status': parts[-1]})
-                continue
-            if section in ('Fans', 'Temperature', 'Power Supply'):
-                parts = re.split(r'\s{2,}', stripped)
-                if len(parts) >= 2:
-                    status = parts[-1].strip()
-                    if status == '-':
-                        continue
-                    if not re.match(r'^[A-Za-z_-]+$', status):
-                        continue
-                    statuses.append({'section': section, 'item': parts[0], 'status': status})
-        return statuses
-
-    def _evaluate_enclosure_hw(self, text):
-        statuses = self._parse_enclosure_statuses(text)
-        bad = [item for item in statuses if item['status'].lower() not in OK_STATUSES]
-        metrics = {'enclosure_status_count': len(statuses), 'bad_enclosure_statuses': bad, 'enclosure_statuses': statuses}
-        if not statuses or bad:
-            return self.fail('Enclosure HW 상태 기준 미달', message='관련 Status가 없거나 OK/ok가 아닌 값이 확인되었습니다.', stdout=text, metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)})
-        return self.ok(metrics=metrics, thresholds={'valid_statuses': list(OK_STATUSES)}, reasons='관련 Enclosure HW Status가 모두 OK/ok입니다.', message='Enclosure HW 상태 점검 정상.')
-
-    def _evaluate_ifgroup(self, text):
-        defaults = CONFIG.get('defaults', {})
-        min_count = self.get_threshold_var('min_ifgroup_interface_cnt', default=defaults.get('min_ifgroup_interface_cnt', 1), value_type='int')
-        bad_status_keywords = self._threshold_list('ifgroup_status_keywords')
-        rows = []
-        for line in text.splitlines():
-            parts = re.split(r'\s{2,}', line.strip())
-            if len(parts) >= 5 and parts[0].lower() not in ('group-name', '----------'):
-                try:
-                    interface_count = int(parts[2])
-                except ValueError:
-                    continue
-                rows.append({'group_name': parts[0], 'status': parts[1].lower(), 'interface_count': interface_count})
-        no_interfaces = 'No interfaces in ifgroup' in text
-        bad_rows = [row for row in rows if row['status'] != 'enabled' or any(keyword in row['status'] for keyword in bad_status_keywords) or row['interface_count'] < min_count]
-        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows, 'no_interfaces_message': no_interfaces}
-        thresholds = {'min_ifgroup_interface_cnt': min_count, 'ifgroup_status_keywords': bad_status_keywords}
-        if not rows or bad_rows or no_interfaces:
-            return self.fail('ifgroup 상태 기준 미달', message='ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.', stdout=text, metrics=metrics, thresholds=thresholds)
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.', message='Path 이중화 점검 정상.')
 
     def run(self):
-        results, error = self._run_commands()
+        device_keywords = self._threshold_list(DEVICE_KEY, DEFAULT_DEVICE_KEYWORDS)
+        status_keywords = self._threshold_list(STATUS_KEY, DEFAULT_STATUS_KEYWORDS)
+        thresholds = {DEVICE_KEY: device_keywords, STATUS_KEY: status_keywords}
+        stdout, error = self._run_command()
         if error:
             return error
-        stdout = self._combined_stdout(results)
-        kind = CONFIG['kind']
-        defaults = CONFIG.get('defaults', {})
 
-        if kind == 'alert':
-            return self._evaluate_alert_text(stdout, defaults.get('device_key', ''), defaults.get('status_key', ''), fail_on_any_alert=True)
-        if kind == 'alert_keywords':
-            return self._evaluate_alert_text(stdout, defaults.get('device_key', ''), defaults.get('status_key', ''), fail_on_any_alert=False)
-        if kind == 'disk':
-            return self._evaluate_disk(stdout)
-        if kind == 'hardware':
-            return self._evaluate_hardware(stdout, defaults.get('keyword_key', 'controller_device_keywords'))
-        if kind == 'hba':
-            return self._evaluate_hardware(stdout, defaults.get('keyword_key', 'hba_device_keywords'), defaults.get('alert_device_key', 'hba_device_keywords'), defaults.get('alert_status_key', 'hba_status_keywords'), check_alerts=True)
-        if kind == 'nvram_battery':
-            return self._evaluate_nvram_battery(stdout)
-        if kind == 'power_supply':
-            return self._evaluate_power_supply(stdout)
-        if kind == 'enclosure_hw':
-            return self._evaluate_enclosure_hw(stdout)
-        if kind == 'ifgroup':
-            return self._evaluate_ifgroup(stdout)
-        return self.fail('점검 스크립트 설정 오류', message=f'지원하지 않는 CHECK_KIND입니다: {kind}')
+        metrics = self._parse_alerts(stdout, device_keywords, status_keywords)
+        has_failure = bool(metrics['keyword_matched_alert_lines'])
+        if FAIL_ON_ANY_ALERT:
+            has_failure = has_failure or metrics['active_alert_count'] > 0 or bool(metrics['bad_severity_lines'])
+        if has_failure:
+            return self.fail('Alert 상태 기준 미달', message='Active Alert, ERROR/CRITICAL Severity 또는 장애 키워드가 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)
+        return self.ok(metrics=metrics, thresholds=thresholds, reasons='장애 Alert 조건이 확인되지 않았습니다.', message='Alert 상태 점검 정상.')
 
 
 CHECK_CLASS = Check
