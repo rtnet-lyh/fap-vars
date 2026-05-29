@@ -1,0 +1,22 @@
+falcon@Center_Server_J4300_A> show chassis routing-engine
+Routing Engine status:
+  Slot 0:
+    Current state                  Master
+    Temperature                 48 degrees C / 118 degrees F
+    CPU temperature             48 degrees C / 118 degrees F
+    DRAM                      3072 MB
+    Memory utilization          48 percent
+    5 sec CPU utilization:
+      User                       6 percent
+      Background                 0 percent
+      Kernel                     3 percent
+      Interrupt                  0 percent
+      Idle                      91 percent
+    Model                          EX4300-32F
+    Serial ID                      TW3720310093
+    Start time                     2020-11-12 07:19:14 KST
+    Uptime                         2023 days, 13 hours, 54 minutes, 30 seconds
+    Last reboot reason             0x1:power cycle/failure
+    Load averages:                 1 minute   5 minute  15 minute
+                                       0.15       0.16       0.10
+falcon@Center_Server_J4300_A>

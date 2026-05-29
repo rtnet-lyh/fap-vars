@@ -1,0 +1,8 @@
+falcon@Center_Server_J4300_A> show arp
+MAC Address       Address         Name                      Interface               Flags
+40:5b:7f:6d:53:60 172.18.8.191    172.18.8.191              irb.808 [ge-0/0/28.0]   none
+44:8a:5b:dc:44:02 172.18.8.230    172.18.8.230              irb.808 [xe-0/0/35.0]   none
+00:06:c4:90:0d:53 172.18.8.252    172.18.8.252              irb.808 [ge-0/0/28.0]   none
+00:00:5e:00:01:fe 172.18.8.254    172.18.8.254              irb.808 [ge-0/0/28.0]   none
+Total entries: 4
+falcon@Center_Server_J4300_A>

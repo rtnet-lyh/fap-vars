@@ -1,0 +1,42 @@
+# 영역
+서비스
+
+# 세부 점검항목
+이중화 구성 상태 점검
+
+# 점검 내용
+Failover 상태 확인
+
+# 구분
+권고
+
+# 명령어
+```bash
+show vrrp summary
+```
+
+# 출력 결과(193.1.0.206,207 둘다 없음)
+```text
+falcon@Center_Server_J4300_B> show vrrp summary
+warning: vrrp subsystem not running - not needed by configuration.
+
+{master:0}
+
+
+
+```
+
+# 설명
+- 명령어: VRRP 이중화 그룹 상태를 확인하는 명령어.
+- 이중화 구성이 되어있는 장비가 없어 결과 확인 불가.
+
+[참고]
+- 이중화 구성이 되어있더라도 master 장비와 slave 장비의 각각 state 값과 addr 값을 비교해야함. (가이드참고)
+
+# 임계치
+
+
+# 판단기준
+- **양호**: 명령어 결과 있음
+- **경고**: 명령어 결과 없음
+- **확인 필요**: 

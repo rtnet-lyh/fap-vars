@@ -1,0 +1,14 @@
+falcon@Center_Server_J4300_B> show chassis environment
+Class Item                           Status     Measurement
+Power FPC 0 Power Supply 0           OK
+      FPC 0 Power Supply 1           OK
+Temp  FPC 0 CPU                      OK         50 degrees C / 122 degrees F
+      FPC 0 NW-PFE                   OK         40 degrees C / 104 degrees F
+      FPC 0 SE-PFE                   OK         35 degrees C / 95 degrees F
+      FPC 0 PHY-4/5                  OK         34 degrees C / 93 degrees F
+      FPC 0 MGMT PHY                 OK         29 degrees C / 84 degrees F
+Fans  FPC 0 Fan 0                    OK         Spinning at normal speed
+      FPC 0 Fan 0 Airflow            OK         Airflow Out (AFO)
+      FPC 0 Fan 1                    OK         Spinning at normal speed
+      FPC 0 Fan 1 Airflow            OK         Airflow Out (AFO)
+falcon@Center_Server_J4300_B>

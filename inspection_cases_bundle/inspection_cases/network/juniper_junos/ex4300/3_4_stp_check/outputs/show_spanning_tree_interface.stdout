@@ -1,0 +1,10 @@
+falcon@Center_Server_J4300_B> show spanning-tree interface
+
+Spanning tree interface parameters for instance 0
+
+Interface                  Port ID    Designated         Designated         Port    State  Role
+                                       port ID           bridge ID          Cost
+ge-0/0/28                  128:490      128:490   8192.c8fe6a91c080        20000    FWD    DESG
+ge-0/0/29                  128:491      128:491   8192.c8fe6a91c080        20000    FWD    DESG
+xe-0/0/35                  128:492      128:494   4096.f4bfa8edae40         2000    FWD    ROOT
+falcon@Center_Server_J4300_B>

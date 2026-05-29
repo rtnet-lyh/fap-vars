@@ -1,0 +1,41 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 88003,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 89003,
+  "host_id": 89003,
+  "job_id": 89003,
+  "item": {
+    "inspection_code": "NETWORK-DELL-DDOS-DELL-1-12-STRG-CONTROLLER-LOG-CHK",
+    "item_id": 90003,
+    "application_id": 88003,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "DELL_DDOS",
+    "application_family_name": "DELL_DDOS",
+    "threshold_list": [
+      {
+        "name": "controller_device_keywords",
+        "value1": "fibre channel,sas,nvram"
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "falcon@Center_Server_J4300_B>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "ping 172.18.8.211 count 5"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/ping_172_18_8_211_count_5.stdout"
+  }
+]

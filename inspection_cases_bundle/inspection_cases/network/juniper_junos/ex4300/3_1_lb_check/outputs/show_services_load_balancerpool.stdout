@@ -1,0 +1,4 @@
+falcon@Center_Server_J4300_B> show services load-balancerpool
+                                            ^
+syntax error, expecting <command>.
+falcon@Center_Server_J4300_B>

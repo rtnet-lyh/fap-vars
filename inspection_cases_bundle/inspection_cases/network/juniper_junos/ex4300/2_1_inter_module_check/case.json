@@ -1,0 +1,36 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 85004,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 86004,
+  "host_id": 86004,
+  "job_id": 86004,
+  "item": {
+    "inspection_code": "NETWORK-JUNIPER-JUNOS-EX4300-2-1-INTER-MODULE",
+    "item_id": 87004,
+    "application_id": 85004,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "JUNIPER_JUNOS_EX4300",
+    "application_family_name": "JUNIPER_JUNOS_EX4300",
+    "threshold_list": []
+  }
+}

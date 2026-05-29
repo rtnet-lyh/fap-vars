@@ -1,0 +1,133 @@
+{
+  "total_cases": 17,
+  "failed_cases": [
+    "dell_1_1_event_log_chk",
+    "dell_1_2_memory_log_chk",
+    "dell_1_4_fan_log_chk",
+    "dell_1_5_power_log_chk",
+    "dell_1_6_hba_log_chk",
+    "dell_1_8_controller_log_chk",
+    "dell_2_1_multipath_chk",
+    "dell_3_2_env_log_chk"
+  ],
+  "cases": [
+    {
+      "case_name": "dell_1_10_strg_controller_log_chk",
+      "result_file": "dell_1_10_strg_controller_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_11_sps_log_chk",
+      "result_file": "dell_1_11_sps_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_12_strg_controller_log_chk",
+      "result_file": "dell_1_12_strg_controller_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_13_strg_battery_log_chk",
+      "result_file": "dell_1_13_strg_battery_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_1_event_log_chk",
+      "result_file": "dell_1_1_event_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-1-EVENT-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_2_memory_log_chk",
+      "result_file": "dell_1_2_memory_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-2-MEMORY-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_3_disk_log_chk",
+      "result_file": "dell_1_3_disk_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_4_fan_log_chk",
+      "result_file": "dell_1_4_fan_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-4-FAN-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_5_power_log_chk",
+      "result_file": "dell_1_5_power_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-5-POWER-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_6_hba_log_chk",
+      "result_file": "dell_1_6_hba_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-6-HBA-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_7_battery_log_chk",
+      "result_file": "dell_1_7_battery_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_1_8_controller_log_chk",
+      "result_file": "dell_1_8_controller_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-1-8-CONTROLLER-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_1_9_data_strg_log_chk",
+      "result_file": "dell_1_9_data_strg_log_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_2_1_multipath_chk",
+      "result_file": "dell_2_1_multipath_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-2-1-MULTIPATH-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_3_1_env_power_chk",
+      "result_file": "dell_3_1_env_power_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "dell_3_2_env_log_chk",
+      "result_file": "dell_3_2_env_log_chk/result.json",
+      "failed_items": [
+        "NETWORK-DELL-DDOS-DELL-3-2-ENV-LOG-CHK"
+      ],
+      "is_success": false
+    },
+    {
+      "case_name": "dell_3_3_env_hw_chk",
+      "result_file": "dell_3_3_env_hw_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

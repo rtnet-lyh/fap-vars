@@ -1,0 +1,16 @@
+sysadmin@localhost# ifgroup show config all
+
+Group-name   Status     Interface   Clients   Replication
+----------   --------   ---------   -------   -----------
+default      disabled           0         1             0
+----------   --------   ---------   -------   -----------
+No interfaces in ifgroup
+
+Group-name   Status     DD Boost Clients
+----------   --------   ----------------
+default      disabled   *
+----------   --------   ----------------
+No replication mtrees with remote hosts in ifgroup
+File replication is allowed on ifgroup.
+Client may use any interface.
+sysadmin@localhost#

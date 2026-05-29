@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "falcon@Center_Server_J4300_B>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show chassis environment"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_chassis_environment.stdout"
+  }
+]

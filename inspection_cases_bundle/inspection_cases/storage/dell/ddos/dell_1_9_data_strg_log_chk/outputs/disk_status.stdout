@@ -1,0 +1,10 @@
+sysadmin@localhost# disk status
+Normal - Storage operational
+
+Disk States   Active tier   Cache tier
+-----------   -----------   ----------
+In Use        25            2
+Spare         2             -
+TOTAL DISKS   27            2
+-----------   -----------   ----------
+sysadmin@localhost#

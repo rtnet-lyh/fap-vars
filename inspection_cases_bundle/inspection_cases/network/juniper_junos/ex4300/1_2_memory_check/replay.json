@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "falcon@Center_Server_J4300_A>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show system memory"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_system_memory.stdout"
+  }
+]

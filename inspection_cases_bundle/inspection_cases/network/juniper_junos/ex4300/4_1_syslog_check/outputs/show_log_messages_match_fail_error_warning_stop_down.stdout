@@ -1,0 +1,4 @@
+falcon@Center_Server_J4300_B> show log messages | match "fail|error|warning|stop|down"
+                                   ^
+syntax error, expecting <command>.
+falcon@Center_Server_J4300_B>

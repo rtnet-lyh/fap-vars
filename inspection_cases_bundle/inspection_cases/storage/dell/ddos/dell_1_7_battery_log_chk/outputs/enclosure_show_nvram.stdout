@@ -1,0 +1,21 @@
+sysadmin@localhost# enclosure show nvram
+Enclosure 1
+        NVRAM Cards:
+                Card   Component                 Value
+                ----   -----------------------   ----------------------------------------------------------------------
+                1      Slot                      0
+                       Firmware version          0.0.81
+                       Memory size               7.93 GiB
+                       Errors                    0 memory (0 uncorrectable), 0 PCI, 0 controller
+                       Flash controller Errors   0 Cfg Err, 0 PANIC, 0 Bus Hang, 0 Bad Blk Warn, 0 Bkup Err, 0 Rstr Err
+                       Board temperature         38 C
+                       CPU temperature           50 C
+                       Number of batteries       1
+                ----   -----------------------   ----------------------------------------------------------------------
+        NVRAM Batteries:
+                Card   Battery   Status   Charge   Charging   Time To       Temperature   Voltage
+                                                   Status     Full Charge
+                ----   -------   ------   ------   --------   -----------   -----------   -------
+                1      1         ok       97 %     enabled    0 mins        34 C          4.051 V
+                ----   -------   ------   ------   --------   -----------   -----------   -------
+sysadmin@localhost#

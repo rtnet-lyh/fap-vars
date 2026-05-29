@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "falcon@Center_Server_J4300_A>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show route 0.0.0.0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_route_0_0_0_0.stdout"
+  }
+]

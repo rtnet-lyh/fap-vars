@@ -1,0 +1,18 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "falcon@Center_Server_J4300_B>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "show log messages | match \"fail|error|warning|stop|down\""
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_log_messages_match_fail_error_warning_stop_down.stdout"
+  }
+]

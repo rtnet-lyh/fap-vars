@@ -1,0 +1,29 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "sysadmin@localhost#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "system show hardware"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/system_show_hardware.stdout"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_type": "exact",
+    "matcher_value": "alerts show current"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/alerts_show_current.stdout"
+  }
+]

@@ -1,0 +1,10 @@
+sysadmin@localhost# enclosure show powersupply
+This command may take up to a minute to complete. Please wait...
+Enclosure   Description      Status
+---------   --------------   ------
+1           Power module 0   OK
+1           Power module 1   OK
+2           Power module A   OK
+2           Power module B   OK
+---------   --------------   ------
+sysadmin@localhost#

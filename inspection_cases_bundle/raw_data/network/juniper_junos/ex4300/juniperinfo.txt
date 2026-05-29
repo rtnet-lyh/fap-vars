@@ -1,0 +1,46 @@
+주니퍼 서버 접속정보
+ssh falcon@172.18.8.211 -p22
+!ehfhrhdtk1
+
+ssh falcon@172.18.8.212 -p22
+!ehfhrhdtk1
+
+
+falcon@Center_Server_J4300_A> show version
+fpc0:
+--------------------------------------------------------------------------
+Hostname: Center_Server_J4300_A
+Model: ex4300-32f
+Junos: 18.4R3-S1.3
+JUNOS EX  Software Suite [18.4R3-S1.3]
+JUNOS FIPS mode utilities [18.4R3-S1.3]
+JUNOS Crypto Software Suite [18.4R3-S1.3]
+JUNOS Online Documentation [18.4R3-S1.3]
+JUNOS Phone-Home Software Suite [18.4R3-S1.3]
+JUNOS jsd [powerpc-18.4R3-S1.3-jet-1]
+JUNOS SDN Software Suite [18.4R3-S1.3]
+JUNOS EX 4300 Software Suite [18.4R3-S1.3]
+JUNOS Web Management Platform Package [18.4R3-S1.3]
+JUNOS py-base-powerpc [18.4R3-S1.3]
+JUNOS py-extensions-powerpc [18.4R3-S1.3]
+
+
+falcon@Center_Server_J4300_B> show version
+fpc0:
+--------------------------------------------------------------------------
+Hostname: Center_Server_J4300_B
+Model: ex4300-32f
+Junos: 18.4R3-S1.3
+JUNOS EX  Software Suite [18.4R3-S1.3]
+JUNOS FIPS mode utilities [18.4R3-S1.3]
+JUNOS Crypto Software Suite [18.4R3-S1.3]
+JUNOS Online Documentation [18.4R3-S1.3]
+JUNOS Phone-Home Software Suite [18.4R3-S1.3]
+JUNOS jsd [powerpc-18.4R3-S1.3-jet-1]
+JUNOS SDN Software Suite [18.4R3-S1.3]
+JUNOS EX 4300 Software Suite [18.4R3-S1.3]
+JUNOS Web Management Platform Package [18.4R3-S1.3]
+JUNOS py-base-powerpc [18.4R3-S1.3]
+JUNOS py-extensions-powerpc [18.4R3-S1.3]
+
+{master:0}

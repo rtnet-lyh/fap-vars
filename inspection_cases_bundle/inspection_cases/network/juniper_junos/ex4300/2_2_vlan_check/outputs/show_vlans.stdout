@@ -1,0 +1,11 @@
+falcon@Center_Server_J4300_A> show vlans
+
+Routing instance        VLAN name             Tag          Interfaces
+default-switch          default               1
+                                                           xe-0/0/35.0*
+default-switch          v808                  808
+                                                           ge-0/0/0.0*
+                                                           ge-0/0/1.0*
+                                                           ge-0/0/10.0*
+                                                           ge-0/0/11.0*
+falcon@Center_Server_J4300_A>

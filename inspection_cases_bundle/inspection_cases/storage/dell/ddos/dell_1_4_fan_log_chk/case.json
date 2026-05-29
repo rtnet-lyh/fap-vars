@@ -1,0 +1,45 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 88008,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 89008,
+  "host_id": 89008,
+  "job_id": 89008,
+  "item": {
+    "inspection_code": "NETWORK-DELL-DDOS-DELL-1-4-FAN-LOG-CHK",
+    "item_id": 90008,
+    "application_id": 88008,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "DELL_DDOS",
+    "application_family_name": "DELL_DDOS",
+    "threshold_list": [
+      {
+        "name": "fan_device_keywords",
+        "value1": "fan,cooling,thermal"
+      },
+      {
+        "name": "fan_status_keywords",
+        "value1": "failed,fault,offline,error,critical"
+      }
+    ]
+  }
+}

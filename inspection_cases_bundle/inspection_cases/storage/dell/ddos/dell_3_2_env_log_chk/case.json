@@ -1,0 +1,45 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 88016,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 89016,
+  "host_id": 89016,
+  "job_id": 89016,
+  "item": {
+    "inspection_code": "NETWORK-DELL-DDOS-DELL-3-2-ENV-LOG-CHK",
+    "item_id": 90016,
+    "application_id": 88016,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "DELL_DDOS",
+    "application_family_name": "DELL_DDOS",
+    "threshold_list": [
+      {
+        "name": "hba_device_keywords",
+        "value1": "fibrechannel,fc,hba,scsi target"
+      },
+      {
+        "name": "hba_status_keywords",
+        "value1": "offline,loop,link down"
+      }
+    ]
+  }
+}

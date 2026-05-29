@@ -1,0 +1,7 @@
+sysadmin@localhost# alerts show current
+Id      Post Time                  Severity   Class               Object   Message
+-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------
+p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.
+-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------
+There is 1 active alert.
+sysadmin@localhost#

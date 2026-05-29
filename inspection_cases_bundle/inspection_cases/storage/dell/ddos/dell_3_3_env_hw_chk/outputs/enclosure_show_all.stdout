@@ -1,0 +1,200 @@
+sysadmin@localhost# enclosure show all
+This command may take up to a minute to complete. Please wait...
+Enclosure 1
+        Fans
+                Description   Level   Status
+                -----------   -----   ------
+                FAN 0A        low     OK
+                FAN 0B        low     OK
+                FAN 1A        low     OK
+                FAN 1B        low     OK
+                FAN 2A        low     OK
+                FAN 2B        low     OK
+                FAN 3A        low     OK
+                FAN 3B        low     OK
+                FAN 4A        low     OK
+                FAN 4B        low     OK
+                FAN 5A        low     OK
+                FAN 5B        low     OK
+                -----------   -----   ------
+        Temperature
+                Description               C/F       Status
+                -----------------------   -------   ------
+                Ambient Temperature       20/68     OK
+                SP Temperature            28/82     OK
+                MP Temperature            20/68     OK
+                CPU0 Temp Relative        -46/-51   OK
+                CPU1 Temp Relative        -47/-53   OK
+                Hottest HDD Temperature   29/84     OK
+                Drive IO Temperature      41/106    OK
+                DIMM Bank0 Temperature    30/86     OK
+                DIMM Bank1 Temperature    30/86     OK
+                DIMM Bank2 Temperature    31/88     OK
+                DIMM Bank3 Temperature    29/84     OK
+                -----------------------   -------   ------
+        Power Supply
+                Description      Status
+                --------------   ------
+                Power module 0   OK
+                Power module 1   OK
+                --------------   ------
+        Chassis:
+                Chassis Part Number     100-555-079-02
+                Chassis Serial Number   FCNCS183100001
+                BMC Device Revision     0
+                BMC Firmware Revision   13.80
+                IPMI Version            2.0
+                BIOS Version            37.66
+                BIOS Release Date       02/16/2016
+        Chassis Sub-components:
+                Name            Product ID                        Family ID   Part No.          Serial No.       Rev
+                -------------   -------------------------------   ---------   ---------------   --------------   ---
+                Local_SP        EUROPA SP DD TIER2 6C BASE MEM    00130022    110-335-204B-01   FCNBN183100069   na
+                Chassis         Chassis                           00320008    100-555-079-02    FCNCS183100001   na
+                PSA             Power Supply                      0041000b    071-000-611-01    AC7N9182601547   na
+                PSB             Power Supply                      0041000b    071-000-611-01    AC7N9182601514   na
+                SLIC0           NVRAM 8GB Model 3 (NVDIMM)        00680005    303-299-000B-04   CF2CW183000374   na
+                SLIC1           Quad Port 10GBase-T               005f0005    303-254-100C-00   CF2AT182900972   na
+                SLIC5           Dual Port 16Gbps Fibre Channel    00350005    303-220-100D-00   CF2DL182700098   na
+                SLIC6           Dual Port 16Gbps Fibre Channel    00350005    303-220-100D-00   CF2DL182700302   na
+                SLIC7           Quad Port 6Gbps SAS               00410005    303-161-109B-00   FCNBD194901879   na
+                Drive_IO_Card   EUROPA DIB 4P X4 SAS 24P EXP 12   00050022    303-346-000B-02   FCNBD183009973   na
+                -------------   -------------------------------   ---------   ---------------   --------------   ---
+        Device VPD FW Information:
+                Name          Version
+                -----------   -----------
+                BIOS          37.66
+                POST          16.71
+                BMC Main      13.80
+                BMC BB        01.40
+                BMC SSP       02.05
+                PSU0          02.03
+                PSU1          02.03
+                SP CMD        01.11.30.01
+                SLIC1 CMD     01.08.29.01
+                SLIC5 CMD     02.04.42.01
+                SLIC6 CMD     02.04.42.01
+                SLIC7 CMD     01.09.31.02
+                IO-Card CMD   01.15.51.02
+                -----------   -----------
+        IO Cards:
+                Slot   Device                            FW Revision                Interface   Ports   MAC/WWNN/WWPN/SASADDR
+                ----   -------------------------------   ------------------------   ---------   -----   ----------------------------
+                M      BCM5727 1GbE                      5727-v1.29 NCSI v1.3.4.0   1GbE        ethMa   00:60:16:9d:cf:9e
+                1      Quad Port 10GBase-T               bc 7.6.57 phy 1.3f         10GbE       eth1a   00:60:16:9b:2e:10
+                                                                                                eth1b   00:60:16:9b:2e:11
+                                                                                                eth1c   00:60:16:9b:2e:12
+                                                                                                eth1d   00:60:16:9b:2e:13
+                5      Dual Port 16 Gbps Fibre Channel   8.03.02                    16GbFC      5a      50:02:18:80:09:a0:6f:1a WWNN
+                                                                                                        50:02:18:86:09:a0:6f:1a WWPN
+                                                                                                5b      50:02:18:80:09:a0:6f:1a WWNN
+                                                                                                        50:02:18:86:09:a1:6f:1a WWPN
+                6      Dual Port 16 Gbps Fibre Channel   8.03.02                    16GbFC      6a      50:02:18:80:09:a0:6f:1a WWNN
+                                                                                                        50:02:18:87:09:a0:6f:1a WWPN
+                                                                                                6b      50:02:18:80:09:a0:6f:1a WWNN
+                                                                                                        50:02:18:87:09:a1:6f:1a WWPN
+                7      PMC Quad Port 6 Gbps SAS          02.13.47.00                PMC_SAS2    7a      50:02:18:88:09:a1:6f:1a
+                                                                                                7b      50:02:18:88:09:a0:6f:1a
+                                                                                                7c      50:02:18:88:09:a2:6f:1a
+                                                                                                7d      50:02:18:88:09:a3:6f:1a
+                ----   -------------------------------   ------------------------   ---------   -----   ----------------------------
+        Controller:
+                Model                    DD6300
+                Capacity                 14
+                Serial No                FCNCS183100001
+                Number of Controllers    1
+                Controller 1
+                        Interface    PM8071
+                        Firmware     03.08.41.00
+                        Part No.     N.A.
+                        Serial No.   N.A.
+                        Status       OK
+        Controller HDDs:
+                Disk   Slot   Size(GB)   Part No.                   Serial No.   Rev
+                ----   ----   --------   ------------------------   ----------   ----
+                1      0      4000       SEAGATE STMFSND2CLAR4000   ZC17GSR3     BS03
+                2      1      4000       SEAGATE STMFSND2CLAR4000   ZC17GQX0     BS03
+                3      2      4000       SEAGATE STMFSND2CLAR4000   ZC17HC3J     BS03
+                4      3      4000       SEAGATE STMFSND2CLAR4000   ZC17H9ZZ     BS03
+                5      4      4000       SEAGATE STMFSND2CLAR4000   ZC17GQZW     BS03
+                6      5      4000       SEAGATE STMFSND2CLAR4000   ZC17H9HH     BS03
+                7      6      4000       SEAGATE STMFSND2CLAR4000   ZC17GP8X     BS03
+                8      7      4000       SEAGATE STMFSND2CLAR4000   ZC17GYW6     BS03
+                9      8      4000       SEAGATE STMFSND2CLAR4000   ZC17H419     BS03
+                10     9      4000       SEAGATE STMFSND2CLAR4000   ZC17GPBA     BS03
+                11     10     4000       SEAGATE STMFSND2CLAR4000   ZC17HCXL     BS03
+                12     11     4000       SEAGATE STMFSND2CLAR4000   ZC17H435     BS03
+                13     13     800        HITACHI H4SMR328_CLAR800   74V0VYJX     S142
+                14     14     800        HITACHI H4SMR328_CLAR800   74V19GUX     S142
+                ----   ----   --------   ------------------------   ----------   ----
+        CPUs:
+                Model                             Stepping   Speed(MHz)   Cores   Hyperthreading
+                -------------------------------   --------   ----------   -----   --------------
+                Intel(R) Xeon(R) CPU E5-2620 v3   2          2401         6       enabled
+                Intel(R) Xeon(R) CPU E5-2620 v3   2          2401         6       enabled
+                -------------------------------   --------   ----------   -----   --------------
+        Memory DIMMs:
+                Number of DIMMS : 12
+                Memory Size: 98304 MiB
+
+                Locator   Speed(MHz)   Size(MiB)   Part No.            Serial No.
+                -------   ----------   ---------   -----------------   ----------
+                DIMM 0    1866         8192        18ASF1G72PZ-2G3B1   1CBE10EB
+                DIMM 2    1866         8192        HMA41GR7BJR4N-UH    4281DCF9
+                DIMM 4    1866         8192        18ASF1G72PZ-2G3B1   1CBE184A
+                DIMM 5    1866         8192        HMA41GR7BJR4N-UH    4281DCFA
+                DIMM 6    1866         8192        18ASF1G72PZ-2G3B1   1CBE1861
+                DIMM 7    1866         8192        HMA41GR7BJR4N-UH    4281DCF8
+                DIMM 8    1866         8192        HMA41GR7BJR4N-UH    4281DCD7
+                DIMM 9    1866         8192        18ASF1G72PZ-2G3B1   1CBE1833
+                DIMM 10   1866         8192        HMA41GR7BJR4N-UH    4281DD03
+                DIMM 11   1866         8192        18ASF1G72PZ-2G3B1   1CBE14A2
+                DIMM 13   1866         8192        HMA41GR7BJR4N-UH    4281DCE7
+                DIMM 15   1866         8192        18ASF1G72PZ-2G3B1   1CBE1459
+                -------   ----------   ---------   -----------------   ----------
+        NVRAM Cards:
+                Card   Component                 Value
+                ----   -----------------------   ----------------------------------------------------------------------
+                1      Slot                      0
+                       Firmware version          0.0.81
+                       Memory size               7.93 GiB
+                       Errors                    0 memory (0 uncorrectable), 0 PCI, 0 controller
+                       Flash controller Errors   0 Cfg Err, 0 PANIC, 0 Bus Hang, 0 Bad Blk Warn, 0 Bkup Err, 0 Rstr Err
+                       Board temperature         37 C
+                       CPU temperature           50 C
+                       Number of batteries       1
+                ----   -----------------------   ----------------------------------------------------------------------
+        NVRAM Batteries:
+                Card   Battery   Status   Charge   Charging   Time To       Temperature   Voltage
+                                                   Status     Full Charge
+                ----   -------   ------   ------   --------   -----------   -----------   -------
+                1      1         ok       97 %     enabled    0 mins        34 C          4.051 V
+                ----   -------   ------   ------   --------   -----------   -----------   -------
+Enclosure 2
+        Fans
+                Description             Level   Status
+                ---------------------   -----   ------
+                Power module 1 fan #1   low     OK
+                Power module 1 fan #2   low     OK
+                Power module 2 fan #1   low     OK
+                Power module 2 fan #2   low     OK
+                ---------------------   -----   ------
+        Temperature
+                Description        C/F     Status
+                ----------------   -----   ------
+                LCC A              31/88   -
+                LCC B              30/86   -
+                Internal ambient   27/81   OK
+                Midplane           20/68   OK
+                PSU A Temp 1       27/81   -
+                PSU A Temp 2       21/70   -
+                PSU B Temp 1       27/81   -
+                PSU B Temp 2       21/70   -
+                ----------------   -----   ------
+        Power Supply
+                Description      Status
+                --------------   ------
+                Power module A   OK
+                Power module B   OK
+                --------------   ------
+sysadmin@localhost#

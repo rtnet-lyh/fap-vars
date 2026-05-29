@@ -1,0 +1,26 @@
+falcon@Center_Server_J4300_A> show system memory
+fpc0:
+--------------------------------------------------------------------------
+System memory usage distribution:
+       Total memory: 2992128 Kbytes (100%)
+    Reserved memory:   59052 Kbytes (  1%)
+       Wired memory:  136476 Kbytes (  4%)
+      Active memory: 1085592 Kbytes ( 36%)
+    Inactive memory:   77940 Kbytes (  2%)
+       Cache memory:  584704 Kbytes ( 19%)
+        Free memory: 1047824 Kbytes ( 35%)
+Memory disk resident memory:  400496 Kbytes
+VM-Kbytes(  %  ) Resident(  %  ) Map-name
+  1048576(99.99)   944772(90.10) kernel map
+   524288(50.00)    48736(09.30) kmem map
+     1216(00.12)     1216(99.99) exec map
+    26212(02.50)     1092(04.17) pipe map
+   115488(11.01)   114784(99.39) buffer map
+    32768(03.13)    32768(99.99) pager map
+Pid     VM-Kbytes(  %  ) Resident(  %  ) Process-name
+      0         0(00.00)        0(00.00) [swapper]
+      1         0(00.00)        0(00.00) /sbin/init --
+      2         0(00.00)        0(00.00) [jfe_job_0_0]
+      3         0(00.00)        0(00.00) [jfe_job_1_0]
+---(more)---
+falcon@Center_Server_J4300_A>

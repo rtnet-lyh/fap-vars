@@ -1,0 +1,5 @@
+falcon@Center_Server_J4300_B> show vrrp summary
+warning: vrrp subsystem not running - not needed by configuration.
+
+{master:0}
+falcon@Center_Server_J4300_B>

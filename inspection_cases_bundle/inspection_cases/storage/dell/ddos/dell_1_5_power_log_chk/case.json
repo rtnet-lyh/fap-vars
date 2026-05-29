@@ -1,0 +1,45 @@
+{
+  "host": "192.0.2.1",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 88009,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "NETWORK_DEVICE",
+        "data": {
+          "username": "admin",
+          "password": "admin",
+          "port": 22
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 89009,
+  "host_id": 89009,
+  "job_id": 89009,
+  "item": {
+    "inspection_code": "NETWORK-DELL-DDOS-DELL-1-5-POWER-LOG-CHK",
+    "item_id": 90009,
+    "application_id": 88009,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "DELL_DDOS",
+    "application_family_name": "DELL_DDOS",
+    "threshold_list": [
+      {
+        "name": "power_device_keywords",
+        "value1": "power,psu,sps,voltage,power supply"
+      },
+      {
+        "name": "power_status_keywords",
+        "value1": "failed,fault,offline,error,critical"
+      }
+    ]
+  }
+}
