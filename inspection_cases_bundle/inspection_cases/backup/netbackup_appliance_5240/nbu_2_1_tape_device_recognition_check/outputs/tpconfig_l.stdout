@@ -1,0 +1,7 @@
+atmsbackup.Main_Menu> tpconfig -l
+Device Robot Drive       Robot                    Drive                 Device                                                              Second
+Type     Num Index  Type DrNum Status  Comment    Name                  Path                                                                Device Path
+robot      0    -    TLD    -       -  -          -                     /dev/tape/by-path/pci-0000:87:00
+  drive    -    0 hcart3    1    DOWN  -          HP.ULTRIUM6-SCSI.000  /dev/tape/by-path/pci-0000:87:00.1-fc-0x50014380272cdeee-lun-0-nst
+  drive    -    1 hcart3    2    DOWN  -          HP.ULTRIUM6-SCSI.001  /dev/tape/by-path/pci-0000:87:00.0-fc-0x50014380272cdef1-lun-0-nst
+atmsbackup.Main_Menu>

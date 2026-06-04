@@ -51,6 +51,7 @@ class Check(BaseCheck):
         dates = self._parse_dates(stdout)
         if not dates:
             return self.fail('RMAN 백업 날짜 파싱 실패', message='RMAN 출력에서 Completion Time 날짜를 찾지 못했습니다.', stdout=stdout, stderr=stderr)
+        
         latest_date, latest_text = max(dates, key=lambda item: item[0])
         elapsed_days = (datetime.date.today() - latest_date).days
         metrics = {

@@ -12,9 +12,10 @@ STATS_RE = re.compile(r'(\d+) packets transmitted,\s*(\d+) received.*?([0-9.]+)%
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def run(self):
-        ping_ip = str(self.get_threshold_var('ping_ip', default='', value_type='str')).strip()
+        ping_ip = str(self.get_threshold_var('ping_ip', default='193.1.0.207', value_type='str')).strip()
         thresholds = {'ping_ip': ping_ip, 'ping_count': COUNT}
         if not ping_ip:
             return self.fail('임계치 미정의', message='ping_ip 값이 필요합니다.', thresholds=thresholds)

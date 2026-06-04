@@ -96,8 +96,8 @@ class Check(BaseCheck):
             'arp_entry_count': len(arp_entries),
             'invalid_mac_entries': invalid_mac_entries,
             'invalid_arp_entries': invalid_arp_entries,
-            'mac_entries': mac_entries,
-            'arp_entries': arp_entries,
+            'mac_entries': mac_entries[:10],
+            'arp_entries': arp_entries[:10],
         }
         if invalid_mac_entries or invalid_arp_entries:
             return self.warn(metrics=metrics, thresholds=thresholds, reasons='MAC status 또는 ARP state 기준을 만족하지 않는 항목이 있습니다.', message=f'MAC/ARP 상태 경고: MAC {len(invalid_mac_entries)}개, ARP {len(invalid_arp_entries)}개.')

@@ -9,7 +9,7 @@
       "application_name": "DELL_DDOS",
       "application_family_name": "DELL_DDOS",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMAND = 'enclosure show powersupply'\nOK_STATUSES = ('ok',)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_power_statuses(self, text):\n        statuses = []\n        for line in text.splitlines():\n            match = re.match(r'^(\\d+)\\s+(Power module\\s+\\S+)\\s+(\\S+)\\s*$', line.strip(), re.IGNORECASE)\n            if match:\n                statuses.append({'enclosure': match.group(1), 'description': match.group(2), 'status': match.group(3)})\n        return statuses\n\n    def run(self):\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        statuses = self._parse_power_statuses(stdout)\n        bad_statuses = [item for item in statuses if item['status'].lower() not in OK_STATUSES]\n        metrics = {'power_status_count': len(statuses), 'bad_power_statuses': bad_statuses, 'power_statuses': statuses}\n        thresholds = {'valid_statuses': list(OK_STATUSES)}\n        if not statuses or bad_statuses:\n            return self.fail('Power Supply 상태 기준 미달', message='Power module Status가 없거나 OK가 아닌 값이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Power module Status가 모두 OK입니다.', message='전원공급 장치 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMAND = 'enclosure show powersupply'\nOK_STATUSES = ('ok',)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([{'command': COMMAND, 'timeout': 10}], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_power_statuses(self, text):\n        statuses = []\n        for line in text.splitlines():\n            match = re.match(r'^(\\d+)\\s+(Power module\\s+\\S+)\\s+(\\S+)\\s*$', line.strip(), re.IGNORECASE)\n            if match:\n                statuses.append({'enclosure': match.group(1), 'description': match.group(2), 'status': match.group(3)})\n        return statuses\n\n    def run(self):\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        statuses = self._parse_power_statuses(stdout)\n        bad_statuses = [item for item in statuses if item['status'].lower() not in OK_STATUSES]\n        metrics = {'power_status_count': len(statuses), 'bad_power_statuses': bad_statuses, 'power_statuses': statuses}\n        thresholds = {'valid_statuses': list(OK_STATUSES)}\n        if not statuses or bad_statuses:\n            return self.fail('Power Supply 상태 기준 미달', message='Power module Status가 없거나 OK가 아닌 값이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Power module Status가 모두 OK입니다.', message='전원공급 장치 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -39,7 +39,7 @@
         "        return ''",
         "",
         "    def _run_command(self):",
-        "        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)",
+        "        results = self._run_paramiko_commands([{'command': COMMAND, 'timeout': 10}], profile=self.PARAMIKO_PROFILE)",
         "        if not results:",
         "            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')",
         "        result = results[0]",
@@ -121,7 +121,7 @@
         ]
       },
       "reasons": "Power module Status가 모두 OK입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: enclosure show powersupply\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: This command may take up to a minute to complete. Please wait...\nEnclosure   Description      Status\n---------   --------------   ------\n1           Power module 0   OK\n1           Power module 1   OK\n2           Power module A   OK\n2           Power module B   OK\n---------   --------------   ------",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: enclosure show powersupply\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: This command may take up to a minute to complete. Please wait...\nEnclosure   Description      Status\n---------   --------------   ------\n1           Power module 0   OK    \n1           Power module 1   OK    \n2           Power module A   OK    \n2           Power module B   OK    \n---------   --------------   ------",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: enclosure show powersupply",
@@ -129,10 +129,10 @@
         " - 출력 내용: This command may take up to a minute to complete. Please wait...",
         "Enclosure   Description      Status",
         "---------   --------------   ------",
-        "1           Power module 0   OK",
-        "1           Power module 1   OK",
-        "2           Power module A   OK",
-        "2           Power module B   OK",
+        "1           Power module 0   OK    ",
+        "1           Power module 1   OK    ",
+        "2           Power module A   OK    ",
+        "2           Power module B   OK    ",
         "---------   --------------   ------"
       ],
       "message": "전원공급 장치 점검 정상."

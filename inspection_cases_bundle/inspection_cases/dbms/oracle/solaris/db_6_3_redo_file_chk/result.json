@@ -167,7 +167,7 @@
       "metrics": {
         "oracle_account": "oratips",
         "verified_oracle_account": "oratips",
-        "redo_group_count": 3,
+        "redo_group_count": 10,
         "redo_groups": [
           {
             "group": 1,
@@ -204,6 +204,90 @@
               "/TTIPS_ORA01/TTIPS/redo03a.log",
               "/TTIPS_ORA02/TTIPS/redo03b.log"
             ]
+          },
+          {
+            "group": 4,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo04a.log",
+              "/TTIPS_ORA02/TTIPS/redo04b.log"
+            ]
+          },
+          {
+            "group": 5,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo05a.log",
+              "/TTIPS_ORA02/TTIPS/redo05b.log"
+            ]
+          },
+          {
+            "group": 6,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo06a.log",
+              "/TTIPS_ORA02/TTIPS/redo06b.log"
+            ]
+          },
+          {
+            "group": 7,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo07a.log",
+              "/TTIPS_ORA02/TTIPS/redo07b.log"
+            ]
+          },
+          {
+            "group": 8,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo08a.log",
+              "/TTIPS_ORA02/TTIPS/redo08b.log"
+            ]
+          },
+          {
+            "group": 9,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo09a.log",
+              "/TTIPS_ORA02/TTIPS/redo09b.log"
+            ]
+          },
+          {
+            "group": 10,
+            "member_count": 2,
+            "mount_points": [
+              "/TTIPS_ORA01",
+              "/TTIPS_ORA02"
+            ],
+            "members": [
+              "/TTIPS_ORA01/TTIPS/redo10a.log",
+              "/TTIPS_ORA02/TTIPS/redo10b.log"
+            ]
           }
         ],
         "invalid_type_count": 0,
@@ -214,7 +298,7 @@
         "redo_group_member_count": 2
       },
       "reasons": "redo 그룹별 member 수와 마운트 포인트 분산이 기준을 만족합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: su - oratips\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\noratips@exTMStotalDB1:~$\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 5]\n - 실행 명령어: whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: oratips\n\n[점검 단계 6]\n - 실행 명령어: sqlplus -S /nolog <<EOF\nCONNECT / AS SYSDBA\nset linesize 200 pagesize 100 feedback off\ncol member format a40\ncol status format a10\ncol type format a10\nSELECT * FROM V\\$logfile;\nEXIT;\nEOF\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: sqlplus -S /nolog <<EOF\nCONNECT / AS SYSDBA\nset linesize 200 pagesize 100 feedback off\ncol member format a40\ncol status format a10\ncol type format a10\nSELECT * FROM V\\$logfile;\nEXIT;\nEOF\n\n    GROUP# STATUS     TYPE       MEMBER                                   IS_     CON_ID\n---------- ---------- ---------- ---------------------------------------- --- ----------\n         1            ONLINE     /TTIPS_ORA01/TTIPS/redo01a.log           NO           0\n         1            ONLINE     /TTIPS_ORA02/TTIPS/redo01b.log           NO           0\n         2            ONLINE     /TTIPS_ORA01/TTIPS/redo02a.log           NO           0\n         2            ONLINE     /TTIPS_ORA02/TTIPS/redo02b.log           NO           0\n         3            ONLINE     /TTIPS_ORA01/TTIPS/redo03a.log           NO           0\n         3            ONLINE     /TTIPS_ORA02/TTIPS/redo03b.log           NO           0",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ###################################################################\n# Warnning!! This system is for the use of authorized users only. #\n###################################################################\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: su - oratips\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): ###################################################################\n# Warnning!! This system is for the use of authorized users only. #\n###################################################################\noratips@exTMStotalDB1:~$\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 5]\n - 실행 명령어: whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: oratips\n\n[점검 단계 6]\n - 실행 명령어: sqlplus -S /nolog <<EOF\nCONNECT / AS SYSDBA\nset linesize 200 pagesize 100 feedback off\ncol member format a40\ncol status format a10\ncol type format a10\nSELECT * FROM V\\$logfile;\nEXIT;\nEOF\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: sqlplus -S /nolog <<EOF\n> CONNECT / AS SYSDBA\n> set linesize 200 pagesize 100 feedback off\n> col member format a40\n> col status format a10\n> col type format a10\n> SELECT * FROM V\\$logfile;\n> EXIT;\n> EOF\n\n    GROUP# STATUS     TYPE       MEMBER                                   IS_     CON_ID\n---------- ---------- ---------- ---------------------------------------- --- ----------\n         1            ONLINE     /TTIPS_ORA01/TTIPS/redo01a.log           NO           0\n         1            ONLINE     /TTIPS_ORA02/TTIPS/redo01b.log           NO           0\n         3            ONLINE     /TTIPS_ORA01/TTIPS/redo03a.log           NO           0\n         3            ONLINE     /TTIPS_ORA02/TTIPS/redo03b.log           NO           0\n         4            ONLINE     /TTIPS_ORA01/TTIPS/redo04a.log           NO           0\n         6            ONLINE     /TTIPS_ORA01/TTIPS/redo06a.log           NO           0\n         7            ONLINE     /TTIPS_ORA01/TTIPS/redo07a.log           NO           0\n         8            ONLINE     /TTIPS_ORA01/TTIPS/redo08a.log           NO           0\n         8            ONLINE     /TTIPS_ORA02/TTIPS/redo08b.log           NO           0\n         9            ONLINE     /TTIPS_ORA01/TTIPS/redo09a.log           NO           0\n         9            ONLINE     /TTIPS_ORA02/TTIPS/redo09b.log           NO           0\n        10            ONLINE     /TTIPS_ORA01/TTIPS/redo10a.log           NO           0\n        10            ONLINE     /TTIPS_ORA02/TTIPS/redo10b.log           NO           0\n         7            ONLINE     /TTIPS_ORA02/TTIPS/redo07b.log           NO           0\n         4            ONLINE     /TTIPS_ORA02/TTIPS/redo04b.log           NO           0\n         5            ONLINE     /TTIPS_ORA01/TTIPS/redo05a.log           NO           0\n         5            ONLINE     /TTIPS_ORA02/TTIPS/redo05b.log           NO           0\n         2            ONLINE     /TTIPS_ORA01/TTIPS/redo02a.log           NO           0\n         2            ONLINE     /TTIPS_ORA02/TTIPS/redo02b.log           NO           0\n         6            ONLINE     /TTIPS_ORA02/TTIPS/redo06b.log           NO           0",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
@@ -225,7 +309,9 @@
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        " - 출력 내용: ###################################################################",
+        "# Warnning!! This system is for the use of authorized users only. #",
+        "###################################################################",
         "",
         "[점검 단계 3]",
         " - 실행 명령어: /usr/bin/id",
@@ -235,7 +321,9 @@
         "[점검 단계 4]",
         " - 실행 명령어: su - oratips",
         " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        " - 출력 내용(stdout): ###################################################################",
+        "# Warnning!! This system is for the use of authorized users only. #",
+        "###################################################################",
         "oratips@exTMStotalDB1:~$",
         " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
@@ -256,23 +344,37 @@
         "EOF",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: sqlplus -S /nolog <<EOF",
-        "CONNECT / AS SYSDBA",
-        "set linesize 200 pagesize 100 feedback off",
-        "col member format a40",
-        "col status format a10",
-        "col type format a10",
-        "SELECT * FROM V\\$logfile;",
-        "EXIT;",
-        "EOF",
+        "> CONNECT / AS SYSDBA",
+        "> set linesize 200 pagesize 100 feedback off",
+        "> col member format a40",
+        "> col status format a10",
+        "> col type format a10",
+        "> SELECT * FROM V\\$logfile;",
+        "> EXIT;",
+        "> EOF",
         "",
         "    GROUP# STATUS     TYPE       MEMBER                                   IS_     CON_ID",
         "---------- ---------- ---------- ---------------------------------------- --- ----------",
         "         1            ONLINE     /TTIPS_ORA01/TTIPS/redo01a.log           NO           0",
         "         1            ONLINE     /TTIPS_ORA02/TTIPS/redo01b.log           NO           0",
+        "         3            ONLINE     /TTIPS_ORA01/TTIPS/redo03a.log           NO           0",
+        "         3            ONLINE     /TTIPS_ORA02/TTIPS/redo03b.log           NO           0",
+        "         4            ONLINE     /TTIPS_ORA01/TTIPS/redo04a.log           NO           0",
+        "         6            ONLINE     /TTIPS_ORA01/TTIPS/redo06a.log           NO           0",
+        "         7            ONLINE     /TTIPS_ORA01/TTIPS/redo07a.log           NO           0",
+        "         8            ONLINE     /TTIPS_ORA01/TTIPS/redo08a.log           NO           0",
+        "         8            ONLINE     /TTIPS_ORA02/TTIPS/redo08b.log           NO           0",
+        "         9            ONLINE     /TTIPS_ORA01/TTIPS/redo09a.log           NO           0",
+        "         9            ONLINE     /TTIPS_ORA02/TTIPS/redo09b.log           NO           0",
+        "        10            ONLINE     /TTIPS_ORA01/TTIPS/redo10a.log           NO           0",
+        "        10            ONLINE     /TTIPS_ORA02/TTIPS/redo10b.log           NO           0",
+        "         7            ONLINE     /TTIPS_ORA02/TTIPS/redo07b.log           NO           0",
+        "         4            ONLINE     /TTIPS_ORA02/TTIPS/redo04b.log           NO           0",
+        "         5            ONLINE     /TTIPS_ORA01/TTIPS/redo05a.log           NO           0",
+        "         5            ONLINE     /TTIPS_ORA02/TTIPS/redo05b.log           NO           0",
         "         2            ONLINE     /TTIPS_ORA01/TTIPS/redo02a.log           NO           0",
         "         2            ONLINE     /TTIPS_ORA02/TTIPS/redo02b.log           NO           0",
-        "         3            ONLINE     /TTIPS_ORA01/TTIPS/redo03a.log           NO           0",
-        "         3            ONLINE     /TTIPS_ORA02/TTIPS/redo03b.log           NO           0"
+        "         6            ONLINE     /TTIPS_ORA02/TTIPS/redo06b.log           NO           0"
       ],
       "message": "redo logfile 이중화 점검 정상"
     }

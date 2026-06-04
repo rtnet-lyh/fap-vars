@@ -26,7 +26,7 @@ class Check(BaseCheck):
         return ''
 
     def _run_command(self):
-        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)
+        results = self._run_paramiko_commands([{'command': COMMAND, 'timeout': 10}], profile=self.PARAMIKO_PROFILE)
         if not results:
             return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')
         result = results[0]

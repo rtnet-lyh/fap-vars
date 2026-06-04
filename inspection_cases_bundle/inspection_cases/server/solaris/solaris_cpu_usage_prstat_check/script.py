@@ -14,6 +14,7 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
+    PARAMIKO_COMMAND_TIMEOUT = 5 
 
     def _parse_number(self, value):
         try:
@@ -164,7 +165,7 @@ class Check(BaseCheck):
                 stderr=(prstat_err or '').strip(),
             )
 
-        if prstat_rc != 0:
+        if prstat_rc not in [0, 124]:
             return self.fail(
                 '점검 명령 실행 실패',
                 message='Solaris CPU 사용률 점검 명령 실행에 실패했습니다. 현재 상태: prstat 명령을 정상적으로 실행하지 못했습니다.',
@@ -204,7 +205,7 @@ class Check(BaseCheck):
                 stderr=(mpstat_err or '').strip(),
             )
 
-        if mpstat_rc != 0:
+        if mpstat_rc not in [0, 124]:
             return self.fail(
                 '점검 명령 실행 실패',
                 message=(

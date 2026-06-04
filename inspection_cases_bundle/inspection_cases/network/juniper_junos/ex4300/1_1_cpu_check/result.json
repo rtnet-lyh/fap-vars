@@ -11,7 +11,7 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "80"
+          "value1": "1"
         }
       ],
       "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show chassis routing-engine'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _parse_cpu_usage(self, text):\n        idle_match = re.search(r'\\bIdle\\s+([0-9.]+)\\s+percent', text, re.IGNORECASE)\n        if idle_match:\n            idle_percent = float(idle_match.group(1))\n            return {\n                'idle_percent': round(idle_percent, 2),\n                'cpu_usage_percent': round(max(0.0, 100.0 - idle_percent), 2),\n            }\n\n        values = []\n        for name in ('User', 'Background', 'Kernel', 'Interrupt'):\n            match = re.search(r'\\b' + name + r'\\s+([0-9.]+)\\s+percent', text, re.IGNORECASE)\n            if match:\n                values.append(float(match.group(1)))\n        if not values:\n            return None\n        return {'cpu_usage_percent': round(sum(values), 2)}\n\n    def run(self):\n        max_usage = self.get_threshold_var('max_cpu_usage_percent', default=80.0, value_type='float')\n        thresholds = {'max_cpu_usage_percent': max_usage}\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n\n        metrics = self._parse_cpu_usage(stdout)\n        if not metrics:\n            return self.fail('CPU 사용률 파싱 실패', message='CPU 사용률 값을 해석하지 못했습니다.', stdout=stdout, thresholds=thresholds)\n        if metrics['cpu_usage_percent'] > max_usage:\n            return self.fail('CPU 사용률 임계치 초과', message=f'CPU 사용률 {metrics[\"cpu_usage_percent\"]}%가 기준 {max_usage}%를 초과했습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='CPU 사용률이 임계치 이하입니다.', message=f'CPU 사용률 점검 정상: {metrics[\"cpu_usage_percent\"]}%.')\n\n\nCHECK_CLASS = Check\n",
@@ -105,19 +105,45 @@
       "threshold_list": [
         {
           "name": "max_cpu_usage_percent",
-          "value1": "80"
+          "value1": "1"
         }
       ],
-      "status": "ok",
+      "status": "fail",
+      "error": "CPU 사용률 임계치 초과",
+      "message": "CPU 사용률 15.0%가 기준 1.0%를 초과했습니다.",
+      "stdout": "Routing Engine status:\n  Slot 0:\n    Current state                  Master\n    Temperature                 48 degrees C / 118 degrees F\n    CPU temperature             48 degrees C / 118 degrees F\n    DRAM                      3072 MB\n    Memory utilization          47 percent\n    5 sec CPU utilization:\n      User                       9 percent\n      Background                 0 percent\n      Kernel                     6 percent\n      Interrupt                  0 percent\n      Idle                      85 percent\n    Model                          EX4300-32F\n    Serial ID                      TW3720310093\n    Start time                     2020-11-12 07:19:14 KST\n    Uptime                         2024 days, 11 hours, 27 minutes, 48 seconds\n    Last reboot reason             0x1:power cycle/failure \n    Load averages:                 1 minute   5 minute  15 minute\n                                       0.01       0.10       0.15\n\n{master:0}",
+      "stdout_lines": [
+        "Routing Engine status:",
+        "  Slot 0:",
+        "    Current state                  Master",
+        "    Temperature                 48 degrees C / 118 degrees F",
+        "    CPU temperature             48 degrees C / 118 degrees F",
+        "    DRAM                      3072 MB",
+        "    Memory utilization          47 percent",
+        "    5 sec CPU utilization:",
+        "      User                       9 percent",
+        "      Background                 0 percent",
+        "      Kernel                     6 percent",
+        "      Interrupt                  0 percent",
+        "      Idle                      85 percent",
+        "    Model                          EX4300-32F",
+        "    Serial ID                      TW3720310093",
+        "    Start time                     2020-11-12 07:19:14 KST",
+        "    Uptime                         2024 days, 11 hours, 27 minutes, 48 seconds",
+        "    Last reboot reason             0x1:power cycle/failure ",
+        "    Load averages:                 1 minute   5 minute  15 minute",
+        "                                       0.01       0.10       0.15",
+        "",
+        "{master:0}"
+      ],
       "metrics": {
-        "idle_percent": 91.0,
-        "cpu_usage_percent": 9.0
+        "idle_percent": 85.0,
+        "cpu_usage_percent": 15.0
       },
       "thresholds": {
-        "max_cpu_usage_percent": 80.0
+        "max_cpu_usage_percent": 1.0
       },
-      "reasons": "CPU 사용률이 임계치 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show chassis routing-engine\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Routing Engine status:\n  Slot 0:\n    Current state                  Master\n    Temperature                 48 degrees C / 118 degrees F\n    CPU temperature             48 degrees C / 118 degrees F\n    DRAM                      3072 MB\n    Memory utilization          48 percent\n    5 sec CPU utilization:\n      User                       6 percent\n      Background                 0 percent\n      Kernel                     3 percent\n      Interrupt                  0 percent\n      Idle                      91 percent\n    Model                          EX4300-32F\n    Serial ID                      TW3720310093\n    Start time                     2020-11-12 07:19:14 KST\n    Uptime                         2023 days, 13 hours, 54 minutes, 30 seconds\n    Last reboot reason             0x1:power cycle/failure\n    Load averages:                 1 minute   5 minute  15 minute\n                                       0.15       0.16       0.10",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show chassis routing-engine\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Routing Engine status:\n  Slot 0:\n    Current state                  Master\n    Temperature                 48 degrees C / 118 degrees F\n    CPU temperature             48 degrees C / 118 degrees F\n    DRAM                      3072 MB\n    Memory utilization          47 percent\n    5 sec CPU utilization:\n      User                       9 percent\n      Background                 0 percent\n      Kernel                     6 percent\n      Interrupt                  0 percent\n      Idle                      85 percent\n    Model                          EX4300-32F\n    Serial ID                      TW3720310093\n    Start time                     2020-11-12 07:19:14 KST\n    Uptime                         2024 days, 11 hours, 27 minutes, 48 seconds\n    Last reboot reason             0x1:power cycle/failure \n    Load averages:                 1 minute   5 minute  15 minute\n                                       0.01       0.10       0.15\n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show chassis routing-engine",
@@ -128,23 +154,26 @@
         "    Temperature                 48 degrees C / 118 degrees F",
         "    CPU temperature             48 degrees C / 118 degrees F",
         "    DRAM                      3072 MB",
-        "    Memory utilization          48 percent",
+        "    Memory utilization          47 percent",
         "    5 sec CPU utilization:",
-        "      User                       6 percent",
+        "      User                       9 percent",
         "      Background                 0 percent",
-        "      Kernel                     3 percent",
+        "      Kernel                     6 percent",
         "      Interrupt                  0 percent",
-        "      Idle                      91 percent",
+        "      Idle                      85 percent",
         "    Model                          EX4300-32F",
         "    Serial ID                      TW3720310093",
         "    Start time                     2020-11-12 07:19:14 KST",
-        "    Uptime                         2023 days, 13 hours, 54 minutes, 30 seconds",
-        "    Last reboot reason             0x1:power cycle/failure",
+        "    Uptime                         2024 days, 11 hours, 27 minutes, 48 seconds",
+        "    Last reboot reason             0x1:power cycle/failure ",
         "    Load averages:                 1 minute   5 minute  15 minute",
-        "                                       0.15       0.16       0.10"
-      ],
-      "message": "CPU 사용률 점검 정상: 9.0%."
+        "                                       0.01       0.10       0.15",
+        "",
+        "{master:0}"
+      ]
     }
   ],
-  "failed_items": []
+  "failed_items": [
+    "NETWORK-JUNIPER-JUNOS-EX4300-1-1-CPU"
+  ]
 }

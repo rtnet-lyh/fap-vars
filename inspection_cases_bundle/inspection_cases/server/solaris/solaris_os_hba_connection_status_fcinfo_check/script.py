@@ -74,6 +74,9 @@ class Check(BaseCheck):
             elif key == 'Current Speed':
                 current['current_speed'] = value
                 current['current_speed_gbps'] = self._extract_speed_gbps(value)
+                print(f"current_speed: {value}")
+                print(f"current_speed_gbps: {self._extract_speed_gbps(value)}")
+                
             elif key == 'Node WWN':
                 current['node_wwn'] = value
 
@@ -156,6 +159,25 @@ class Check(BaseCheck):
 
         ports = self._parse_ports(text)
         if not ports:
+            if re.search('no adapters found', text.lower()):
+                return self.ok(
+                    metrics={
+                        'use_hba_port': False,
+                        'output': text
+                    },
+                    thresholds={
+                        'expected_state_value': expected_state_value,
+                        'min_current_speed_gbps': min_current_speed_gbps,
+                        'failure_keywords': failure_keywords,
+                    },
+                    reasons=(
+                        f'HBA 포트를 사용하지 않습니다. {text}'
+                    ),
+                    message=(
+                        f'HBA 포트를 사용하지 않습니다. {text}'
+                    ),
+                )
+
             return self.fail(
                 'HBA 연결 상태 파싱 실패',
                 message='Solaris HBA 연결 상태 점검에 실패했습니다. 현재 상태: fcinfo 출력에서 HBA 포트 정보를 해석하지 못했습니다.',

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
-
+import re
 
 MPATHADM_SHOW_LU_COMMAND = 'mpathadm show lu'
 
@@ -11,259 +11,199 @@ class Check(BaseCheck):
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
+    
+    def _parse_logical_units(self, output: str, min_path_count: int, ok_state: str, ok_disabled: str):
+        results = []
+    #     Logical Unit:  /dev/rdsk/c0t5000CCA02F653D5Cd0s2
+    #         mpath-support:  libmpscsi_vhci.so
+    #         Vendor:  HGST
+    #         Product:  H101860SFSUN600G
+    #         Revision:  A990
+    #         Name Type:  unknown type
+    #         Name:  5000cca02f653d5c
+    #         Asymmetric:  no
+    #         Current Load Balance:  shortest-path
+    #         Logical Unit Group ID:  NA
+    #         Auto Failback:  on
+    #         Auto Probing:  NA
 
-    def _normalize(self, value):
-        return str(value or '').strip().lower()
+    #         Paths:
+    #                 Initiator Port Name:  500605b00e77b830
+    #                 Target Port Name:  5000cca02f653d5d
+    #                 Override Path:  NA
+    #                 Path State:  OK
+    #                 Disabled:  no
 
-    def _parse_logical_units(self, text):
-        logical_units = []
-        current = None
+    #         Target Ports:
+    #                 Name:  5000cca02f653d5d
+    #                 Relative ID:  0
 
-        for raw_line in (text or '').splitlines():
-            line = raw_line.strip()
-            if not line:
+    # Logical Unit:  /dev/rdsk/c0t5000CCA07D594A30d0s2
+    #         mpath-support:  libmpscsi_vhci.so
+    #         Vendor:  HGST
+    #         Product:  H101860SFSUN600G
+    #         Revision:  A990
+    #         Name Type:  unknown type
+    #         Name:  5000cca07d594a30
+    #         Asymmetric:  no
+    #         Current Load Balance:  shortest-path
+    #         Logical Unit Group ID:  NA
+    #         Auto Failback:  on
+    #         Auto Probing:  NA
+
+    #         Paths:
+    #                 Initiator Port Name:  500605b00e77b830
+    #                 Target Port Name:  5000cca07d594a31
+    #                 Override Path:  NA
+    #                 Path State:  OK
+    #                 Disabled:  no
+
+    #         Target Ports:
+    #                 Name:  5000cca07d594a31
+    #                 Relative ID:  0
+
+    # Logical Unit:  /dev/rdsk/c0t5000CCA02F6569A0d0s2
+    #         mpath-support:  libmpscsi_vhci.so
+    #         Vendor:  HGST
+    #         Product:  H101860SFSUN600G
+    #         Revision:  A990
+    #         Name Type:  unknown type
+    #         Name:  5000cca02f6569a0
+    #         Asymmetric:  no
+    #         Current Load Balance:  shortest-path
+    #         Logical Unit Group ID:  NA
+    #         Auto Failback:  on
+    #         Auto Probing:  NA
+
+    #         Paths:
+    #                 Initiator Port Name:  500605b00e77b830
+    #                 Target Port Name:  5000cca02f6569a1
+    #                 Override Path:  NA
+    #                 Path State:  OK
+    #                 Disabled:  no
+
+    #         Target Ports:
+    #                 Name:  5000cca02f6569a1
+    #                 Relative ID:  0
+
+    # Logical Unit:  /dev/rdsk/c0t5000CCA07D598CA4d0s2
+    #         mpath-support:  libmpscsi_vhci.so
+    #         Vendor:  HGST
+    #         Product:  H101860SFSUN600G
+    #         Revision:  A990
+    #         Name Type:  unknown type
+    #         Name:  5000cca07d598ca4
+    #         Asymmetric:  no
+    #         Current Load Balance:  shortest-path
+    #         Logical Unit Group ID:  NA
+    #         Auto Failback:  on
+    #         Auto Probing:  NA
+
+    #         Paths:
+    #                 Initiator Port Name:  500605b00e77b830
+    #                 Target Port Name:  5000cca07d598ca5
+    #                 Override Path:  NA
+    #                 Path State:  OK
+    #                 Disabled:  no
+
+    #         Target Ports:
+    #                 Name:  5000cca07d598ca5
+    #                 Relative ID:  0
+
+        blocks = re.split(r'(?=^Logical Unit:\s+)', output, flags=re.MULTILINE)
+
+        for block in blocks:
+            if not block.strip():
                 continue
 
-            if line.startswith('Logical Unit:'):
-                if current:
-                    logical_units.append(current)
-                current = {
-                    'logical_unit': line.split(':', 1)[1].strip(),
-                    'stms_state': '',
-                    'current_path': '',
-                    'path_status': '',
-                    'paths': [],
-                }
+            lu_match = re.search('^Logical Unit:\s+(\S+)', block, re.MULTILINE)
+            if not lu_match:
                 continue
 
-            if not current or ':' not in line:
-                continue
+            lu_name = lu_match.group(1)
 
-            key, value = line.split(':', 1)
-            key = key.strip()
-            value = value.strip()
-
-            if key == 'Stms State':
-                current['stms_state'] = value
-                continue
-
-            if key == 'Current Path':
-                current['current_path'] = value
-                continue
-
-            if key == 'Path Status':
-                current['path_status'] = value
-                continue
-
-            if line.startswith('Path '):
-                current['paths'].append({
-                    'path': key.replace('Path ', '', 1).strip(),
-                    'status': value,
-                })
-                continue
-
-        if current:
-            logical_units.append(current)
-
-        if not logical_units:
-            return None
-
-        for lu in logical_units:
-            lu['path_count'] = len(lu['paths'])
-            lu['connected_path_count'] = sum(
-                1 for path in lu['paths']
-                if self._normalize(path['status']) == 'connected'
+            path_blocks = re.findall(
+                r'Initiator Port Name:\s+(\S+).*?'
+                r'Target Port Name:\s+(\S+).*?'
+                r'Path State:\s+(\S+).*?'
+                r'Disabled:\s+(\S+)',
+                block,
+                flags=re.DOTALL
             )
 
-        return logical_units
+            paths = []
+            for idx, (initiator, target, state, disabled) in enumerate(path_blocks, start=1):
+                paths.append({
+                    "path_no": idx,
+                    "initiator_port_name": initiator,
+                    "target_port_name": target,
+                    "path_state": state,
+                    "disabled": disabled,
+                    "is_ok": state == ok_state and disabled == ok_disabled
+                })
+
+            path_count = len(paths)
+
+            results.append({
+                "logical_unit": lu_name,
+                "path_count": path_count,
+                "is_multipath": path_count >= min_path_count,
+                "is_ok": path_count >= min_path_count and all(p["is_ok"] for p in paths),
+                "paths": paths
+            })
+
+        return results
+            
 
     def run(self):
-        expected_stms_state = self.get_threshold_var('expected_stms_state', default='ENABLED', value_type='str')
-        expected_path_status = self.get_threshold_var('expected_path_status', default='CONNECTED', value_type='str')
-        expected_path_state = self.get_threshold_var('expected_path_state', default='CONNECTED', value_type='str')
-        disallowed_path_states_raw = self.get_threshold_var('disallowed_path_states', default='DISABLED', value_type='str')
-        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+        min_path_count = self.get_threshold_var('min_path_count', default=1, value_type='int')
+        ok_state = self.get_threshold_var('ok_state', default='OK', value_type='str')
+        ok_disabled = self.get_threshold_var('ok_disabled', default='no', value_type='str')
 
         result = self._run_solaris_commands([
-            {'command': MPATHADM_SHOW_LU_COMMAND, 'timeout': 25},
+            {'command': MPATHADM_SHOW_LU_COMMAND, 'timeout': 5},
         ], become_required=True)[0]
+
         rc = result['rc']
         out = result['stdout']
         err = result['stderr']
 
-        if self._is_connection_error(rc, err):
-            return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
-            )
-
         text = (out or '').strip()
+       
+        logical_units = self._parse_logical_units(text, min_path_count, ok_state, ok_disabled)
 
-        if rc != 0:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message='Solaris Multipath 이중화 점검에 실패했습니다. 현재 상태: mpathadm 명령을 정상적으로 실행하지 못했습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
+        ok_items = [item for item in logical_units if item.get("is_ok")]
+        fail_items = [item for item in logical_units if not item.get("is_ok")]
 
-        command_error = self._detect_command_error(
-            text,
-            err,
-            extra_patterns=[
-                'permission denied',
-                'not supported',
-                'unknown userland error',
-                'no such file or directory',
-                'cannot find',
-                'not found',
-                'device not found',
-            ],
-        )
-        if command_error:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris Multipath 이중화 점검에 실패했습니다. '
-                    f'현재 상태: mpathadm 출력에서 실행 오류가 확인되었습니다: {command_error}'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
+        is_pass = True if ok_items and not fail_items else False
 
-        failure_keywords = [
-            keyword.strip()
-            for keyword in failure_keywords_raw.split(',')
-            if keyword.strip()
-        ]
-        matched_failure_keywords = [
-            keyword for keyword in failure_keywords
-            if keyword.lower() in text.lower()
-        ]
-        if matched_failure_keywords:
-            return self.fail(
-                'Multipath 실패 키워드 감지',
-                message=(
-                    'Solaris Multipath 이중화 점검에 실패했습니다. '
-                    f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        logical_units = self._parse_logical_units(text)
-        if not logical_units:
-            return self.fail(
-                'Multipath 파싱 실패',
-                message='Solaris Multipath 이중화 점검에 실패했습니다. 현재 상태: mpathadm 출력에서 Logical Unit 정보를 해석하지 못했습니다.',
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        expected_stms_norm = self._normalize(expected_stms_state)
-        expected_path_status_norm = self._normalize(expected_path_status)
-        expected_path_state_norm = self._normalize(expected_path_state)
-        disallowed_path_states = [
-            item.strip() for item in disallowed_path_states_raw.split(',') if item.strip()
-        ]
-        disallowed_norm = [self._normalize(item) for item in disallowed_path_states]
-
-        stms_issue_units = []
-        path_status_issue_units = []
-        abnormal_paths = []
-        disallowed_paths = []
-        stms_enabled_count = 0
-        connected_path_status_count = 0
-        connected_path_count = 0
-
-        for lu in logical_units:
-            if self._normalize(lu['stms_state']) == expected_stms_norm:
-                stms_enabled_count += 1
-            else:
-                stms_issue_units.append(lu['logical_unit'])
-
-            if self._normalize(lu['path_status']) == expected_path_status_norm:
-                connected_path_status_count += 1
-            else:
-                path_status_issue_units.append(lu['logical_unit'])
-
-            for path in lu['paths']:
-                status_norm = self._normalize(path['status'])
-                if status_norm == expected_path_state_norm:
-                    connected_path_count += 1
-                else:
-                    abnormal_paths.append({
-                        'logical_unit': lu['logical_unit'],
-                        'path': path['path'],
-                        'status': path['status'],
-                    })
-                if status_norm in disallowed_norm:
-                    disallowed_paths.append({
-                        'logical_unit': lu['logical_unit'],
-                        'path': path['path'],
-                        'status': path['status'],
-                    })
-
-        metrics = {
-            'logical_unit_count': len(logical_units),
-            'stms_enabled_count': stms_enabled_count,
-            'connected_path_status_count': connected_path_status_count,
-            'connected_path_count': connected_path_count,
-            'abnormal_path_count': len(abnormal_paths),
-            'logical_units': logical_units,
-            'stms_issue_units': stms_issue_units,
-            'path_status_issue_units': path_status_issue_units,
-            'abnormal_paths': abnormal_paths,
-            'disallowed_paths': disallowed_paths,
-            'matched_failure_keywords': matched_failure_keywords,
-        }
+        metrics = logical_units
         thresholds = {
-            'expected_stms_state': expected_stms_state,
-            'expected_path_status': expected_path_status,
-            'expected_path_state': expected_path_state,
-            'disallowed_path_states': disallowed_path_states,
-            'failure_keywords': failure_keywords,
+            'min_path_count': min_path_count,
+            'ok_state': ok_state,
+            'ok_disabled': ok_disabled,          
         }
 
-        if stms_issue_units or path_status_issue_units or abnormal_paths:
-            problem_parts = []
-            if stms_issue_units:
-                problem_parts.append(f'Stms State 비정상 LU={stms_issue_units}')
-            if path_status_issue_units:
-                problem_parts.append(f'Path Status 비정상 LU={path_status_issue_units}')
-            if abnormal_paths:
-                abnormal_text = [
-                    f"{item['path']}={item['status']}"
-                    for item in abnormal_paths
-                ]
-                problem_parts.append(f'비정상 경로={abnormal_text}')
-            return self.fail(
-                'Multipath 상태 비정상',
-                message=(
-                    'Solaris Multipath 이중화 점검에 실패했습니다. '
-                    '현재 상태: ' + ', '.join(problem_parts) + '. '
-                    f'기준 Stms State={expected_stms_state}, Path Status={expected_path_status}, '
-                    f'개별 경로 상태={expected_path_state}, 금지 상태={disallowed_path_states}.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
+        if is_pass:
+            return self.ok(
+                metrics=metrics,
+                thresholds=thresholds,
+                reasons=f"MultiPath 이중화 점검 성공. {ok_items}",
+                message=f"MultiPath 이중화 점검 성공. {ok_items}",
             )
 
-        return self.ok(
-            metrics=metrics,
-            thresholds=thresholds,
-            reasons=(
-                f'모든 Logical Unit의 Stms State가 {expected_stms_state}이고 Path Status와 개별 경로 상태가 '
-                f'{expected_path_status}/{expected_path_state} 기준을 충족합니다.'
-            ),
-            message=(
-                'Solaris Multipath 이중화 상태가 정상입니다. '
-                f'현재 상태: LU {len(logical_units)}개, Stms State 정상 {stms_enabled_count}개, '
-                f'Path Status 정상 {connected_path_status_count}개, CONNECTED 경로 {connected_path_count}개, '
-                '비정상 경로 0개입니다.'
-            ),
-        )
+        else:
+            return self.fail(
+                error='Multipath 파싱 실패',
+                metrics=metrics,
+                thresholds=thresholds,
+                reasons=f"MultiPath 이중화 점검 실패. {ok_items}",
+                message=f"MultiPath 이중화 점검 실패. {fail_items}",
+            )
 
+
+       
+       
+        
 
 CHECK_CLASS = Check

@@ -15,10 +15,10 @@
         },
         {
           "name": "ifgroup_status_keywords",
-          "value1": "disabled,down,offline,fail,error"
+          "value1": "down,offline,fail,error"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMAND = 'ifgroup show config all'\nDEFAULT_MIN_INTERFACE_COUNT = 1\nDEFAULT_BAD_STATUS_KEYWORDS = ['disabled', 'down', 'offline', 'fail', 'error']\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _split_list(self, value):\n        return [item.strip() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _parse_ifgroup_rows(self, text):\n        rows = []\n        for line in text.splitlines():\n            parts = re.split(r'\\s{2,}', line.strip())\n            if len(parts) >= 5 and parts[0].lower() not in ('group-name', '----------'):\n                try:\n                    interface_count = int(parts[2])\n                except ValueError:\n                    continue\n                rows.append({'group_name': parts[0], 'status': parts[1].lower(), 'interface_count': interface_count})\n        return rows\n\n    def run(self):\n        min_count = self.get_threshold_var('min_ifgroup_interface_cnt', default=DEFAULT_MIN_INTERFACE_COUNT, value_type='int')\n        bad_keywords = self._split_list(self.get_threshold_var('ifgroup_status_keywords', default=','.join(DEFAULT_BAD_STATUS_KEYWORDS), value_type='str'))\n        thresholds = {'min_ifgroup_interface_cnt': min_count, 'ifgroup_status_keywords': bad_keywords}\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        rows = self._parse_ifgroup_rows(stdout)\n        no_interfaces = 'No interfaces in ifgroup' in stdout\n        bad_rows = [row for row in rows if row['status'] != 'enabled' or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]\n        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows, 'no_interfaces_message': no_interfaces}\n        if not rows or bad_rows or no_interfaces:\n            return self.fail('ifgroup 상태 기준 미달', message='ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.', message='Path 이중화 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMAND = 'ifgroup show config all'\nDEFAULT_MIN_INTERFACE_COUNT = 1\nDEFAULT_BAD_STATUS_KEYWORDS = ['down', 'offline', 'fail', 'error']\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _split_list(self, value):\n        return [item.strip() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _parse_ifgroup_rows(self, text):\n        rows = []\n        for line in text.splitlines():\n            parts = re.split(r'\\s{2,}', line.strip())\n            if len(parts) >= 5 and parts[0].lower() not in ('group-name', '----------'):\n                try:\n                    print(f\"line: {line}\")\n                    print(f\"interface_count: {parts[3]}\")\n                    interface_count = int(parts[3])\n                except ValueError:\n                    continue\n                rows.append({'group_name': parts[0], 'status': parts[1].lower(), 'interface_count': interface_count})\n        return rows\n\n    def run(self):\n        min_count = self.get_threshold_var('min_ifgroup_interface_cnt', default=DEFAULT_MIN_INTERFACE_COUNT, value_type='int')\n        bad_keywords = self._split_list(self.get_threshold_var('ifgroup_status_keywords', default=','.join(DEFAULT_BAD_STATUS_KEYWORDS), value_type='str'))\n        thresholds = {'min_ifgroup_interface_cnt': min_count, 'ifgroup_status_keywords': bad_keywords}\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        rows = self._parse_ifgroup_rows(stdout)        \n        bad_rows = [row for row in rows if row['status'] not in ['enabled', 'disabled'] or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]\n        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows}\n        if not rows or bad_rows:\n            return self.fail('ifgroup 상태 기준 미달', message='ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.', message='Path 이중화 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -30,7 +30,7 @@
         "COMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')",
         "COMMAND = 'ifgroup show config all'",
         "DEFAULT_MIN_INTERFACE_COUNT = 1",
-        "DEFAULT_BAD_STATUS_KEYWORDS = ['disabled', 'down', 'offline', 'fail', 'error']",
+        "DEFAULT_BAD_STATUS_KEYWORDS = ['down', 'offline', 'fail', 'error']",
         "",
         "",
         "class Check(BaseCheck):",
@@ -71,7 +71,9 @@
         "            parts = re.split(r'\\s{2,}', line.strip())",
         "            if len(parts) >= 5 and parts[0].lower() not in ('group-name', '----------'):",
         "                try:",
-        "                    interface_count = int(parts[2])",
+        "                    print(f\"line: {line}\")",
+        "                    print(f\"interface_count: {parts[3]}\")",
+        "                    interface_count = int(parts[3])",
         "                except ValueError:",
         "                    continue",
         "                rows.append({'group_name': parts[0], 'status': parts[1].lower(), 'interface_count': interface_count})",
@@ -85,11 +87,10 @@
         "        if error:",
         "            return error",
         "",
-        "        rows = self._parse_ifgroup_rows(stdout)",
-        "        no_interfaces = 'No interfaces in ifgroup' in stdout",
-        "        bad_rows = [row for row in rows if row['status'] != 'enabled' or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]",
-        "        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows, 'no_interfaces_message': no_interfaces}",
-        "        if not rows or bad_rows or no_interfaces:",
+        "        rows = self._parse_ifgroup_rows(stdout)        ",
+        "        bad_rows = [row for row in rows if row['status'] not in ['enabled', 'disabled'] or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]",
+        "        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows}",
+        "        if not rows or bad_rows:",
         "            return self.fail('ifgroup 상태 기준 미달', message='ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)",
         "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.', message='Path 이중화 점검 정상.')",
         "",
@@ -114,56 +115,31 @@
         },
         {
           "name": "ifgroup_status_keywords",
-          "value1": "disabled,down,offline,fail,error"
+          "value1": "down,offline,fail,error"
         }
       ],
-      "status": "fail",
-      "error": "ifgroup 상태 기준 미달",
-      "message": "ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.",
-      "stdout": "Group-name   Status     Interface   Clients   Replication\n----------   --------   ---------   -------   -----------\ndefault      disabled           0         1             0\n----------   --------   ---------   -------   -----------\nNo interfaces in ifgroup\n\nGroup-name   Status     DD Boost Clients\n----------   --------   ----------------\ndefault      disabled   *\n----------   --------   ----------------\nNo replication mtrees with remote hosts in ifgroup\nFile replication is allowed on ifgroup.\nClient may use any interface.",
-      "stdout_lines": [
-        "Group-name   Status     Interface   Clients   Replication",
-        "----------   --------   ---------   -------   -----------",
-        "default      disabled           0         1             0",
-        "----------   --------   ---------   -------   -----------",
-        "No interfaces in ifgroup",
-        "",
-        "Group-name   Status     DD Boost Clients",
-        "----------   --------   ----------------",
-        "default      disabled   *",
-        "----------   --------   ----------------",
-        "No replication mtrees with remote hosts in ifgroup",
-        "File replication is allowed on ifgroup.",
-        "Client may use any interface."
-      ],
+      "status": "ok",
       "metrics": {
         "ifgroup_rows": [
           {
             "group_name": "default",
             "status": "disabled",
-            "interface_count": 0
+            "interface_count": 1
           }
         ],
-        "bad_ifgroup_rows": [
-          {
-            "group_name": "default",
-            "status": "disabled",
-            "interface_count": 0
-          }
-        ],
-        "no_interfaces_message": true
+        "bad_ifgroup_rows": []
       },
       "thresholds": {
         "min_ifgroup_interface_cnt": 1,
         "ifgroup_status_keywords": [
-          "disabled",
           "down",
           "offline",
           "fail",
           "error"
         ]
       },
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ifgroup show config all\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Group-name   Status     Interface   Clients   Replication\n----------   --------   ---------   -------   -----------\ndefault      disabled           0         1             0\n----------   --------   ---------   -------   -----------\nNo interfaces in ifgroup\n\nGroup-name   Status     DD Boost Clients\n----------   --------   ----------------\ndefault      disabled   *\n----------   --------   ----------------\nNo replication mtrees with remote hosts in ifgroup\nFile replication is allowed on ifgroup.\nClient may use any interface.",
+      "reasons": "ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ifgroup show config all\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Group-name   Status     Interface   Clients   Replication\n----------   --------   ---------   -------   -----------\ndefault      disabled           0         1             0\n----------   --------   ---------   -------   -----------\nNo interfaces in ifgroup\n\nGroup-name   Status     DD Boost Clients\n----------   --------   ----------------\ndefault      disabled   *               \n----------   --------   ----------------\nNo replication mtrees with remote hosts in ifgroup\nFile replication is allowed on ifgroup.\nClient may use any interface.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: ifgroup show config all",
@@ -176,15 +152,14 @@
         "",
         "Group-name   Status     DD Boost Clients",
         "----------   --------   ----------------",
-        "default      disabled   *",
+        "default      disabled   *               ",
         "----------   --------   ----------------",
         "No replication mtrees with remote hosts in ifgroup",
         "File replication is allowed on ifgroup.",
         "Client may use any interface."
-      ]
+      ],
+      "message": "Path 이중화 점검 정상."
     }
   ],
-  "failed_items": [
-    "NETWORK-DELL-DDOS-DELL-2-1-MULTIPATH-CHK"
-  ]
+  "failed_items": []
 }

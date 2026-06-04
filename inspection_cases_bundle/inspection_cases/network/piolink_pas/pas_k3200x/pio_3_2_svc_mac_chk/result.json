@@ -18,7 +18,7 @@
           "value1": "REACHABLE,STALE,DELAY"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMANDS = ['show mac', 'show arp']\nMAC_RE = re.compile(r'^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$', re.IGNORECASE)\nIP_RE = re.compile(r'^\\d+(?:\\.\\d+){3}$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_commands(self):\n        results = self._run_paramiko_commands(COMMANDS, profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < len(COMMANDS):\n            return None, self.fail('점검 명령 실행 실패', message='일부 점검 명령 결과를 수신하지 못했습니다.')\n        for result in results:\n            stdout = (result.get('stdout') or '').strip()\n            stderr = (result.get('stderr') or '').strip()\n            if result.get('rc') != 0:\n                return None, self.fail('점검 명령 실행 실패', message=f'{result.get(\"command\")} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return results, None\n\n    def _split_list(self, value):\n        return [item.strip().upper() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _parse_mac_entries(self, text):\n        entries = []\n        current_port = ''\n        current_vid = ''\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if not parts:\n                continue\n            if MAC_RE.match(parts[0]) and len(parts) >= 3:\n                mac, status, entry_type = parts[0], parts[1], parts[2]\n            elif len(parts) >= 5 and MAC_RE.match(parts[2]):\n                current_port, current_vid = parts[0], parts[1]\n                mac, status, entry_type = parts[2], parts[3], parts[4]\n            else:\n                continue\n            entries.append({\n                'port': current_port,\n                'vid': current_vid,\n                'mac_address': mac,\n                'status': status.lower(),\n                'type': entry_type.lower(),\n            })\n        return entries\n\n    def _parse_arp_entries(self, text):\n        entries = []\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if len(parts) < 4 or not IP_RE.match(parts[0]) or not MAC_RE.match(parts[1]):\n                continue\n            entries.append({\n                'ip_address': parts[0],\n                'mac_address': parts[1],\n                'interface': parts[2],\n                'state': parts[3].upper(),\n            })\n        return entries\n\n    def run(self):\n        expected_mac_status = str(self.get_threshold_var('expected_mac_status', default='forward', value_type='str')).strip().lower()\n        valid_arp_state_raw = self.get_threshold_var('valid_arp_state', default='REACHABLE,STALE,DELAY', value_type='str')\n        valid_arp_states = self._split_list(valid_arp_state_raw)\n        thresholds = {'expected_mac_status': expected_mac_status, 'valid_arp_state': valid_arp_states}\n        results, error = self._run_commands()\n        if error:\n            return error\n\n        mac_stdout = (results[0].get('stdout') or '').strip()\n        arp_stdout = (results[1].get('stdout') or '').strip()\n        mac_entries = self._parse_mac_entries(mac_stdout)\n        arp_entries = self._parse_arp_entries(arp_stdout)\n        if not mac_entries or not arp_entries:\n            return self.fail('MAC/ARP 파싱 실패', message='show mac 또는 show arp 출력에서 테이블 항목을 찾지 못했습니다.', stdout='\\n\\n'.join([mac_stdout, arp_stdout]), thresholds=thresholds, metrics={'mac_entry_count': len(mac_entries), 'arp_entry_count': len(arp_entries)})\n\n        invalid_mac_entries = [\n            item for item in mac_entries\n            if not item['port'] or item['status'] != expected_mac_status\n        ]\n        invalid_arp_entries = [item for item in arp_entries if item['state'] not in valid_arp_states]\n        metrics = {\n            'mac_entry_count': len(mac_entries),\n            'arp_entry_count': len(arp_entries),\n            'invalid_mac_entries': invalid_mac_entries,\n            'invalid_arp_entries': invalid_arp_entries,\n            'mac_entries': mac_entries,\n            'arp_entries': arp_entries,\n        }\n        if invalid_mac_entries or invalid_arp_entries:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='MAC status 또는 ARP state 기준을 만족하지 않는 항목이 있습니다.', message=f'MAC/ARP 상태 경고: MAC {len(invalid_mac_entries)}개, ARP {len(invalid_arp_entries)}개.')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='MAC status와 ARP state가 기준을 만족합니다.', message=f'MAC/ARP 테이블 점검 정상: MAC {len(mac_entries)}개, ARP {len(arp_entries)}개.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMANDS = ['show mac', 'show arp']\nMAC_RE = re.compile(r'^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$', re.IGNORECASE)\nIP_RE = re.compile(r'^\\d+(?:\\.\\d+){3}$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_commands(self):\n        results = self._run_paramiko_commands(COMMANDS, profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < len(COMMANDS):\n            return None, self.fail('점검 명령 실행 실패', message='일부 점검 명령 결과를 수신하지 못했습니다.')\n        for result in results:\n            stdout = (result.get('stdout') or '').strip()\n            stderr = (result.get('stderr') or '').strip()\n            if result.get('rc') != 0:\n                return None, self.fail('점검 명령 실행 실패', message=f'{result.get(\"command\")} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return results, None\n\n    def _split_list(self, value):\n        return [item.strip().upper() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _parse_mac_entries(self, text):\n        entries = []\n        current_port = ''\n        current_vid = ''\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if not parts:\n                continue\n            if MAC_RE.match(parts[0]) and len(parts) >= 3:\n                mac, status, entry_type = parts[0], parts[1], parts[2]\n            elif len(parts) >= 5 and MAC_RE.match(parts[2]):\n                current_port, current_vid = parts[0], parts[1]\n                mac, status, entry_type = parts[2], parts[3], parts[4]\n            else:\n                continue\n            entries.append({\n                'port': current_port,\n                'vid': current_vid,\n                'mac_address': mac,\n                'status': status.lower(),\n                'type': entry_type.lower(),\n            })\n        return entries\n\n    def _parse_arp_entries(self, text):\n        entries = []\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if len(parts) < 4 or not IP_RE.match(parts[0]) or not MAC_RE.match(parts[1]):\n                continue\n            entries.append({\n                'ip_address': parts[0],\n                'mac_address': parts[1],\n                'interface': parts[2],\n                'state': parts[3].upper(),\n            })\n        return entries\n\n    def run(self):\n        expected_mac_status = str(self.get_threshold_var('expected_mac_status', default='forward', value_type='str')).strip().lower()\n        valid_arp_state_raw = self.get_threshold_var('valid_arp_state', default='REACHABLE,STALE,DELAY', value_type='str')\n        valid_arp_states = self._split_list(valid_arp_state_raw)\n        thresholds = {'expected_mac_status': expected_mac_status, 'valid_arp_state': valid_arp_states}\n        results, error = self._run_commands()\n        if error:\n            return error\n\n        mac_stdout = (results[0].get('stdout') or '').strip()\n        arp_stdout = (results[1].get('stdout') or '').strip()\n        mac_entries = self._parse_mac_entries(mac_stdout)\n        arp_entries = self._parse_arp_entries(arp_stdout)\n        if not mac_entries or not arp_entries:\n            return self.fail('MAC/ARP 파싱 실패', message='show mac 또는 show arp 출력에서 테이블 항목을 찾지 못했습니다.', stdout='\\n\\n'.join([mac_stdout, arp_stdout]), thresholds=thresholds, metrics={'mac_entry_count': len(mac_entries), 'arp_entry_count': len(arp_entries)})\n\n        invalid_mac_entries = [\n            item for item in mac_entries\n            if not item['port'] or item['status'] != expected_mac_status\n        ]\n        invalid_arp_entries = [item for item in arp_entries if item['state'] not in valid_arp_states]\n        metrics = {\n            'mac_entry_count': len(mac_entries),\n            'arp_entry_count': len(arp_entries),\n            'invalid_mac_entries': invalid_mac_entries,\n            'invalid_arp_entries': invalid_arp_entries,\n            'mac_entries': mac_entries[:10],\n            'arp_entries': arp_entries[:10],\n        }\n        if invalid_mac_entries or invalid_arp_entries:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='MAC status 또는 ARP state 기준을 만족하지 않는 항목이 있습니다.', message=f'MAC/ARP 상태 경고: MAC {len(invalid_mac_entries)}개, ARP {len(invalid_arp_entries)}개.')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='MAC status와 ARP state가 기준을 만족합니다.', message=f'MAC/ARP 테이블 점검 정상: MAC {len(mac_entries)}개, ARP {len(arp_entries)}개.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -118,8 +118,8 @@
         "            'arp_entry_count': len(arp_entries),",
         "            'invalid_mac_entries': invalid_mac_entries,",
         "            'invalid_arp_entries': invalid_arp_entries,",
-        "            'mac_entries': mac_entries,",
-        "            'arp_entries': arp_entries,",
+        "            'mac_entries': mac_entries[:10],",
+        "            'arp_entries': arp_entries[:10],",
         "        }",
         "        if invalid_mac_entries or invalid_arp_entries:",
         "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='MAC status 또는 ARP state 기준을 만족하지 않는 항목이 있습니다.', message=f'MAC/ARP 상태 경고: MAC {len(invalid_mac_entries)}개, ARP {len(invalid_arp_entries)}개.')",
@@ -151,8 +151,8 @@
       ],
       "status": "ok",
       "metrics": {
-        "mac_entry_count": 44,
-        "arp_entry_count": 41,
+        "mac_entry_count": 43,
+        "arp_entry_count": 40,
         "invalid_mac_entries": [],
         "invalid_arp_entries": [],
         "mac_entries": [
@@ -225,244 +225,6 @@
             "mac_address": "54:80:28:40:1b:14",
             "status": "forward",
             "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "54:80:28:40:1b:38",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e0:be:bc",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:28:1c",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2b:38",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2b:d4",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2b:f8",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2c:08",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2c:8c",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:e4:2c:d4",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:fd:28:fc",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "68:05:ca:fd:2c:2c",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "80:18:44:e9:4d:88",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "88:90:09:93:70:80",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "a0:36:9f:df:6d:08",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "a4:bf:01:0f:e5:b1",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "a4:bf:01:75:0a:7c",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "b4:96:91:97:35:cf",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "b4:96:91:97:37:35",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "c8:fe:6a:91:c0:21",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d0:94:66:15:5b:38",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d0:94:66:15:5b:3a",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d4:f5:ef:0d:f6:54",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d8:d3:85:f7:ec:0e",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d8:d3:85:f8:4a:b0",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d8:d3:85:f8:4b:68",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "d8:d3:85:f8:e4:11",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "ec:e7:a7:06:0d:d8",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "f4:bf:a8:ed:ad:e1",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "f4:bf:a8:ed:ad:ff",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "13",
-            "vid": "808",
-            "mac_address": "f4:bf:a8:ed:ae:40",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "16",
-            "vid": "422",
-            "mac_address": "00:10:f3:a4:1e:d9",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "18",
-            "vid": "808",
-            "mac_address": "04:32:01:5a:2a:c0",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "agg1",
-            "vid": "422",
-            "mac_address": "00:06:c4:90:0d:77",
-            "status": "forward",
-            "type": "dynamic"
-          },
-          {
-            "port": "agg1",
-            "vid": "422",
-            "mac_address": "00:10:f3:a4:22:f1",
-            "status": "forward",
-            "type": "dynamic"
           }
         ],
         "arp_entries": [
@@ -494,7 +256,7 @@
             "ip_address": "172.18.8.15",
             "mac_address": "14:02:ec:74:e2:10",
             "interface": "V808",
-            "state": "DELAY"
+            "state": "REACHABLE"
           },
           {
             "ip_address": "172.18.8.17",
@@ -518,199 +280,13 @@
             "ip_address": "172.18.8.22",
             "mac_address": "68:05:ca:e4:2b:d4",
             "interface": "V808",
-            "state": "REACHABLE"
+            "state": "DELAY"
           },
           {
             "ip_address": "172.18.8.23",
             "mac_address": "d8:d3:85:f8:4b:68",
             "interface": "V808",
             "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.24",
-            "mac_address": "54:80:28:40:1b:14",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.25",
-            "mac_address": "80:18:44:e9:4d:88",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.26",
-            "mac_address": "d0:94:66:15:5b:38",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.27",
-            "mac_address": "a4:bf:01:0f:e5:b1",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.28",
-            "mac_address": "a4:bf:01:75:0a:7c",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.29",
-            "mac_address": "68:05:ca:e0:be:bc",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.30",
-            "mac_address": "ec:e7:a7:06:0d:d8",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.31",
-            "mac_address": "d8:d3:85:f8:e4:11",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.34",
-            "mac_address": "d4:f5:ef:0d:f6:54",
-            "interface": "V808",
-            "state": "STALE"
-          },
-          {
-            "ip_address": "172.18.8.41",
-            "mac_address": "a0:36:9f:df:6d:08",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.45",
-            "mac_address": "d8:d3:85:f7:ec:0e",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.52",
-            "mac_address": "68:05:ca:e4:2b:38",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.53",
-            "mac_address": "68:05:ca:e4:2b:f8",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.54",
-            "mac_address": "68:05:ca:e4:2c:08",
-            "interface": "V808",
-            "state": "DELAY"
-          },
-          {
-            "ip_address": "172.18.8.71",
-            "mac_address": "40:a6:b7:29:25:dc",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.81",
-            "mac_address": "b4:96:91:97:35:cf",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.82",
-            "mac_address": "b4:96:91:97:37:35",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.87",
-            "mac_address": "68:05:ca:fd:2c:2c",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.88",
-            "mac_address": "68:05:ca:fd:28:fc",
-            "interface": "V808",
-            "state": "DELAY"
-          },
-          {
-            "ip_address": "172.18.8.91",
-            "mac_address": "b4:96:91:97:35:cf",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.92",
-            "mac_address": "b4:96:91:97:37:35",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.93",
-            "mac_address": "68:05:ca:e4:2c:d4",
-            "interface": "V808",
-            "state": "DELAY"
-          },
-          {
-            "ip_address": "172.18.8.97",
-            "mac_address": "68:05:ca:fd:2c:2c",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.98",
-            "mac_address": "68:05:ca:fd:28:fc",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.191",
-            "mac_address": "40:5b:7f:6d:53:60",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.211",
-            "mac_address": "f4:bf:a8:ed:ad:e1",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.212",
-            "mac_address": "c8:fe:6a:91:c0:21",
-            "interface": "V808",
-            "state": "REACHABLE"
-          },
-          {
-            "ip_address": "172.18.8.230",
-            "mac_address": "44:8a:5b:dc:44:02",
-            "interface": "V808",
-            "state": "STALE"
-          },
-          {
-            "ip_address": "172.18.8.253",
-            "mac_address": "00:06:c4:90:0d:77",
-            "interface": "V808",
-            "state": "STALE"
-          },
-          {
-            "ip_address": "172.31.247.123",
-            "mac_address": "00:10:f3:a4:1e:d9",
-            "interface": "V422",
-            "state": "STALE"
-          },
-          {
-            "ip_address": "172.31.247.126",
-            "mac_address": "00:10:f3:a4:1e:d9",
-            "interface": "V422",
-            "state": "DELAY"
           }
         ]
       },
@@ -723,7 +299,7 @@
         ]
       },
       "reasons": "MAC status와 ARP state가 기준을 만족합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show mac\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  MAC\n ------------------------------------------------------------------------------\n    Ageing Time          : 300\n\n    Mac Table\n       Port  Vid   Mac Address       Status  Type\n       12    808   40:5b:7f:6d:53:60 forward dynamic\n       13    808   00:06:c4:90:0d:77 forward dynamic\n                   00:62:0b:9e:e9:86 forward dynamic\n                   0e:00:e8:15:06:38 forward dynamic\n                   14:02:ec:74:e2:10 forward dynamic\n                   40:a6:b7:29:25:dc forward dynamic\n                   44:8a:5b:dc:44:02 forward dynamic\n                   48:df:37:59:78:40 forward dynamic\n                   48:df:37:59:78:d0 forward dynamic\n                   54:80:28:40:1b:14 forward dynamic\n                   54:80:28:40:1b:38 forward dynamic\n                   68:05:ca:e0:be:bc forward dynamic\n                   68:05:ca:e4:28:1c forward dynamic\n                   68:05:ca:e4:2b:38 forward dynamic\n                   68:05:ca:e4:2b:d4 forward dynamic\n                   68:05:ca:e4:2b:f8 forward dynamic\n                   68:05:ca:e4:2c:08 forward dynamic\n                   68:05:ca:e4:2c:8c forward dynamic\n                   68:05:ca:e4:2c:d4 forward dynamic\n                   68:05:ca:fd:28:fc forward dynamic\n                   68:05:ca:fd:2c:2c forward dynamic\n                   80:18:44:e9:4d:88 forward dynamic\n                   88:90:09:93:70:80 forward dynamic\n                   a0:36:9f:df:6d:08 forward dynamic\n                   a4:bf:01:0f:e5:b1 forward dynamic\n                   a4:bf:01:75:0a:7c forward dynamic\n                   b4:96:91:97:35:cf forward dynamic\n                   b4:96:91:97:37:35 forward dynamic\n                   c8:fe:6a:91:c0:21 forward dynamic\n                   d0:94:66:15:5b:38 forward dynamic\n                   d0:94:66:15:5b:3a forward dynamic\n                   d4:f5:ef:0d:f6:54 forward dynamic\n                   d8:d3:85:f7:ec:0e forward dynamic\n                   d8:d3:85:f8:4a:b0 forward dynamic\n                   d8:d3:85:f8:4b:68 forward dynamic\n                   d8:d3:85:f8:e4:11 forward dynamic\n                   ec:e7:a7:06:0d:d8 forward dynamic\n                   f4:bf:a8:ed:ad:e1 forward dynamic\n                   f4:bf:a8:ed:ad:ff forward dynamic\n                   f4:bf:a8:ed:ae:40 forward dynamic\n       16    422   00:10:f3:a4:1e:d9 forward dynamic\n       18    808   04:32:01:5a:2a:c0 forward dynamic\n       agg1  422   00:06:c4:90:0d:77 forward dynamic\n                   00:10:f3:a4:22:f1 forward dynamic\n================================================================================\n\n[점검 단계 2]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  ARP\n ------------------------------------------------------------------------------\n    Timeout (sec)               : 30\n    Locktime (1/100 sec)        : 100\n    Proxy Arp Status            : disable\n    Proxy Arp Delay (1/100 sec) : 0\n    Proxy Arp Running           : disable\n\n    Static                      :\n\n    Dynamic\n       IP Address     MAC Address       Interface State\n       172.18.8.1     04:32:01:5a:2a:c0 V808      REACHABLE\n       172.18.8.4     00:62:0b:9e:e9:86 V808      STALE\n       172.18.8.11    54:80:28:40:1b:38 V808      REACHABLE\n       172.18.8.14    d8:d3:85:f8:4a:b0 V808      REACHABLE\n       172.18.8.15    14:02:ec:74:e2:10 V808      DELAY\n       172.18.8.17    48:df:37:59:78:40 V808      REACHABLE\n       172.18.8.19    68:05:ca:e4:2c:8c V808      REACHABLE\n       172.18.8.20    68:05:ca:e4:28:1c V808      REACHABLE\n       172.18.8.22    68:05:ca:e4:2b:d4 V808      REACHABLE\n       172.18.8.23    d8:d3:85:f8:4b:68 V808      REACHABLE\n       172.18.8.24    54:80:28:40:1b:14 V808      REACHABLE\n       172.18.8.25    80:18:44:e9:4d:88 V808      REACHABLE\n       172.18.8.26    d0:94:66:15:5b:38 V808      REACHABLE\n       172.18.8.27    a4:bf:01:0f:e5:b1 V808      REACHABLE\n       172.18.8.28    a4:bf:01:75:0a:7c V808      REACHABLE\n       172.18.8.29    68:05:ca:e0:be:bc V808      REACHABLE\n       172.18.8.30    ec:e7:a7:06:0d:d8 V808      REACHABLE\n       172.18.8.31    d8:d3:85:f8:e4:11 V808      REACHABLE\n       172.18.8.34    d4:f5:ef:0d:f6:54 V808      STALE\n       172.18.8.41    a0:36:9f:df:6d:08 V808      REACHABLE\n       172.18.8.45    d8:d3:85:f7:ec:0e V808      REACHABLE\n       172.18.8.52    68:05:ca:e4:2b:38 V808      REACHABLE\n       172.18.8.53    68:05:ca:e4:2b:f8 V808      REACHABLE\n       172.18.8.54    68:05:ca:e4:2c:08 V808      DELAY\n       172.18.8.71    40:a6:b7:29:25:dc V808      REACHABLE\n       172.18.8.81    b4:96:91:97:35:cf V808      REACHABLE\n       172.18.8.82    b4:96:91:97:37:35 V808      REACHABLE\n       172.18.8.87    68:05:ca:fd:2c:2c V808      REACHABLE\n       172.18.8.88    68:05:ca:fd:28:fc V808      DELAY\n       172.18.8.91    b4:96:91:97:35:cf V808      REACHABLE\n       172.18.8.92    b4:96:91:97:37:35 V808      REACHABLE\n       172.18.8.93    68:05:ca:e4:2c:d4 V808      DELAY\n       172.18.8.97    68:05:ca:fd:2c:2c V808      REACHABLE\n       172.18.8.98    68:05:ca:fd:28:fc V808      REACHABLE\n       172.18.8.191   40:5b:7f:6d:53:60 V808      REACHABLE\n       172.18.8.211   f4:bf:a8:ed:ad:e1 V808      REACHABLE\n       172.18.8.212   c8:fe:6a:91:c0:21 V808      REACHABLE\n       172.18.8.230   44:8a:5b:dc:44:02 V808      STALE\n       172.18.8.253   00:06:c4:90:0d:77 V808      STALE\n       172.31.247.123 00:10:f3:a4:1e:d9 V422      STALE\n       172.31.247.126 00:10:f3:a4:1e:d9 V422      DELAY\n================================================================================",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show mac\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  MAC\n ------------------------------------------------------------------------------\n    Ageing Time          : 300\n\n    Mac Table            \n       Port  Vid   Mac Address       Status  Type   \n       12    808   40:5b:7f:6d:53:60 forward dynamic\n       13    808   00:06:c4:90:0d:77 forward dynamic\n                   00:62:0b:9e:e9:86 forward dynamic\n                   0e:00:e8:15:06:38 forward dynamic\n                   14:02:ec:74:e2:10 forward dynamic\n                   40:a6:b7:29:25:dc forward dynamic\n                   44:8a:5b:dc:44:02 forward dynamic\n                   48:df:37:59:78:40 forward dynamic\n                   48:df:37:59:78:d0 forward dynamic\n                   54:80:28:40:1b:14 forward dynamic\n                   54:80:28:40:1b:38 forward dynamic\n                   68:05:ca:e0:be:bc forward dynamic\n                   68:05:ca:e4:28:1c forward dynamic\n                   68:05:ca:e4:2b:38 forward dynamic\n                   68:05:ca:e4:2b:d4 forward dynamic\n                   68:05:ca:e4:2b:f8 forward dynamic\n                   68:05:ca:e4:2c:08 forward dynamic\n                   68:05:ca:e4:2c:8c forward dynamic\n                   68:05:ca:e4:2c:d4 forward dynamic\n                   68:05:ca:fd:28:fc forward dynamic\n                   68:05:ca:fd:2c:2c forward dynamic\n                   80:18:44:e9:4d:88 forward dynamic\n\n        \n                   88:90:09:93:70:80 forward dynamic\n                   a0:36:9f:df:6d:08 forward dynamic\n                   a4:bf:01:0f:e5:b1 forward dynamic\n                   a4:bf:01:75:0a:7c forward dynamic\n                   b4:96:91:97:35:cf forward dynamic\n                   b4:96:91:97:37:35 forward dynamic\n                   c8:fe:6a:91:c0:21 forward dynamic\n                   d0:94:66:15:5b:38 forward dynamic\n                   d4:f5:ef:0d:f6:54 forward dynamic\n                   d8:d3:85:f7:ec:0e forward dynamic\n                   d8:d3:85:f8:4a:b0 forward dynamic\n                   d8:d3:85:f8:4b:68 forward dynamic\n                   d8:d3:85:f8:e4:11 forward dynamic\n                   ec:e7:a7:06:0d:d8 forward dynamic\n                   f4:bf:a8:ed:ad:e1 forward dynamic\n                   f4:bf:a8:ed:ad:ff forward dynamic\n                   f4:bf:a8:ed:ae:40 forward dynamic\n       16    422   00:10:f3:a4:1e:d9 forward dynamic\n       18    808   04:32:01:5a:2a:c0 forward dynamic\n       agg1  422   00:06:c4:90:0d:77 forward dynamic\n                   00:10:f3:a4:22:f1 forward dynamic\n================================================================================\n\n[점검 단계 2]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  ARP\n ------------------------------------------------------------------------------\n    Timeout (sec)               : 30\n    Locktime (1/100 sec)        : 100\n    Proxy Arp Status            : disable\n    Proxy Arp Delay (1/100 sec) : 0\n    Proxy Arp Running           : disable\n\n    Static                      : \n\n    Dynamic                     \n       IP Address     MAC Address       Interface State    \n       172.18.8.1     04:32:01:5a:2a:c0 V808      REACHABLE\n       172.18.8.4     00:62:0b:9e:e9:86 V808      STALE    \n       172.18.8.11    54:80:28:40:1b:38 V808      REACHABLE\n       172.18.8.14    d8:d3:85:f8:4a:b0 V808      REACHABLE\n       172.18.8.15    14:02:ec:74:e2:10 V808      REACHABLE\n       172.18.8.17    48:df:37:59:78:40 V808      REACHABLE\n       172.18.8.19    68:05:ca:e4:2c:8c V808      REACHABLE\n       172.18.8.20    68:05:ca:e4:28:1c V808      REACHABLE\n       172.18.8.22    68:05:ca:e4:2b:d4 V808      DELAY    \n       172.18.8.23    d8:d3:85:f8:4b:68 V808      REACHABLE\n       172.18.8.24    54:80:28:40:1b:14 V808      REACHABLE\n       172.18.8.25    80:18:44:e9:4d:88 V808      REACHABLE\n       172.18.8.27    a4:bf:01:0f:e5:b1 V808      REACHABLE\n       172.18.8.28    a4:bf:01:75:0a:7c V808      REACHABLE\n       172.18.8.29    68:05:ca:e0:be:bc V808      DELAY    \n       172.18.8.30    ec:e7:a7:06:0d:d8 V808      REACHABLE\n\n        \n       172.18.8.31    d8:d3:85:f8:e4:11 V808      REACHABLE\n       172.18.8.34    d4:f5:ef:0d:f6:54 V808      STALE    \n       172.18.8.41    a0:36:9f:df:6d:08 V808      REACHABLE\n       172.18.8.45    d8:d3:85:f7:ec:0e V808      REACHABLE\n       172.18.8.52    68:05:ca:e4:2b:38 V808      REACHABLE\n       172.18.8.53    68:05:ca:e4:2b:f8 V808      REACHABLE\n       172.18.8.54    68:05:ca:e4:2c:08 V808      REACHABLE\n       172.18.8.71    40:a6:b7:29:25:dc V808      REACHABLE\n       172.18.8.81    b4:96:91:97:35:cf V808      DELAY    \n       172.18.8.82    b4:96:91:97:37:35 V808      REACHABLE\n       172.18.8.87    68:05:ca:fd:2c:2c V808      REACHABLE\n       172.18.8.88    68:05:ca:fd:28:fc V808      REACHABLE\n       172.18.8.91    b4:96:91:97:35:cf V808      DELAY    \n       172.18.8.92    b4:96:91:97:37:35 V808      DELAY    \n       172.18.8.93    68:05:ca:e4:2c:d4 V808      REACHABLE\n       172.18.8.97    68:05:ca:fd:2c:2c V808      DELAY    \n       172.18.8.98    68:05:ca:fd:28:fc V808      DELAY    \n       172.18.8.191   40:5b:7f:6d:53:60 V808      REACHABLE\n       172.18.8.211   f4:bf:a8:ed:ad:e1 V808      STALE    \n       172.18.8.212   c8:fe:6a:91:c0:21 V808      REACHABLE\n       172.18.8.230   44:8a:5b:dc:44:02 V808      REACHABLE\n       172.18.8.253   00:06:c4:90:0d:77 V808      STALE    \n       172.31.247.123 00:10:f3:a4:1e:d9 V422      STALE    \n       172.31.247.126 00:10:f3:a4:1e:d9 V422      REACHABLE\n================================================================================",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show mac",
@@ -733,8 +309,8 @@
         " ------------------------------------------------------------------------------",
         "    Ageing Time          : 300",
         "",
-        "    Mac Table",
-        "       Port  Vid   Mac Address       Status  Type",
+        "    Mac Table            ",
+        "       Port  Vid   Mac Address       Status  Type   ",
         "       12    808   40:5b:7f:6d:53:60 forward dynamic",
         "       13    808   00:06:c4:90:0d:77 forward dynamic",
         "                   00:62:0b:9e:e9:86 forward dynamic",
@@ -757,6 +333,8 @@
         "                   68:05:ca:fd:28:fc forward dynamic",
         "                   68:05:ca:fd:2c:2c forward dynamic",
         "                   80:18:44:e9:4d:88 forward dynamic",
+        "",
+        "        ",
         "                   88:90:09:93:70:80 forward dynamic",
         "                   a0:36:9f:df:6d:08 forward dynamic",
         "                   a4:bf:01:0f:e5:b1 forward dynamic",
@@ -765,7 +343,6 @@
         "                   b4:96:91:97:37:35 forward dynamic",
         "                   c8:fe:6a:91:c0:21 forward dynamic",
         "                   d0:94:66:15:5b:38 forward dynamic",
-        "                   d0:94:66:15:5b:3a forward dynamic",
         "                   d4:f5:ef:0d:f6:54 forward dynamic",
         "                   d8:d3:85:f7:ec:0e forward dynamic",
         "                   d8:d3:85:f8:4a:b0 forward dynamic",
@@ -793,54 +370,55 @@
         "    Proxy Arp Delay (1/100 sec) : 0",
         "    Proxy Arp Running           : disable",
         "",
-        "    Static                      :",
+        "    Static                      : ",
         "",
-        "    Dynamic",
-        "       IP Address     MAC Address       Interface State",
+        "    Dynamic                     ",
+        "       IP Address     MAC Address       Interface State    ",
         "       172.18.8.1     04:32:01:5a:2a:c0 V808      REACHABLE",
-        "       172.18.8.4     00:62:0b:9e:e9:86 V808      STALE",
+        "       172.18.8.4     00:62:0b:9e:e9:86 V808      STALE    ",
         "       172.18.8.11    54:80:28:40:1b:38 V808      REACHABLE",
         "       172.18.8.14    d8:d3:85:f8:4a:b0 V808      REACHABLE",
-        "       172.18.8.15    14:02:ec:74:e2:10 V808      DELAY",
+        "       172.18.8.15    14:02:ec:74:e2:10 V808      REACHABLE",
         "       172.18.8.17    48:df:37:59:78:40 V808      REACHABLE",
         "       172.18.8.19    68:05:ca:e4:2c:8c V808      REACHABLE",
         "       172.18.8.20    68:05:ca:e4:28:1c V808      REACHABLE",
-        "       172.18.8.22    68:05:ca:e4:2b:d4 V808      REACHABLE",
+        "       172.18.8.22    68:05:ca:e4:2b:d4 V808      DELAY    ",
         "       172.18.8.23    d8:d3:85:f8:4b:68 V808      REACHABLE",
         "       172.18.8.24    54:80:28:40:1b:14 V808      REACHABLE",
         "       172.18.8.25    80:18:44:e9:4d:88 V808      REACHABLE",
-        "       172.18.8.26    d0:94:66:15:5b:38 V808      REACHABLE",
         "       172.18.8.27    a4:bf:01:0f:e5:b1 V808      REACHABLE",
         "       172.18.8.28    a4:bf:01:75:0a:7c V808      REACHABLE",
-        "       172.18.8.29    68:05:ca:e0:be:bc V808      REACHABLE",
+        "       172.18.8.29    68:05:ca:e0:be:bc V808      DELAY    ",
         "       172.18.8.30    ec:e7:a7:06:0d:d8 V808      REACHABLE",
+        "",
+        "        ",
         "       172.18.8.31    d8:d3:85:f8:e4:11 V808      REACHABLE",
-        "       172.18.8.34    d4:f5:ef:0d:f6:54 V808      STALE",
+        "       172.18.8.34    d4:f5:ef:0d:f6:54 V808      STALE    ",
         "       172.18.8.41    a0:36:9f:df:6d:08 V808      REACHABLE",
         "       172.18.8.45    d8:d3:85:f7:ec:0e V808      REACHABLE",
         "       172.18.8.52    68:05:ca:e4:2b:38 V808      REACHABLE",
         "       172.18.8.53    68:05:ca:e4:2b:f8 V808      REACHABLE",
-        "       172.18.8.54    68:05:ca:e4:2c:08 V808      DELAY",
+        "       172.18.8.54    68:05:ca:e4:2c:08 V808      REACHABLE",
         "       172.18.8.71    40:a6:b7:29:25:dc V808      REACHABLE",
-        "       172.18.8.81    b4:96:91:97:35:cf V808      REACHABLE",
+        "       172.18.8.81    b4:96:91:97:35:cf V808      DELAY    ",
         "       172.18.8.82    b4:96:91:97:37:35 V808      REACHABLE",
         "       172.18.8.87    68:05:ca:fd:2c:2c V808      REACHABLE",
-        "       172.18.8.88    68:05:ca:fd:28:fc V808      DELAY",
-        "       172.18.8.91    b4:96:91:97:35:cf V808      REACHABLE",
-        "       172.18.8.92    b4:96:91:97:37:35 V808      REACHABLE",
-        "       172.18.8.93    68:05:ca:e4:2c:d4 V808      DELAY",
-        "       172.18.8.97    68:05:ca:fd:2c:2c V808      REACHABLE",
-        "       172.18.8.98    68:05:ca:fd:28:fc V808      REACHABLE",
+        "       172.18.8.88    68:05:ca:fd:28:fc V808      REACHABLE",
+        "       172.18.8.91    b4:96:91:97:35:cf V808      DELAY    ",
+        "       172.18.8.92    b4:96:91:97:37:35 V808      DELAY    ",
+        "       172.18.8.93    68:05:ca:e4:2c:d4 V808      REACHABLE",
+        "       172.18.8.97    68:05:ca:fd:2c:2c V808      DELAY    ",
+        "       172.18.8.98    68:05:ca:fd:28:fc V808      DELAY    ",
         "       172.18.8.191   40:5b:7f:6d:53:60 V808      REACHABLE",
-        "       172.18.8.211   f4:bf:a8:ed:ad:e1 V808      REACHABLE",
+        "       172.18.8.211   f4:bf:a8:ed:ad:e1 V808      STALE    ",
         "       172.18.8.212   c8:fe:6a:91:c0:21 V808      REACHABLE",
-        "       172.18.8.230   44:8a:5b:dc:44:02 V808      STALE",
-        "       172.18.8.253   00:06:c4:90:0d:77 V808      STALE",
-        "       172.31.247.123 00:10:f3:a4:1e:d9 V422      STALE",
-        "       172.31.247.126 00:10:f3:a4:1e:d9 V422      DELAY",
+        "       172.18.8.230   44:8a:5b:dc:44:02 V808      REACHABLE",
+        "       172.18.8.253   00:06:c4:90:0d:77 V808      STALE    ",
+        "       172.31.247.123 00:10:f3:a4:1e:d9 V422      STALE    ",
+        "       172.31.247.126 00:10:f3:a4:1e:d9 V422      REACHABLE",
         "================================================================================"
       ],
-      "message": "MAC/ARP 테이블 점검 정상: MAC 44개, ARP 41개."
+      "message": "MAC/ARP 테이블 점검 정상: MAC 43개, ARP 40개."
     }
   ],
   "failed_items": []

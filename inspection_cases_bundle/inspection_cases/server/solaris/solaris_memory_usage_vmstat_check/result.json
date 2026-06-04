@@ -315,15 +315,15 @@
       ],
       "status": "ok",
       "metrics": {
-        "swap_kb": 1024,
-        "free_kb": 2048,
+        "swap_kb": 8586856,
+        "free_kb": 8715448,
         "page_in_count": 0,
         "page_out_count": 0,
-        "user_percent": 5.0,
-        "system_percent": 3.0,
-        "cpu_busy_percent": 8.0,
-        "idle_percent": 92.0,
-        "run_queue_count": 1,
+        "user_percent": 0.0,
+        "system_percent": 0.0,
+        "cpu_busy_percent": 0.0,
+        "idle_percent": 100.0,
+        "run_queue_count": 0,
         "blocked_queue_count": 0,
         "matched_failure_keywords": []
       },
@@ -339,8 +339,8 @@
           "command not found"
         ]
       },
-      "reasons": "가용 메모리 2048KB가 기준 이상이고 page in/out 수치도 기준 이내이며 CPU/메모리 병목 징후가 크지 않습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: vmstat\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: kthr      memory            page            disk          faults      cpu\nr b   swap  free   re mf pi po fr sr  in  sy  cs us sy id\n1 0   1024  2048   0  0  0  0  0  0   10  20  30  5  3 92",
+      "reasons": "가용 메모리 8715448KB가 기준 이상이고 page in/out 수치도 기준 이내이며 CPU/메모리 병목 징후가 크지 않습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: All connections are monitored and recorded\nDisconnect immediately if you are not an authorized user!\nYou have new mail.\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: vmstat\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: kthr      memory            page            disk          faults      cpu\n r b w   swap  free  re  mf pi po fr de sr s0 s1 s2 s3   in   sy   cs us sy id\n 0 0 0 8586856 8715448 90 316 0 0  0  0  0 38  0  0  0 2600 3117 2227  0  0 100",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
@@ -351,7 +351,9 @@
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        " - 출력 내용: All connections are monitored and recorded",
+        "Disconnect immediately if you are not an authorized user!",
+        "You have new mail.",
         "",
         "[점검 단계 3]",
         " - 실행 명령어: /usr/bin/id",
@@ -362,10 +364,10 @@
         " - 실행 명령어: vmstat",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: kthr      memory            page            disk          faults      cpu",
-        "r b   swap  free   re mf pi po fr sr  in  sy  cs us sy id",
-        "1 0   1024  2048   0  0  0  0  0  0   10  20  30  5  3 92"
+        " r b w   swap  free  re  mf pi po fr de sr s0 s1 s2 s3   in   sy   cs us sy id",
+        " 0 0 0 8586856 8715448 90 316 0 0  0  0  0 38  0  0  0 2600 3117 2227  0  0 100"
       ],
-      "message": "Solaris 메모리 사용률이 정상입니다. 현재 상태: free 2048KB (기준 1024KB 이상), swap 1024KB, pi 0회 (기준 0회 이하), po 0회 (기준 0회 이하), run queue 1, blocked 0, User 5.00%, System 3.00%, User+System 8.00%, Idle 92.00%."
+      "message": "Solaris 메모리 사용률이 정상입니다. 현재 상태: free 8715448KB (기준 1024KB 이상), swap 8586856KB, pi 0회 (기준 0회 이하), po 0회 (기준 0회 이하), run queue 0, blocked 0, User 0.00%, System 0.00%, User+System 0.00%, Idle 100.00%."
     }
   ],
   "failed_items": []

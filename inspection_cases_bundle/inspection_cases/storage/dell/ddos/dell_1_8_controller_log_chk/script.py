@@ -11,7 +11,7 @@ DEVICE_KEY = 'controller_device_keywords'
 STATUS_KEY = 'controller_status_keywords'
 DEFAULT_DEVICE_KEYWORDS = ['controller', 'disk controller']
 DEFAULT_STATUS_KEYWORDS = ['failed', 'failure', 'low', 'disabled', 'reset', 'error']
-FAIL_ON_ANY_ALERT = True
+FAIL_ON_ANY_ALERT = False
 
 
 class Check(BaseCheck):

@@ -106,18 +106,18 @@
         ]
       },
       "reasons": "Storage 정상 문구가 있고 디스크 장애 키워드가 없습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: disk status\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Normal - Storage operational\n\nDisk States   Active tier   Cache tier\n-----------   -----------   ----------\nIn Use        25            2\nSpare         2             -\nTOTAL DISKS   27            2\n-----------   -----------   ----------",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: disk status\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Normal - Storage operational\n \nDisk States   Active tier   Cache tier\n-----------   -----------   ----------\nIn Use        25            2         \nSpare         2             -         \nTOTAL DISKS   27            2         \n-----------   -----------   ----------",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: disk status",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: Normal - Storage operational",
-        "",
+        " ",
         "Disk States   Active tier   Cache tier",
         "-----------   -----------   ----------",
-        "In Use        25            2",
-        "Spare         2             -",
-        "TOTAL DISKS   27            2",
+        "In Use        25            2         ",
+        "Spare         2             -         ",
+        "TOTAL DISKS   27            2         ",
         "-----------   -----------   ----------"
       ],
       "message": "Disk 상태 점검 정상."

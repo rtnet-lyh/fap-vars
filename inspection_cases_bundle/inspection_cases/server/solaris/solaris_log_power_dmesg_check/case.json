@@ -1,22 +1,22 @@
 {
-  "host": "192.168.1.163",
-  "port": 22,
-  "user": "fap",
-  "password": "f3dtop0!",
+  "host": "172.18.8.41",
+  "port": 222,
+  "user": "root",
+  "password": "",
   "credentials": {
     "SOLARIS": [
       {
-        "application_id": 418,
+        "application_id": 415,
         "application_type_id": 40,
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
+          "username": "sysadmin",
+          "password": "!2602Edc41",
           "become": "True",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "C_ttms2602!"
         }
       }
     ]

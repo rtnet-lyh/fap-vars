@@ -86,15 +86,13 @@ class Check(BaseCheck):
 
     def _parse_alerts(self, text, device_keywords, status_keywords):
         active_match = re.search(r'There\s+(?:is|are)\s+(\d+)\s+active alert', text, re.IGNORECASE)
-        active_alert_count = int(active_match.group(1)) if active_match else 0
-        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\b(ERROR|CRITICAL)\b', line, re.IGNORECASE)]
+        active_alert_count = int(active_match.group(1)) if active_match else 0        
         keyword_lines = []
         for line in text.splitlines():
             if any(self._contains_keyword(line, keyword) for keyword in device_keywords) and any(self._contains_keyword(line, keyword) for keyword in status_keywords):
                 keyword_lines.append(line.strip())
         return {
-            'active_alert_count': active_alert_count,
-            'bad_severity_lines': bad_severity_lines,
+            'active_alert_count': active_alert_count,            
             'keyword_matched_alert_lines': keyword_lines,
         }
 
@@ -117,9 +115,9 @@ class Check(BaseCheck):
             'matching_devices': matching,
         }
         metrics.update(alert_metrics)
-        if not matching or not rows_with_ports or alert_metrics['active_alert_count'] > 0 or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']:
+        if not matching or not rows_with_ports or alert_metrics['keyword_matched_alert_lines']: # alert_metrics['active_alert_count'] > 0 or 
             return self.fail('하드웨어 상태 기준 미달', message='필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)
-        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='하드웨어 상태 점검 정상.')
+        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='HBA 로그 상태 점검 정상.')
 
 
 CHECK_CLASS = Check

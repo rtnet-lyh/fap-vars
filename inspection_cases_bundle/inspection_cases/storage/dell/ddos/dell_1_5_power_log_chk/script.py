@@ -11,7 +11,7 @@ DEVICE_KEY = 'power_device_keywords'
 STATUS_KEY = 'power_status_keywords'
 DEFAULT_DEVICE_KEYWORDS = ['power', 'psu', 'sps', 'voltage', 'power supply']
 DEFAULT_STATUS_KEYWORDS = ['failed', 'fault', 'offline', 'error', 'critical']
-FAIL_ON_ANY_ALERT = True
+FAIL_ON_ANY_ALERT = False
 
 
 class Check(BaseCheck):

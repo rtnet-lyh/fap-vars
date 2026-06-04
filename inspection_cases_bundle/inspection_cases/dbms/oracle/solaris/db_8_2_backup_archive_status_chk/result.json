@@ -13,7 +13,7 @@
       "threshold_list": [
         {
           "name": "oracle_account",
-          "value1": "oratips"
+          "value1": "oracle"
         }
       ],
       "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nLOG_MODE_COMMAND = \"\"\"sqlplus -S /nolog <<EOF\nconnect / as sysdba\nset feedback off\nselect log_mode from v\\$database;\nexit;\nEOF\"\"\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'solaris'\n    PARAMIKO_REUSE_SESSION = False\n\n    def run(self):\n        oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')\n        try:\n            result = self._run_solaris_account_commands(\n                oracle_account,\n                [{'command': LOG_MODE_COMMAND, 'timeout': 30}],\n            )[0]\n        except ValueError as exc:\n            return self.fail('Oracle 계정 전환 설정 오류', message=str(exc))\n\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        switch = getattr(self, '_solaris_last_account_switch_verification', {}) or {}\n        if self._is_connection_error(result.get('rc'), stderr):\n            return self.fail('호스트 연결 실패', message=stderr or 'Paramiko 연결 확인에 실패했습니다.', stderr=stderr)\n        if not switch.get('ok'):\n            return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=stderr)\n        if result.get('rc') != 0:\n            return self.fail('LOG_MODE SQL 실행 실패', message='v$database log_mode SQL을 실행하지 못했습니다.', stdout=stdout, stderr=stderr)\n\n        modes = [line.strip() for line in stdout.splitlines() if line.strip() in ('ARCHIVELOG', 'NOARCHIVELOG')]\n        if not modes:\n            return self.fail('LOG_MODE 출력 파싱 실패', message='SQLPlus 출력에서 ARCHIVELOG/NOARCHIVELOG 값을 찾지 못했습니다.', stdout=stdout, stderr=stderr)\n        metrics = {\n            'oracle_account': oracle_account,\n            'verified_oracle_account': switch.get('actual_user') or '',\n            'log_mode': modes[-1],\n        }\n        thresholds = {'oracle_account': oracle_account}\n        if modes[-1] != 'ARCHIVELOG':\n            return self.fail(\n                '아카이브 로그 모드 비활성',\n                metrics=metrics,\n                thresholds=thresholds,\n                message='LOG_MODE가 ARCHIVELOG가 아닙니다.',\n            )\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='LOG_MODE가 ARCHIVELOG입니다.',\n            message='온라인 백업 가능 여부 점검 정상',\n        )\n\n\nCHECK_CLASS = Check\n",
@@ -99,20 +99,20 @@
       "threshold_list": [
         {
           "name": "oracle_account",
-          "value1": "oratips"
+          "value1": "oracle"
         }
       ],
       "status": "ok",
       "metrics": {
-        "oracle_account": "oratips",
-        "verified_oracle_account": "oratips",
+        "oracle_account": "oracle",
+        "verified_oracle_account": "oracle",
         "log_mode": "ARCHIVELOG"
       },
       "thresholds": {
-        "oracle_account": "oratips"
+        "oracle_account": "oracle"
       },
       "reasons": "LOG_MODE가 ARCHIVELOG입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: su - oratips\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Oracle Corporation      SunOS 5.10      Generic Patch   January 2005\noratips@exTMStotalDB1:~$\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 5]\n - 실행 명령어: whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: oratips\n\n[점검 단계 6]\n - 실행 명령어: sqlplus -S /nolog <<EOF\nconnect / as sysdba\nset feedback off\nselect log_mode from v\\$database;\nexit;\nEOF\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: sqlplus -S /nolog <<EOF\nconnect / as sysdba\nset feedback off\nselect log_mode from v\\$database;\nexit;\nEOF\n\nLOG_MODE\n------------\nARCHIVELOG",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: su - root\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Password:\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Oracle Corporation      SunOS 5.11      11.3    July 2018\n\nwarning warning\nYou have new mail.\nSourcing /root/.profile-EIS...\n\n[점검 단계 3]\n - 실행 명령어: /usr/bin/id\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: uid=0(root) gid=0(root)\n\n[점검 단계 4]\n - 실행 명령어: su - oracle\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): Oracle Corporation      SunOS 5.11      11.3    July 2018\n\nwarning warning\ncitsdb1:/oracle/ >\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 5]\n - 실행 명령어: whoami\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: oracle\n\n[점검 단계 6]\n - 실행 명령어: sqlplus -S /nolog <<EOF\nconnect / as sysdba\nset feedback off\nselect log_mode from v\\$database;\nexit;\nEOF\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: sqlplus -S /nolog <<EOF\nconnect / as sysdba\nset feedback off\nselect log \b_mode from v\\$database;\n> exit;\n> EOF\n\nLOG_MODE\n------------\nARCHIVELOG",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: su - root",
@@ -123,7 +123,11 @@
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
+        " - 출력 내용: Oracle Corporation      SunOS 5.11      11.3    July 2018",
+        "",
+        "warning warning",
+        "You have new mail.",
+        "Sourcing /root/.profile-EIS...",
         "",
         "[점검 단계 3]",
         " - 실행 명령어: /usr/bin/id",
@@ -131,16 +135,18 @@
         " - 출력 내용: uid=0(root) gid=0(root)",
         "",
         "[점검 단계 4]",
-        " - 실행 명령어: su - oratips",
+        " - 실행 명령어: su - oracle",
         " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): Oracle Corporation      SunOS 5.10      Generic Patch   January 2005",
-        "oratips@exTMStotalDB1:~$",
+        " - 출력 내용(stdout): Oracle Corporation      SunOS 5.11      11.3    July 2018",
+        "",
+        "warning warning",
+        "citsdb1:/oracle/ >",
         " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 5]",
         " - 실행 명령어: whoami",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: oratips",
+        " - 출력 내용: oracle",
         "",
         "[점검 단계 6]",
         " - 실행 명령어: sqlplus -S /nolog <<EOF",
@@ -153,9 +159,9 @@
         " - 출력 내용: sqlplus -S /nolog <<EOF",
         "connect / as sysdba",
         "set feedback off",
-        "select log_mode from v\\$database;",
-        "exit;",
-        "EOF",
+        "select log \b_mode from v\\$database;",
+        "> exit;",
+        "> EOF",
         "",
         "LOG_MODE",
         "------------",

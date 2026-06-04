@@ -1,0 +1,35 @@
+{
+  "host": "193.1.0.206",
+  "port": 22,
+  "user": "admin",
+  "password": "admin",
+  "credentials": {
+    "NETWORK": [
+      {
+        "application_id": 80300,
+        "application_type_id": 30,
+        "application_type_name": "NETWORK",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "admin",
+          "password": "c#r7SAN1"          
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "execution_id": 81301,
+  "host_id": 81301,
+  "job_id": 81301,
+  "item": {
+    "inspection_code": "TUTORIAL-CISCO-PARAMIKO-01",
+    "item_id": 98301,
+    "application_id": 80300,
+    "application_type_id": 30,
+    "application_type_name": "NETWORK",
+    "application_name": "CISCO_IOS",
+    "application_family_name": "CISCO_IOS",
+    "threshold_list": []
+  }
+}

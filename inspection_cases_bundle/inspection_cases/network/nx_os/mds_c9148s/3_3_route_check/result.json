@@ -14,7 +14,7 @@
           "value1": "193.1.0.254"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show ip route'\nGATEWAY_RE = re.compile(r'Default gateway is\\s+(\\d+(?:\\.\\d+){3})')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        expected = str(self.get_threshold_var('gateway_ip', default='', value_type='str')).strip()\n        thresholds = {'gateway_ip': expected}\n        if not expected:\n            return self.fail('임계치 미정의', message='gateway_ip 값이 필요합니다.', thresholds=thresholds)\n\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)\n\n        match = GATEWAY_RE.search(out or '')\n        if not match:\n            return self.fail('라우팅 테이블 파싱 실패', message='Default gateway 값을 찾지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)\n\n        actual = match.group(1)\n        metrics = {'default_gateway': actual}\n        if actual != expected:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'Default gateway {actual}가 기준 {expected}와 다릅니다.', message='Default gateway 기준 불일치')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Default gateway가 기준값과 일치합니다.', message='라우팅 테이블 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show ip route'\nGATEWAY_RE = re.compile(r'Default gateway is\\s+(\\d+(?:\\.\\d+){3})')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        expected = str(self.get_threshold_var('gateway_ip', default='193.1.0.254', value_type='str')).strip()\n        thresholds = {'gateway_ip': expected}\n        if not expected:\n            return self.fail('임계치 미정의', message='gateway_ip 값이 필요합니다.', thresholds=thresholds)\n\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip(), thresholds=thresholds)\n\n        match = GATEWAY_RE.search(out or '')\n        if not match:\n            return self.fail('라우팅 테이블 파싱 실패', message='Default gateway 값을 찾지 못했습니다.', stdout=(out or '').strip(), thresholds=thresholds)\n\n        actual = match.group(1)\n        metrics = {'default_gateway': actual}\n        if actual != expected:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons=f'Default gateway {actual}가 기준 {expected}와 다릅니다.', message='Default gateway 기준 불일치')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Default gateway가 기준값과 일치합니다.', message='라우팅 테이블 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -32,7 +32,7 @@
         "    CONNECTION_METHOD = 'ssh'",
         "",
         "    def run(self):",
-        "        expected = str(self.get_threshold_var('gateway_ip', default='', value_type='str')).strip()",
+        "        expected = str(self.get_threshold_var('gateway_ip', default='193.1.0.254', value_type='str')).strip()",
         "        thresholds = {'gateway_ip': expected}",
         "        if not expected:",
         "            return self.fail('임계치 미정의', message='gateway_ip 값이 필요합니다.', thresholds=thresholds)",
@@ -79,13 +79,12 @@
         "gateway_ip": "193.1.0.254"
       },
       "reasons": "Default gateway가 기준값과 일치합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show ip route\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show ip route\n\nCodes: C - connected, S - static\n\nDefault gateway is 193.1.0.254\n\nC 193.1.0.0/19 is directly connected, mgmt0",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show ip route\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: \nCodes: C - connected, S - static\n\nDefault gateway is 193.1.0.254\n\nC 193.1.0.0/19 is directly connected, mgmt0",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show ip route",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CITS-SAN1# show ip route",
-        "",
+        " - 출력 내용: ",
         "Codes: C - connected, S - static",
         "",
         "Default gateway is 193.1.0.254",

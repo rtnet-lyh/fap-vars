@@ -116,13 +116,13 @@
       "status": "ok",
       "metrics": {
         "memory_usage_count": 2,
-        "max_used_percent": 28.17,
+        "max_used_percent": 28.21,
         "max_used_processor": "Management Processor",
         "over_threshold": [],
         "memory_usages": [
           {
             "processor": "Management Processor",
-            "used_percent": 28.17
+            "used_percent": 28.21
           },
           {
             "processor": "Packet Processor",
@@ -134,7 +134,7 @@
         "max_used_percent": 80.0
       },
       "reasons": "모든 Memory Usage 값이 임계치 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show resource\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  RESOURCE\n--------------------------------------------------------------------------------\n    Management Processor\n        CPU\n                Usage     : 2.43%\n\n        Memory\n                Total     : 1572864 kB\n                Used      : 443092 kB\n                Free      : 1129772 kB\n                Usage     : 28.17%\n\n    Packet Processor\n        CPU\n                Usage     : 2.68%\n\n        Memory\n                Total     : 14518804 kB\n                Used      : 2134320 kB\n                Free      : 12384484 kB\n                Usage     : 14.70%\n\n    Log Storage\n                Total     : 218043 MB\n                Used      : 1650 MB\n                Free      : 205316 MB\n                Usage     : 1%\n================================================================================",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show resource\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  RESOURCE\n--------------------------------------------------------------------------------\n    Management Processor\n\tCPU\n\t\tUsage     : 5.88%\n\n\tMemory\n\t\tTotal     : 1572864 kB\n\t\tUsed      : 443756 kB\n\t\tFree      : 1129108 kB\n\t\tUsage     : 28.21%\n\n    Packet Processor\n\tCPU\n\t\tUsage     : 3.91%\n\n\tMemory\n\t\tTotal     : 14518804 kB\n\t\tUsed      : 2134612 kB\n\t\tFree      : 12384192 kB\n\t\tUsage     : 14.70%\n\n    Log Storage\n\t\tTotal     : 218043 MB\n\t\tUsed      : 1655 MB\n\t\tFree      : 205311 MB\n\t\tUsage     : 1%\n================================================================================",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show resource",
@@ -143,33 +143,33 @@
         "  RESOURCE",
         "--------------------------------------------------------------------------------",
         "    Management Processor",
-        "        CPU",
-        "                Usage     : 2.43%",
+        "\tCPU",
+        "\t\tUsage     : 5.88%",
         "",
-        "        Memory",
-        "                Total     : 1572864 kB",
-        "                Used      : 443092 kB",
-        "                Free      : 1129772 kB",
-        "                Usage     : 28.17%",
+        "\tMemory",
+        "\t\tTotal     : 1572864 kB",
+        "\t\tUsed      : 443756 kB",
+        "\t\tFree      : 1129108 kB",
+        "\t\tUsage     : 28.21%",
         "",
         "    Packet Processor",
-        "        CPU",
-        "                Usage     : 2.68%",
+        "\tCPU",
+        "\t\tUsage     : 3.91%",
         "",
-        "        Memory",
-        "                Total     : 14518804 kB",
-        "                Used      : 2134320 kB",
-        "                Free      : 12384484 kB",
-        "                Usage     : 14.70%",
+        "\tMemory",
+        "\t\tTotal     : 14518804 kB",
+        "\t\tUsed      : 2134612 kB",
+        "\t\tFree      : 12384192 kB",
+        "\t\tUsage     : 14.70%",
         "",
         "    Log Storage",
-        "                Total     : 218043 MB",
-        "                Used      : 1650 MB",
-        "                Free      : 205316 MB",
-        "                Usage     : 1%",
+        "\t\tTotal     : 218043 MB",
+        "\t\tUsed      : 1655 MB",
+        "\t\tFree      : 205311 MB",
+        "\t\tUsage     : 1%",
         "================================================================================"
       ],
-      "message": "메모리 사용률 점검 정상: 최대 28.17%, 기준 80.0%."
+      "message": "메모리 사용률 점검 정상: 최대 28.21%, 기준 80.0%."
     }
   ],
   "failed_items": []

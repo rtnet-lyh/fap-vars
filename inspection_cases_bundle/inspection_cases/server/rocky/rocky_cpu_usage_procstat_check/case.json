@@ -1,6 +1,6 @@
 {
-  "host": "192.168.1.123",
-  "port": 22,
+  "host": "172.18.8.191",
+  "port": 2222,
   "user": "fap",
   "password": "",
   "credentials": {
@@ -16,7 +16,7 @@
           "become": "true",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "!ehfhrhdtk1"
         }
       }
     ]

@@ -4,20 +4,19 @@ import re
 
 from .common._base import BaseCheck
 
-
 COMMAND = 'show interface brief'
 ROW_RE = re.compile(r'^(fc\S+)\s+\S+\s+\S+\s+\S+\s+(\S+)')
-
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def _split(self, value):
         return [item for item in re.split(r'[\s,]+', str(value or '').strip()) if item]
 
     def run(self):
-        expected = self._split(self.get_threshold_var('up_interface', default='', value_type='str'))
+        expected = self._split(self.get_threshold_var('up_interface', default='fc1/1,fc1/2', value_type='str'))
         thresholds = {'up_interface': expected}
         if not expected:
             return self.fail('임계치 미정의', message='up_interface 값이 필요합니다.', thresholds=thresholds)

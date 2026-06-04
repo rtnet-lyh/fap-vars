@@ -81,7 +81,7 @@
       },
       "thresholds": {},
       "reasons": "출력에서 0.0.0.0 경로가 확인되었습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show route 0.0.0.0\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: inet.0: 3 destinations, 3 routes (3 active, 0 holddown, 0 hidden)\n+ = Active Route, - = Last Active, * = Both\n\n0.0.0.0/0          *[Static/5] 289w0d 15:39:48\n                    >  to 172.18.8.254 via irb.808",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show route 0.0.0.0\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: inet.0: 3 destinations, 3 routes (3 active, 0 holddown, 0 hidden)\n+ = Active Route, - = Last Active, * = Both\n\n0.0.0.0/0          *[Static/5] 289w1d 13:49:04\n                    >  to 172.18.8.254 via irb.808\n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show route 0.0.0.0",
@@ -89,8 +89,10 @@
         " - 출력 내용: inet.0: 3 destinations, 3 routes (3 active, 0 holddown, 0 hidden)",
         "+ = Active Route, - = Last Active, * = Both",
         "",
-        "0.0.0.0/0          *[Static/5] 289w0d 15:39:48",
-        "                    >  to 172.18.8.254 via irb.808"
+        "0.0.0.0/0          *[Static/5] 289w1d 13:49:04",
+        "                    >  to 172.18.8.254 via irb.808",
+        "",
+        "{master:0}"
       ],
       "message": "라우팅 Table 상태 점검 정상."
     }

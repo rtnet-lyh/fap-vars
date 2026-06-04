@@ -2,7 +2,6 @@
 
 import argparse
 import configparser
-import html
 import json
 import os
 import re
@@ -22,7 +21,6 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 DEFAULT_FAP_CONFIG_FILE = Path("/fap/ansible/conf/fap.conf")
 DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parent / "output"
 INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
-INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 MAX_SHEETS_PER_WORKBOOK = 250
 
 
@@ -390,12 +388,6 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--job-id", type=int, required=True, help="Target inspection job_id.")
     parser.add_argument("--user-id", help="Optional user identifier for traceability.")
     parser.add_argument("--report-type", default="default", help="Registered report type. Default: default")
-    parser.add_argument(
-        "--output-format",
-        choices=("xlsx", "docx"),
-        default="xlsx",
-        help="Output format. xlsx creates Excel reports; docx creates one document per inspection area.",
-    )
     parser.add_argument("--output-dir", help="Optional output root. A dated directory is created below it.")
     parser.add_argument("--output-name", default="점검보고서", help="Output filename prefix. Default: 점검보고서")
     parser.add_argument("--file-name", help="Optional exact output filename. When set, timestamp is not appended.")
@@ -1656,28 +1648,22 @@ def normalize_sheet_name(raw_name: str, used_names: Optional[Set[str]] = None) -
     return candidate
 
 
-def build_output_path(output_name: str, output_dir: Optional[str] = None, suffix: str = ".xlsx") -> Path:
+def build_output_path(output_name: str, output_dir: Optional[str] = None) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     date_dir = datetime.now().strftime("%Y%m%d")
     root = Path(output_dir).expanduser() if output_dir else DEFAULT_OUTPUT_ROOT
     target_dir = root / date_dir
     target_dir.mkdir(parents=True, exist_ok=True)
     output_stem = normalize_output_name(output_name)
-    return (target_dir / f"{output_stem}_{timestamp}{normalize_suffix(suffix)}").resolve()
+    return (target_dir / f"{output_stem}_{timestamp}.xlsx").resolve()
 
 
-def build_named_output_path(
-    file_name: str,
-    output_path: Optional[str] = None,
-    output_dir: Optional[str] = None,
-    suffix: str = ".xlsx",
-) -> Path:
-    normalized_suffix = normalize_suffix(suffix)
+def build_named_output_path(file_name: str, output_path: Optional[str] = None, output_dir: Optional[str] = None) -> Path:
     candidate_name = Path(file_name).name.strip()
     if not candidate_name:
-        candidate_name = f"점검보고서{normalized_suffix}"
-    if Path(candidate_name).suffix.lower() != normalized_suffix:
-        candidate_name = f"{Path(candidate_name).stem}{normalized_suffix}"
+        candidate_name = "점검보고서.xlsx"
+    if Path(candidate_name).suffix.lower() != ".xlsx":
+        candidate_name = f"{candidate_name}.xlsx"
 
     if output_path:
         target_dir = Path(output_path).expanduser()
@@ -1690,11 +1676,10 @@ def build_named_output_path(
     return (target_dir / candidate_name).resolve()
 
 
-def build_explicit_output_path(output_path: str, suffix: str = ".xlsx") -> Path:
-    normalized_suffix = normalize_suffix(suffix)
+def build_explicit_output_path(output_path: str) -> Path:
     candidate = Path(output_path).expanduser()
-    if candidate.suffix.lower() != normalized_suffix:
-        candidate = candidate.with_suffix(normalized_suffix)
+    if candidate.suffix.lower() != ".xlsx":
+        candidate = candidate.with_suffix(".xlsx")
     candidate.parent.mkdir(parents=True, exist_ok=True)
     return candidate.resolve()
 
@@ -1710,374 +1695,12 @@ def build_zip_output_path(output_path: Path) -> Path:
     return output_path.with_suffix(".zip")
 
 
-def normalize_suffix(suffix: str) -> str:
-    candidate = (suffix or ".xlsx").strip().lower()
-    return candidate if candidate.startswith(".") else f".{candidate}"
-
-
 def build_zip_archive(saved_paths: Sequence[Path], archive_path: Path) -> Path:
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(str(archive_path), "w", compression=zipfile.ZIP_DEFLATED) as zip_handle:
         for saved_path in saved_paths:
             zip_handle.write(str(saved_path), arcname=saved_path.name)
     return archive_path.resolve()
-
-
-def save_government_checklist_docx_reports(
-    summary_rows: Sequence[SummaryRow],
-    detail_rows: Sequence[DetailRow],
-    output_path: Path,
-) -> Path:
-    if not summary_rows:
-        raise RuntimeError("summary query returned no rows")
-
-    grouped_details = defaultdict(list)
-    for detail in detail_rows:
-        grouped_details[detail.host_key].append(detail)
-
-    area_sections = build_government_checklist_area_sections(summary_rows, grouped_details)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    document_dir = output_path.with_suffix("")
-    document_dir.mkdir(parents=True, exist_ok=True)
-
-    saved_paths = []
-    used_names = set()
-    for section_index, section in enumerate(area_sections, start=1):
-        area_name = section["area_name"]
-        filename = build_area_document_filename(output_path.stem, area_name, section_index, used_names)
-        document_path = document_dir / filename
-        document_bytes = build_government_checklist_docx(area_name, section["host_entries"])
-        document_path.write_bytes(document_bytes)
-        saved_paths.append(document_path)
-
-    if len(saved_paths) == 1:
-        return saved_paths[0].resolve()
-    return build_zip_archive(saved_paths, build_zip_output_path(output_path))
-
-
-def build_area_document_filename(
-    output_stem: str,
-    area_name: str,
-    section_index: int,
-    used_names: Set[str],
-) -> str:
-    cleaned_area = INVALID_FILENAME_CHARS.sub("_", area_name or "").strip().strip(".")
-    cleaned_area = re.sub(r"\s+", " ", cleaned_area) or "점검 영역"
-    base_name = f"{output_stem}_{section_index:02d}_{cleaned_area}"
-    candidate = f"{base_name}.docx"
-    suffix = 1
-    while candidate.lower() in used_names:
-        candidate = f"{base_name}_{suffix}.docx"
-        suffix += 1
-    used_names.add(candidate.lower())
-    return candidate
-
-
-def build_government_checklist_docx(
-    area_name: str,
-    host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
-) -> bytes:
-    document_xml = build_government_checklist_document_xml(area_name, host_entries)
-    package_files = {
-        "[Content_Types].xml": build_docx_content_types_xml(),
-        "_rels/.rels": build_docx_root_rels_xml(),
-        "docProps/core.xml": build_docx_core_properties_xml(),
-        "docProps/app.xml": build_docx_app_properties_xml(),
-        "word/document.xml": document_xml,
-        "word/_rels/document.xml.rels": build_docx_document_rels_xml(),
-        "word/styles.xml": build_docx_styles_xml(),
-        "word/settings.xml": build_docx_settings_xml(),
-        "word/webSettings.xml": build_docx_web_settings_xml(),
-        "word/fontTable.xml": build_docx_font_table_xml(),
-    }
-
-    from io import BytesIO
-
-    buffer = BytesIO()
-    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as zip_handle:
-        for filename, content in package_files.items():
-            zip_handle.writestr(filename, content.encode("utf-8"))
-    return buffer.getvalue()
-
-
-def build_government_checklist_document_xml(
-    area_name: str,
-    host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
-) -> str:
-    inspected_area = (area_name or "").strip() or "점검 영역"
-    host_labels = [build_host_label(summary_row) for summary_row, _details in host_entries]
-    checked_time = format_datetime(first_present_value(*build_government_checklist_checked_time_candidates(host_entries)))
-    host_detail_indexes = [
-        index_details_by_government_checklist_item(details_for_host) for _summary_row, details_for_host in host_entries
-    ]
-    item_entries = build_government_checklist_item_entries(host_entries)
-    all_details_for_area = [detail for _summary_row, details_for_host in host_entries for detail in details_for_host]
-
-    body_parts = [
-        build_docx_paragraph("[서식 1] 정보시스템 상태점검", style="Normal"),
-        build_docx_paragraph(f"{inspected_area} 점검 일지", style="Title", align="center"),
-        build_docx_paragraph(f"□ {inspected_area} 점검", style="Normal"),
-        build_docx_paragraph(f"○ 장비명: {', '.join(host_labels) if host_labels else '-'}", style="Normal"),
-        build_docx_paragraph(f"○ 점검 일자: {checked_time}", style="Normal"),
-        build_government_checklist_docx_table(item_entries, host_entries, host_detail_indexes),
-        build_docx_paragraph(f"□ 점검 결과 요약: {build_government_checklist_result_summary(all_details_for_area)}"),
-        build_docx_paragraph(f"□ 주요 조치내역: {build_government_checklist_action_summary(host_entries)}"),
-        build_docx_paragraph("점검자: __________ (서명)        확인자: __________ (서명)", align="center"),
-    ]
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        "<w:body>"
-        + "".join(body_parts)
-        + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
-        '<w:pgMar w:top="1134" w:right="850" w:bottom="1134" w:left="850" w:header="708" w:footer="708" w:gutter="0"/>'
-        "</w:sectPr></w:body></w:document>"
-    )
-
-
-def build_government_checklist_docx_table(
-    item_entries: Sequence[Tuple[str, str]],
-    host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
-    host_detail_indexes: Sequence[Mapping[str, DetailRow]],
-) -> str:
-    column_count = 2 + (len(host_entries) * 3)
-    grid_columns = ['<w:gridCol w:w="650"/>', '<w:gridCol w:w="2600"/>']
-    for _summary_row, _details_for_host in host_entries:
-        grid_columns.extend(
-            ['<w:gridCol w:w="720"/>', '<w:gridCol w:w="820"/>', '<w:gridCol w:w="1550"/>']
-        )
-
-    rows = [
-        "<w:tr>"
-        + build_docx_table_cell("번호", v_merge="restart", width=650, align="center", bold=True)
-        + build_docx_table_cell("점검항목", v_merge="restart", width=2600, align="center", bold=True)
-        + "".join(
-            build_docx_table_cell(build_host_label(summary_row), grid_span=3, align="center", bold=True)
-            for summary_row, _details_for_host in host_entries
-        )
-        + "</w:tr>",
-        "<w:tr>"
-        + build_docx_table_cell("", v_merge="continue", width=650)
-        + build_docx_table_cell("", v_merge="continue", width=2600)
-        + "".join(
-            build_docx_table_cell(header, align="center", bold=True)
-            for _summary_row, _details_for_host in host_entries
-            for header in ("정상", "비정상", "비고")
-        )
-        + "</w:tr>",
-    ]
-
-    if not item_entries:
-        rows.append(
-            "<w:tr>"
-            + build_docx_table_cell("상세 데이터가 없습니다.", grid_span=max(column_count, 1))
-            + "</w:tr>"
-        )
-    else:
-        for item_number, (item_key, item_label) in enumerate(item_entries, start=1):
-            result_cells = []
-            for host_detail_index in host_detail_indexes:
-                detail_row = host_detail_index.get(item_key)
-                result_cells.extend(build_government_checklist_result_cells(detail_row))
-            rows.append(
-                "<w:tr>"
-                + build_docx_table_cell(str(item_number), align="center")
-                + build_docx_table_cell(item_label)
-                + "".join(
-                    build_docx_table_cell(
-                        value,
-                        align="center" if index % 3 in {0, 1} else "left",
-                    )
-                    for index, value in enumerate(result_cells)
-                )
-                + "</w:tr>"
-            )
-
-    return (
-        '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'
-        '<w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        '<w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        '<w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        '<w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
-        "</w:tblBorders></w:tblPr>"
-        f"<w:tblGrid>{''.join(grid_columns)}</w:tblGrid>"
-        + "".join(rows)
-        + "</w:tbl>"
-    )
-
-
-def build_docx_table_cell(
-    text: Any,
-    *,
-    grid_span: int = 1,
-    v_merge: Optional[str] = None,
-    width: Optional[int] = None,
-    align: str = "left",
-    bold: bool = False,
-) -> str:
-    properties = []
-    if width:
-        properties.append(f'<w:tcW w:w="{int(width)}" w:type="dxa"/>')
-    if grid_span > 1:
-        properties.append(f'<w:gridSpan w:val="{int(grid_span)}"/>')
-    if v_merge == "restart":
-        properties.append('<w:vMerge w:val="restart"/>')
-    elif v_merge == "continue":
-        properties.append("<w:vMerge/>")
-    return f"<w:tc><w:tcPr>{''.join(properties)}</w:tcPr>{build_docx_paragraph(text, align=align, bold=bold)}</w:tc>"
-
-
-def build_docx_paragraph(
-    text: Any,
-    *,
-    style: str = "Normal",
-    align: str = "left",
-    bold: bool = False,
-) -> str:
-    style_xml = f'<w:pStyle w:val="{xml_escape(style)}"/>' if style != "Normal" else ""
-    align_xml = f'<w:jc w:val="{xml_escape(align)}"/>' if align else ""
-    bold_xml = "<w:b/>" if bold else ""
-    text_xml = build_docx_text_runs(text)
-    return (
-        f"<w:p><w:pPr>{style_xml}{align_xml}</w:pPr>"
-        f'<w:r><w:rPr><w:rFonts w:ascii="Malgun Gothic" w:eastAsia="Malgun Gothic" w:hAnsi="Malgun Gothic"/>{bold_xml}</w:rPr>'
-        f"{text_xml}</w:r></w:p>"
-    )
-
-
-def build_docx_text_runs(text: Any) -> str:
-    lines = str(text if text is not None else "").splitlines() or [""]
-    parts = []
-    for line_index, line in enumerate(lines):
-        if line_index:
-            parts.append("<w:br/>")
-        parts.append(f'<w:t xml:space="preserve">{xml_escape(line)}</w:t>')
-    return "".join(parts)
-
-
-def xml_escape(value: Any) -> str:
-    return html.escape(str(value if value is not None else ""), quote=True)
-
-
-def build_docx_content_types_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-        '<Default Extension="xml" ContentType="application/xml"/>'
-        '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
-        '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
-        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-        '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
-        '<Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>'
-        '<Override PartName="/word/webSettings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"/>'
-        '<Override PartName="/word/fontTable.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>'
-        "</Types>"
-    )
-
-
-def build_docx_root_rels_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'
-        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>'
-        "</Relationships>"
-    )
-
-
-def build_docx_document_rels_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
-        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>'
-        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings" Target="webSettings.xml"/>'
-        '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/>'
-        "</Relationships>"
-    )
-
-
-def build_docx_core_properties_xml() -> str:
-    generated_at = datetime.now().isoformat(timespec="seconds") + "Z"
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
-        'xmlns:dc="http://purl.org/dc/elements/1.1/" '
-        'xmlns:dcterms="http://purl.org/dc/terms/" '
-        'xmlns:dcmitype="http://purl.org/dc/dcmitype/" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-        "<dc:title>점검보고서</dc:title>"
-        "<dc:creator>FAP Report Generator</dc:creator>"
-        "<cp:lastModifiedBy>FAP Report Generator</cp:lastModifiedBy>"
-        f'<dcterms:created xsi:type="dcterms:W3CDTF">{generated_at}</dcterms:created>'
-        f'<dcterms:modified xsi:type="dcterms:W3CDTF">{generated_at}</dcterms:modified>'
-        "</cp:coreProperties>"
-    )
-
-
-def build_docx_app_properties_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" '
-        'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
-        "<Application>FAP Report Generator</Application>"
-        "<DocSecurity>0</DocSecurity>"
-        "<ScaleCrop>false</ScaleCrop>"
-        "<Company></Company>"
-        "<LinksUpToDate>false</LinksUpToDate>"
-        "<SharedDoc>false</SharedDoc>"
-        "<HyperlinksChanged>false</HyperlinksChanged>"
-        "<AppVersion>1.0</AppVersion>"
-        "</Properties>"
-    )
-
-
-def build_docx_settings_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        '<w:zoom w:percent="100"/>'
-        '<w:defaultTabStop w:val="720"/>'
-        '<w:compat><w:compatSetting w:name="compatibilityMode" '
-        'w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat>'
-        "</w:settings>"
-    )
-
-
-def build_docx_web_settings_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:webSettings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        "<w:optimizeForBrowser/>"
-        "</w:webSettings>"
-    )
-
-
-def build_docx_font_table_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        '<w:font w:name="Malgun Gothic"><w:family w:val="swiss"/><w:pitch w:val="variable"/></w:font>'
-        "</w:fonts>"
-    )
-
-
-def build_docx_styles_xml() -> str:
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        '<w:style w:type="paragraph" w:default="1" w:styleId="Normal">'
-        '<w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Malgun Gothic" w:eastAsia="Malgun Gothic" w:hAnsi="Malgun Gothic"/><w:sz w:val="20"/></w:rPr>'
-        "</w:style>"
-        '<w:style w:type="paragraph" w:styleId="Title">'
-        '<w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="32"/></w:rPr>'
-        "</w:style>"
-        "</w:styles>"
-    )
 
 
 def build_result_payload(
@@ -2298,23 +1921,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print(json.dumps(payload, ensure_ascii=False))
             return 1
 
-        output_suffix = ".docx" if args.output_format == "docx" else ".xlsx"
+        generator = get_report_generator(args.report_type)
         if args.file_name:
-            output_path = build_named_output_path(args.file_name, args.output_path, args.output_dir, output_suffix)
+            output_path = build_named_output_path(args.file_name, args.output_path, args.output_dir)
         elif args.output_path:
-            output_path = build_explicit_output_path(args.output_path, output_suffix)
+            output_path = build_explicit_output_path(args.output_path)
         else:
-            output_path = build_output_path(args.output_name, args.output_dir, output_suffix)
+            output_path = build_output_path(args.output_name, args.output_dir)
+        saved_paths = generator.save_workbooks(summary_rows, detail_rows, output_path)
         msg = "success"
-        if args.output_format == "docx":
-            primary_report_path = str(save_government_checklist_docx_reports(summary_rows, detail_rows, output_path))
-        else:
-            generator = get_report_generator(args.report_type)
-            saved_paths = generator.save_workbooks(summary_rows, detail_rows, output_path)
-            primary_report_path = str(saved_paths[0])
-            if len(saved_paths) > 1:
-                archive_path = build_zip_archive(saved_paths, build_zip_output_path(output_path))
-                primary_report_path = str(archive_path)
+        primary_report_path = str(saved_paths[0])
+        if len(saved_paths) > 1:
+            archive_path = build_zip_archive(saved_paths, build_zip_output_path(output_path))
+            primary_report_path = str(archive_path)
 
         payload = build_result_payload(
             result="success",

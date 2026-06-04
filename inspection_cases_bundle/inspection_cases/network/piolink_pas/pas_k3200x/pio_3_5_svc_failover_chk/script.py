@@ -59,7 +59,7 @@ class Check(BaseCheck):
             'vrrp_rows': vrrp_rows,
         }
         if invalid_rows:
-            return self.warn(metrics=metrics, thresholds={}, reasons='VRRP Running 또는 Status 기준을 만족하지 않는 행이 있습니다.', message=f'Failover 상태 경고: 비정상 VRRP {len(invalid_rows)}개.')
+            return self.fail(error='VRRP Running 또는 Status 기준을 만족하지 않는 행이 있습니다.', metrics=metrics, thresholds={}, reasons='VRRP Running 또는 Status 기준을 만족하지 않는 행이 있습니다.', message=f'Failover 상태 경고: 비정상 VRRP {len(invalid_rows)}개.')
         return self.ok(metrics=metrics, thresholds={}, reasons='VRRP Running이 master/backup이고 Status가 enable입니다.', message=f'Failover 상태 점검 정상: VRRP {len(vrrp_rows)}개.')
 
 

@@ -4,8 +4,8 @@ import re
 from .common._base import BaseCheck
 
 
-METASTAT_COMMAND = 'metastat'
-
+CHECK_COMMAND1 = 'zpool status'
+CHECK_COMMAND2 = 'zpool status -x'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -13,231 +13,52 @@ class Check(BaseCheck):
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
 
-    def _split_blocks(self, text):
-        sections = [section.strip() for section in re.split(r'\n\s*\n', (text or '').strip()) if section.strip()]
-        return sections
-
-    def _parse_mirror_blocks(self, text):
-        mirror_entries = []
-        submirror_state_map = {}
-        sections = self._split_blocks(text)
-
-        for section in sections:
-            lines = [line.rstrip() for line in section.splitlines() if line.strip()]
-            if not lines:
-                continue
-
-            first_line = lines[0].strip()
-            submirror_match = re.match(r'^(d\d+):\s+Submirror of\s+(d\d+)$', first_line)
-            if submirror_match:
-                submirror_name = submirror_match.group(1)
-                parent_mirror = submirror_match.group(2)
-                submirror_state_match = re.search(r'^\s*State:\s*(.+)$', section, re.MULTILINE)
-                submirror_state_map[submirror_name] = {
-                    'parent_mirror': parent_mirror,
-                    'state': submirror_state_match.group(1).strip() if submirror_state_match else '',
-                }
-                continue
-
-            mirror_match = re.match(r'^(d\d+):\s+Mirror$', first_line)
-            if not mirror_match:
-                continue
-
-            mirror_name = mirror_match.group(1)
-            submirrors = re.findall(r'^\s*Submirror\s+\d+:\s+(\S+)$', section, re.MULTILINE)
-            state_matches = re.findall(r'^\s*State:\s*(.+)$', section, re.MULTILINE)
-            overall_state = state_matches[-1].strip() if state_matches else ''
-            status_match = re.search(r'^\s*Status:\s*(.+)$', section, re.MULTILINE)
-            status_text = status_match.group(1).strip() if status_match else ''
-
-            mirror_entries.append({
-                'mirror_name': mirror_name,
-                'submirrors': submirrors,
-                'mirror_state': overall_state,
-                'mirror_status': status_text,
-                'section': section,
-            })
-
-        return {
-            'mirrors': mirror_entries,
-            'submirror_state_map': submirror_state_map,
-        }
-
-    def _build_mirror_summary(self, mirrors, limit=3):
-        if not mirrors:
-            return 'mirror 요약 없음'
-
-        summaries = []
-        for mirror in mirrors[:limit]:
-            summaries.append(
-                f"{mirror['mirror_name']} state={mirror['mirror_state'] or 'unknown'}, submirror {len(mirror['submirrors'])}개"
-            )
-        if len(mirrors) > limit:
-            summaries.append(f"외 {len(mirrors) - limit}개")
-        return ', '.join(summaries)
-
     def run(self):
-        required_state = self.get_threshold_var('required_state', default='Okay', value_type='str')
-        min_submirror_count = self.get_threshold_var('min_submirror_count', default=2, value_type='int')
-        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+        try:
+            ok_keyword = self.get_threshold_var('ok_keyword', default='all pools are healthy', value_type='str')        
+            metrics = {}
 
-        result = self._run_solaris_commands([
-            {'command': METASTAT_COMMAND, 'timeout': 25},
-        ], become_required=True)[0]
-        rc = result['rc']
-        out = result['stdout']
-        err = result['stderr']
+            result = self._run_solaris_commands([
+                {'command': CHECK_COMMAND1, 'timeout': 1},
+                {'command': CHECK_COMMAND2, 'timeout': 1},
+            ], become_required=True)
 
-        if self._is_connection_error(rc, err):
+            result_check_command1 = result[-2]
+            result_check_command2 = result[-1]
+            
+            rc = result_check_command1['rc']
+            out = result_check_command1['stdout']
+            err = result_check_command1['stderr']        
+            metrics["zpool_status_output"] = out
+
+            rc = result_check_command2['rc']
+            out = result_check_command2['stdout']
+            err = result_check_command2['stderr']          
+            metrics["zpool_healthy_output"] = out
+
+            is_pass = True if re.search(ok_keyword, out) else False
+            metrics["is_pass"] = is_pass
+            
+            if is_pass:
+                return self.ok(
+                    metrics=metrics,
+                    thresholds={'ok_keyword': ok_keyword},
+                    reasons=f"디스크 이중화가 정상 입니다. {CHECK_COMMAND2} 결과에 {ok_keyword}가 발견되었습니다.",
+                    message=f"디스크 이중화가 정상 입니다. {CHECK_COMMAND2} 결과에 {ok_keyword}가 발견되었습니다.",
+                )
+            else:
+                return self.fail(
+                    error=f"디스크 이중화가 비정상 입니다.",
+                    metrics=metrics,
+                    thresholds={'ok_keyword': ok_keyword},
+                    reasons=f"디스크 이중화 점검이 필요합니다. {CHECK_COMMAND2} 결과에 {ok_keyword}가 발견되지 않았습니다.",
+                    message=f"디스크 이중화 점검이 필요합니다. {CHECK_COMMAND2} 결과에 {ok_keyword}가 발견되지 않았습니다.",
+                )
+        except Exception as e:
             return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
+                error=str(e),
+                reasons=str(e),
+                message=str(e),
             )
-
-        text = (out or '').strip()
-
-        if rc != 0:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    '현재 상태: metastat 명령을 정상적으로 실행하지 못했습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        command_error = self._detect_command_error(
-            text,
-            err,
-            extra_patterns=['permission denied', 'not supported', 'unknown userland error'],
-        )
-        if command_error:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    f'현재 상태: metastat 출력에서 실행 오류가 확인되었습니다: {command_error}'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
-        combined_output = '\n'.join(part for part in (text, (err or '').strip()) if part)
-        matched_failure_keywords = [
-            keyword for keyword in failure_keywords
-            if keyword.lower() in combined_output.lower()
-        ]
-        if matched_failure_keywords:
-            return self.fail(
-                'Disk 이중화 실패 키워드 감지',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        parsed = self._parse_mirror_blocks(text)
-        mirrors = parsed['mirrors']
-        submirror_state_map = parsed['submirror_state_map']
-        if not mirrors:
-            return self.fail(
-                'Mirror 정보 없음',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    '현재 상태: metastat 출력에서 Mirror 볼륨 정보를 찾지 못했습니다.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        mirror_summary = self._build_mirror_summary(mirrors)
-        abnormal_mirrors = []
-        abnormal_submirrors = []
-        missing_status_mirrors = []
-        insufficient_submirrors = []
-
-        for mirror in mirrors:
-            mirror_name = mirror['mirror_name']
-            submirrors = mirror['submirrors']
-            mirror_state = mirror['mirror_state']
-            status_text = mirror['mirror_status']
-
-            if len(submirrors) < min_submirror_count:
-                insufficient_submirrors.append(f'{mirror_name}={len(submirrors)}')
-
-            if mirror_state.lower() != required_state.lower():
-                abnormal_mirrors.append(f'{mirror_name}={mirror_state or "unknown"}')
-
-            if 'functioning properly' not in status_text.lower():
-                missing_status_mirrors.append(f'{mirror_name}={status_text or "unknown"}')
-
-            for submirror_name in submirrors:
-                submirror_info = submirror_state_map.get(submirror_name, {})
-                submirror_state = (submirror_info.get('state') or '').strip()
-                if submirror_state.lower() != required_state.lower():
-                    abnormal_submirrors.append(f'{submirror_name}={submirror_state or "unknown"}')
-
-        if insufficient_submirrors:
-            return self.fail(
-                'Submirror 수 부족',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    f'현재 상태: 기준 {min_submirror_count}개 이상을 만족하지 못한 mirror가 있습니다: {insufficient_submirrors}. '
-                    f'mirror 요약: {mirror_summary}.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        if abnormal_mirrors or abnormal_submirrors or missing_status_mirrors:
-            return self.fail(
-                'Disk 이중화 상태 비정상',
-                message=(
-                    'Solaris Disk 이중화 점검에 실패했습니다. '
-                    f'현재 상태: 비정상 mirror={abnormal_mirrors or ["없음"]}, '
-                    f'비정상 submirror={abnormal_submirrors or ["없음"]}, '
-                    f'정상 status 미확인 mirror={missing_status_mirrors or ["없음"]}, '
-                    f'mirror 요약: {mirror_summary}.'
-                ),
-                stdout=text,
-                stderr=(err or '').strip(),
-            )
-
-        primary_mirror = mirrors[0]
-        return self.ok(
-            metrics={
-                    'mirror_count': len(mirrors),
-                'mirror_name': primary_mirror['mirror_name'],
-                'submirror_count': len(primary_mirror['submirrors']),
-                'mirror_state': primary_mirror['mirror_state'],
-                'mirror_status': primary_mirror['mirror_status'],
-                'submirrors': primary_mirror['submirrors'],
-                'mirror_rows': mirrors,
-                'submirror_state_map': submirror_state_map,
-                'matched_failure_keywords': matched_failure_keywords,
-            },
-            thresholds={
-                'required_state': required_state,
-                'min_submirror_count': min_submirror_count,
-                'failure_keywords': failure_keywords,
-            },
-            reasons=(
-                f'mirror {len(mirrors)}개와 submirror 상태가 모두 {required_state}이며 '
-                '정상 status 문구도 확인되었습니다.'
-            ),
-            message=(
-                'Solaris Disk 이중화가 정상입니다. '
-                f'현재 상태: mirror {len(mirrors)}개, 대표 mirror {primary_mirror["mirror_name"]} '
-                f'state={primary_mirror["mirror_state"]}, status={primary_mirror["mirror_status"]}, '
-                f'submirror {len(primary_mirror["submirrors"])}개 (기준 {min_submirror_count}개 이상), '
-                f'mirror 요약: {mirror_summary}.'
-            ),
-        )
-
 
 CHECK_CLASS = Check

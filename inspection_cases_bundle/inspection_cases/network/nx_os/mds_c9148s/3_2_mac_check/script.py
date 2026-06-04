@@ -12,6 +12,7 @@ ARP_RE = re.compile(r'^\S+\s+(?P<ip>\d+(?:\.\d+){3})\s+\S+\s+(?P<mac>[0-9a-f.]+)
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def run(self):
         rc, out, err = self._ssh(COMMAND)

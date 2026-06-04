@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
+import re
+from datetime import datetime, date
 
-
-RMAN_SPFILE_COMMAND = """rman target / <<EOF
+RMAN_SPFILE_COMMAND = '''rman target / <<EOF
 LIST BACKUP OF SPFILE;
 EXIT;
-EOF"""
+EOF'''
 
 
 class Check(BaseCheck):
@@ -15,9 +16,50 @@ class Check(BaseCheck):
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
 
+    def _parse_completion_time(self, output, threshold_days=30):
+        results = {
+            "is_pass": False,
+            "latest_completion_time": None,
+            "elapsed_days": None,
+            "threshold_days": threshold_days,
+            "message": ""
+        }
+
+        date_matches = re.findall(
+            r"\d{2}:\d{2}:\d{2}\s+(\d{2}-[A-Z]+-\d{2})",
+            output.upper()
+        )   
+
+        if not date_matches:
+            results["message"] = "Completion Time 정보를 찾지 못했습니다."
+
+        else:
+            completion_dates = [                
+                datetime.strptime(d, "%d-%b-%y").date()
+                for d in date_matches
+            ]
+        
+            oldest_date = min(completion_dates)
+
+            elapsed_days = (date.today() - oldest_date).days
+
+            results.update({
+                "is_pass": elapsed_days <= threshold_days,
+                "oldes_completion_time": oldest_date.strftime("%Y-%m-%d"),
+                "elapsed_days": elapsed_days,
+                "message":(
+                    "정상"
+                    if elapsed_days <= threshold_days
+                    else f"{threshold_days}일 이상 경과"
+                )
+            })
+
+        return results
+
     def run(self):
+        pasred = {}
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
-        reference_date = self.get_threshold_var('backup_reference_date', default='21-MAY-26', value_type='str')
+        threshold_days = self.get_threshold_var('threshold_days', default=30, value_type='int')
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,
@@ -36,31 +78,31 @@ class Check(BaseCheck):
         if result.get('rc') != 0:
             return self.fail('RMAN SPFILE 백업 조회 실패', message='RMAN LIST BACKUP OF SPFILE을 실행하지 못했습니다.', stdout=stdout, stderr=stderr)
 
-        match_count = stdout.upper().count(str(reference_date or '').upper())
+        pasred = self._parse_completion_time(stdout, threshold_days)
+        
         metrics = {
             'oracle_account': oracle_account,
             'verified_oracle_account': switch.get('actual_user') or '',
-            'backup_reference_date_match_count': match_count,
+            'backup_threshold_days_result': pasred,
         }
         thresholds = {
             'oracle_account': oracle_account,
-            'backup_reference_date': reference_date,
+            'threshold_days': threshold_days,
         }
-        if not reference_date or match_count < 1:
+        if not pasred.get("is_pass"):
             return self.fail(
                 'SPFILE 백업 기준 날짜 미확인',
                 metrics=metrics,
                 thresholds=thresholds,
-                message='RMAN SPFILE 백업 출력에서 기준 날짜 문자열을 찾지 못했습니다.',
+                message=f'가장 오래된 백업날짜가 {threshold_days}을 초과 했습니다.',
                 stdout=stdout,
                 stderr=stderr,
             )
         return self.ok(
             metrics=metrics,
             thresholds=thresholds,
-            reasons='RMAN SPFILE 백업 출력에 기준 날짜 문자열이 있습니다.',
-            message='환경 설정 파일 백업 점검 정상',
+            reasons=f'가장 오래된 백업날짜가 {threshold_days}일 내에 있습니다.',
+            message=f'가장 오래된 백업날짜가 {threshold_days}일 내에 있습니다.',
         )
-
 
 CHECK_CLASS = Check

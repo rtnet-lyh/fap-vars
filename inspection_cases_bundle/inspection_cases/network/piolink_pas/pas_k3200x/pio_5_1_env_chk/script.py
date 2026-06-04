@@ -75,7 +75,7 @@ class Check(BaseCheck):
             'fans': fans,
         }
         if bad_powers or bad_fans or not storage_ok:
-            return self.warn(metrics=metrics, thresholds={}, reasons='Power, Fan, Storage 중 기준을 만족하지 않는 항목이 있습니다.', message=f'환경 상태 경고: Power {len(bad_powers)}개, Fan {len(bad_fans)}개, Storage={storage_condition}.')
+            return self.fail(error="Power, Fan, Storage 중 기준을 만족하지 않는 항목이 있습니다.", metrics=metrics, thresholds={}, reasons='Power, Fan, Storage 중 기준을 만족하지 않는 항목이 있습니다.', message=f'환경 상태 경고: Power {len(bad_powers)}개, Fan {len(bad_fans)}개, Storage={storage_condition}.')
         return self.ok(metrics=metrics, thresholds={}, reasons='Power 상태가 ON, Fan 상태가 ON, Storage 상태가 Good입니다.', message=f'전원/FAN 등 점검 정상: Power {len(powers)}개, Fan {len(fans)}개.')
 
 

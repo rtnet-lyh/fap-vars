@@ -1,0 +1,67 @@
+{
+  "items": [
+    {
+      "inspection_code": "TUTORIAL-CISCO-PARAMIKO-01",
+      "item_id": 98301,
+      "application_id": 80300,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "CISCO_IOS",
+      "application_family_name": "CISCO_IOS",
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\nfrom .common._base import BaseCheck\nimport traceback\n\nCOMMAND = (\"show processes cpu\")\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):        \n        \n        rc, out, err = self._ssh(COMMAND, become=True)\n        \n        return self.ok(\n            metrics={},\n            thresholds={},\n            reasons=\"\",\n            message=\"\",\n        )        \n            \nCHECK_CLASS = Check",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "from .common._base import BaseCheck",
+        "import traceback",
+        "",
+        "COMMAND = (\"show processes cpu\")",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "    def run(self):        ",
+        "        ",
+        "        rc, out, err = self._ssh(COMMAND, become=True)",
+        "        ",
+        "        return self.ok(",
+        "            metrics={},",
+        "            thresholds={},",
+        "            reasons=\"\",",
+        "            message=\"\",",
+        "        )        ",
+        "            ",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "TUTORIAL-CISCO-PARAMIKO-01",
+      "item_id": 98301,
+      "application_id": 80300,
+      "application_type_id": 30,
+      "application_type_name": "NETWORK",
+      "application_name": "CISCO_IOS",
+      "application_family_name": "CISCO_IOS",
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {},
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: printf '%s\\n' '*******' | su - root -c 'show processes cpu'\n - 명령 종료코드: rc=244 (비정상 종료)\n - 출력 내용: Syntax error while parsing 'printf '%s\\n' '' | su - root -c 'show processes cpu''\n\n\nCmd exec error.",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: printf '%s\\n' '*******' | su - root -c 'show processes cpu'",
+        " - 명령 종료코드: rc=244 (비정상 종료)",
+        " - 출력 내용: Syntax error while parsing 'printf '%s\\n' '' | su - root -c 'show processes cpu''",
+        "",
+        "",
+        "Cmd exec error."
+      ],
+      "message": ""
+    }
+  ],
+  "failed_items": []
+}

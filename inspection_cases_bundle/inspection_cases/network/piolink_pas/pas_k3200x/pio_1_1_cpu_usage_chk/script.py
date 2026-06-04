@@ -72,7 +72,7 @@ class Check(BaseCheck):
             'cpu_usages': cpu_usages,
         }
         if over_threshold:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='CPU Usage 값이 임계치를 초과했습니다.', message=f'CPU 사용률 최대값 {max_item["used_percent"]}%가 기준 {max_used_percent}%를 초과했습니다.')
+            return self.fail(error="CPU 임계치 초과", metrics=metrics, thresholds=thresholds, reasons='CPU Usage 값이 임계치를 초과했습니다.', message=f'CPU 사용률 최대값 {max_item["used_percent"]}%가 기준 {max_used_percent}%를 초과했습니다.')
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='모든 CPU Usage 값이 임계치 이하입니다.', message=f'CPU 사용률 점검 정상: 최대 {max_item["used_percent"]}%, 기준 {max_used_percent}%.')
 
 

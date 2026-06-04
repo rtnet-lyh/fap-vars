@@ -9,7 +9,7 @@
       "application_name": "NX_OS_MDS_C9148S",
       "application_family_name": "NX_OS_MDS_C9148S",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show arp'\nARP_RE = re.compile(r'^\\S+\\s+(?P<ip>\\d+(?:\\.\\d+){3})\\s+\\S+\\s+(?P<mac>[0-9a-f.]+)\\s+\\S+\\s+(?P<interface>\\S+)', re.IGNORECASE)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def run(self):\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())\n\n        entries = [m.groupdict() for m in (ARP_RE.match(line.strip()) for line in (out or '').splitlines()) if m]\n        metrics = {'arp_entry_count': len(entries), 'arp_entries': entries}\n        if not entries:\n            return self.fail('ARP 테이블 파싱 실패', message='Hardware Addr와 Interface가 있는 ARP 항목을 찾지 못했습니다.', stdout=(out or '').strip(), metrics=metrics)\n        return self.ok(metrics=metrics, thresholds={}, reasons='Hardware Addr와 Interface가 있는 ARP 항목이 확인되었습니다.', message=f'ARP 테이블 점검이 정상 수행되었습니다. entries={len(entries)}.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show arp'\nARP_RE = re.compile(r'^\\S+\\s+(?P<ip>\\d+(?:\\.\\d+){3})\\s+\\S+\\s+(?P<mac>[0-9a-f.]+)\\s+\\S+\\s+(?P<interface>\\S+)', re.IGNORECASE)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n    SSH_CONTROL_MASTER = False\n\n    def run(self):\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())\n\n        entries = [m.groupdict() for m in (ARP_RE.match(line.strip()) for line in (out or '').splitlines()) if m]\n        metrics = {'arp_entry_count': len(entries), 'arp_entries': entries}\n        if not entries:\n            return self.fail('ARP 테이블 파싱 실패', message='Hardware Addr와 Interface가 있는 ARP 항목을 찾지 못했습니다.', stdout=(out or '').strip(), metrics=metrics)\n        return self.ok(metrics=metrics, thresholds={}, reasons='Hardware Addr와 Interface가 있는 ARP 항목이 확인되었습니다.', message=f'ARP 테이블 점검이 정상 수행되었습니다. entries={len(entries)}.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -25,6 +25,7 @@
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
         "    CONNECTION_METHOD = 'ssh'",
+        "    SSH_CONTROL_MASTER = False",
         "",
         "    def run(self):",
         "        rc, out, err = self._ssh(COMMAND)",
@@ -65,13 +66,12 @@
       },
       "thresholds": {},
       "reasons": "Hardware Addr와 Interface가 있는 ARP 항목이 확인되었습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show arp\nProtocol Address         Age (min) Hardware Addr                 Type Interface\nInternet 193.1.0.254     0         0000.0c07.acc1                ARPA mgmt0",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Protocol Address         Age (min) Hardware Addr                 Type Interface\nInternet 193.1.0.254     0         0000.0c07.acc1                ARPA mgmt0",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show arp",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CITS-SAN1# show arp",
-        "Protocol Address         Age (min) Hardware Addr                 Type Interface",
+        " - 출력 내용: Protocol Address         Age (min) Hardware Addr                 Type Interface",
         "Internet 193.1.0.254     0         0000.0c07.acc1                ARPA mgmt0"
       ],
       "message": "ARP 테이블 점검이 정상 수행되었습니다. entries=1."

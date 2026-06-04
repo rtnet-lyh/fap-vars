@@ -34,6 +34,7 @@ class Check(BaseCheck):
 
     def run(self):
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
+        max_memory_percent = self.get_threshold_var('max_memory_percent', default=80, value_type='float')
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,
@@ -56,21 +57,40 @@ class Check(BaseCheck):
         if not rows:
             return self.fail('메모리 출력 파싱 실패', message='ps 출력에서 Oracle 메모리 사용 행을 해석하지 못했습니다.', stdout=stdout, stderr=stderr)
 
-        max_row = max(rows, key=lambda row: row['memory_percent'])
-        return self.warn(
-            metrics={
-                'applicable': False,
-                'oracle_account': oracle_account,
-                'verified_oracle_account': switch.get('actual_user') or '',
-                'process_count': len(rows),
-                'max_memory_percent': max_row['memory_percent'],
-                'max_memory_process': max_row['command'],
-                'processes': rows,
-            },
-            thresholds={'oracle_account': oracle_account},
-            reasons='raw 문서의 판단기준이 RSS 값 의미 문제로 보류되어 자동 판정을 보류합니다.',
-            message='Oracle 프로세스 메모리 사용 현황을 수집했지만 DB_3_1 자동 판정 기준은 raw 문서에서 보류 상태입니다.',
-        )
+        max_row = max(rows, key=lambda row: row['memory_percent'])        
+        is_pass = True if max_row['memory_percent'] <= max_memory_percent else False
+
+        if is_pass:
+             return self.ok(                
+                metrics={
+                    'applicable': False,
+                    'oracle_account': oracle_account,
+                    'verified_oracle_account': switch.get('actual_user') or '',
+                    'process_count': len(rows),
+                    'max_memory_percent': max_row['memory_percent'],
+                    'max_memory_process': max_row['command'],
+                    'top_10_processes': rows[0:10],
+                },
+                thresholds={'oracle_account': oracle_account},
+                reasons=f"메모리 사용률({max_row['memory_percent']}%) 정상. 임계치: {max_memory_percent}%",
+                message=f"메모리 사용률({max_row['memory_percent']}%) 정상. 임계치: {max_memory_percent}%",
+            )
+        else:
+            return self.fail(
+                error=f"메모리 사용률({max_row['memory_percent']}%) 임계치({max_memory_percent}%) 초과",
+                metrics={
+                    'applicable': False,
+                    'oracle_account': oracle_account,
+                    'verified_oracle_account': switch.get('actual_user') or '',
+                    'process_count': len(rows),
+                    'max_memory_percent': max_row['memory_percent'],
+                    'max_memory_process': max_row['command'],
+                    'top_10_processes': rows[0:10],
+                },
+                thresholds={'oracle_account': oracle_account},
+                reasons=f"메모리 사용률({max_row['memory_percent']}%) 점검필요. 임계치: {max_memory_percent}%",
+                message=f"메모리 사용률({max_row['memory_percent']}%) 점검필요. 임계치: {max_memory_percent}%",
+            )
 
 
 CHECK_CLASS = Check

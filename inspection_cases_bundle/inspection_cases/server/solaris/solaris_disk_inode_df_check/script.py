@@ -5,7 +5,7 @@ import re
 from .common._base import BaseCheck
 
 
-DF_INODE_COMMAND = 'df -o i'
+DF_COMMAND = 'df -h'
 
 
 class Check(BaseCheck):
@@ -14,38 +14,72 @@ class Check(BaseCheck):
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
 
-    def _parse_rows(self, text):
+    def _to_bytes(self, value):
+        match = re.match(r'^([0-9]+(?:\.[0-9]+)?)([KMGTP]?)(?:i?B?)?$', str(value).strip(), re.IGNORECASE)
+        if not match:
+            return None
+        number = float(match.group(1))
+        unit = match.group(2).upper()
+        multiplier = {'': 1, 'K': 1024, 'M': 1024 ** 2, 'G': 1024 ** 3, 'T': 1024 ** 4, 'P': 1024 ** 5}[unit]
+        return number * multiplier
+
+    def _parse_number(self, value):
+        try:
+            return float(str(value).strip().rstrip('%'))
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_df_rows(self, text, ignore_pattern):
         lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]
+        if not lines:
+            return {
+                'header_found': False,
+                'rows': [],
+            }
+        
         header_found = False
         rows = []
-
         for index, line in enumerate(lines):
             parts = re.split(r'\s+', line.strip())
             lowered = [part.lower() for part in parts]
-            if 'filesystem' in lowered and 'iused' in lowered and 'ifree' in lowered and '%iused' in lowered:
-                header_found = True
+            if not header_found:
+                if 'filesystem' in lowered and ('use%' in lowered or 'capacity' in lowered):
+                    header_found = True
                 continue
 
-            if len(parts) < 5:
+            if len(parts) < 6:
                 continue
-            try:
-                inode_used = int(parts[1])
-                inode_free = int(parts[2])
-                inode_used_percent = float(parts[3].rstrip('%'))
-            except ValueError:
+
+            if re.search(rf"{ignore_pattern}", line ):
                 continue
-            total_inodes = inode_used + inode_free
-            inode_free_percent = round((inode_free / total_inodes) * 100, 2) if total_inodes else 0.0
+
+            size_bytes = self._to_bytes(parts[1])
+            used_bytes = self._to_bytes(parts[2])
+            avail_bytes = self._to_bytes(parts[3])
+            used_percent = self._parse_number(parts[4])
+
+            if size_bytes is None or used_bytes is None or avail_bytes is None or used_percent is None:
+                continue
+
+            mount_point = ' '.join(parts[5:])
+            avail_percent = round((avail_bytes / size_bytes) * 100, 2) if size_bytes > 0 else 0.0
+            is_zero_sized = size_bytes == 0 and used_bytes == 0 and avail_bytes == 0
+
             rows.append({
                 'line_number': index + 1,
                 'filesystem': parts[0],
-                'inode_used': inode_used,
-                'inode_free': inode_free,
-                'inode_total': total_inodes,
-                'inode_used_percent': inode_used_percent,
-                'inode_free_percent': inode_free_percent,
-                'mount_point': ' '.join(parts[4:]),
+                'size': parts[1],
+                'used': parts[2],
+                'avail': parts[3],
+                'used_percent': round(used_percent, 2),
+                'avail_percent': avail_percent,
+                'mount_point': mount_point,
+                'size_bytes': size_bytes,
+                'used_bytes': used_bytes,
+                'avail_bytes': avail_bytes,
+                'is_zero_sized': is_zero_sized,
             })
+
         return {
             'header_found': header_found,
             'rows': rows,
@@ -58,41 +92,43 @@ class Check(BaseCheck):
         summaries = []
         for row in rows[:limit]:
             summaries.append(
-                f"{row['mount_point']} inode {row['inode_used_percent']:.2f}% used, free {row['inode_free_percent']:.2f}%"
+                f"{row['mount_point']} {row['used_percent']:.2f}% used, avail {row['avail_percent']:.2f}%"
             )
         if len(rows) > limit:
             summaries.append(f"외 {len(rows) - limit}개")
         return ', '.join(summaries)
 
     def run(self):
-        max_inode_used_percent = self.get_threshold_var('max_inode_used_percent', default=80, value_type='float')
-        min_inode_free_percent = self.get_threshold_var('min_inode_free_percent', default=20, value_type='float')
+        used_max_percent = self.get_threshold_var('used_max_percent', default=80.0, value_type='float')
+        avail_min_percent = self.get_threshold_var('avail_min_percent', default=20.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+        ignore_pattern = self.get_threshold_var(key='ignore_pattern', default='/media', value_type='raw')
 
         result = self._run_solaris_commands([
-            {'command': DF_INODE_COMMAND, 'timeout': 10},
+            {'command': DF_COMMAND, 'timeout': 10},
         ])[0]
         rc = result['rc']
         out = result['stdout']
         err = result['stderr']
+
         if self._is_connection_error(rc, err):
             return self.fail(
                 '호스트 연결 실패',
                 message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
                 stderr=(err or '').strip(),
             )
+
         if rc != 0:
             return self.fail(
                 '점검 명령 실행 실패',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    '현재 상태: df -o i 명령을 정상적으로 실행하지 못했습니다.'
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    '현재 상태: df -h 명령을 정상적으로 실행하지 못했습니다.'
                 ),
                 stdout=(out or '').strip(),
                 stderr=(err or '').strip(),
             )
 
-        text = (out or '').strip()
         command_error = self._detect_command_error(
             out,
             err,
@@ -102,13 +138,14 @@ class Check(BaseCheck):
             return self.fail(
                 '점검 명령 실행 실패',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    f'현재 상태: df -o i 출력에서 실행 오류가 확인되었습니다: {command_error}'
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    f'현재 상태: df -h 출력에서 실행 오류가 확인되었습니다: {command_error}'
                 ),
-                stdout=text,
+                stdout=(out or '').strip(),
                 stderr=(err or '').strip(),
             )
 
+        text = (out or '').strip()
         failure_keywords = [keyword.strip() for keyword in failure_keywords_raw.split(',') if keyword.strip()]
         combined_output = '\n'.join(part for part in (text, (err or '').strip()) if part)
         matched_failure_keywords = [
@@ -117,22 +154,22 @@ class Check(BaseCheck):
         ]
         if matched_failure_keywords:
             return self.fail(
-                'I-Node 실패 키워드 감지',
+                '파일시스템 실패 키워드 감지',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
                     f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        parsed = self._parse_rows(text)
+        parsed = self._parse_df_rows(text, ignore_pattern)
         if not parsed['header_found']:
             return self.fail(
-                'I-Node 파싱 실패',
+                '파일시스템 사용량 파싱 실패',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    '현재 상태: df -o i 출력에서 Filesystem/iused/ifree/%iused 헤더를 찾지 못했습니다.'
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    '현재 상태: df -h 출력에서 Filesystem/Use% 헤더를 찾지 못했습니다.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
@@ -141,81 +178,99 @@ class Check(BaseCheck):
         rows = parsed['rows']
         if not rows:
             return self.fail(
-                'I-Node 파싱 실패',
+                '파일시스템 사용량 파싱 실패',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    '현재 상태: df -o i 출력에서 inode 정보를 해석하지 못했습니다.'
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    '현재 상태: df -h 출력에서 파일시스템 정보를 해석하지 못했습니다.'
+                ),
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        check_rows = [row for row in rows if not row.get('is_zero_sized')]
+        if not check_rows:
+            return self.fail(
+                '파일시스템 사용량 파싱 실패',
+                message=(
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    '현재 상태: 용량을 점검할 수 있는 실제 파일시스템 정보를 해석하지 못했습니다.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
         invalid_rows = [
-            row for row in rows
-            if row['inode_used'] < 0 or row['inode_free'] < 0 or row['inode_total'] <= 0
+            row for row in check_rows
+            if row['size_bytes'] <= 0
+            or row['used_bytes'] < 0
+            or row['avail_bytes'] < 0
+            or row['used_bytes'] > row['size_bytes']
+            or row['avail_bytes'] > row['size_bytes']
         ]
         if invalid_rows:
             invalid_summary = ', '.join(
-                f"{row['mount_point']} iused {row['inode_used']} ifree {row['inode_free']}"
+                f"{row['mount_point']} size {row['size']} used {row['used']} avail {row['avail']}"
                 for row in invalid_rows[:3]
             )
             return self.fail(
-                'I-Node 데이터 불일치',
+                '파일시스템 데이터 불일치',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    f'현재 상태: inode 수치가 비정상입니다: {invalid_summary}.'
+                    'Solaris 파일시스템 사용량 점검에 실패했습니다. '
+                    f'현재 상태: 파일시스템 용량 데이터가 비정상입니다: {invalid_summary}.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        bad_rows = [
-            row for row in rows
-            if row['inode_used_percent'] > max_inode_used_percent or row['inode_free_percent'] < min_inode_free_percent
+        threshold_rows = [
+            row for row in check_rows
+            if row['used_percent'] >= used_max_percent or row['avail_percent'] < avail_min_percent
         ]
-        bad_rows.sort(key=lambda row: (row['inode_used_percent'], -row['inode_free_percent']), reverse=True)
-        mount_summary = self._build_mount_summary(bad_rows or sorted(rows, key=lambda row: row['inode_used_percent'], reverse=True))
-        if bad_rows:
-            top = bad_rows[0]
+        threshold_rows.sort(key=lambda row: (row['used_percent'], -row['avail_percent']), reverse=True)
+        affected_summary = self._build_mount_summary(threshold_rows or sorted(check_rows, key=lambda row: row['used_percent'], reverse=True))
+        if threshold_rows:
+            top = threshold_rows[0]
             return self.fail(
-                'I-Node 사용률 임계치 초과',
+                '파일시스템 사용률 임계치 초과',
                 message=(
-                    'Solaris I-Node 사용률 점검에 실패했습니다. '
-                    f'현재 상태: {top["mount_point"]} inode 사용률 {top["inode_used_percent"]:.2f}% '
-                    f'(기준 {max_inode_used_percent:.2f}% 이하), 잔여 {top["inode_free_percent"]:.2f}% '
-                    f'(기준 {min_inode_free_percent:.2f}% 이상), iused {top["inode_used"]}, '
-                    f'ifree {top["inode_free"]}, 영향 mount 요약: {mount_summary}.'
+                    'Solaris 파일시스템 사용량이 기준치를 초과했습니다. '
+                    f'현재 상태: {top["mount_point"]} 사용률 {top["used_percent"]:.2f}% (기준 {used_max_percent:.2f}% 미만), '
+                    f'여유 {top["avail_percent"]:.2f}% (기준 {avail_min_percent:.2f}% 이상), '
+                    f'Size {top["size"]}, Used {top["used"]}, Avail {top["avail"]}, 영향 mount 요약: {affected_summary}.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
 
-        max_row = max(rows, key=lambda item: item['inode_used_percent'])
-        min_free_row = min(rows, key=lambda item: item['inode_free_percent'])
+        max_row = max(check_rows, key=lambda item: item['used_percent'])
+        min_avail_row = min(check_rows, key=lambda item: item['avail_percent'])
         return self.ok(
             metrics={
                 'filesystem_count': len(rows),
-                'max_inode_used_mount_point': max_row['mount_point'],
-                'max_inode_used_percent': max_row['inode_used_percent'],
-                'min_inode_free_mount_point': min_free_row['mount_point'],
-                'min_inode_free_percent': min_free_row['inode_free_percent'],
+                'checked_filesystem_count': len(check_rows),
+                'ignored_zero_size_filesystem_count': len(rows) - len(check_rows),
+                'max_usage_mount_point': max_row['mount_point'],
+                'max_usage_percent': max_row['used_percent'],
+                'lowest_avail_mount_point': min_avail_row['mount_point'],
+                'lowest_avail_percent': min_avail_row['avail_percent'],
                 'rows': rows,
                 'matched_failure_keywords': matched_failure_keywords,
             },
             thresholds={
-                'max_inode_used_percent': max_inode_used_percent,
-                'min_inode_free_percent': min_inode_free_percent,
+                'used_max_percent': used_max_percent,
+                'avail_min_percent': avail_min_percent,
                 'failure_keywords': failure_keywords,
+                'ignore_pattern': ignore_pattern,
             },
             reasons=(
-                f'모든 파일시스템의 inode 사용률과 잔여 inode 비율이 기준 이내입니다. '
-                f'최대 사용률은 {max_row["mount_point"]} {max_row["inode_used_percent"]:.2f}%입니다.'
+                f'점검 대상 파일시스템 {len(check_rows)}개가 정상 해석되었고 최대 사용률 {max_row["used_percent"]:.2f}%와 '
+                f'최소 여유율 {min_avail_row["avail_percent"]:.2f}%가 모두 기준 이내입니다.'
             ),
             message=(
-                'Solaris I-Node 사용률이 정상입니다. '
-                f'현재 상태: 파일시스템 {len(rows)}개, 최대 inode 사용률 {max_row["mount_point"]} {max_row["inode_used_percent"]:.2f}% '
-                f'(기준 {max_inode_used_percent:.2f}% 이하), 최소 잔여율 {min_free_row["mount_point"]} {min_free_row["inode_free_percent"]:.2f}% '
-                f'(기준 {min_inode_free_percent:.2f}% 이상), 영향 mount 요약: {mount_summary}.'
+                'Solaris 파일시스템 사용량이 정상입니다. '
+                f'현재 상태: 점검 대상 파일시스템 {len(check_rows)}개, 최대 사용률 {max_row["mount_point"]} {max_row["used_percent"]:.2f}% '
+                f'(기준 {used_max_percent:.2f}% 미만), 최소 여유율 {min_avail_row["mount_point"]} {min_avail_row["avail_percent"]:.2f}% '
+                f'(기준 {avail_min_percent:.2f}% 이상), 영향 mount 요약: {affected_summary}.'
             ),
         )
 

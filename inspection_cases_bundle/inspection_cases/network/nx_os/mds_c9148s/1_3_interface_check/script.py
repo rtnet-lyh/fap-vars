@@ -14,6 +14,7 @@ SPEED_RE = re.compile(r'Speed is ([0-9.]+) Gbps')
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def _parse(self, text):
         rows = []

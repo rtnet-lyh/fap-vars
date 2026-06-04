@@ -1,5 +1,5 @@
 {
-  "host": "192.168.1.55",
+  "host": "193.1.0.206",
   "port": 22,
   "user": "admin",
   "password": "admin",
@@ -9,10 +9,10 @@
         "application_id": 80501,
         "application_type_id": 30,
         "application_type_name": "NETWORK",
-        "credential_type_name": "NETWORK_DEVICE",
+        "credential_type_name": "SSH",
         "data": {
           "username": "admin",
-          "password": "admin",
+          "password": "c#r7SAN1",
           "port": 22
         }
       }

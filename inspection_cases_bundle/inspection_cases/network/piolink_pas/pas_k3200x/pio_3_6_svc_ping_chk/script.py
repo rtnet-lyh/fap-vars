@@ -33,7 +33,7 @@ class Check(BaseCheck):
         return '\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()), None
 
     def run(self):
-        ip_address = str(self.get_threshold_var('ip_address', default='', value_type='str')).strip()
+        ip_address = str(self.get_threshold_var('ip_address', default='172.18.8.191', value_type='str')).strip()
         max_packet_loss_percent = self.get_threshold_var('max_packet_loss_percent', default=0.0, value_type='float')
         max_avg_response_time_ms = self.get_threshold_var('max_avg_response_time_ms', default=100.0, value_type='float')
         thresholds = {
@@ -67,7 +67,7 @@ class Check(BaseCheck):
             'avg_response_time_ms': avg_response_time_ms,
         }
         if packet_loss > max_packet_loss_percent or avg_response_time_ms > max_avg_response_time_ms:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='packet loss 또는 avg RTT가 임계치를 초과했습니다.', message=f'통신 테스트 경고: loss={packet_loss}%, avg={avg_response_time_ms}ms.')
+            return self.fail(error='packet loss 또는 avg RTT가 임계치를 초과했습니다.', metrics=metrics, thresholds=thresholds, reasons='packet loss 또는 avg RTT가 임계치를 초과했습니다.', message=f'통신 테스트 경고: loss={packet_loss}%, avg={avg_response_time_ms}ms.')
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='packet loss와 avg RTT가 임계치 이하입니다.', message=f'통신 테스트 정상: loss={packet_loss}%, avg={avg_response_time_ms}ms.')
 
 

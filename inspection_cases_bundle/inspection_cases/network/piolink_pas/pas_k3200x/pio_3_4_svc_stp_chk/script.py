@@ -60,9 +60,9 @@ class Check(BaseCheck):
             'used_ports': used_ports,
         }
         if not used_ports:
-            return self.warn(metrics=metrics, thresholds={}, reasons='STP 사용 포트를 찾지 못했습니다.', message='STP 상태 경고: 사용 포트가 없습니다.')
+            return self.fail(error="STP 사용 포트를 찾지 못했습니다.", metrics=metrics, thresholds={}, reasons='STP 사용 포트를 찾지 못했습니다.', message='STP 상태 경고: 사용 포트가 없습니다.')
         if down_used_ports:
-            return self.warn(metrics=metrics, thresholds={}, reasons='사용 포트 중 Link가 up이 아닌 포트가 있습니다.', message=f'STP 상태 경고: Link down 사용 포트 {len(down_used_ports)}개.')
+            return self.fail(error="사용 포트 중 Link가 up이 아닌 포트가 있습니다.", metrics=metrics, thresholds={}, reasons='사용 포트 중 Link가 up이 아닌 포트가 있습니다.', message=f'STP 상태 경고: Link down 사용 포트 {len(down_used_ports)}개.')
         return self.ok(metrics=metrics, thresholds={}, reasons='STP 전역 Status는 참고값으로 기록하고, 사용 포트 Link가 up인지 확인했습니다.', message=f'STP 상태 점검 정상: 사용 포트 {len(used_ports)}개.')
 
 

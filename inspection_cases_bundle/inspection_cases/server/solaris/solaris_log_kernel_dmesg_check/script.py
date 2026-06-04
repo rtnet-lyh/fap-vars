@@ -3,7 +3,7 @@
 from .common._base import BaseCheck
 
 
-LOG_COMMAND = "dmesg | grep -i 'panic|kernel panic'"
+LOG_COMMAND = "dmesg | egrep -i 'panic|kernel panic'"
 
 
 class Check(BaseCheck):

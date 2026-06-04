@@ -9,7 +9,7 @@
       "application_name": "PIOLINK_PAS_K3200X",
       "application_family_name": "PIOLINK_PAS_K3200X",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show route'\nDEFAULT_GATEWAY_RE = re.compile(r'Default-Gateway\\s*:\\s*(\\S+)')\nDESTINATION_RE = re.compile(r'^\\s*(?P<destination>\\d+(?:\\.\\d+){3}/\\d+)\\s+\\S+\\s+(?P<interface>\\S+)\\s*$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_routes(self, text):\n        routes = []\n        for line in (text or '').splitlines():\n            match = DESTINATION_RE.match(line)\n            if match:\n                routes.append(match.groupdict())\n        gateway_match = DEFAULT_GATEWAY_RE.search(text or '')\n        return gateway_match.group(1) if gateway_match else '', routes\n\n    def run(self):\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        default_gateway, routes = self._parse_routes(stdout)\n        if 'ROUTE' not in stdout and not routes and not default_gateway:\n            return self.fail('라우팅 정보 파싱 실패', message='show route 출력에서 ROUTE 정보를 찾지 못했습니다.', stdout=stdout)\n\n        missing = []\n        if not default_gateway:\n            missing.append('Default-Gateway')\n        if not routes:\n            missing.append('route destination/interface')\n        metrics = {\n            'default_gateway': default_gateway,\n            'route_count': len(routes),\n            'routes': routes,\n            'missing': missing,\n        }\n        if missing:\n            return self.warn(metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))\n        return self.ok(metrics=metrics, thresholds={}, reasons='Default-Gateway 및 route destination/interface 정보가 존재합니다.', message=f'라우팅 Table 상태 점검 정상: route {len(routes)}개.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show route'\nDEFAULT_GATEWAY_RE = re.compile(r'Default-Gateway\\s*:\\s*(\\S+)')\nDESTINATION_RE = re.compile(r'^\\s*(?P<destination>\\d+(?:\\.\\d+){3}/\\d+)\\s+\\S+\\s+(?P<interface>\\S+)\\s*$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self):\n        results = self._run_paramiko_commands([COMMAND], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _parse_routes(self, text):\n        routes = []\n        for line in (text or '').splitlines():\n            match = DESTINATION_RE.match(line)\n            if match:\n                routes.append(match.groupdict())\n        gateway_match = DEFAULT_GATEWAY_RE.search(text or '')\n        return gateway_match.group(1) if gateway_match else '', routes\n\n    def run(self):\n        stdout, error = self._run_command()\n        if error:\n            return error\n\n        default_gateway, routes = self._parse_routes(stdout)\n        if 'ROUTE' not in stdout and not routes and not default_gateway:\n            return self.fail('라우팅 정보 파싱 실패', message='show route 출력에서 ROUTE 정보를 찾지 못했습니다.', stdout=stdout)\n\n        missing = []\n        if not default_gateway:\n            missing.append('Default-Gateway')\n        if not routes:\n            missing.append('route destination/interface')\n        metrics = {\n            'default_gateway': default_gateway,\n            'route_count': len(routes),\n            'routes': routes,\n            'missing': missing,\n        }\n        if missing:\n            return self.fail(error=\"Default-Gateway 또는 route destination/interface 정보가 없습니다.\", metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))\n        return self.ok(metrics=metrics, thresholds={}, reasons='Default-Gateway 및 route destination/interface 정보가 존재합니다.', message=f'라우팅 Table 상태 점검 정상: route {len(routes)}개.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -70,7 +70,7 @@
         "            'missing': missing,",
         "        }",
         "        if missing:",
-        "            return self.warn(metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))",
+        "            return self.fail(error=\"Default-Gateway 또는 route destination/interface 정보가 없습니다.\", metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))",
         "        return self.ok(metrics=metrics, thresholds={}, reasons='Default-Gateway 및 route destination/interface 정보가 존재합니다.', message=f'라우팅 Table 상태 점검 정상: route {len(routes)}개.')",
         "",
         "",
@@ -110,7 +110,7 @@
       },
       "thresholds": {},
       "reasons": "Default-Gateway 및 route destination/interface 정보가 존재합니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show route\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  ROUTE\n ------------------------------------------------------------------------------\n    Default-Gateway      : 172.31.247.126\n\n    Network\n       Destination       Gateway Interface\n       172.31.247.112/28 0.0.0.0 V422\n       172.18.8.0/24     0.0.0.0 V808\n       192.168.100.0/24  0.0.0.0 mgmt\n================================================================================",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show route\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ================================================================================\n  ROUTE\n ------------------------------------------------------------------------------\n    Default-Gateway      : 172.31.247.126\n\n    Network              \n       Destination       Gateway Interface\n       172.31.247.112/28 0.0.0.0 V422     \n       172.18.8.0/24     0.0.0.0 V808     \n       192.168.100.0/24  0.0.0.0 mgmt     \n================================================================================",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show route",
@@ -120,11 +120,11 @@
         " ------------------------------------------------------------------------------",
         "    Default-Gateway      : 172.31.247.126",
         "",
-        "    Network",
+        "    Network              ",
         "       Destination       Gateway Interface",
-        "       172.31.247.112/28 0.0.0.0 V422",
-        "       172.18.8.0/24     0.0.0.0 V808",
-        "       192.168.100.0/24  0.0.0.0 mgmt",
+        "       172.31.247.112/28 0.0.0.0 V422     ",
+        "       172.18.8.0/24     0.0.0.0 V808     ",
+        "       192.168.100.0/24  0.0.0.0 mgmt     ",
         "================================================================================"
       ],
       "message": "라우팅 Table 상태 점검 정상: route 3개."

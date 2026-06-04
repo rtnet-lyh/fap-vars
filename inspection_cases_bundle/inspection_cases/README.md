@@ -50,7 +50,6 @@ Windows 케이스는 `server/windows/windows_<domain>_<detail>_<command>_check/`
 새 케이스는 가장 가까운 기존 케이스를 기준으로 시작한다.
 
 - Linux/Rocky 계열은 `CONNECTION_METHOD = 'ssh'`와 `_ssh("...")` 패턴을 사용한다.
-- `runner.py` 기본 SSH multiplexing 옵션을 쓰면 안 되는 항목은 `script.py`에 `SSH_CONTROL_MASTER = False`를 선언한다.
 - 네트워크 장비 중 SSH exec 채널이나 `sshpass` 방식이 맞지 않는 장비는 `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands([...])` 패턴을 사용한다.
 - Paramiko 옵션은 API credential `data`에 넣지 말고 `script.py`의 `PARAMIKO_*` 클래스 속성으로 조정한다.
 - Paramiko 프롬프트는 `PARAMIKO_PROBE_PROMPT`로 엔터를 보낸 뒤 세션 응답에서 동적으로 학습한다. `PARAMIKO_PROFILE`은 pager 설정만 담당하고, `PARAMIKO_ENABLE_MODE`는 내장된 `enable` + 기본 비밀번호 프롬프트 처리로 동작한다.

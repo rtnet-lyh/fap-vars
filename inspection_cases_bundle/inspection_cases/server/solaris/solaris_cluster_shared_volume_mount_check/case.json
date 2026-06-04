@@ -1,22 +1,22 @@
 {
-  "host": "192.168.1.163",
-  "port": 22,
-  "user": "fap",
-  "password": "f3dtop0!",
+  "host": "172.18.8.41",
+  "port": 222,
+  "user": "root",
+  "password": "",
   "credentials": {
     "SOLARIS": [
       {
-        "application_id": 424,
+        "application_id": 415,
         "application_type_id": 40,
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
+          "username": "sysadmin",
+          "password": "!2602Edc41",
           "become": "True",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "C_ttms2602!"
         }
       }
     ]
@@ -45,20 +45,8 @@
     "action_content": "공유 볼륨이 지정된 mount point에 정상 마운트되었는지, 읽기/쓰기 상태가 rw인지, 파일시스템 유형이 기준과 일치하는지 확인합니다.",
     "threshold_list": [
       {
-        "name": "mount_point",
-        "value1": "/mnt/shared"
-      },
-      {
-        "name": "expected_access_mode",
-        "value1": "rw"
-      },
-      {
-        "name": "expected_filesystem_types",
-        "value1": "ufs"
-      },
-      {
-        "name": "failure_keywords",
-        "value1": "장치를 찾을 수 없습니다,not found,module,cannot,command not found,no such file"
+        "name": "sdfsdf",
+        "value1": "sdfsf"
       }
     ]
   }

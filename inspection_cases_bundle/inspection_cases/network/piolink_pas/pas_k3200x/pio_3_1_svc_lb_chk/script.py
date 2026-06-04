@@ -52,7 +52,7 @@ class Check(BaseCheck):
             'real_servers': servers,
         }
         if disabled_servers:
-            return self.warn(metrics=metrics, thresholds={}, reasons='Status가 enable이 아닌 Real Server가 있습니다.', message=f'LB 상태 경고: 비정상 Real Server {len(disabled_servers)}개.')
+            return self.fail(error="Status가 enable이 아닌 Real Server가 있습니다.", metrics=metrics, thresholds={}, reasons='Status가 enable이 아닌 Real Server가 있습니다.', message=f'LB 상태 경고: 비정상 Real Server {len(disabled_servers)}개.')
         return self.ok(metrics=metrics, thresholds={}, reasons='모든 Real Server Status가 enable입니다.', message=f'LB 상태 점검 정상: Real Server {len(servers)}개.')
 
 

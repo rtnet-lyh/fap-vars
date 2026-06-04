@@ -24,6 +24,7 @@ class Check(BaseCheck):
         lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]
         header_banner_found = False
         header_found = False
+        header_type = 'unknown'
         rows = []
 
         for index, line in enumerate(lines):
@@ -35,50 +36,68 @@ class Check(BaseCheck):
 
             parts = re.split(r'\s+', stripped)
             part_headers = [part.lower() for part in parts]
-            if 'device' in part_headers and 'svc_t' in part_headers and '%b' in part_headers:
+            
+            if 'device' in part_headers and 'asvc_t' in part_headers and '%b' in part_headers:                
                 header_found = True
+                header_type = 'A'
                 continue
 
-            if len(parts) != 10:
+            if 'device' in part_headers and 'svc_t' in part_headers and '%b' in part_headers:                
+                header_found = True
+                header_type = 'B'
                 continue
 
-            parsed_values = [self._parse_float(value) for value in parts[1:]]
-            if any(value is None for value in parsed_values):
-                continue
+            if header_found and header_type == 'A':
+                if len(parts) != 11:
+                    continue
 
-            rows.append({
-                'line_number': index + 1,
-                'device': parts[0],
-                'read_per_sec': parsed_values[0],
-                'write_per_sec': parsed_values[1],
-                'read_kb_per_sec': parsed_values[2],
-                'write_kb_per_sec': parsed_values[3],
-                'wait': parsed_values[4],
-                'active': parsed_values[5],
-                'service_time_ms': parsed_values[6],
-                'wait_percent': parsed_values[7],
-                'busy_percent': parsed_values[8],
-            })
+                parsed_values = [self._parse_float(value) for value in parts[1:]]
+                if any(value is None for value in parsed_values):
+                    continue
+
+                rows.append({
+                    'line_number': index + 1,
+                    'device': parts[0],
+                    'read_per_sec': parsed_values[0],
+                    'write_per_sec': parsed_values[1],
+                    'read_kb_per_sec': parsed_values[2],
+                    'write_kb_per_sec': parsed_values[3],
+                    'wait': parsed_values[4],
+                    'active': parsed_values[5],
+                    'wait_service_time_ms': parsed_values[6],
+                    'active_service_time_ms': parsed_values[7],
+                    'wait_percent': parsed_values[8],
+                    'busy_percent': parsed_values[9],
+                })
+
+            if header_found and header_type == 'B':
+                if len(parts) != 10:
+                    continue
+
+                parsed_values = [self._parse_float(value) for value in parts[1:]]
+                if any(value is None for value in parsed_values):
+                    continue
+
+                rows.append({
+                    'line_number': index + 1,
+                    'device': parts[0],
+                    'read_per_sec': parsed_values[0],
+                    'write_per_sec': parsed_values[1],
+                    'read_kb_per_sec': parsed_values[2],
+                    'write_kb_per_sec': parsed_values[3],
+                    'wait': parsed_values[4],
+                    'active': parsed_values[5],
+                    'wait_service_time_ms': parsed_values[6],
+                    'active_service_time_ms': parsed_values[6],
+                    'wait_percent': parsed_values[7],
+                    'busy_percent': parsed_values[8],
+                })
 
         return {
             'header_banner_found': header_banner_found,
             'header_found': header_found,
             'rows': rows,
-        }
-
-    def _build_device_summary(self, rows, limit=3):
-        if not rows:
-            return '장치 요약 없음'
-
-        summaries = []
-        for row in rows[:limit]:
-            summaries.append(
-                f"{row['device']} svc_t {row['service_time_ms']:.2f}ms, %b {row['busy_percent']:.2f}%, "
-                f"wait {row['wait']:.2f}, actv {row['active']:.2f}"
-            )
-        if len(rows) > limit:
-            summaries.append(f"외 {len(rows) - limit}개")
-        return ', '.join(summaries)
+        }    
 
     def _split_keywords(self, raw_value):
         return [keyword.strip() for keyword in str(raw_value or '').split(',') if keyword.strip()]
@@ -90,7 +109,7 @@ class Check(BaseCheck):
         return None
 
     def run(self):
-        max_service_time_ms = self.get_threshold_var('max_service_time_ms', default=20, value_type='float')
+        max_service_time_ms = self.get_threshold_var('max_service_time_ms', default=1000, value_type='float')
         max_busy_percent = self.get_threshold_var('max_busy_percent', default=80, value_type='float')
         failure_keywords = self._split_keywords(
             self.get_threshold_var('failure_keywords', default='장치를 찾을 수 없습니다,not found,cannot,command not found,module missing', value_type='str')
@@ -208,34 +227,50 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        worst_svc = max(rows, key=lambda item: item['service_time_ms'])
+        worst_wait_svc = max(rows, key=lambda item: item['wait_service_time_ms'])
+        worst_active_svc = max(rows, key=lambda item: item['active_service_time_ms'])
+
         worst_busy = max(rows, key=lambda item: item['busy_percent'])
         highest_wait = max(rows, key=lambda item: item['wait'])
-        highest_active = max(rows, key=lambda item: item['active'])
-        device_summary = self._build_device_summary(sorted(rows, key=lambda item: (item['service_time_ms'], item['busy_percent']), reverse=True))
-
-        if worst_svc['service_time_ms'] >= max_service_time_ms:
+        highest_active = max(rows, key=lambda item: item['active'])        
+        
+        if worst_wait_svc['wait_service_time_ms'] >= max_service_time_ms:
             return self.fail(
                 'Disk I/O 서비스 시간 임계치 초과',
                 message=(
                     'Solaris Disk I/O 점검에 실패했습니다. '
-                    f'현재 상태: {worst_svc["device"]} svc_t {worst_svc["service_time_ms"]:.2f}ms '
-                    f'(기준 {max_service_time_ms:.2f}ms 미만), %b {worst_svc["busy_percent"]:.2f}%, '
-                    f'wait {worst_svc["wait"]:.2f}, actv {worst_svc["active"]:.2f}, '
-                    f'r/s {worst_svc["read_per_sec"]:.2f}, w/s {worst_svc["write_per_sec"]:.2f}, 장치 요약: {device_summary}.'
+                    f'현재 상태: {worst_wait_svc["device"]} svc_t {worst_wait_svc["wait_service_time_ms"]:.2f}ms '
+                    f'(기준 {max_service_time_ms:.2f}ms 미만), %b {worst_wait_svc["busy_percent"]:.2f}%, '
+                    f'wait {worst_wait_svc["wait"]:.2f}, actv {worst_wait_svc["active"]:.2f}, '
+                    f'r/s {worst_wait_svc["read_per_sec"]:.2f}, w/s {worst_wait_svc["write_per_sec"]:.2f}.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
             )
+
+        if worst_active_svc['active_service_time_ms'] >= max_service_time_ms:
+            return self.fail(
+                'Disk I/O 서비스 시간 임계치 초과',
+                message=(
+                    'Solaris Disk I/O 점검에 실패했습니다. '
+                    f'현재 상태: {worst_active_svc["device"]} svc_t {worst_active_svc["service_time_ms"]:.2f}ms '
+                    f'(기준 {max_service_time_ms:.2f}ms 미만), %b {worst_active_svc["busy_percent"]:.2f}%, '
+                    f'wait {worst_active_svc["wait"]:.2f}, actv {worst_active_svc["active"]:.2f}, '
+                    f'r/s {worst_active_svc["read_per_sec"]:.2f}, w/s {worst_active_svc["write_per_sec"]:.2f}.'
+                ),
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
         if worst_busy['busy_percent'] >= max_busy_percent:
             return self.fail(
                 'Disk I/O 바쁨률 임계치 초과',
                 message=(
                     'Solaris Disk I/O 점검에 실패했습니다. '
                     f'현재 상태: {worst_busy["device"]} %b {worst_busy["busy_percent"]:.2f}% '
-                    f'(기준 {max_busy_percent:.2f}% 미만), svc_t {worst_busy["service_time_ms"]:.2f}ms, '
+                    f'(기준 {max_busy_percent:.2f}% 미만), svc_t {worst_busy["wait_service_time_ms"]:.2f}ms, '
                     f'wait {worst_busy["wait"]:.2f}, actv {worst_busy["active"]:.2f}, '
-                    f'r/s {worst_busy["read_per_sec"]:.2f}, w/s {worst_busy["write_per_sec"]:.2f}, 장치 요약: {device_summary}.'
+                    f'r/s {worst_busy["read_per_sec"]:.2f}, w/s {worst_busy["write_per_sec"]:.2f}.'
                 ),
                 stdout=text,
                 stderr=(err or '').strip(),
@@ -244,8 +279,10 @@ class Check(BaseCheck):
         return self.ok(
             metrics={
                 'device_count': len(rows),
-                'worst_service_device': worst_svc['device'],
-                'worst_service_time_ms': worst_svc['service_time_ms'],
+                'worst_wait_service_device': worst_wait_svc['device'],
+                'worst_wait_service_time_ms': worst_wait_svc['wait_service_time_ms'],
+                'worst_active_service_device': worst_active_svc['device'],
+                'worst_active_service_time_ms': worst_active_svc['active_service_time_ms'],
                 'worst_busy_device': worst_busy['device'],
                 'worst_busy_percent': worst_busy['busy_percent'],
                 'highest_wait_device': highest_wait['device'],
@@ -262,15 +299,17 @@ class Check(BaseCheck):
             },
             reasons=(
                 f'모든 디스크의 svc_t와 %b가 기준 이내입니다. '
-                f'최대 svc_t는 {worst_svc["device"]} {worst_svc["service_time_ms"]:.2f}ms, '
+                f'최대 wsvc_t는 {worst_wait_svc["device"]} {worst_wait_svc["wait_service_time_ms"]:.2f}ms, '
+                f'최대 asvc_t는 {worst_active_svc["device"]} {worst_active_svc["active_service_time_ms"]:.2f}ms, '
                 f'최대 %b는 {worst_busy["device"]} {worst_busy["busy_percent"]:.2f}%입니다.'
             ),
             message=(
                 'Solaris Disk I/O가 정상입니다. '
-                f'현재 상태: 디스크 {len(rows)}개, 최대 svc_t {worst_svc["device"]} {worst_svc["service_time_ms"]:.2f}ms '
+                f'현재 상태: 디스크 {len(rows)}개, 최대 wsvc_t {worst_wait_svc["device"]} {worst_wait_svc["wait_service_time_ms"]:.2f}ms '
+                f'현재 상태: 디스크 {len(rows)}개, 최대 asvc_t {worst_active_svc["device"]} {worst_active_svc["active_service_time_ms"]:.2f}ms '
                 f'(기준 {max_service_time_ms:.2f}ms 미만), 최대 %b {worst_busy["device"]} {worst_busy["busy_percent"]:.2f}% '
                 f'(기준 {max_busy_percent:.2f}% 미만), 최대 wait {highest_wait["device"]} {highest_wait["wait"]:.2f}, '
-                f'최대 actv {highest_active["device"]} {highest_active["active"]:.2f}, 장치 요약: {device_summary}.'
+                f'최대 actv {highest_active["device"]} {highest_active["active"]:.2f}.'
             ),
         )
 

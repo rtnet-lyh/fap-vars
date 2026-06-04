@@ -1,22 +1,22 @@
 {
-  "host": "192.168.1.163",
-  "port": 22,
-  "user": "fap",
-  "password": "f3dtop0!",
+  "host": "172.18.8.41",
+  "port": 222,
+  "user": "root",
+  "password": "",
   "credentials": {
     "SOLARIS": [
       {
-        "application_id": 412,
+        "application_id": 415,
         "application_type_id": 40,
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "fap",
-          "password": "f3dtop0!",
+          "username": "sysadmin",
+          "password": "!2602Edc41",
           "become": "True",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "C_ttms2602!"
         }
       }
     ]
@@ -45,20 +45,32 @@
     "action_content": "정의된 mdb 커널 심볼, ndd 네트워크 파라미터, ulimit -n 값이 조회되고 기준값이 있는 항목은 일치하는지 확인합니다.",
     "threshold_list": [
       {
-        "name": "required_parameters",
-        "value1": "shmmax,seminfo_semmsl,maxfiles,maxuproc,minfree,msginfo_msgmax"
+        "name": "tcp_time_wait_interval",
+        "value1": "<=,60000"
       },
       {
-        "name": "required_ndd_parameters",
-        "value1": "/dev/tcp:tcp_conn_req_max_q,/dev/tcp:tcp_conn_req_max_q0,/dev/tcp:tcp_keepalive_interval,/dev/tcp:tcp_time_wait_interval,/dev/ip:ip_forwarding"
+        "name": "tcp_conn_req_max_q",
+        "value1": ">=,128"
       },
       {
-        "name": "ulimit_n",
-        "value1": ""
+        "name": "tcp_conn_req_max_q0",
+        "value1": ">=,1024"
       },
       {
-        "name": "failure_keywords",
-        "value1": "장치를 찾을 수 없습니다,not found,cannot,unknown,command not found,module missing,invalid argument"
+        "name": "tcp_keepalive_interval",
+        "value1": "<=,7200000"
+      },
+      {
+        "name": "tcp_fin_wait_2_flush_interval",
+        "value1": "<=,67500"
+      },
+      {
+        "name": "tcp_smallest_anon_port",
+        "value1": ">=,32768"
+      },
+      {
+        "name": "tcp_largest_anon_port",
+        "value1": ">=,65535"
       }
     ]
   }

@@ -45,7 +45,7 @@ class Check(BaseCheck):
         for line in (text or '').splitlines():
             parts = line.split()
             if len(parts) >= 4 and MAC_RE.match(parts[0]) and IP_RE.match(parts[1]):
-                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[3]})
+                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[4]})
         return entries
 
     def run(self):

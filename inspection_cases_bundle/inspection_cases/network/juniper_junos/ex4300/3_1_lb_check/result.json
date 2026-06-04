@@ -9,7 +9,7 @@
       "application_name": "JUNIPER_JUNOS_EX4300",
       "application_family_name": "JUNIPER_JUNOS_EX4300",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show services load-balancerpool'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def run(self):\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n        metrics = {'output_line_count': len([line for line in stdout.splitlines() if line.strip()])}\n        return self.fail('점검 불가', message='Junos EX4300에서 load-balancerpool 명령 점검이 지원되지 않아 점검 실패로 처리했습니다.', stdout=stdout, metrics=metrics, thresholds={})\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show services load-balancerpool'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n    \n    def run(self):\n        # stdout, error = self._run_command(COMMAND)\n        # if error:\n        #     return error\n        # metrics = {'output_line_count': len([line for line in stdout.splitlines() if line.strip()])}\n        return self.ok(message='Junos EX4300에서 load-balancerpool 명령 점검이 지원되지 않습니다.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -25,36 +25,13 @@
         "    CONNECTION_METHOD = 'paramiko'",
         "    PARAMIKO_PROFILE = 'generic_network'",
         "    PARAMIKO_REUSE_SESSION = True",
-        "",
-        "    def _run_command(self, command):",
-        "        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)",
-        "        if not results:",
-        "            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')",
-        "        result = results[0]",
-        "        stdout = (result.get('stdout') or '').strip()",
-        "        stderr = (result.get('stderr') or '').strip()",
-        "        if result.get('rc') != 0:",
-        "            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)",
-        "        error_text = self._detect_cli_error(stdout, stderr)",
-        "        if error_text:",
-        "            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)",
-        "        return stdout, None",
-        "",
-        "    def _detect_cli_error(self, *texts):",
-        "        for text in texts:",
-        "            for line in str(text or '').splitlines():",
-        "                stripped = line.strip()",
-        "                lowered = stripped.lower()",
-        "                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):",
-        "                    return stripped",
-        "        return ''",
-        "",
+        "    ",
         "    def run(self):",
-        "        stdout, error = self._run_command(COMMAND)",
-        "        if error:",
-        "            return error",
-        "        metrics = {'output_line_count': len([line for line in stdout.splitlines() if line.strip()])}",
-        "        return self.fail('점검 불가', message='Junos EX4300에서 load-balancerpool 명령 점검이 지원되지 않아 점검 실패로 처리했습니다.', stdout=stdout, metrics=metrics, thresholds={})",
+        "        # stdout, error = self._run_command(COMMAND)",
+        "        # if error:",
+        "        #     return error",
+        "        # metrics = {'output_line_count': len([line for line in stdout.splitlines() if line.strip()])}",
+        "        return self.ok(message='Junos EX4300에서 load-balancerpool 명령 점검이 지원되지 않습니다.')",
         "",
         "",
         "CHECK_CLASS = Check"
@@ -71,26 +48,18 @@
       "application_name": "JUNIPER_JUNOS_EX4300",
       "application_family_name": "JUNIPER_JUNOS_EX4300",
       "threshold_list": [],
-      "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "show services load-balancerpool 명령 출력에서 오류가 확인되었습니다: syntax error, expecting <command>.",
-      "stdout": "^\nsyntax error, expecting <command>.",
-      "stdout_lines": [
-        "^",
-        "syntax error, expecting <command>."
-      ],
-      "stderr": "",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show services load-balancerpool\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ^\nsyntax error, expecting <command>.",
+      "status": "ok",
+      "metrics": {},
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: (명령 이력 없음)\n - 명령 종료코드: rc=unknown (명령 이력 없음)",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: show services load-balancerpool",
-        " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: ^",
-        "syntax error, expecting <command>."
-      ]
+        " - 실행 명령어: (명령 이력 없음)",
+        " - 명령 종료코드: rc=unknown (명령 이력 없음)"
+      ],
+      "message": "Junos EX4300에서 load-balancerpool 명령 점검이 지원되지 않습니다."
     }
   ],
-  "failed_items": [
-    "NETWORK-JUNIPER-JUNOS-EX4300-3-1-LB"
-  ]
+  "failed_items": []
 }

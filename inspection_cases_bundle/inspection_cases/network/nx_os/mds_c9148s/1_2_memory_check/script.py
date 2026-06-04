@@ -13,7 +13,8 @@ STATUS_RE = re.compile(r'Current memory status:\s*(\S+)', re.IGNORECASE)
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
-
+    SSH_CONTROL_MASTER = False
+    
     def run(self):
         max_usage = self.get_threshold_var('max_mem_usage_percent', default=90.0, value_type='float')
         thresholds = {'max_mem_usage_percent': max_usage}

@@ -3,7 +3,7 @@
 from .common._base import BaseCheck
 
 
-LOG_COMMAND = "dmesg | grep -i 'error|fail|warning'"
+LOG_COMMAND = "dmesg | egrep -i 'error|fail|warning'"
 
 
 class Check(BaseCheck):

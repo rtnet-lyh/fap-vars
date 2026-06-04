@@ -11,7 +11,8 @@ COMMAND = 'show vsan'
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
-
+    SSH_CONTROL_MASTER = False
+    
     def _split(self, value):
         return [item for item in re.split(r'[\s,]+', str(value or '').strip()) if item]
 
@@ -29,7 +30,7 @@ class Check(BaseCheck):
         return vsans
 
     def run(self):
-        expected = self._split(self.get_threshold_var('active_vsan', default='', value_type='str'))
+        expected = self._split(self.get_threshold_var('active_vsan', default='10', value_type='str'))
         thresholds = {'active_vsan': expected}
         if not expected:
             return self.fail('임계치 미정의', message='active_vsan 값이 필요합니다.', thresholds=thresholds)

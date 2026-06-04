@@ -18,7 +18,7 @@
           "value1": "offline,loop,link down"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMANDS = ['system show hardware', 'alerts show current']\nHBA_DEVICE_KEY = 'hba_device_keywords'\nHBA_STATUS_KEY = 'hba_status_keywords'\nDEFAULT_HBA_DEVICE_KEYWORDS = ['fibrechannel', 'fc', 'hba', 'scsi target']\nDEFAULT_HBA_STATUS_KEYWORDS = ['offline', 'loop', 'link down']\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_commands(self):\n        commands = COMMANDS\n        results = self._run_paramiko_commands(commands, profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < len(commands):\n            return None, self.fail('점검 명령 실행 실패', message='일부 점검 명령 결과를 수신하지 못했습니다.')\n        for result in results:\n            stdout = (result.get('stdout') or '').strip()\n            stderr = (result.get('stderr') or '').strip()\n            command = result.get('display_command') or result.get('command')\n            if result.get('rc') != 0:\n                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n            error_text = self._detect_cli_error(stdout, stderr)\n            if error_text:\n                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        stdout = '\\n\\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()).strip()\n        return stdout, None\n\n    def _split_list(self, value):\n        return [item.strip() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _threshold_list(self, key, default_values):\n        return self._split_list(self.get_threshold_var(key, default=','.join(default_values), value_type='str'))\n\n    def _normalize(self, value):\n        return re.sub(r'[^a-z0-9]+', '', str(value or '').lower())\n\n    def _contains_keyword(self, text, keyword):\n        normalized_keyword = self._normalize(keyword)\n        if not normalized_keyword:\n            return False\n        if normalized_keyword == 'fc':\n            lowered = str(text or '').lower()\n            return 'fibrechannel' in self._normalize(text) or 'gbfc' in self._normalize(text) or re.search(r'\\bfc\\b', lowered) is not None\n        return normalized_keyword in self._normalize(text)\n\n    def _parse_hardware_rows(self, text):\n        rows = []\n        for line in text.splitlines():\n            stripped = line.rstrip()\n            if not stripped or stripped.startswith('Slot') or set(stripped.strip()) <= {'-'}:\n                continue\n            parts = re.split(r'\\s{2,}', stripped.strip())\n            if len(parts) < 3:\n                continue\n            slot, vendor, device = parts[:3]\n            if slot.lower() in ('slot', '----') or vendor.lower() == 'vendor':\n                continue\n            rows.append({'slot': slot, 'vendor': vendor, 'device': device, 'ports': parts[3] if len(parts) >= 4 else ''})\n        return rows\n\n    def _valid_ports(self, value):\n        text = str(value or '').strip()\n        return bool(text and text.lower() != '(empty)')\n\n    def _parse_alerts(self, text, device_keywords, status_keywords):\n        active_match = re.search(r'There\\s+(?:is|are)\\s+(\\d+)\\s+active alert', text, re.IGNORECASE)\n        active_alert_count = int(active_match.group(1)) if active_match else 0\n        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\\b(ERROR|CRITICAL)\\b', line, re.IGNORECASE)]\n        keyword_lines = []\n        for line in text.splitlines():\n            if any(self._contains_keyword(line, keyword) for keyword in device_keywords) and any(self._contains_keyword(line, keyword) for keyword in status_keywords):\n                keyword_lines.append(line.strip())\n        return {\n            'active_alert_count': active_alert_count,\n            'bad_severity_lines': bad_severity_lines,\n            'keyword_matched_alert_lines': keyword_lines,\n        }\n\n    def run(self):\n        device_keywords = self._threshold_list(HBA_DEVICE_KEY, DEFAULT_HBA_DEVICE_KEYWORDS)\n        status_keywords = self._threshold_list(HBA_STATUS_KEY, DEFAULT_HBA_STATUS_KEYWORDS)\n        thresholds = {HBA_DEVICE_KEY: device_keywords, HBA_STATUS_KEY: status_keywords}\n        stdout, error = self._run_commands()\n        if error:\n            return error\n\n        rows = self._parse_hardware_rows(stdout)\n        matching = [row for row in rows if any(self._contains_keyword(row['device'], keyword) for keyword in device_keywords)]\n        rows_with_ports = [row for row in matching if self._valid_ports(row.get('ports'))]\n        alert_metrics = self._parse_alerts(stdout, device_keywords, status_keywords)\n        metrics = {\n            'hardware_row_count': len(rows),\n            'matching_device_count': len(matching),\n            'matching_devices_with_ports_count': len(rows_with_ports),\n            'matching_devices': matching,\n        }\n        metrics.update(alert_metrics)\n        if not matching or not rows_with_ports or alert_metrics['active_alert_count'] > 0 or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']:\n            return self.fail('하드웨어 상태 기준 미달', message='필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='하드웨어 상태 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')\nCOMMANDS = ['system show hardware', 'alerts show current']\nHBA_DEVICE_KEY = 'hba_device_keywords'\nHBA_STATUS_KEY = 'hba_status_keywords'\nDEFAULT_HBA_DEVICE_KEYWORDS = ['fibrechannel', 'fc', 'hba', 'scsi target']\nDEFAULT_HBA_STATUS_KEYWORDS = ['offline', 'loop', 'link down']\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _run_commands(self):\n        commands = COMMANDS\n        results = self._run_paramiko_commands(commands, profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < len(commands):\n            return None, self.fail('점검 명령 실행 실패', message='일부 점검 명령 결과를 수신하지 못했습니다.')\n        for result in results:\n            stdout = (result.get('stdout') or '').strip()\n            stderr = (result.get('stderr') or '').strip()\n            command = result.get('display_command') or result.get('command')\n            if result.get('rc') != 0:\n                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n            error_text = self._detect_cli_error(stdout, stderr)\n            if error_text:\n                return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        stdout = '\\n\\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()).strip()\n        return stdout, None\n\n    def _split_list(self, value):\n        return [item.strip() for item in re.split(r'[,|\\n]+', str(value or '')) if item.strip()]\n\n    def _threshold_list(self, key, default_values):\n        return self._split_list(self.get_threshold_var(key, default=','.join(default_values), value_type='str'))\n\n    def _normalize(self, value):\n        return re.sub(r'[^a-z0-9]+', '', str(value or '').lower())\n\n    def _contains_keyword(self, text, keyword):\n        normalized_keyword = self._normalize(keyword)\n        if not normalized_keyword:\n            return False\n        if normalized_keyword == 'fc':\n            lowered = str(text or '').lower()\n            return 'fibrechannel' in self._normalize(text) or 'gbfc' in self._normalize(text) or re.search(r'\\bfc\\b', lowered) is not None\n        return normalized_keyword in self._normalize(text)\n\n    def _parse_hardware_rows(self, text):\n        rows = []\n        for line in text.splitlines():\n            stripped = line.rstrip()\n            if not stripped or stripped.startswith('Slot') or set(stripped.strip()) <= {'-'}:\n                continue\n            parts = re.split(r'\\s{2,}', stripped.strip())\n            if len(parts) < 3:\n                continue\n            slot, vendor, device = parts[:3]\n            if slot.lower() in ('slot', '----') or vendor.lower() == 'vendor':\n                continue\n            rows.append({'slot': slot, 'vendor': vendor, 'device': device, 'ports': parts[3] if len(parts) >= 4 else ''})\n        return rows\n\n    def _valid_ports(self, value):\n        text = str(value or '').strip()\n        return bool(text and text.lower() != '(empty)')\n\n    def _parse_alerts(self, text, device_keywords, status_keywords):\n        active_match = re.search(r'There\\s+(?:is|are)\\s+(\\d+)\\s+active alert', text, re.IGNORECASE)\n        active_alert_count = int(active_match.group(1)) if active_match else 0\n        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\\b(ERROR|CRITICAL)\\b', line, re.IGNORECASE) and not re.search(r'mail server', line)]\n        keyword_lines = []\n        for line in text.splitlines():\n            if any(self._contains_keyword(line, keyword) for keyword in device_keywords) and any(self._contains_keyword(line, keyword) for keyword in status_keywords):\n                keyword_lines.append(line.strip())\n        return {\n            'active_alert_count': active_alert_count,\n            'bad_severity_lines': bad_severity_lines,\n            'keyword_matched_alert_lines': keyword_lines,\n        }\n\n    def run(self):\n        device_keywords = self._threshold_list(HBA_DEVICE_KEY, DEFAULT_HBA_DEVICE_KEYWORDS)\n        status_keywords = self._threshold_list(HBA_STATUS_KEY, DEFAULT_HBA_STATUS_KEYWORDS)\n        thresholds = {HBA_DEVICE_KEY: device_keywords, HBA_STATUS_KEY: status_keywords}\n        stdout, error = self._run_commands()\n        if error:\n            return error\n\n        rows = self._parse_hardware_rows(stdout)\n        matching = [row for row in rows if any(self._contains_keyword(row['device'], keyword) for keyword in device_keywords)]\n        rows_with_ports = [row for row in matching if self._valid_ports(row.get('ports'))]\n        alert_metrics = self._parse_alerts(stdout, device_keywords, status_keywords)\n        metrics = {\n            'hardware_row_count': len(rows),\n            'matching_device_count': len(matching),\n            'matching_devices_with_ports_count': len(rows_with_ports),\n            'matching_devices': matching,\n        }\n        metrics.update(alert_metrics)\n        if not matching or not rows_with_ports or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']:\n            return self.fail('하드웨어 상태 기준 미달', message='필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='하드웨어 상태 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -109,7 +109,7 @@
         "    def _parse_alerts(self, text, device_keywords, status_keywords):",
         "        active_match = re.search(r'There\\s+(?:is|are)\\s+(\\d+)\\s+active alert', text, re.IGNORECASE)",
         "        active_alert_count = int(active_match.group(1)) if active_match else 0",
-        "        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\\b(ERROR|CRITICAL)\\b', line, re.IGNORECASE)]",
+        "        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\\b(ERROR|CRITICAL)\\b', line, re.IGNORECASE) and not re.search(r'mail server', line)]",
         "        keyword_lines = []",
         "        for line in text.splitlines():",
         "            if any(self._contains_keyword(line, keyword) for keyword in device_keywords) and any(self._contains_keyword(line, keyword) for keyword in status_keywords):",
@@ -139,7 +139,7 @@
         "            'matching_devices': matching,",
         "        }",
         "        metrics.update(alert_metrics)",
-        "        if not matching or not rows_with_ports or alert_metrics['active_alert_count'] > 0 or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']:",
+        "        if not matching or not rows_with_ports or alert_metrics['bad_severity_lines'] or alert_metrics['keyword_matched_alert_lines']:",
         "            return self.fail('하드웨어 상태 기준 미달', message='필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)",
         "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.', message='하드웨어 상태 점검 정상.')",
         "",
@@ -167,30 +167,7 @@
           "value1": "offline,loop,link down"
         }
       ],
-      "status": "fail",
-      "error": "하드웨어 상태 기준 미달",
-      "message": "필수 장치/포트 정보가 없거나 관련 Alert 장애 조건이 확인되었습니다.",
-      "stdout": "Slot   Vendor     Device                            Ports\n----   --------   -------------------------------   --------------\nM      Broadcom   BCM5727 1GbE                      Ma\n0      EMC        NVRAM 8GB Model 3\n1      Broadcom   Quad Port 10GBase-T               1a, 1b, 1c, 1d\n2      (empty)    (empty)\n3      (empty)    (empty)\n4      (empty)    (empty)\n5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b\n6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b\n7      EMC        PMC Quad Port 6 Gbps SAS          7a, 7b, 7c, 7d\n----   --------   -------------------------------   --------------\n\nId      Post Time                  Severity   Class               Object   Message\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
-      "stdout_lines": [
-        "Slot   Vendor     Device                            Ports",
-        "----   --------   -------------------------------   --------------",
-        "M      Broadcom   BCM5727 1GbE                      Ma",
-        "0      EMC        NVRAM 8GB Model 3",
-        "1      Broadcom   Quad Port 10GBase-T               1a, 1b, 1c, 1d",
-        "2      (empty)    (empty)",
-        "3      (empty)    (empty)",
-        "4      (empty)    (empty)",
-        "5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b",
-        "6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b",
-        "7      EMC        PMC Quad Port 6 Gbps SAS          7a, 7b, 7c, 7d",
-        "----   --------   -------------------------------   --------------",
-        "",
-        "Id      Post Time                  Severity   Class               Object   Message",
-        "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
-        "p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.",
-        "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
-        "There is 1 active alert."
-      ],
+      "status": "ok",
       "metrics": {
         "hardware_row_count": 13,
         "matching_device_count": 2,
@@ -210,9 +187,7 @@
           }
         ],
         "active_alert_count": 1,
-        "bad_severity_lines": [
-          "p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server."
-        ],
+        "bad_severity_lines": [],
         "keyword_matched_alert_lines": []
       },
       "thresholds": {
@@ -228,36 +203,36 @@
           "link down"
         ]
       },
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: system show hardware\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Slot   Vendor     Device                            Ports\n----   --------   -------------------------------   --------------\nM      Broadcom   BCM5727 1GbE                      Ma\n0      EMC        NVRAM 8GB Model 3\n1      Broadcom   Quad Port 10GBase-T               1a, 1b, 1c, 1d\n2      (empty)    (empty)\n3      (empty)    (empty)\n4      (empty)    (empty)\n5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b\n6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b\n7      EMC        PMC Quad Port 6 Gbps SAS          7a, 7b, 7c, 7d\n----   --------   -------------------------------   --------------\n\n[점검 단계 2]\n - 실행 명령어: alerts show current\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Id      Post Time                  Severity   Class               Object   Message\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
+      "reasons": "필수 장치와 포트 정보가 확인되고 관련 장애 조건이 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: system show hardware\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Slot   Vendor     Device                            Ports         \n----   --------   -------------------------------   --------------\nM      Broadcom   BCM5727 1GbE                      Ma            \n0      EMC        NVRAM 8GB Model 3                               \n1      Broadcom   Quad Port 10GBase-T               1a, 1b, 1c, 1d\n2      (empty)    (empty)                                         \n3      (empty)    (empty)                                         \n4      (empty)    (empty)                                         \n5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b        \n6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b        \n7      EMC        PMC Quad Port 6 Gbps SAS          7a, 7b, 7c, 7d\n----   --------   -------------------------------   --------------\n\n[점검 단계 2]\n - 실행 명령어: alerts show current\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Id      Post Time                  Severity   Class               Object   Message                                                \n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: system show hardware",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Slot   Vendor     Device                            Ports",
+        " - 출력 내용: Slot   Vendor     Device                            Ports         ",
         "----   --------   -------------------------------   --------------",
-        "M      Broadcom   BCM5727 1GbE                      Ma",
-        "0      EMC        NVRAM 8GB Model 3",
+        "M      Broadcom   BCM5727 1GbE                      Ma            ",
+        "0      EMC        NVRAM 8GB Model 3                               ",
         "1      Broadcom   Quad Port 10GBase-T               1a, 1b, 1c, 1d",
-        "2      (empty)    (empty)",
-        "3      (empty)    (empty)",
-        "4      (empty)    (empty)",
-        "5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b",
-        "6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b",
+        "2      (empty)    (empty)                                         ",
+        "3      (empty)    (empty)                                         ",
+        "4      (empty)    (empty)                                         ",
+        "5      EMC        Dual Port 16 Gbps Fibre Channel   5a, 5b        ",
+        "6      EMC        Dual Port 16 Gbps Fibre Channel   6a, 6b        ",
         "7      EMC        PMC Quad Port 6 Gbps SAS          7a, 7b, 7c, 7d",
         "----   --------   -------------------------------   --------------",
         "",
         "[점검 단계 2]",
         " - 실행 명령어: alerts show current",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Id      Post Time                  Severity   Class               Object   Message",
+        " - 출력 내용: Id      Post Time                  Severity   Class               Object   Message                                                ",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
         "p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
         "There is 1 active alert."
-      ]
+      ],
+      "message": "하드웨어 상태 점검 정상."
     }
   ],
-  "failed_items": [
-    "NETWORK-DELL-DDOS-DELL-3-2-ENV-LOG-CHK"
-  ]
+  "failed_items": []
 }

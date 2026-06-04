@@ -3,7 +3,7 @@
 from .common._base import BaseCheck
 
 
-LOG_COMMAND = "dmesg | grep -i 'timeout|i/o error|transport failed|media error'"
+LOG_COMMAND = "dmesg | egrep -i 'timeout|i/o error|transport failed|media error'"
 LOG_PATTERNS = (
     'timeout',
     'i/o error',

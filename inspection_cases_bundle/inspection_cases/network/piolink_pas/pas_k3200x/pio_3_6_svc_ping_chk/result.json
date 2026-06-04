@@ -11,7 +11,7 @@
       "threshold_list": [
         {
           "name": "ip_address",
-          "value1": "172.31.247.114"
+          "value1": "172.18.8.191"
         },
         {
           "name": "max_packet_loss_percent",
@@ -22,7 +22,7 @@
           "value1": "100"
         }
       ],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nPING_RUN_TIMEOUT_SEC = 1.0\nPACKET_LOSS_RE = re.compile(r'(\\d+)\\s+packets transmitted,\\s*(\\d+)\\s+received,\\s*([0-9.]+)%\\s+packet loss', re.IGNORECASE)\nAVG_RTT_RE = re.compile(r'(?:rtt|round-trip).*?=\\s*[0-9.]+/([0-9.]+)/[0-9.]+', re.IGNORECASE)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_ping(self, command):\n        results = self._run_paramiko_commands([\n            {'command': command, 'timeout': PING_RUN_TIMEOUT_SEC, 'ignore_prompt': True},\n            {'command': '\\x03', 'timeout': 5, 'hide_command': True},\n        ], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < 2:\n            return None, self.fail('점검 명령 실행 실패', message='ping 종료를 위한 Ctrl-C 결과를 수신하지 못했습니다.')\n        first, second = results[0], results[1]\n        if first.get('rc') not in (0, 124):\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=(first.get('stdout') or '').strip(), stderr=(first.get('stderr') or '').strip())\n        if second.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message='ping 종료 후 프롬프트를 수신하지 못했습니다.', stdout=(second.get('stdout') or '').strip(), stderr=(second.get('stderr') or '').strip())\n        return '\\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()), None\n\n    def run(self):\n        ip_address = str(self.get_threshold_var('ip_address', default='', value_type='str')).strip()\n        max_packet_loss_percent = self.get_threshold_var('max_packet_loss_percent', default=0.0, value_type='float')\n        max_avg_response_time_ms = self.get_threshold_var('max_avg_response_time_ms', default=100.0, value_type='float')\n        thresholds = {\n            'ip_address': ip_address,\n            'max_packet_loss_percent': max_packet_loss_percent,\n            'max_avg_response_time_ms': max_avg_response_time_ms,\n            'ping_run_timeout_sec': PING_RUN_TIMEOUT_SEC,\n        }\n        if not ip_address:\n            return self.fail('임계치 미정의', message='ip_address threshold 값이 필요합니다.', thresholds=thresholds)\n\n        command = f'ping {ip_address}'\n        output, error = self._run_ping(command)\n        if error:\n            return error\n\n        loss_match = PACKET_LOSS_RE.search(output or '')\n        avg_match = AVG_RTT_RE.search(output or '')\n        if not loss_match or not avg_match:\n            return self.fail('ping 결과 파싱 실패', message='packet loss 또는 avg RTT 값을 해석하지 못했습니다.', stdout=output, thresholds=thresholds)\n\n        transmitted = int(loss_match.group(1))\n        received = int(loss_match.group(2))\n        packet_loss = float(loss_match.group(3))\n        avg_response_time_ms = float(avg_match.group(1))\n        metrics = {\n            'ip_address': ip_address,\n            'packets_transmitted': transmitted,\n            'packets_received': received,\n            'packet_loss_percent': packet_loss,\n            'avg_response_time_ms': avg_response_time_ms,\n        }\n        if packet_loss > max_packet_loss_percent or avg_response_time_ms > max_avg_response_time_ms:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='packet loss 또는 avg RTT가 임계치를 초과했습니다.', message=f'통신 테스트 경고: loss={packet_loss}%, avg={avg_response_time_ms}ms.')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='packet loss와 avg RTT가 임계치 이하입니다.', message=f'통신 테스트 정상: loss={packet_loss}%, avg={avg_response_time_ms}ms.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nPING_RUN_TIMEOUT_SEC = 1.0\nPACKET_LOSS_RE = re.compile(r'(\\d+)\\s+packets transmitted,\\s*(\\d+)\\s+received,\\s*([0-9.]+)%\\s+packet loss', re.IGNORECASE)\nAVG_RTT_RE = re.compile(r'(?:rtt|round-trip).*?=\\s*[0-9.]+/([0-9.]+)/[0-9.]+', re.IGNORECASE)\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_ping(self, command):\n        results = self._run_paramiko_commands([\n            {'command': command, 'timeout': PING_RUN_TIMEOUT_SEC, 'ignore_prompt': True},\n            {'command': '\\x03', 'timeout': 5, 'hide_command': True},\n        ], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        if len(results) < 2:\n            return None, self.fail('점검 명령 실행 실패', message='ping 종료를 위한 Ctrl-C 결과를 수신하지 못했습니다.')\n        first, second = results[0], results[1]\n        if first.get('rc') not in (0, 124):\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=(first.get('stdout') or '').strip(), stderr=(first.get('stderr') or '').strip())\n        if second.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message='ping 종료 후 프롬프트를 수신하지 못했습니다.', stdout=(second.get('stdout') or '').strip(), stderr=(second.get('stderr') or '').strip())\n        return '\\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()), None\n\n    def run(self):\n        ip_address = str(self.get_threshold_var('ip_address', default='172.18.8.191', value_type='str')).strip()\n        max_packet_loss_percent = self.get_threshold_var('max_packet_loss_percent', default=0.0, value_type='float')\n        max_avg_response_time_ms = self.get_threshold_var('max_avg_response_time_ms', default=100.0, value_type='float')\n        thresholds = {\n            'ip_address': ip_address,\n            'max_packet_loss_percent': max_packet_loss_percent,\n            'max_avg_response_time_ms': max_avg_response_time_ms,\n            'ping_run_timeout_sec': PING_RUN_TIMEOUT_SEC,\n        }\n        if not ip_address:\n            return self.fail('임계치 미정의', message='ip_address threshold 값이 필요합니다.', thresholds=thresholds)\n\n        command = f'ping {ip_address}'\n        output, error = self._run_ping(command)\n        if error:\n            return error\n\n        loss_match = PACKET_LOSS_RE.search(output or '')\n        avg_match = AVG_RTT_RE.search(output or '')\n        if not loss_match or not avg_match:\n            return self.fail('ping 결과 파싱 실패', message='packet loss 또는 avg RTT 값을 해석하지 못했습니다.', stdout=output, thresholds=thresholds)\n\n        transmitted = int(loss_match.group(1))\n        received = int(loss_match.group(2))\n        packet_loss = float(loss_match.group(3))\n        avg_response_time_ms = float(avg_match.group(1))\n        metrics = {\n            'ip_address': ip_address,\n            'packets_transmitted': transmitted,\n            'packets_received': received,\n            'packet_loss_percent': packet_loss,\n            'avg_response_time_ms': avg_response_time_ms,\n        }\n        if packet_loss > max_packet_loss_percent or avg_response_time_ms > max_avg_response_time_ms:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='packet loss 또는 avg RTT가 임계치를 초과했습니다.', message=f'통신 테스트 경고: loss={packet_loss}%, avg={avg_response_time_ms}ms.')\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='packet loss와 avg RTT가 임계치 이하입니다.', message=f'통신 테스트 정상: loss={packet_loss}%, avg={avg_response_time_ms}ms.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -59,7 +59,7 @@
         "        return '\\n'.join((item.get('stdout') or '').strip() for item in results if (item.get('stdout') or '').strip()), None",
         "",
         "    def run(self):",
-        "        ip_address = str(self.get_threshold_var('ip_address', default='', value_type='str')).strip()",
+        "        ip_address = str(self.get_threshold_var('ip_address', default='172.18.8.191', value_type='str')).strip()",
         "        max_packet_loss_percent = self.get_threshold_var('max_packet_loss_percent', default=0.0, value_type='float')",
         "        max_avg_response_time_ms = self.get_threshold_var('max_avg_response_time_ms', default=100.0, value_type='float')",
         "        thresholds = {",
@@ -113,7 +113,7 @@
       "threshold_list": [
         {
           "name": "ip_address",
-          "value1": "172.31.247.114"
+          "value1": "172.18.8.191"
         },
         {
           "name": "max_packet_loss_percent",
@@ -126,39 +126,40 @@
       ],
       "status": "ok",
       "metrics": {
-        "ip_address": "172.31.247.114",
-        "packets_transmitted": 2,
-        "packets_received": 2,
+        "ip_address": "172.18.8.191",
+        "packets_transmitted": 1,
+        "packets_received": 1,
         "packet_loss_percent": 0.0,
-        "avg_response_time_ms": 0.017
+        "avg_response_time_ms": 0.109
       },
       "thresholds": {
-        "ip_address": "172.31.247.114",
+        "ip_address": "172.18.8.191",
         "max_packet_loss_percent": 0.0,
         "max_avg_response_time_ms": 100.0,
         "ping_run_timeout_sec": 1.0
       },
       "reasons": "packet loss와 avg RTT가 임계치 이하입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: ping 172.31.247.114\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): PING 172.31.247.114 (172.31.247.114) 56(84) bytes of data.\n64 bytes from 172.31.247.114: icmp_req=1 ttl=64 time=0.022 ms\n64 bytes from 172.31.247.114: icmp_req=2 ttl=64 time=0.012 ms\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ^C\n--- 172.31.247.114 ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, time 999ms\nrtt min/avg/max/mdev = 0.012/0.017/0.022/0.005 ms\nDone",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ping 172.18.8.191\n - 명령 종료코드: rc=124 (명령 시간 초과)\n - 출력 내용(stdout): PING 172.18.8.191 (172.18.8.191) 56(84) bytes of data.\n64 bytes from 172.18.8.191: icmp_req=1 ttl=64 time=0.109 ms\n - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received\n\n[점검 단계 2]\n - 실행 명령어: *******\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: ^C\n\n--- 172.18.8.191 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 0.109/0.109/0.109/0.000 ms\nDone\nCenter_PAS-K3200X_A#",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: ping 172.31.247.114",
+        " - 실행 명령어: ping 172.18.8.191",
         " - 명령 종료코드: rc=124 (명령 시간 초과)",
-        " - 출력 내용(stdout): PING 172.31.247.114 (172.31.247.114) 56(84) bytes of data.",
-        "64 bytes from 172.31.247.114: icmp_req=1 ttl=64 time=0.022 ms",
-        "64 bytes from 172.31.247.114: icmp_req=2 ttl=64 time=0.012 ms",
+        " - 출력 내용(stdout): PING 172.18.8.191 (172.18.8.191) 56(84) bytes of data.",
+        "64 bytes from 172.18.8.191: icmp_req=1 ttl=64 time=0.109 ms",
         " - 출력 내용(stderr): PARAMIKO_COMMAND_TIMEOUT: prompt was not received",
         "",
         "[점검 단계 2]",
         " - 실행 명령어: *******",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: ^C",
-        "--- 172.31.247.114 ping statistics ---",
-        "2 packets transmitted, 2 received, 0% packet loss, time 999ms",
-        "rtt min/avg/max/mdev = 0.012/0.017/0.022/0.005 ms",
-        "Done"
+        "",
+        "--- 172.18.8.191 ping statistics ---",
+        "1 packets transmitted, 1 received, 0% packet loss, time 0ms",
+        "rtt min/avg/max/mdev = 0.109/0.109/0.109/0.000 ms",
+        "Done",
+        "Center_PAS-K3200X_A#"
       ],
-      "message": "통신 테스트 정상: loss=0.0%, avg=0.017ms."
+      "message": "통신 테스트 정상: loss=0.0%, avg=0.109ms."
     }
   ],
   "failed_items": []

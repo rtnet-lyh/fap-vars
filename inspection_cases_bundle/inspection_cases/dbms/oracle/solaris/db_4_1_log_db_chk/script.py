@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import shlex
+import re
 
 from .common._base import BaseCheck
 
 
 LOG_PATTERN = 'ORA-01536|ORA-01110|ORA-00060|ORA-01578|RMAN-08136'
-DEFAULT_DB_LOG_DIR = '/TTIPS_LOG01/diag/rdbms/ttips/TTIPS1/trace'
-
+DIAG_TRACE_PATH_QUERY = """sqlplus -S / as sysdba << EOF
+set pages 0 feedback off heading off
+SELECT value
+FROM v\$diag_info where name = 'Diag Trace';
+EXIT;
+EOF"""
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -17,23 +22,38 @@ class Check(BaseCheck):
 
     def run(self):
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
-        db_log_dir = self.get_threshold_var('db_log_dir', default=DEFAULT_DB_LOG_DIR, value_type='str')
-        command = 'egrep -i "%s" %s/alert_*.log' % (LOG_PATTERN, shlex.quote(db_log_dir))
+
+        # log 경로를 찾기위한 쿼리 실행
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,
-                [{'command': command, 'timeout': 20}],
+                [{'command': DIAG_TRACE_PATH_QUERY, 'timeout': 20}],
             )[0]
         except ValueError as exc:
             return self.fail('Oracle 계정 전환 설정 오류', message=str(exc))
 
-        stdout = (result.get('stdout') or '').strip()
-        stderr = (result.get('stderr') or '').strip()
         switch = getattr(self, '_solaris_last_account_switch_verification', {}) or {}
-        if self._is_connection_error(result.get('rc'), stderr):
-            return self.fail('호스트 연결 실패', message=stderr or 'Paramiko 연결 확인에 실패했습니다.', stderr=stderr)
         if not switch.get('ok'):
             return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=stderr)
+
+        stdout = result.get('stdout', '')
+        match = re.search(r"(/[\w./-]+)", stdout)
+        db_log_dir = match.group(1) if match else False
+
+        if not db_log_dir:
+            return self.fail('alert log 검색 실패', message='alert log 검색 실패')
+        
+        # 로그 확인
+        command = "egrep -i '%s' %s/alert_*.log" % (LOG_PATTERN, shlex.quote(db_log_dir))
+    
+        result = self._run_paramiko_commands(                
+            [{'command': command, 'timeout': 20}],
+            become=True
+        )[0]
+
+        stdout = (result.get('stdout') or '').strip()
+        stderr = (result.get('stderr') or '').strip()
+        
         if result.get('rc') not in (0, 1):
             return self.fail('DB 로그 grep 실행 실패', message='DB 로그 파일에서 Oracle 오류 번호를 검색하지 못했습니다.', stdout=stdout, stderr=stderr)
 

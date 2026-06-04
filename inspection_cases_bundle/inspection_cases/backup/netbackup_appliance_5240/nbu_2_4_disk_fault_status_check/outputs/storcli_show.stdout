@@ -1,0 +1,24 @@
+atmsbackup.Main_Menu> /opt/MegaRAID/storcli/storcli64 /c0 /eall /sall show
+CLI Version = 007.1704.0000.0000 Jan 16, 2021
+Operating system = Linux 4.18.0-372.105.1.el8_6.x86_64
+Controller = 0
+Status = Success
+Description = Show Drive Information Succeeded.
+
+
+Drive Information :
+=================
+
+------------------------------------------------------------------------------
+EID:Slt DID State DG       Size Intf Med SED PI SeSz Model            Sp Type
+------------------------------------------------------------------------------
+252:0    11 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:1    10 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:2    16 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:3    12 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:4    15 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:5    14 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:6     8 Onln   0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     U  -
+252:7    13 DHS    0 930.390 GB SAS  HDD N   N  512B ST1000NM0045     D  -
+------------------------------------------------------------------------------
+atmsbackup.Main_Menu>

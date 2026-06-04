@@ -18,6 +18,7 @@ PROMPT_RE = re.compile(r'^[A-Za-z0-9_.:/-]+[>#]\s*$')
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def _parse_top_processes(self, text, limit):
         found_header = False

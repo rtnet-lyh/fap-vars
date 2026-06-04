@@ -9,7 +9,7 @@
       "application_name": "JUNIPER_JUNOS_EX4300",
       "application_family_name": "JUNIPER_JUNOS_EX4300",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show arp'\nMAC_RE = re.compile(r'^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$', re.IGNORECASE)\nIP_RE = re.compile(r'^\\d+(?:\\.\\d+){3}$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _parse_arp_entries(self, text):\n        entries = []\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if len(parts) >= 4 and MAC_RE.match(parts[0]) and IP_RE.match(parts[1]):\n                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[3]})\n        return entries\n\n    def run(self):\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n\n        entries = self._parse_arp_entries(stdout)\n        metrics = {'arp_entry_count': len(entries), 'arp_entries': entries}\n        if not entries:\n            return self.fail('MAC/ARP 파싱 실패', message='show arp 출력에서 MAC/IP/interface 행을 찾지 못했습니다.', stdout=stdout, metrics=metrics, thresholds={})\n        return self.ok(metrics=metrics, thresholds={}, reasons='MAC/IP/interface 행이 1개 이상 정상 파싱되었습니다.', message=f'MAC/ARP 테이블 점검 정상: {len(entries)}개 항목.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show arp'\nMAC_RE = re.compile(r'^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$', re.IGNORECASE)\nIP_RE = re.compile(r'^\\d+(?:\\.\\d+){3}$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def _parse_arp_entries(self, text):\n        entries = []\n        for line in (text or '').splitlines():\n            parts = line.split()\n            if len(parts) >= 4 and MAC_RE.match(parts[0]) and IP_RE.match(parts[1]):\n                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[4]})\n        return entries\n\n    def run(self):\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n\n        entries = self._parse_arp_entries(stdout)\n        metrics = {'arp_entry_count': len(entries), 'arp_entries': entries}\n        if not entries:\n            return self.fail('MAC/ARP 파싱 실패', message='show arp 출력에서 MAC/IP/interface 행을 찾지 못했습니다.', stdout=stdout, metrics=metrics, thresholds={})\n        return self.ok(metrics=metrics, thresholds={}, reasons='MAC/IP/interface 행이 1개 이상 정상 파싱되었습니다.', message=f'MAC/ARP 테이블 점검 정상: {len(entries)}개 항목.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -58,7 +58,7 @@
         "        for line in (text or '').splitlines():",
         "            parts = line.split()",
         "            if len(parts) >= 4 and MAC_RE.match(parts[0]) and IP_RE.match(parts[1]):",
-        "                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[3]})",
+        "                entries.append({'mac_address': parts[0], 'ip_address': parts[1], 'name': parts[2], 'interface': parts[4]})",
         "        return entries",
         "",
         "    def run(self):",
@@ -95,31 +95,31 @@
             "mac_address": "40:5b:7f:6d:53:60",
             "ip_address": "172.18.8.191",
             "name": "172.18.8.191",
-            "interface": "irb.808"
+            "interface": "[ge-0/0/28.0]"
           },
           {
             "mac_address": "44:8a:5b:dc:44:02",
             "ip_address": "172.18.8.230",
             "name": "172.18.8.230",
-            "interface": "irb.808"
+            "interface": "[xe-0/0/35.0]"
           },
           {
             "mac_address": "00:06:c4:90:0d:53",
             "ip_address": "172.18.8.252",
             "name": "172.18.8.252",
-            "interface": "irb.808"
+            "interface": "[ge-0/0/28.0]"
           },
           {
             "mac_address": "00:00:5e:00:01:fe",
             "ip_address": "172.18.8.254",
             "name": "172.18.8.254",
-            "interface": "irb.808"
+            "interface": "[ge-0/0/28.0]"
           }
         ]
       },
       "thresholds": {},
       "reasons": "MAC/IP/interface 행이 1개 이상 정상 파싱되었습니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: MAC Address       Address         Name                      Interface               Flags\n40:5b:7f:6d:53:60 172.18.8.191    172.18.8.191              irb.808 [ge-0/0/28.0]   none\n44:8a:5b:dc:44:02 172.18.8.230    172.18.8.230              irb.808 [xe-0/0/35.0]   none\n00:06:c4:90:0d:53 172.18.8.252    172.18.8.252              irb.808 [ge-0/0/28.0]   none\n00:00:5e:00:01:fe 172.18.8.254    172.18.8.254              irb.808 [ge-0/0/28.0]   none\nTotal entries: 4",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show arp\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: MAC Address       Address         Name                      Interface               Flags\n40:5b:7f:6d:53:60 172.18.8.191    172.18.8.191              irb.808 [ge-0/0/28.0]   none\n44:8a:5b:dc:44:02 172.18.8.230    172.18.8.230              irb.808 [xe-0/0/35.0]   none\n00:06:c4:90:0d:53 172.18.8.252    172.18.8.252              irb.808 [ge-0/0/28.0]   none\n00:00:5e:00:01:fe 172.18.8.254    172.18.8.254              irb.808 [ge-0/0/28.0]   none\nTotal entries: 4\n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show arp",
@@ -129,7 +129,9 @@
         "44:8a:5b:dc:44:02 172.18.8.230    172.18.8.230              irb.808 [xe-0/0/35.0]   none",
         "00:06:c4:90:0d:53 172.18.8.252    172.18.8.252              irb.808 [ge-0/0/28.0]   none",
         "00:00:5e:00:01:fe 172.18.8.254    172.18.8.254              irb.808 [ge-0/0/28.0]   none",
-        "Total entries: 4"
+        "Total entries: 4",
+        "",
+        "{master:0}"
       ],
       "message": "MAC/ARP 테이블 점검 정상: 4개 항목."
     }

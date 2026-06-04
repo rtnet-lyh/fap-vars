@@ -9,7 +9,7 @@
       "application_name": "NX_OS_MDS_C9148S",
       "application_family_name": "NX_OS_MDS_C9148S",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show logging | include fail|error|warning|stop|down'\nPROMPT_RE = re.compile(r'^[A-Za-z0-9_.:/-]+[>#]\\s*$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n    def _lines(self, text):\n        lines = []\n        for line in (text or '').splitlines():\n            stripped = line.strip()\n            if not stripped or PROMPT_RE.match(stripped) or stripped.endswith('# ' + COMMAND):\n                continue\n            lines.append(stripped)\n        return lines\n\n    def run(self):\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())\n\n        lines = self._lines(out)\n        metrics = {'matched_log_count': len(lines), 'matched_logs': lines}\n        if lines:\n            return self.warn(metrics=metrics, thresholds={}, reasons='fail/error/warning/stop/down 관련 로그가 출력되었습니다.', message=f'시스템 로그 키워드 출력 {len(lines)}건.')\n        return self.ok(metrics=metrics, thresholds={}, reasons='fail/error/warning/stop/down 관련 로그가 출력되지 않았습니다.', message='시스템 로그 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'show logging | include fail|error|warning|stop|down'\nPROMPT_RE = re.compile(r'^[A-Za-z0-9_.:/-]+[>#]\\s*$')\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n    SSH_CONTROL_MASTER = False\n\n    def _lines(self, text):\n        lines = []\n        for line in (text or '').splitlines():\n            stripped = line.strip()\n            if not stripped or PROMPT_RE.match(stripped) or stripped.endswith('# ' + COMMAND):\n                continue\n            lines.append(stripped)\n        return lines\n\n    def run(self):\n        rc, out, err = self._ssh(COMMAND)\n        if rc != 0:\n            return self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 실행에 실패했습니다.', stdout=(out or '').strip(), stderr=(err or '').strip())\n\n        lines = self._lines(out)\n        metrics = {'matched_log_count': len(lines), 'matched_logs': lines}\n        if lines:\n            return self.warn(metrics=metrics, thresholds={}, reasons='fail/error/warning/stop/down 관련 로그가 출력되었습니다.', message=f'시스템 로그 키워드 출력 {len(lines)}건.')\n        return self.ok(metrics=metrics, thresholds={}, reasons='fail/error/warning/stop/down 관련 로그가 출력되지 않았습니다.', message='시스템 로그 점검이 정상 수행되었습니다.')\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
@@ -25,6 +25,7 @@
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
         "    CONNECTION_METHOD = 'ssh'",
+        "    SSH_CONTROL_MASTER = False",
         "",
         "    def _lines(self, text):",
         "        lines = []",
@@ -63,29 +64,34 @@
       "threshold_list": [],
       "status": "warn",
       "metrics": {
-        "matched_log_count": 5,
+        "matched_log_count": 8,
         "matched_logs": [
-          "3(errors)               4(warnings)     5(notifications)",
+          "3(errors)\t\t4(warnings)\t5(notifications)",
           "2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)",
           "2026 Apr 15 15:47:57 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from console - login",
           "2026 May 19 17:00:17 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[21938]",
-          "2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]"
+          "2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]",
+          "2026 May 21 09:17:52 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17234]",
+          "2026 May 21 09:19:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17266]",
+          "2026 May 21 09:20:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17362]"
         ]
       },
       "thresholds": {},
       "reasons": "fail/error/warning/stop/down 관련 로그가 출력되었습니다.",
-      "message": "시스템 로그 키워드 출력 5건.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show logging | include fail|error|warning|stop|down\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: CITS-SAN1# show logging | include fail|error|warning|stop|down\n3(errors)               4(warnings)     5(notifications)\n2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)\n2026 Apr 15 15:47:57 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from console - login\n2026 May 19 17:00:17 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[21938]\n2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]",
+      "message": "시스템 로그 키워드 출력 8건.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show logging | include fail|error|warning|stop|down\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 3(errors)\t\t4(warnings)\t5(notifications)\n2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)   \n2026 Apr 15 15:47:57 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from console - login\n2026 May 19 17:00:17 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[21938]\n2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]\n2026 May 21 09:17:52 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17234]\n2026 May 21 09:19:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17266]\n2026 May 21 09:20:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17362]",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show logging | include fail|error|warning|stop|down",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: CITS-SAN1# show logging | include fail|error|warning|stop|down",
-        "3(errors)               4(warnings)     5(notifications)",
-        "2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)",
+        " - 출력 내용: 3(errors)\t\t4(warnings)\t5(notifications)",
+        "2026 Mar 27 09:46:04 CITS-SAN1 %PORT-5-IF_DOWN_LINK_FAILURE: %$VSAN 10%$ Interface fc1/5 is down (Link failure loss of signal)   ",
         "2026 Apr 15 15:47:57 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from console - login",
         "2026 May 19 17:00:17 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[21938]",
-        "2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]"
+        "2026 May 20 17:44:48 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[13859]",
+        "2026 May 21 09:17:52 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17234]",
+        "2026 May 21 09:19:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17266]",
+        "2026 May 21 09:20:47 CITS-SAN1 %AUTHPRIV-3-SYSTEM_MSG: pam_aaa:Authentication failed from 172.18.8.191 - sshd[17362]"
       ]
     }
   ],

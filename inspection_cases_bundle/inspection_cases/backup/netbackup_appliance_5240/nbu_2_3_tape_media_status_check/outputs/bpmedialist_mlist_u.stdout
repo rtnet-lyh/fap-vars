@@ -1,0 +1,19 @@
+atmsbackup.Main_Menu> bpmedialist -mlist -U
+Server Host = netbackup
+
+ id     rl  images   allocated        last updated      density  kbytes restores
+           vimages   expiration       last read         <------- STATUS ------->
+           On Hold
+--------------------------------------------------------------------------------
+EMR162   9     17   03/12/2026 16:29  03/14/2026 15:56  hcart3  9207800736     0
+               17   INFINITY              N/A         FULL
+           0
+
+EMR166  24     20   03/13/2026 15:21  03/13/2026 21:40  hcart3  7579495552     0
+               20   INFINITY              N/A
+           0
+
+EMR167   9     13   03/14/2026 15:56  03/14/2026 23:03  hcart3  7494612576     0
+               13   INFINITY              N/A
+           0
+atmsbackup.Main_Menu>

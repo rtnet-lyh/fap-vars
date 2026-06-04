@@ -91,7 +91,7 @@
       "threshold_list": [],
       "status": "ok",
       "metrics": {
-        "stp_interface_count": 3,
+        "stp_interface_count": 2,
         "invalid_stp_interfaces": [],
         "stp_interfaces": [
           {
@@ -100,20 +100,15 @@
             "role": "DESG"
           },
           {
-            "interface": "ge-0/0/29",
-            "state": "FWD",
-            "role": "DESG"
-          },
-          {
             "interface": "xe-0/0/35",
             "state": "FWD",
-            "role": "ROOT"
+            "role": "DESG"
           }
         ]
       },
       "thresholds": {},
       "reasons": "모든 STP State/Role 조합이 정상 범위입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show spanning-tree interface\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Spanning tree interface parameters for instance 0\n\nInterface                  Port ID    Designated         Designated         Port    State  Role\n                                       port ID           bridge ID          Cost\nge-0/0/28                  128:490      128:490   8192.c8fe6a91c080        20000    FWD    DESG\nge-0/0/29                  128:491      128:491   8192.c8fe6a91c080        20000    FWD    DESG\nxe-0/0/35                  128:492      128:494   4096.f4bfa8edae40         2000    FWD    ROOT",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show spanning-tree interface\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Spanning tree interface parameters for instance 0\n\nInterface                  Port ID    Designated         Designated         Port    State  Role\n                                       port ID           bridge ID          Cost\nge-0/0/28                  128:490      128:490   4096.f4bfa8edae40        20000    FWD    DESG \nxe-0/0/35                  128:494      128:494   4096.f4bfa8edae40         2000    FWD    DESG \n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show spanning-tree interface",
@@ -122,9 +117,10 @@
         "",
         "Interface                  Port ID    Designated         Designated         Port    State  Role",
         "                                       port ID           bridge ID          Cost",
-        "ge-0/0/28                  128:490      128:490   8192.c8fe6a91c080        20000    FWD    DESG",
-        "ge-0/0/29                  128:491      128:491   8192.c8fe6a91c080        20000    FWD    DESG",
-        "xe-0/0/35                  128:492      128:494   4096.f4bfa8edae40         2000    FWD    ROOT"
+        "ge-0/0/28                  128:490      128:490   4096.f4bfa8edae40        20000    FWD    DESG ",
+        "xe-0/0/35                  128:494      128:494   4096.f4bfa8edae40         2000    FWD    DESG ",
+        "",
+        "{master:0}"
       ],
       "message": "STP 상태 점검 정상."
     }

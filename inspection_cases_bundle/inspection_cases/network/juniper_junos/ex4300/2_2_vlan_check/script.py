@@ -50,7 +50,7 @@ class Check(BaseCheck):
         return names
 
     def run(self):
-        active_names = self._split_list(self.get_threshold_var('active_vlan_name', default='', value_type='str'))
+        active_names = self._split_list(self.get_threshold_var('active_vlan_name', default='v808', value_type='str'))
         thresholds = {'active_vlan_name': active_names}
         if not active_names:
             return self.fail('임계치 미정의', message='active_vlan_name threshold 값이 필요합니다.', thresholds=thresholds)

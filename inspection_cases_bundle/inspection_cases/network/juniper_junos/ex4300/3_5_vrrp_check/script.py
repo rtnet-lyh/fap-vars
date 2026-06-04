@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from .common._base import BaseCheck
+import re
 
+from .common._base import BaseCheck
 
 COMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')
 COMMAND = 'show vrrp summary'
-
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -45,7 +45,9 @@ class Check(BaseCheck):
         metrics = {'output_line_count': len(output_lines), 'output_lines': output_lines}
         if not output_lines:
             return self.fail('VRRP 상태 기준 미달', message='show vrrp summary 출력이 비어 있습니다.', stdout=stdout, metrics=metrics, thresholds={})
-        return self.ok(metrics=metrics, thresholds={}, reasons='VRRP 명령 결과가 존재합니다.', message='이중화 구성 상태 점검 정상.')
+        
+        message = 'VRRP 미설정 장비 입니다.' if re.search(r'vrrp subsystem not running', stdout) else '이중화 구성 상태 점검 정상.' # to do 
+        return self.ok(metrics=metrics, thresholds={}, reasons=message, message=message)
 
 
 CHECK_CLASS = Check

@@ -57,7 +57,7 @@ class Check(BaseCheck):
             'missing': missing,
         }
         if missing:
-            return self.warn(metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))
+            return self.fail(error="Default-Gateway 또는 route destination/interface 정보가 없습니다.", metrics=metrics, thresholds={}, reasons='Default-Gateway 또는 route destination/interface 정보가 없습니다.', message='라우팅 Table 상태 경고: ' + ', '.join(missing))
         return self.ok(metrics=metrics, thresholds={}, reasons='Default-Gateway 및 route destination/interface 정보가 존재합니다.', message=f'라우팅 Table 상태 점검 정상: route {len(routes)}개.')
 
 

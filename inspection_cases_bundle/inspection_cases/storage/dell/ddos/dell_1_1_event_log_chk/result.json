@@ -85,9 +85,9 @@
       "status": "fail",
       "error": "Alert 상태 기준 미달",
       "message": "Active Alert 또는 ERROR/CRITICAL Severity가 확인되었습니다.",
-      "stdout": "Id      Post Time                  Severity   Class               Object   Message\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
+      "stdout": "Id      Post Time                  Severity   Class               Object   Message                                                \n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
       "stdout_lines": [
-        "Id      Post Time                  Severity   Class               Object   Message",
+        "Id      Post Time                  Severity   Class               Object   Message                                                ",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
         "p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
@@ -100,12 +100,12 @@
         ]
       },
       "thresholds": {},
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: alerts show current\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Id      Post Time                  Severity   Class               Object   Message\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: alerts show current\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Id      Post Time                  Severity   Class               Object   Message                                                \n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\np0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.\n-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------\nThere is 1 active alert.",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: alerts show current",
         " - 명령 종료코드: rc=0 (정상 종료)",
-        " - 출력 내용: Id      Post Time                  Severity   Class               Object   Message",
+        " - 출력 내용: Id      Post Time                  Severity   Class               Object   Message                                                ",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",
         "p0-96   Mon Mar 30 14:33:16 2026   ERROR      SystemMaintenance            EVT-SMTOOL-00001: Error communicating with mail server.",
         "-----   ------------------------   --------   -----------------   ------   -------------------------------------------------------",

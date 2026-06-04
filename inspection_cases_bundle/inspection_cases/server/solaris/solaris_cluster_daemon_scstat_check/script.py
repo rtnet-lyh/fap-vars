@@ -116,7 +116,18 @@ class Check(BaseCheck):
                 'not supported',
             ],
         )
-        if command_error:
+        if command_error:            
+            if 'command not found' in command_error.lower():
+                return self.ok(
+                    metrics={},
+                    thresholds={
+                        'bad_status_keywords': bad_status_keywords,
+                        'failure_keywords': failure_keywords,
+                        'required_sections': required_sections,
+                    },
+                    reasons=f"{SCSTAT_COMMAND} 명령어가 존재하지 않습니다. 미대상 입니다. ",
+                    message=f"{SCSTAT_COMMAND} 명령어가 존재하지 않습니다. 미대상 입니다. ",
+                )
             return self.fail(
                 '점검 명령 실행 실패',
                 message=(

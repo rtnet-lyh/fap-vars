@@ -10,6 +10,7 @@ BAD_STATUSES = {'fail', 'failed', 'faulty', 'warning', 'critical', 'major', 'min
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def run(self):
         rc, out, err = self._ssh(COMMAND)

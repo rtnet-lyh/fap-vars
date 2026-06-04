@@ -18,7 +18,7 @@ ANSI_ESCAPE_RE = re.compile(r'(?:\x1B\[[0-?]*[ -/]*[@-~]|\x1B\][^\x07]*(?:\x07|\
 DEFAULT_PASSWORD_PROMPT_PATTERNS = [r'(?:[Pp]assword|암호):\s*$']
 PARAMIKO_PROFILES = {
     'generic_network': {
-        'pager_patterns': [r'--More--', r'--- more ---', r'Press any key', r'More:\s*<space>'],
+        'pager_patterns': [r'--More--', r'--- more ---', r'Press any key', r'More:\s*<space>', r'---\(more\s?\d{0,4}%?\)---'],
         'pager_response': ' ',
     },
     'linux': {

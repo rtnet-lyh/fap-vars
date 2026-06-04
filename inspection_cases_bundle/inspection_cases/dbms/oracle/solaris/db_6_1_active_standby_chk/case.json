@@ -1,6 +1,6 @@
 {
-  "host": "172.18.8.91",
-  "port": 22,
+  "host": "193.1.0.62",
+  "port": 222,
   "user": "oratips",
   "password": "f3dtop0!",
   "credentials": {
@@ -11,12 +11,12 @@
         "application_type_name": "SOLARIS",
         "credential_type_name": "SSH",
         "data": {
-          "username": "oratips",
-          "password": "f3dtop0!",
+          "username": "dbuser",
+          "password": "cits!@DBUSER62",
           "become": "true",
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "f3dtop0!"
+          "become_password": "cits!@DBR62"
         }
       }
     ]
@@ -34,7 +34,7 @@
     "inspection_item_name": "Active-Standby archive destination 상태",
     "inspection_command": "su - <oracle_account>; whoami; sqlplus v$archive_dest query",
     "threshold_list": [
-      {"name": "oracle_account", "value1": "oratips"}
+      {"name": "oracle_account", "value1": "oracle"}
     ]
   }
 }

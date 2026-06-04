@@ -147,23 +147,25 @@
       },
       "thresholds": {},
       "reasons": "하드웨어 Status 값이 모두 OK입니다.",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show chassis environment\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Class Item                           Status     Measurement\nPower FPC 0 Power Supply 0           OK\n      FPC 0 Power Supply 1           OK\nTemp  FPC 0 CPU                      OK         50 degrees C / 122 degrees F\n      FPC 0 NW-PFE                   OK         40 degrees C / 104 degrees F\n      FPC 0 SE-PFE                   OK         35 degrees C / 95 degrees F\n      FPC 0 PHY-4/5                  OK         34 degrees C / 93 degrees F\n      FPC 0 MGMT PHY                 OK         29 degrees C / 84 degrees F\nFans  FPC 0 Fan 0                    OK         Spinning at normal speed\n      FPC 0 Fan 0 Airflow            OK         Airflow Out (AFO)\n      FPC 0 Fan 1                    OK         Spinning at normal speed\n      FPC 0 Fan 1 Airflow            OK         Airflow Out (AFO)",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show chassis environment\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Class Item                           Status     Measurement\nPower FPC 0 Power Supply 0           OK        \n      FPC 0 Power Supply 1           OK        \nTemp  FPC 0 CPU                      OK         49 degrees C / 120 degrees F\n      FPC 0 NW-PFE                   OK         41 degrees C / 105 degrees F\n      FPC 0 SE-PFE                   OK         35 degrees C / 95 degrees F\n      FPC 0 PHY-4/5                  OK         33 degrees C / 91 degrees F\n      FPC 0 MGMT PHY                 OK         30 degrees C / 86 degrees F\nFans  FPC 0 Fan 0                    OK         Spinning at normal speed\n      FPC 0 Fan 0 Airflow            OK         Airflow Out (AFO)\n      FPC 0 Fan 1                    OK         Spinning at normal speed\n      FPC 0 Fan 1 Airflow            OK         Airflow Out (AFO)\n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show chassis environment",
         " - 명령 종료코드: rc=0 (정상 종료)",
         " - 출력 내용: Class Item                           Status     Measurement",
-        "Power FPC 0 Power Supply 0           OK",
-        "      FPC 0 Power Supply 1           OK",
-        "Temp  FPC 0 CPU                      OK         50 degrees C / 122 degrees F",
-        "      FPC 0 NW-PFE                   OK         40 degrees C / 104 degrees F",
+        "Power FPC 0 Power Supply 0           OK        ",
+        "      FPC 0 Power Supply 1           OK        ",
+        "Temp  FPC 0 CPU                      OK         49 degrees C / 120 degrees F",
+        "      FPC 0 NW-PFE                   OK         41 degrees C / 105 degrees F",
         "      FPC 0 SE-PFE                   OK         35 degrees C / 95 degrees F",
-        "      FPC 0 PHY-4/5                  OK         34 degrees C / 93 degrees F",
-        "      FPC 0 MGMT PHY                 OK         29 degrees C / 84 degrees F",
+        "      FPC 0 PHY-4/5                  OK         33 degrees C / 91 degrees F",
+        "      FPC 0 MGMT PHY                 OK         30 degrees C / 86 degrees F",
         "Fans  FPC 0 Fan 0                    OK         Spinning at normal speed",
         "      FPC 0 Fan 0 Airflow            OK         Airflow Out (AFO)",
         "      FPC 0 Fan 1                    OK         Spinning at normal speed",
-        "      FPC 0 Fan 1 Airflow            OK         Airflow Out (AFO)"
+        "      FPC 0 Fan 1 Airflow            OK         Airflow Out (AFO)",
+        "",
+        "{master:0}"
       ],
       "message": "전원/FAN 등 환경 상태 점검 정상."
     }

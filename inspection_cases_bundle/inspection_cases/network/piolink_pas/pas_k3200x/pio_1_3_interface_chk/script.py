@@ -67,7 +67,7 @@ class Check(BaseCheck):
             'ports': ports,
         }
         if over_threshold:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='일부 포트의 RxRate 또는 TxRate가 임계치 이상입니다.', message=f'인터페이스 사용률 경고: 기준 초과 포트 {len(over_threshold)}개.')
+            return self.fail(error="일부 포트의 Rate가 임계치를 초과합니다", metrics=metrics, thresholds=thresholds, reasons='일부 포트의 RxRate 또는 TxRate가 임계치 이상입니다.', message=f'인터페이스 사용률 경고: 기준 초과 포트 {len(over_threshold)}개.')
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='모든 포트의 RxRate/TxRate가 임계치 미만입니다.', message=f'인터페이스 사용률 점검 정상: Rx 최대 {max_rx["rx_rate_bps"]}bps, Tx 최대 {max_tx["tx_rate_bps"]}bps.')
 
 

@@ -4,287 +4,146 @@ import re
 
 from .common._base import BaseCheck
 
-
-MOUNT_COMMAND_TEMPLATE = 'mount | grep -- {mount_point}'
-
+CHECK_COMMAND = 'mount'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
     PARAMIKO_PROFILE = 'solaris'
     PARAMIKO_REUSE_SESSION = False
+    
+    def _parse_mount_lines(self, output, check_options, check_mounts):
+        # mount
+        # / on rpool/ROOT/solaris-1 read/write/setuid/devices/rstchown/dev=3e10002 on Thu Jan  1 09:00:00 1970
+        # /var on rpool/ROOT/solaris-1/var read/write/setuid/devices/rstchown/nonbmand/exec/xattr/atime/dev=3e10003 on Wed Sep 24 20:25:42 2025
+        # /devices on /devices read/write/setuid/devices/rstchown/dev=fff00000 on Wed Sep 24 20:25:42 2025
+        # /dev on /dev read/write/setuid/devices/rstchown/dev=ffe40000 on Wed Sep 24 20:25:42 2025
+        # /system/contract on ctfs read/write/setuid/devices/rstchown/dev=ffe00001 on Wed Sep 24 20:25:42 2025
+        # /proc on proc read/write/setuid/devices/rstchown/dev=ffec0000 on Wed Sep 24 20:25:42 2025
+        # /etc/mnttab on mnttab read/write/setuid/devices/rstchown/dev=ffdc0001 on Wed Sep 24 20:25:42 2025
+        # /system/volatile on swap read/write/setuid/devices/rstchown/xattr/dev=ffd80001 on Wed Sep 24 20:25:42 2025
+        # /tmp on swap read/write/setuid/devices/rstchown/xattr/dev=ffd80002 on Wed Sep 24 20:25:42 2025
+        # /system/object on objfs read/write/setuid/devices/rstchown/dev=ffd40001 on Wed Sep 24 20:25:42 2025
+        # /etc/dfs/sharetab on sharefs read/write/setuid/devices/rstchown/dev=ffd00001 on Wed Sep 24 20:25:42 2025
+        # /dev/fd on fd read/write/setuid/devices/rstchown/dev=ffcc0001 on Wed Sep 24 20:25:42 2025
+        # /var/share on rpool/VARSHARE read/write/nosetuid/devices/rstchown/nonbmand/noexec/noxattr/atime/dev=3e10006 on Wed Sep 24 20:25:56 2025
+        # /var/tmp on rpool/VARSHARE/tmp read/write/setuid/devices/rstchown/nonbmand/exec/xattr/atime/dev=3e10007 on Wed Sep 24 20:25:56 2025
+        # /var/share/kvol on rpool/VARSHARE/kvol read/write/nosetuid/devices/rstchown/nonbmand/noexec/noxattr/atime/dev=3e10008 on Wed Sep 24 20:25:57 2025
+        # /media/Solaris-11_3_35_6_0-Boot-SPARC on /dev/dsk/c2t0d0s2 read only/nosetuid/nodevices/rstchown/noglobal/maplcase/rr/traildot/dev=2a8003a on Wed Sep 24 20:26:36 2025
 
-    def _split_keywords(self, raw_value):
-        return [token.strip() for token in str(raw_value or '').split(',') if token.strip()]
-
-    def _quote_for_shell(self, value):
-        text = str(value or '')
-        return "'" + text.replace("'", "'\"'\"'") + "'"
-
-    def _parse_mount_lines(self, text):
-        rows = []
-        for line_number, raw_line in enumerate((text or '').splitlines(), start=1):
-            line = raw_line.strip()
+        results = {}
+        is_mount_cnt = 0
+        is_check_cnt = 0
+        
+        for line in output.splitlines():            
+            line = line.strip()
             if not line:
                 continue
-
-            match = re.match(
-                r'^(?P<device>\S+)\s+on\s+(?P<mount_point>\S+)\s+type\s+'
-                r'(?P<filesystem_type>\S+)\s+\((?P<options>[^)]*)\)\s*$',
-                line,
-            )
+            
+            match = re.search(r'^(\S+)\s+on\s+(\S+)\s+(.+?)\s+on', line)                        
             if not match:
                 continue
+            
+            mount_point = match.group(1)
+            device = match.group(2)
+            options = match.group(3).split('/')
 
-            options = [option.strip() for option in match.group('options').split(',') if option.strip()]
-            rows.append({
-                'line_number': line_number,
-                'raw_line': line,
-                'device': match.group('device'),
-                'mount_point': match.group('mount_point'),
-                'filesystem_type': match.group('filesystem_type'),
-                'mount_options': options,
-            })
+            is_mount = mount_point in check_mounts
+            if is_mount:
+                is_mount_cnt += 1
 
-        return rows
+            is_check = all(opt in options for opt in check_options)
+            if is_mount and is_check:
+                is_check_cnt += 1
 
-    def _detect_access_mode(self, mount_options):
-        lowered = [option.lower() for option in (mount_options or [])]
-        if 'rw' in lowered:
-            return 'rw'
-        if 'ro' in lowered:
-            return 'ro'
-        return 'unknown'
+            results[mount_point] = {                
+                "device": device,
+                "options": options, 
+                "exist_mount": is_mount,               
+                "exist_option": is_check 
+            }
 
-    def _build_mount_summary(self, rows, limit=3):
-        if not rows:
-            return '감지된 mount 정보 없음'
+        results["is_pass"] = True if (len(check_mounts) == is_mount_cnt and len(check_mounts) == is_check_cnt) else False
 
-        parts = []
-        for row in rows[:limit]:
-            access_mode = self._detect_access_mode(row['mount_options'])
-            parts.append(
-                f"{row['mount_point']} {row['filesystem_type']} {access_mode} ({', '.join(row['mount_options'])})"
-            )
-        if len(rows) > limit:
-            parts.append(f'외 {len(rows) - limit}건')
-        return ', '.join(parts)
+        return results 
 
     def run(self):
-        mount_point = self.get_threshold_var('mount_point', default='/mnt/shared', value_type='str').strip()
-        expected_access_mode = self.get_threshold_var('expected_access_mode', default='rw', value_type='str').strip().lower()
-        expected_filesystem_types = [
-            token.lower()
-            for token in self._split_keywords(
-                self.get_threshold_var('expected_filesystem_types', default='', value_type='str')
-            )
-        ]
-        failure_keywords = self._split_keywords(
-            self.get_threshold_var(
-                'failure_keywords',
-                default='장치를 찾을 수 없습니다,not found,module,cannot,command not found,no such file',
-                value_type='str',
-            )
-        )
+        check_mounts = self.get_threshold_var('check_mounts', default='/', value_type='str').strip()        
+        check_options = self.get_threshold_var('check_options', default='read,write', value_type='str').strip()
 
-        if not mount_point:
-            return self.fail(
-                '점검 설정 오류',
-                message='Solaris 공유 볼륨 상태 점검에 실패했습니다. 현재 상태: mount_point 임계치가 비어 있어 점검 대상을 결정할 수 없습니다.',
-            )
-
-        command = MOUNT_COMMAND_TEMPLATE.format(mount_point=self._quote_for_shell(mount_point))
+        check_mounts = re.split(r'[,|]', check_mounts)
+        check_options = re.split(r'[,|]', check_options)
+    
         result = self._run_solaris_commands([
-            {'command': command, 'timeout': 10},
+            {'command': CHECK_COMMAND, 'timeout': 5},
         ])[0]
-        rc = result['rc']
+       
         out = result['stdout']
-        err = result['stderr']
+        text = (out or '').strip()      
 
-        if self._is_connection_error(rc, err):
-            return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결 확인에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
-            )
-
-        text = (out or '').strip()
-        stderr_text = (err or '').strip()
-        combined_text = '\n'.join(part for part in (text, stderr_text) if part)
-
-        command_error = self._detect_command_error(
-            text,
-            stderr_text,
-            extra_patterns=failure_keywords + [
-                'permission denied',
-                'illegal option',
-                'invalid option',
-                'usage:',
-                'not supported',
-                'unknown userland error',
-            ],
-        )
-        if command_error:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount 출력에서 실행 오류가 확인되었습니다: {command_error}'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        if rc not in (0, 1):
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount 점검 명령 종료코드가 rc={rc}로 반환되었습니다.'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        matched_failure_keywords = [
-            keyword for keyword in failure_keywords
-            if keyword.lower() in combined_text.lower()
-        ]
-        if matched_failure_keywords:
-            return self.fail(
-                '공유 볼륨 실패 키워드 감지',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: 출력에서 실패 키워드 {matched_failure_keywords}가 확인되었습니다.'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        if stderr_text:
-            return self.fail(
-                '점검 명령 실행 실패',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: stderr 출력이 확인되었습니다: {stderr_text}'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        if rc == 1 or not text:
-            return self.fail(
-                '공유 볼륨 미마운트',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount point {mount_point}가 mount 출력에서 확인되지 않아 공유 볼륨이 마운트되지 않았습니다.'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        parsed_rows = self._parse_mount_lines(text)
-        if not parsed_rows:
-            return self.fail(
-                '공유 볼륨 파싱 실패',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    '현재 상태: mount 출력에서 장치, mount point, 파일시스템, 옵션 정보를 정상적으로 해석하지 못했습니다.'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        matched_rows = [row for row in parsed_rows if row['mount_point'] == mount_point]
-        if not matched_rows:
-            return self.fail(
-                '공유 볼륨 파싱 실패',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount 출력은 존재하지만 요청한 mount point {mount_point}와 정확히 일치하는 항목을 찾지 못했습니다. '
-                    f'감지된 mount 요약: {self._build_mount_summary(parsed_rows)}.'
-                ),
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        target_row = matched_rows[0]
-        access_mode = self._detect_access_mode(target_row['mount_options'])
-        metrics = {
-            'command_rc': rc,
-            'mount_point': target_row['mount_point'],
-            'device': target_row['device'],
-            'filesystem_type': target_row['filesystem_type'],
-            'access_mode': access_mode,
-            'mount_options': target_row['mount_options'],
-            'parsed_mount_count': len(parsed_rows),
-            'matched_mount_count': len(matched_rows),
-            'matched_failure_keywords': matched_failure_keywords,
-            'parsed_mounts': parsed_rows,
+        parsed_rows = self._parse_mount_lines(output=text, check_options=check_options, check_mounts=check_mounts)    
+        
+        metrics = { 
+            'is_pass': parsed_rows.get("is_pass", False),
+            'mount_info': parsed_rows,
+            'check_mounts': check_mounts,
+            'check_options': check_options,            
         }
+
         thresholds = {
-            'mount_point': mount_point,
-            'expected_access_mode': expected_access_mode,
-            'expected_filesystem_types': expected_filesystem_types,
-            'failure_keywords': failure_keywords,
+            'check_mounts': check_mounts,
+            'check_options': check_options,                        
         }
+          
+        ok_items = []
+        fail_items = []
 
-        if access_mode == 'unknown':
-            return self.fail(
-                '공유 볼륨 접근 상태 확인 실패',
+        for mount_point in check_mounts:
+            if parsed_rows.get(mount_point):
+                if parsed_rows[mount_point]["exist_mount"] and parsed_rows[mount_point]["exist_option"]:
+                    ok_items.append({
+                        "mount_point": mount_point,
+                        "options": parsed_rows[mount_point]["options"],
+                        "device": parsed_rows[mount_point]["device"],
+                        "check_options": check_options,
+                    })
+                else:
+                    fail_items.append({
+                        "mount_point": mount_point,
+                        "options": parsed_rows[mount_point]["options"],
+                        "device": parsed_rows[mount_point]["device"],
+                        "check_options": check_options,
+                    })
+            else:
+                fail_items.append({
+                    "mount_point": mount_point,
+                    "options": "unknown",
+                    "device": "unknown",
+                    "check_options": check_options,
+                })
+             
+        if parsed_rows["is_pass"]:        
+            return self.ok(
+                metrics=metrics,
+                thresholds=thresholds,
+                reasons=(
+                    f'공유 볼륨이 정상 마운트되어 있습니다. 성공정보: {ok_items}'                    
+                ),
                 message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount point {mount_point}의 옵션 {target_row["mount_options"]}에서 rw/ro 상태를 확인하지 못했습니다.'
+                    f'공유 볼륨이 정상 마운트되어 있습니다. 성공정보: {ok_items}'                    
+                ),
+            )
+        else:
+            return self.fail(
+                error='공유 볼륨 파일시스템 유형 이상',
+                reasons=(
+                    f'공유 볼륨 점검이 필요 합니다. {fail_items}'                    
+                ),
+                message=(
+                    f'공유 볼륨 점검이 필요 합니다. {fail_items}'                                        
                 ),
                 metrics=metrics,
                 thresholds=thresholds,
-                stdout=text,
-                stderr=stderr_text,
             )
-
-        if expected_access_mode and access_mode != expected_access_mode:
-            return self.fail(
-                '공유 볼륨 접근 상태 이상',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount point {mount_point}가 {access_mode} 상태이며 기준은 {expected_access_mode}입니다. '
-                    f'device {target_row["device"]}, filesystem {target_row["filesystem_type"]}, '
-                    f'options {", ".join(target_row["mount_options"])}.'
-                ),
-                metrics=metrics,
-                thresholds=thresholds,
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        if expected_filesystem_types and target_row['filesystem_type'].lower() not in expected_filesystem_types:
-            return self.fail(
-                '공유 볼륨 파일시스템 유형 이상',
-                message=(
-                    'Solaris 공유 볼륨 상태 점검에 실패했습니다. '
-                    f'현재 상태: mount point {mount_point}의 파일시스템 유형이 {target_row["filesystem_type"]}이며 '
-                    f'허용 기준은 {expected_filesystem_types}입니다.'
-                ),
-                metrics=metrics,
-                thresholds=thresholds,
-                stdout=text,
-                stderr=stderr_text,
-            )
-
-        return self.ok(
-            metrics=metrics,
-            thresholds=thresholds,
-            reasons=(
-                f'공유 볼륨 {mount_point}가 정상 마운트되어 있고 '
-                f'접근 상태 {access_mode}, 파일시스템 {target_row["filesystem_type"]}가 기준과 일치합니다.'
-            ),
-            message=(
-                'Solaris 공유 볼륨 상태가 정상입니다. '
-                f'현재 상태: mount point {mount_point}, device {target_row["device"]}, '
-                f'filesystem {target_row["filesystem_type"]}, access {access_mode} '
-                f'(기준 {expected_access_mode}), options {", ".join(target_row["mount_options"])}.'
-            ),
-        )
-
 
 CHECK_CLASS = Check

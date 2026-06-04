@@ -3,7 +3,7 @@
 from .common._base import BaseCheck
 
 
-LOG_COMMAND = "dmesg | grep -i 'ecc error|singlebit|multibit|uncorrectable'"
+LOG_COMMAND = "dmesg | egrep -i 'ecc error|singlebit|multibit|uncorrectable'"
 
 
 class Check(BaseCheck):

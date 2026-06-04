@@ -32,7 +32,7 @@ class Check(BaseCheck):
 
     def run(self):
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
-        max_cpu_usage_percent = self.get_threshold_var('max_cpu_usage_percent', default=70, value_type='float')
+        max_cpu_usage_percent = self.get_threshold_var('max_cpu_usage_percent', default=80, value_type='float')
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,

@@ -29,7 +29,7 @@ class Check(BaseCheck):
         except (TypeError, ValueError):
             return None
 
-    def _parse_df_rows(self, text):
+    def _parse_df_rows(self, text, ignore_mount_pattern):
         lines = [line.rstrip() for line in (text or '').splitlines() if line.strip()]
         if not lines:
             return {
@@ -58,9 +58,11 @@ class Check(BaseCheck):
             if size_bytes is None or used_bytes is None or avail_bytes is None or used_percent is None:
                 continue
 
-            mount_point = ' '.join(parts[5:])
+            mount_point = ' '.join(parts[5:])            
+
             avail_percent = round((avail_bytes / size_bytes) * 100, 2) if size_bytes > 0 else 0.0
             is_zero_sized = size_bytes == 0 and used_bytes == 0 and avail_bytes == 0
+            is_ignore = True if re.search(ignore_mount_pattern, mount_point) else False  
 
             rows.append({
                 'line_number': index + 1,
@@ -75,6 +77,7 @@ class Check(BaseCheck):
                 'used_bytes': used_bytes,
                 'avail_bytes': avail_bytes,
                 'is_zero_sized': is_zero_sized,
+                'is_ignore': is_ignore
             })
 
         return {
@@ -99,7 +102,8 @@ class Check(BaseCheck):
         used_max_percent = self.get_threshold_var('used_max_percent', default=80.0, value_type='float')
         avail_min_percent = self.get_threshold_var('avail_min_percent', default=20.0, value_type='float')
         failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
-
+        ignore_mount_pattern = self.get_threshold_var('ignore_mount_pattern', default='^/media/', value_type='raw')
+        
         result = self._run_solaris_commands([
             {'command': DF_COMMAND, 'timeout': 10},
         ])[0]
@@ -159,7 +163,7 @@ class Check(BaseCheck):
                 stderr=(err or '').strip(),
             )
 
-        parsed = self._parse_df_rows(text)
+        parsed = self._parse_df_rows(text, ignore_mount_pattern)
         if not parsed['header_found']:
             return self.fail(
                 '파일시스템 사용량 파싱 실패',
@@ -201,7 +205,7 @@ class Check(BaseCheck):
             or row['used_bytes'] < 0
             or row['avail_bytes'] < 0
             or row['used_bytes'] > row['size_bytes']
-            or row['avail_bytes'] > row['size_bytes']
+            or row['avail_bytes'] > row['size_bytes']            
         ]
         if invalid_rows:
             invalid_summary = ', '.join(
@@ -220,8 +224,9 @@ class Check(BaseCheck):
 
         threshold_rows = [
             row for row in check_rows
-            if row['used_percent'] >= used_max_percent or row['avail_percent'] < avail_min_percent
+            if (row['used_percent'] >= used_max_percent or row['avail_percent'] < avail_min_percent) and not row['is_ignore']
         ]
+        
         threshold_rows.sort(key=lambda row: (row['used_percent'], -row['avail_percent']), reverse=True)
         affected_summary = self._build_mount_summary(threshold_rows or sorted(check_rows, key=lambda row: row['used_percent'], reverse=True))
         if threshold_rows:
@@ -251,11 +256,13 @@ class Check(BaseCheck):
                 'lowest_avail_percent': min_avail_row['avail_percent'],
                 'rows': rows,
                 'matched_failure_keywords': matched_failure_keywords,
+                'ignore_mount_pattern': ignore_mount_pattern
             },
             thresholds={
                 'used_max_percent': used_max_percent,
                 'avail_min_percent': avail_min_percent,
                 'failure_keywords': failure_keywords,
+                'ignore_mount_pattern': ignore_mount_pattern
             },
             reasons=(
                 f'점검 대상 파일시스템 {len(check_rows)}개가 정상 해석되었고 최대 사용률 {max_row["used_percent"]:.2f}%와 '
@@ -263,6 +270,7 @@ class Check(BaseCheck):
             ),
             message=(
                 'Solaris 파일시스템 사용량이 정상입니다. '
+                f'점검 대상에서 제외된 마운트 포인트 패턴: {ignore_mount_pattern}'
                 f'현재 상태: 점검 대상 파일시스템 {len(check_rows)}개, 최대 사용률 {max_row["mount_point"]} {max_row["used_percent"]:.2f}% '
                 f'(기준 {used_max_percent:.2f}% 미만), 최소 여유율 {min_avail_row["mount_point"]} {min_avail_row["avail_percent"]:.2f}% '
                 f'(기준 {avail_min_percent:.2f}% 이상), 영향 mount 요약: {affected_summary}.'

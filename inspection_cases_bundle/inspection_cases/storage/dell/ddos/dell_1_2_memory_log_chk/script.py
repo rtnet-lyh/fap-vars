@@ -38,18 +38,20 @@ class Check(BaseCheck):
             return None, self.fail('점검 명령 실행 실패', message=f'{COMMAND} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)
         return stdout, None
 
-    def _parse_alerts(self, text):
-        active_match = re.search(r'There\s+(?:is|are)\s+(\d+)\s+active alert', text, re.IGNORECASE)
+    def _parse_alerts(self, text, bad_keywords):
+        
+        active_match = re.search(rf'{bad_keywords}', text, re.IGNORECASE)
         active_alert_count = int(active_match.group(1)) if active_match else 0
-        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(r'\b(ERROR|CRITICAL)\b', line, re.IGNORECASE)]
-        return {'active_alert_count': active_alert_count, 'bad_severity_lines': bad_severity_lines}
+        bad_severity_lines = [line.strip() for line in text.splitlines() if re.search(rf'{bad_keywords}', line, re.IGNORECASE)]
+        return {'active_alert_count': active_alert_count, 'bad_severity_lines': bad_severity_lines, 'bad_keywords': bad_keywords}
 
     def run(self):
         stdout, error = self._run_command()
+        bad_keywords = self.get_threshold_var(key='bad_keywords', default='memory', value_type='raw')
         if error:
             return error
 
-        metrics = self._parse_alerts(stdout)
+        metrics = self._parse_alerts(stdout, bad_keywords)
         if metrics['active_alert_count'] > 0 or metrics['bad_severity_lines']:
             return self.fail('Alert 상태 기준 미달', message='Active Alert 또는 ERROR/CRITICAL Severity가 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds={})
         return self.ok(metrics=metrics, thresholds={}, reasons='Active Alert와 ERROR/CRITICAL Severity가 없습니다.', message='Alert 상태 점검 정상.')

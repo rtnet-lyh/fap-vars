@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .common._base import BaseCheck
-
+import re
 
 LOG_COMMAND = "clog | grep -i 'status change|offline|online|cluster error'"
 LOG_PATTERNS = (
@@ -92,6 +92,22 @@ class Check(BaseCheck):
                 'usage:',
             ],
         )
+        
+        if re.search(r'command not found', combined_text):
+            return self.ok(
+                metrics={},
+                thresholds={
+                    'bad_log_keywords': bad_log_keywords,
+                    'failure_keywords': failure_keywords,
+                },
+                reasons=(
+                    f'{LOG_COMMAND} 명령어가 존재하지 않습니다. 미대상으로 정상 처리 되었습니다.'                    
+                ),
+                message=(
+                    f'{LOG_COMMAND} 명령어가 존재하지 않습니다. 미대상으로 정상 처리 되었습니다.'                    
+                ),
+            )
+
         if command_error:
             return self.fail(
                 '점검 명령 실행 실패',

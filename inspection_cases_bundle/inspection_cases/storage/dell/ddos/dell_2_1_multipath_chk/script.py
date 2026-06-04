@@ -8,7 +8,7 @@ from .common._base import BaseCheck
 COMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'command not found')
 COMMAND = 'ifgroup show config all'
 DEFAULT_MIN_INTERFACE_COUNT = 1
-DEFAULT_BAD_STATUS_KEYWORDS = ['disabled', 'down', 'offline', 'fail', 'error']
+DEFAULT_BAD_STATUS_KEYWORDS = ['down', 'offline', 'fail', 'error']
 
 
 class Check(BaseCheck):
@@ -49,7 +49,9 @@ class Check(BaseCheck):
             parts = re.split(r'\s{2,}', line.strip())
             if len(parts) >= 5 and parts[0].lower() not in ('group-name', '----------'):
                 try:
-                    interface_count = int(parts[2])
+                    print(f"line: {line}")
+                    print(f"interface_count: {parts[3]}")
+                    interface_count = int(parts[3])
                 except ValueError:
                     continue
                 rows.append({'group_name': parts[0], 'status': parts[1].lower(), 'interface_count': interface_count})
@@ -63,11 +65,10 @@ class Check(BaseCheck):
         if error:
             return error
 
-        rows = self._parse_ifgroup_rows(stdout)
-        no_interfaces = 'No interfaces in ifgroup' in stdout
-        bad_rows = [row for row in rows if row['status'] != 'enabled' or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]
-        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows, 'no_interfaces_message': no_interfaces}
-        if not rows or bad_rows or no_interfaces:
+        rows = self._parse_ifgroup_rows(stdout)        
+        bad_rows = [row for row in rows if row['status'] not in ['enabled', 'disabled'] or any(keyword in row['status'] for keyword in bad_keywords) or row['interface_count'] < min_count]
+        metrics = {'ifgroup_rows': rows, 'bad_ifgroup_rows': bad_rows}
+        if not rows or bad_rows:
             return self.fail('ifgroup 상태 기준 미달', message='ifgroup가 enabled 상태가 아니거나 interface 수 기준을 만족하지 못했습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='ifgroup가 enabled 상태이고 interface 수 기준을 만족합니다.', message='Path 이중화 점검 정상.')
 

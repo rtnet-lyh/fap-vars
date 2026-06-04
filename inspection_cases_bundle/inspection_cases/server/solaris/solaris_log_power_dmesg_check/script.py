@@ -3,7 +3,7 @@
 from .common._base import BaseCheck
 
 
-LOG_COMMAND = "dmesg | grep -i 'psu|power supply|failed'"
+LOG_COMMAND = "dmesg | egrep -i 'psu|power supply|failed'"
 
 
 class Check(BaseCheck):

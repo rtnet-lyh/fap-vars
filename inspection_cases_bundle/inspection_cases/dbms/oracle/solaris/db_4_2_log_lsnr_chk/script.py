@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import shlex
+import re
 
 from .common._base import BaseCheck
 
 
-LSNR_PATTERN = 'connection refused|timeout|TNS listener stopped|warning|slow|delay|TNS-12514|TNS-12541|TNS-12170'
-DEFAULT_LSNR_LOG_DIR = '/TTIPS_GRID/oracle/grid/gridbase/diag/tnslsnr/exTMStotalDB1/listener/trace'
-
+# LSNR_PATTERN = 'connection refused|timeout|TNS listener stopped|warning|slow|delay|TNS-12514|TNS-12541|TNS-12170'
+LSNR_PATTERN = 'TNS-|ORA-|WARNING|FATAL|REFUSED|FAILED'
+FIND_LISTENER_COMMAND = "find /TTIPS_GRID /TTIPS_HOME /oracle/app/oracle/diag/tnslsnr/citsdb1/listener/trace -type f -name 'listener.log' 2>/dev/null | xargs ls -t | head -1"
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
@@ -17,24 +18,37 @@ class Check(BaseCheck):
 
     def run(self):
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
-        lsnr_log_dir = self.get_threshold_var('lsnr_log_dir', default=DEFAULT_LSNR_LOG_DIR, value_type='str')
-        listener_log = shlex.quote(lsnr_log_dir) + '/listener.log'
-        command = 'tail -200 %s | egrep -i "%s" %s' % (listener_log, LSNR_PATTERN, listener_log)
+
+        # log 경로를 찾기위한 쿼리 실행
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,
-                [{'command': command, 'timeout': 20}],
+                [{'command': FIND_LISTENER_COMMAND, 'timeout': 20}],
             )[0]
         except ValueError as exc:
             return self.fail('Oracle 계정 전환 설정 오류', message=str(exc))
 
-        stdout = (result.get('stdout') or '').strip()
-        stderr = (result.get('stderr') or '').strip()
         switch = getattr(self, '_solaris_last_account_switch_verification', {}) or {}
-        if self._is_connection_error(result.get('rc'), stderr):
-            return self.fail('호스트 연결 실패', message=stderr or 'Paramiko 연결 확인에 실패했습니다.', stderr=stderr)
         if not switch.get('ok'):
-            return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=stderr)
+            return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=switch.get('stderr'))
+
+        stdout = result.get('stdout', '').splitlines()[-1]
+        match = re.search(r"(/[\w./-]+)", stdout)
+        listener_log = match.group(1) if match else False
+        if not listener_log:
+            return self.fail('listener_log 검색 실패', message='listener_log 검색 실패')        
+        
+        # command = f'egrep -i "{LSNR_PATTERN}" {listener_log} | tail -200'
+        command = f'tail -2000 {listener_log} | egrep -i "{LSNR_PATTERN}"'
+
+        result = self._run_paramiko_commands(                
+            [{'command': command, 'timeout': 20}],
+            become=True
+        )[0]
+        
+        stdout = (result.get('stdout') or '').strip()
+        stderr = (result.get('stderr') or '').strip()        
+        
         if result.get('rc') not in (0, 1):
             return self.fail('리스너 로그 grep 실행 실패', message='리스너 로그 파일 검색 명령을 실행하지 못했습니다.', stdout=stdout, stderr=stderr)
 
@@ -45,7 +59,7 @@ class Check(BaseCheck):
             'matched_log_count': len(lines),
             'matched_logs': lines,
         }
-        thresholds = {'oracle_account': oracle_account, 'lsnr_log_dir': lsnr_log_dir}
+        thresholds = {'oracle_account': oracle_account}
         if lines:
             return self.fail(
                 '리스너 로그 이상 감지',

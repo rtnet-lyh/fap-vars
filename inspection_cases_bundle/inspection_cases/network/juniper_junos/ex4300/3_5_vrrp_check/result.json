@@ -9,16 +9,16 @@
       "application_name": "JUNIPER_JUNOS_EX4300",
       "application_family_name": "JUNIPER_JUNOS_EX4300",
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show vrrp summary'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def run(self):\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n\n        output_lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        metrics = {'output_line_count': len(output_lines), 'output_lines': output_lines}\n        if not output_lines:\n            return self.fail('VRRP 상태 기준 미달', message='show vrrp summary 출력이 비어 있습니다.', stdout=stdout, metrics=metrics, thresholds={})\n        return self.ok(metrics=metrics, thresholds={}, reasons='VRRP 명령 결과가 존재합니다.', message='이중화 구성 상태 점검 정상.')\n\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\nCOMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')\nCOMMAND = 'show vrrp summary'\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'generic_network'\n    PARAMIKO_REUSE_SESSION = True\n\n    def _run_command(self, command):\n        results = self._run_paramiko_commands([command], profile=self.PARAMIKO_PROFILE)\n        if not results:\n            return None, self.fail('점검 명령 실행 실패', message='Paramiko 명령 실행 결과가 비어 있습니다.')\n        result = results[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 실행에 실패했습니다.', stdout=stdout, stderr=stderr)\n        error_text = self._detect_cli_error(stdout, stderr)\n        if error_text:\n            return None, self.fail('점검 명령 실행 실패', message=f'{command} 명령 출력에서 오류가 확인되었습니다: {error_text}', stdout=stdout, stderr=stderr)\n        return stdout, None\n\n    def _detect_cli_error(self, *texts):\n        for text in texts:\n            for line in str(text or '').splitlines():\n                stripped = line.strip()\n                lowered = stripped.lower()\n                if stripped and any(marker in lowered for marker in COMMAND_ERROR_MARKERS):\n                    return stripped\n        return ''\n\n    def run(self):\n        stdout, error = self._run_command(COMMAND)\n        if error:\n            return error\n\n        output_lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        metrics = {'output_line_count': len(output_lines), 'output_lines': output_lines}\n        if not output_lines:\n            return self.fail('VRRP 상태 기준 미달', message='show vrrp summary 출력이 비어 있습니다.', stdout=stdout, metrics=metrics, thresholds={})\n        \n        message = 'VRRP 미설정 장비 입니다.' if re.search(r'vrrp subsystem not running', stdout) else '이중화 구성 상태 점검 정상.' # to do \n        return self.ok(metrics=metrics, thresholds={}, reasons=message, message=message)\n\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "",
-        "from .common._base import BaseCheck",
+        "import re",
         "",
+        "from .common._base import BaseCheck",
         "",
         "COMMAND_ERROR_MARKERS = ('syntax error', 'unknown command', 'invalid command', 'unknown keyword', 'missing argument')",
         "COMMAND = 'show vrrp summary'",
-        "",
         "",
         "class Check(BaseCheck):",
         "    USE_HOST_CONNECTION = True",
@@ -58,7 +58,9 @@
         "        metrics = {'output_line_count': len(output_lines), 'output_lines': output_lines}",
         "        if not output_lines:",
         "            return self.fail('VRRP 상태 기준 미달', message='show vrrp summary 출력이 비어 있습니다.', stdout=stdout, metrics=metrics, thresholds={})",
-        "        return self.ok(metrics=metrics, thresholds={}, reasons='VRRP 명령 결과가 존재합니다.', message='이중화 구성 상태 점검 정상.')",
+        "        ",
+        "        message = 'VRRP 미설정 장비 입니다.' if re.search(r'vrrp subsystem not running', stdout) else '이중화 구성 상태 점검 정상.' # to do ",
+        "        return self.ok(metrics=metrics, thresholds={}, reasons=message, message=message)",
         "",
         "",
         "CHECK_CLASS = Check"
@@ -84,7 +86,7 @@
         ]
       },
       "thresholds": {},
-      "reasons": "VRRP 명령 결과가 존재합니다.",
+      "reasons": "VRRP 미설정 장비 입니다.",
       "raw_output": "[점검 단계 1]\n - 실행 명령어: show vrrp summary\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: warning: vrrp subsystem not running - not needed by configuration.\n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
@@ -94,7 +96,7 @@
         "",
         "{master:0}"
       ],
-      "message": "이중화 구성 상태 점검 정상."
+      "message": "VRRP 미설정 장비 입니다."
     }
   ],
   "failed_items": []

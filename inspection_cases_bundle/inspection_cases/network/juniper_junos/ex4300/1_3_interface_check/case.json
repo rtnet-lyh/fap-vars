@@ -1,19 +1,18 @@
 {
-  "host": "192.0.2.1",
+  "host": "172.18.8.211",
   "port": 22,
   "user": "admin",
   "password": "admin",
   "credentials": {
     "NETWORK": [
       {
-        "application_id": 85003,
+        "application_id": 85001,
         "application_type_id": 30,
         "application_type_name": "NETWORK",
-        "credential_type_name": "NETWORK_DEVICE",
+        "credential_type_name": "SSH",
         "data": {
-          "username": "admin",
-          "password": "admin",
-          "port": 22
+          "username": "falcon",
+          "password": "!ehfhrhdtk1"          
         }
       }
     ]
@@ -31,11 +30,7 @@
     "application_type_name": "NETWORK",
     "application_name": "JUNIPER_JUNOS_EX4300",
     "application_family_name": "JUNIPER_JUNOS_EX4300",
-    "threshold_list": [
-      {
-        "name": "interface_name",
-        "value1": "ge-0/0/0"
-      },
+    "threshold_list": [      
       {
         "name": "max_interface_usage_percent",
         "value1": "80"

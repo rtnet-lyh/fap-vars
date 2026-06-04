@@ -1,4 +1,5 @@
-prtdiagSystem Configuration: QEMU Standard PC (i440FX + PIIX, 1996)
+prtdiag; prtconf -v | grep -i memory
+System Configuration: QEMU Standard PC (i440FX + PIIX, 1996)
 BIOS Configuration: SeaBIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
 
 ==== Memory Device Sockets ================================
@@ -6,7 +7,6 @@ BIOS Configuration: SeaBIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2
 Type    Status Set Device Locator      Bank Locator
 ------- ------ --- ------------------- --------------------
 RAM     in use 0   DIMM 0
-Memory size: 8192 Megabytes
-DIMM 0: 8192 MB ECC
+Memory size: 2048 Megabytes
             name='device-memory' type=int items=2
 #

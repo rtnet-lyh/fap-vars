@@ -1,0 +1,37 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router>"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "enable"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Password:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "Router#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show clock"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "show clock\r\n12:34:56.789 KST Wed Jan 10 2024\r\nRouter#"
+  }
+]

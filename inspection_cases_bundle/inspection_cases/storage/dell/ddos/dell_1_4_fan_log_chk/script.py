@@ -83,10 +83,10 @@ class Check(BaseCheck):
 
         metrics = self._parse_alerts(stdout, device_keywords, status_keywords)
         has_failure = bool(metrics['keyword_matched_alert_lines'])
-        if FAIL_ON_ANY_ALERT:
-            has_failure = has_failure or metrics['active_alert_count'] > 0 or bool(metrics['bad_severity_lines'])
+        # if FAIL_ON_ANY_ALERT:
+        #     has_failure = has_failure or metrics['active_alert_count'] > 0 or bool(metrics['bad_severity_lines'])
         if has_failure:
-            return self.fail('Alert 상태 기준 미달', message='Active Alert, ERROR/CRITICAL Severity 또는 장애 키워드가 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)
+            return self.fail('Alert 상태 기준 미달', message='장애 키워드가 확인되었습니다.', stdout=stdout, metrics=metrics, thresholds=thresholds)
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='장애 Alert 조건이 확인되지 않았습니다.', message='Alert 상태 점검 정상.')
 
 

@@ -95,21 +95,97 @@
       "threshold_list": [],
       "status": "fail",
       "error": "인터페이스 상태 기준 미달",
-      "message": "admin up/link down 인터페이스가 3개 있습니다.",
-      "stdout": "Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   eth-switch\ngr-0/0/0                up    up\npfe-0/0/0               up    up\npfe-0/0/0.16383         up    up   inet\n                                   inet6\npfh-0/0/0               up    up\npfh-0/0/0.16383         up    up   inet\npfh-0/0/0.16384         up    up   inet\nge-0/0/1                up    up\nge-0/0/1.0              up    up   eth-switch\nme0                     down  down\nme0.0                   up    down eth-switch\nmtun                    up    up\npimd                    up    up\npime                    up    up\ntap                     up    up\nvme                     up    down\nvme.0                   up    down inet",
+      "message": "admin up/link down 인터페이스가 7개 있습니다.",
+      "stdout": "Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   eth-switch\ngr-0/0/0                up    up\npfe-0/0/0               up    up\npfe-0/0/0.16383         up    up   inet    \n                                   inet6   \npfh-0/0/0               up    up\npfh-0/0/0.16383         up    up   inet    \npfh-0/0/0.16384         up    up   inet    \nge-0/0/1                up    up\nge-0/0/1.0              up    up   eth-switch\nge-0/0/2                up    up\nge-0/0/2.0              up    up   eth-switch\nge-0/0/3                up    up\nge-0/0/3.0              up    up   eth-switch\nge-0/0/4                up    up\nge-0/0/4.0              up    up   eth-switch\nge-0/0/5                up    up\nge-0/0/5.0              up    up   eth-switch\nge-0/0/6                up    up\nge-0/0/6.0              up    up   eth-switch\nge-0/0/7                up    up\nge-0/0/7.0              up    up   eth-switch\nge-0/0/8                up    up\nge-0/0/8.0              up    up   eth-switch\nge-0/0/9                up    up\nge-0/0/9.0              up    up   eth-switch\nge-0/0/10               up    up\nge-0/0/10.0             up    up   eth-switch\nge-0/0/11               up    up\nge-0/0/11.0             up    up   eth-switch\nge-0/0/12               up    up\nge-0/0/12.0             up    up   eth-switch\nge-0/0/13               up    up\nge-0/0/13.0             up    up   eth-switch\nge-0/0/14               up    up\nge-0/0/14.0             up    up   eth-switch\nge-0/0/15               up    up\nge-0/0/15.0             up    up   eth-switch\nge-0/0/16               up    up\nge-0/0/16.0             up    up   eth-switch\nge-0/0/17               up    up\nge-0/0/17.0             up    up   eth-switch\nge-0/0/18               up    up\nge-0/0/18.0             up    up   eth-switch\nge-0/0/19               up    up\nge-0/0/19.0             up    up   eth-switch\nge-0/0/21               up    up\nge-0/0/21.0             up    up   eth-switch\nge-0/0/22               up    up\nge-0/0/22.0             up    up   eth-switch\nge-0/0/24               up    up\nge-0/0/24.0             up    up   eth-switch\nge-0/0/25               up    up\nge-0/0/25.0             up    up   eth-switch\nge-0/0/26               down  down\nge-0/0/26.0             up    down eth-switch\nge-0/0/27               down  down\nge-0/0/27.0             up    down eth-switch\nge-0/0/28               up    up\nge-0/0/28.0             up    up   eth-switch\nxe-0/0/32               down  down\nxe-0/0/32.0             up    down eth-switch\nxe-0/0/33               down  down\nxe-0/0/33.0             up    down eth-switch\nxe-0/0/34               up    up\nxe-0/0/34.0             up    up   eth-switch\nxe-0/0/35               up    up\nxe-0/0/35.0             up    up   eth-switch\nbme0                    up    up\nbme0.0                  up    up   inet     128.0.0.1/2     \n                                            128.0.0.4/2     \n                                            128.0.0.16/2    \n                                            128.0.0.63/2    \ndsc                     up    up\nfti0                    up    up\ngre                     up    up\nipip                    up    up\nirb                     up    up\nirb.0                   up    up   inet    \nirb.808                 up    up   inet     172.18.8.211/24 \njsrv                    up    up\njsrv.1                  up    up   inet     128.0.0.127/2   \nlo0                     up    up\nlo0.0                   up    up   inet    \nlo0.16385               up    up   inet    \nlsi                     up    up\nme0                     down  down\nme0.0                   up    down eth-switch\nmtun                    up    up\npimd                    up    up\npime                    up    up\ntap                     up    up\nvme                     up    down\nvme.0                   up    down inet    \n\n{master:0}",
       "stdout_lines": [
         "Interface               Admin Link Proto    Local                 Remote",
         "ge-0/0/0                up    up",
         "ge-0/0/0.0              up    up   eth-switch",
         "gr-0/0/0                up    up",
         "pfe-0/0/0               up    up",
-        "pfe-0/0/0.16383         up    up   inet",
-        "                                   inet6",
+        "pfe-0/0/0.16383         up    up   inet    ",
+        "                                   inet6   ",
         "pfh-0/0/0               up    up",
-        "pfh-0/0/0.16383         up    up   inet",
-        "pfh-0/0/0.16384         up    up   inet",
+        "pfh-0/0/0.16383         up    up   inet    ",
+        "pfh-0/0/0.16384         up    up   inet    ",
         "ge-0/0/1                up    up",
         "ge-0/0/1.0              up    up   eth-switch",
+        "ge-0/0/2                up    up",
+        "ge-0/0/2.0              up    up   eth-switch",
+        "ge-0/0/3                up    up",
+        "ge-0/0/3.0              up    up   eth-switch",
+        "ge-0/0/4                up    up",
+        "ge-0/0/4.0              up    up   eth-switch",
+        "ge-0/0/5                up    up",
+        "ge-0/0/5.0              up    up   eth-switch",
+        "ge-0/0/6                up    up",
+        "ge-0/0/6.0              up    up   eth-switch",
+        "ge-0/0/7                up    up",
+        "ge-0/0/7.0              up    up   eth-switch",
+        "ge-0/0/8                up    up",
+        "ge-0/0/8.0              up    up   eth-switch",
+        "ge-0/0/9                up    up",
+        "ge-0/0/9.0              up    up   eth-switch",
+        "ge-0/0/10               up    up",
+        "ge-0/0/10.0             up    up   eth-switch",
+        "ge-0/0/11               up    up",
+        "ge-0/0/11.0             up    up   eth-switch",
+        "ge-0/0/12               up    up",
+        "ge-0/0/12.0             up    up   eth-switch",
+        "ge-0/0/13               up    up",
+        "ge-0/0/13.0             up    up   eth-switch",
+        "ge-0/0/14               up    up",
+        "ge-0/0/14.0             up    up   eth-switch",
+        "ge-0/0/15               up    up",
+        "ge-0/0/15.0             up    up   eth-switch",
+        "ge-0/0/16               up    up",
+        "ge-0/0/16.0             up    up   eth-switch",
+        "ge-0/0/17               up    up",
+        "ge-0/0/17.0             up    up   eth-switch",
+        "ge-0/0/18               up    up",
+        "ge-0/0/18.0             up    up   eth-switch",
+        "ge-0/0/19               up    up",
+        "ge-0/0/19.0             up    up   eth-switch",
+        "ge-0/0/21               up    up",
+        "ge-0/0/21.0             up    up   eth-switch",
+        "ge-0/0/22               up    up",
+        "ge-0/0/22.0             up    up   eth-switch",
+        "ge-0/0/24               up    up",
+        "ge-0/0/24.0             up    up   eth-switch",
+        "ge-0/0/25               up    up",
+        "ge-0/0/25.0             up    up   eth-switch",
+        "ge-0/0/26               down  down",
+        "ge-0/0/26.0             up    down eth-switch",
+        "ge-0/0/27               down  down",
+        "ge-0/0/27.0             up    down eth-switch",
+        "ge-0/0/28               up    up",
+        "ge-0/0/28.0             up    up   eth-switch",
+        "xe-0/0/32               down  down",
+        "xe-0/0/32.0             up    down eth-switch",
+        "xe-0/0/33               down  down",
+        "xe-0/0/33.0             up    down eth-switch",
+        "xe-0/0/34               up    up",
+        "xe-0/0/34.0             up    up   eth-switch",
+        "xe-0/0/35               up    up",
+        "xe-0/0/35.0             up    up   eth-switch",
+        "bme0                    up    up",
+        "bme0.0                  up    up   inet     128.0.0.1/2     ",
+        "                                            128.0.0.4/2     ",
+        "                                            128.0.0.16/2    ",
+        "                                            128.0.0.63/2    ",
+        "dsc                     up    up",
+        "fti0                    up    up",
+        "gre                     up    up",
+        "ipip                    up    up",
+        "irb                     up    up",
+        "irb.0                   up    up   inet    ",
+        "irb.808                 up    up   inet     172.18.8.211/24 ",
+        "jsrv                    up    up",
+        "jsrv.1                  up    up   inet     128.0.0.127/2   ",
+        "lo0                     up    up",
+        "lo0.0                   up    up   inet    ",
+        "lo0.16385               up    up   inet    ",
+        "lsi                     up    up",
         "me0                     down  down",
         "me0.0                   up    down eth-switch",
         "mtun                    up    up",
@@ -117,12 +193,34 @@
         "pime                    up    up",
         "tap                     up    up",
         "vme                     up    down",
-        "vme.0                   up    down inet"
+        "vme.0                   up    down inet    ",
+        "",
+        "{master:0}"
       ],
       "metrics": {
-        "interface_count": 18,
-        "bad_interface_count": 3,
+        "interface_count": 91,
+        "bad_interface_count": 7,
         "bad_interfaces": [
+          {
+            "interface": "ge-0/0/26.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "ge-0/0/27.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/32.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/33.0",
+            "admin": "up",
+            "link": "down"
+          },
           {
             "interface": "me0.0",
             "admin": "up",
@@ -191,6 +289,371 @@
             "link": "up"
           },
           {
+            "interface": "ge-0/0/2",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/2.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/3",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/3.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/4",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/4.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/5",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/5.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/6",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/6.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/7",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/7.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/8",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/8.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/9",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/9.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/10",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/10.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/11",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/11.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/12",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/12.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/13",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/13.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/14",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/14.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/15",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/15.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/16",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/16.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/17",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/17.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/18",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/18.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/19",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/19.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/21",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/21.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/22",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/22.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/24",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/24.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/25",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/25.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/26",
+            "admin": "down",
+            "link": "down"
+          },
+          {
+            "interface": "ge-0/0/26.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "ge-0/0/27",
+            "admin": "down",
+            "link": "down"
+          },
+          {
+            "interface": "ge-0/0/27.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "ge-0/0/28",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ge-0/0/28.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "xe-0/0/32",
+            "admin": "down",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/32.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/33",
+            "admin": "down",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/33.0",
+            "admin": "up",
+            "link": "down"
+          },
+          {
+            "interface": "xe-0/0/34",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "xe-0/0/34.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "xe-0/0/35",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "xe-0/0/35.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "bme0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "bme0.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "dsc",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "fti0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "gre",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "ipip",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "irb",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "irb.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "irb.808",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "jsrv",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "jsrv.1",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "lo0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "lo0.0",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "lo0.16385",
+            "admin": "up",
+            "link": "up"
+          },
+          {
+            "interface": "lsi",
+            "admin": "up",
+            "link": "up"
+          },
+          {
             "interface": "me0",
             "admin": "down",
             "link": "down"
@@ -233,7 +696,7 @@
         ]
       },
       "thresholds": {},
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: show interfaces terse\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   eth-switch\ngr-0/0/0                up    up\npfe-0/0/0               up    up\npfe-0/0/0.16383         up    up   inet\n                                   inet6\npfh-0/0/0               up    up\npfh-0/0/0.16383         up    up   inet\npfh-0/0/0.16384         up    up   inet\nge-0/0/1                up    up\nge-0/0/1.0              up    up   eth-switch\nme0                     down  down\nme0.0                   up    down eth-switch\nmtun                    up    up\npimd                    up    up\npime                    up    up\ntap                     up    up\nvme                     up    down\nvme.0                   up    down inet",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: show interfaces terse\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   eth-switch\ngr-0/0/0                up    up\npfe-0/0/0               up    up\npfe-0/0/0.16383         up    up   inet    \n                                   inet6   \npfh-0/0/0               up    up\npfh-0/0/0.16383         up    up   inet    \npfh-0/0/0.16384         up    up   inet    \nge-0/0/1                up    up\nge-0/0/1.0              up    up   eth-switch\nge-0/0/2                up    up\nge-0/0/2.0              up    up   eth-switch\nge-0/0/3                up    up\nge-0/0/3.0              up    up   eth-switch\nge-0/0/4                up    up\nge-0/0/4.0              up    up   eth-switch\nge-0/0/5                up    up\nge-0/0/5.0              up    up   eth-switch\nge-0/0/6                up    up\nge-0/0/6.0              up    up   eth-switch\nge-0/0/7                up    up\nge-0/0/7.0              up    up   eth-switch\nge-0/0/8                up    up\nge-0/0/8.0              up    up   eth-switch\nge-0/0/9                up    up\nge-0/0/9.0              up    up   eth-switch\nge-0/0/10               up    up\nge-0/0/10.0             up    up   eth-switch\nge-0/0/11               up    up\nge-0/0/11.0             up    up   eth-switch\nge-0/0/12               up    up\nge-0/0/12.0             up    up   eth-switch\nge-0/0/13               up    up\nge-0/0/13.0             up    up   eth-switch\nge-0/0/14               up    up\nge-0/0/14.0             up    up   eth-switch\nge-0/0/15               up    up\nge-0/0/15.0             up    up   eth-switch\nge-0/0/16               up    up\nge-0/0/16.0             up    up   eth-switch\nge-0/0/17               up    up\nge-0/0/17.0             up    up   eth-switch\nge-0/0/18               up    up\nge-0/0/18.0             up    up   eth-switch\nge-0/0/19               up    up\nge-0/0/19.0             up    up   eth-switch\nge-0/0/21               up    up\nge-0/0/21.0             up    up   eth-switch\nge-0/0/22               up    up\nge-0/0/22.0             up    up   eth-switch\nge-0/0/24               up    up\nge-0/0/24.0             up    up   eth-switch\nge-0/0/25               up    up\nge-0/0/25.0             up    up   eth-switch\nge-0/0/26               down  down\nge-0/0/26.0             up    down eth-switch\nge-0/0/27               down  down\nge-0/0/27.0             up    down eth-switch\nge-0/0/28               up    up\nge-0/0/28.0             up    up   eth-switch\nxe-0/0/32               down  down\nxe-0/0/32.0             up    down eth-switch\nxe-0/0/33               down  down\nxe-0/0/33.0             up    down eth-switch\nxe-0/0/34               up    up\nxe-0/0/34.0             up    up   eth-switch\nxe-0/0/35               up    up\nxe-0/0/35.0             up    up   eth-switch\nbme0                    up    up\nbme0.0                  up    up   inet     128.0.0.1/2     \n                                            128.0.0.4/2     \n                                            128.0.0.16/2    \n                                            128.0.0.63/2    \ndsc                     up    up\nfti0                    up    up\ngre                     up    up\nipip                    up    up\nirb                     up    up\nirb.0                   up    up   inet    \nirb.808                 up    up   inet     172.18.8.211/24 \njsrv                    up    up\njsrv.1                  up    up   inet     128.0.0.127/2   \nlo0                     up    up\nlo0.0                   up    up   inet    \nlo0.16385               up    up   inet    \nlsi                     up    up\nme0                     down  down\nme0.0                   up    down eth-switch\nmtun                    up    up\npimd                    up    up\npime                    up    up\ntap                     up    up\nvme                     up    down\nvme.0                   up    down inet    \n\n{master:0}",
       "raw_output_lines": [
         "[점검 단계 1]",
         " - 실행 명령어: show interfaces terse",
@@ -243,13 +706,89 @@
         "ge-0/0/0.0              up    up   eth-switch",
         "gr-0/0/0                up    up",
         "pfe-0/0/0               up    up",
-        "pfe-0/0/0.16383         up    up   inet",
-        "                                   inet6",
+        "pfe-0/0/0.16383         up    up   inet    ",
+        "                                   inet6   ",
         "pfh-0/0/0               up    up",
-        "pfh-0/0/0.16383         up    up   inet",
-        "pfh-0/0/0.16384         up    up   inet",
+        "pfh-0/0/0.16383         up    up   inet    ",
+        "pfh-0/0/0.16384         up    up   inet    ",
         "ge-0/0/1                up    up",
         "ge-0/0/1.0              up    up   eth-switch",
+        "ge-0/0/2                up    up",
+        "ge-0/0/2.0              up    up   eth-switch",
+        "ge-0/0/3                up    up",
+        "ge-0/0/3.0              up    up   eth-switch",
+        "ge-0/0/4                up    up",
+        "ge-0/0/4.0              up    up   eth-switch",
+        "ge-0/0/5                up    up",
+        "ge-0/0/5.0              up    up   eth-switch",
+        "ge-0/0/6                up    up",
+        "ge-0/0/6.0              up    up   eth-switch",
+        "ge-0/0/7                up    up",
+        "ge-0/0/7.0              up    up   eth-switch",
+        "ge-0/0/8                up    up",
+        "ge-0/0/8.0              up    up   eth-switch",
+        "ge-0/0/9                up    up",
+        "ge-0/0/9.0              up    up   eth-switch",
+        "ge-0/0/10               up    up",
+        "ge-0/0/10.0             up    up   eth-switch",
+        "ge-0/0/11               up    up",
+        "ge-0/0/11.0             up    up   eth-switch",
+        "ge-0/0/12               up    up",
+        "ge-0/0/12.0             up    up   eth-switch",
+        "ge-0/0/13               up    up",
+        "ge-0/0/13.0             up    up   eth-switch",
+        "ge-0/0/14               up    up",
+        "ge-0/0/14.0             up    up   eth-switch",
+        "ge-0/0/15               up    up",
+        "ge-0/0/15.0             up    up   eth-switch",
+        "ge-0/0/16               up    up",
+        "ge-0/0/16.0             up    up   eth-switch",
+        "ge-0/0/17               up    up",
+        "ge-0/0/17.0             up    up   eth-switch",
+        "ge-0/0/18               up    up",
+        "ge-0/0/18.0             up    up   eth-switch",
+        "ge-0/0/19               up    up",
+        "ge-0/0/19.0             up    up   eth-switch",
+        "ge-0/0/21               up    up",
+        "ge-0/0/21.0             up    up   eth-switch",
+        "ge-0/0/22               up    up",
+        "ge-0/0/22.0             up    up   eth-switch",
+        "ge-0/0/24               up    up",
+        "ge-0/0/24.0             up    up   eth-switch",
+        "ge-0/0/25               up    up",
+        "ge-0/0/25.0             up    up   eth-switch",
+        "ge-0/0/26               down  down",
+        "ge-0/0/26.0             up    down eth-switch",
+        "ge-0/0/27               down  down",
+        "ge-0/0/27.0             up    down eth-switch",
+        "ge-0/0/28               up    up",
+        "ge-0/0/28.0             up    up   eth-switch",
+        "xe-0/0/32               down  down",
+        "xe-0/0/32.0             up    down eth-switch",
+        "xe-0/0/33               down  down",
+        "xe-0/0/33.0             up    down eth-switch",
+        "xe-0/0/34               up    up",
+        "xe-0/0/34.0             up    up   eth-switch",
+        "xe-0/0/35               up    up",
+        "xe-0/0/35.0             up    up   eth-switch",
+        "bme0                    up    up",
+        "bme0.0                  up    up   inet     128.0.0.1/2     ",
+        "                                            128.0.0.4/2     ",
+        "                                            128.0.0.16/2    ",
+        "                                            128.0.0.63/2    ",
+        "dsc                     up    up",
+        "fti0                    up    up",
+        "gre                     up    up",
+        "ipip                    up    up",
+        "irb                     up    up",
+        "irb.0                   up    up   inet    ",
+        "irb.808                 up    up   inet     172.18.8.211/24 ",
+        "jsrv                    up    up",
+        "jsrv.1                  up    up   inet     128.0.0.127/2   ",
+        "lo0                     up    up",
+        "lo0.0                   up    up   inet    ",
+        "lo0.16385               up    up   inet    ",
+        "lsi                     up    up",
         "me0                     down  down",
         "me0.0                   up    down eth-switch",
         "mtun                    up    up",
@@ -257,7 +796,9 @@
         "pime                    up    up",
         "tap                     up    up",
         "vme                     up    down",
-        "vme.0                   up    down inet"
+        "vme.0                   up    down inet    ",
+        "",
+        "{master:0}"
       ]
     }
   ],

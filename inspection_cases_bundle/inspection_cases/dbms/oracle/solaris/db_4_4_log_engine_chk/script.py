@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import shlex
+import re
 
 from .common._base import BaseCheck
 
 
 ENGINE_PATTERN = 'ORA-|error|failure|warning|corrupt|internal|deadlock|timeout'
-DEFAULT_DB_LOG_DIR = '/TTIPS_LOG01/diag/rdbms/ttips/TTIPS1/trace'
+DIAG_TRACE_PATH_QUERY = """sqlplus -S / as sysdba << EOF
+set pages 0 feedback off heading off
+SELECT value
+FROM v\$diag_info where name = 'Diag Trace';
+EXIT;
+EOF"""
 
 
 class Check(BaseCheck):
@@ -17,23 +23,37 @@ class Check(BaseCheck):
 
     def run(self):
         oracle_account = self.get_threshold_var('oracle_account', default='oratips', value_type='str')
-        db_log_dir = self.get_threshold_var('db_log_dir', default=DEFAULT_DB_LOG_DIR, value_type='str')
-        command = 'egrep -i "%s" %s/alert_*.log' % (ENGINE_PATTERN, shlex.quote(db_log_dir))
+
+        # log 경로를 찾기위한 쿼리 실행
         try:
             result = self._run_solaris_account_commands(
                 oracle_account,
-                [{'command': command, 'timeout': 20}],
+                [{'command': DIAG_TRACE_PATH_QUERY, 'timeout': 20}],
             )[0]
         except ValueError as exc:
             return self.fail('Oracle 계정 전환 설정 오류', message=str(exc))
 
+        switch = getattr(self, '_solaris_last_account_switch_verification', {}) or {}
+        if not switch.get('ok'):
+            return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=switch.get('stderr') or '')
+
+        stdout = result.get('stdout', '')
+        match = re.search(r"(/[\w./-]+)", stdout)
+        db_log_dir = match.group(1) if match else False
+
+        if not db_log_dir:
+            return self.fail('alert log 검색 실패', message='alert log 검색 실패')
+        
+        command = 'egrep -i "%s" %s/alert_*.log | tail -200' % (ENGINE_PATTERN, shlex.quote(db_log_dir))
+        
+        result = self._run_paramiko_commands(                
+            [{'command': command, 'timeout': 20}],
+            become=True
+        )[0]
+
         stdout = (result.get('stdout') or '').strip()
         stderr = (result.get('stderr') or '').strip()
-        switch = getattr(self, '_solaris_last_account_switch_verification', {}) or {}
-        if self._is_connection_error(result.get('rc'), stderr):
-            return self.fail('호스트 연결 실패', message=stderr or 'Paramiko 연결 확인에 실패했습니다.', stderr=stderr)
-        if not switch.get('ok'):
-            return self.fail('Oracle 계정 전환 실패', message=switch.get('message') or 'Oracle 계정 전환을 확인하지 못했습니다.', stdout=switch.get('stdout') or '', stderr=stderr)
+        
         if result.get('rc') not in (0, 1):
             return self.fail('DB 엔진 로그 grep 실행 실패', message='DB 엔진 alert 로그 검색 명령을 실행하지 못했습니다.', stdout=stdout, stderr=stderr)
 

@@ -12,9 +12,10 @@ GATEWAY_RE = re.compile(r'Default gateway is\s+(\d+(?:\.\d+){3})')
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'ssh'
+    SSH_CONTROL_MASTER = False
 
     def run(self):
-        expected = str(self.get_threshold_var('gateway_ip', default='', value_type='str')).strip()
+        expected = str(self.get_threshold_var('gateway_ip', default='193.1.0.254', value_type='str')).strip()
         thresholds = {'gateway_ip': expected}
         if not expected:
             return self.fail('임계치 미정의', message='gateway_ip 값이 필요합니다.', thresholds=thresholds)

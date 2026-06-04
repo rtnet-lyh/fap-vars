@@ -66,9 +66,9 @@ class Check(BaseCheck):
             'vlans': vlans,
         }
         if not evaluated_vlans:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='멤버 포트가 있는 VLAN을 찾지 못했습니다.', message='VLAN 상태 경고: 멤버 포트가 있는 VLAN이 없습니다.')
+            return self.fail(error="멤버 포트가 있는 VLAN을 찾지 못했습니다.", metrics=metrics, thresholds=thresholds, reasons='멤버 포트가 있는 VLAN을 찾지 못했습니다.', message='VLAN 상태 경고: 멤버 포트가 있는 VLAN이 없습니다.')
         if below_threshold:
-            return self.warn(metrics=metrics, thresholds=thresholds, reasons='일부 VLAN의 member port 수가 기준 미만입니다.', message=f'VLAN 상태 경고: 기준 미달 VLAN {len(below_threshold)}개.')
+            return self.fail(error="일부 VLAN의 member port 수가 기준 미만입니다.", metrics=metrics, thresholds=thresholds, reasons='일부 VLAN의 member port 수가 기준 미만입니다.', message=f'VLAN 상태 경고: 기준 미달 VLAN {len(below_threshold)}개.')
         return self.ok(metrics=metrics, thresholds=thresholds, reasons='VLAN별 member port 수가 기준 이상입니다.', message=f'VLAN 상태 점검 정상: 평가 VLAN {len(evaluated_vlans)}개.')
 
 
