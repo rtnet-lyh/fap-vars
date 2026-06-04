@@ -9,6 +9,7 @@ import os
 import re
 import ssl
 import sys
+import textwrap
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -30,7 +31,11 @@ INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
 INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 MAX_SHEETS_PER_WORKBOOK = 250
 HWPX_SECTION_PATH = "Contents/section0.xml"
-PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS = 32
+PREVENTIVE_HWPX_CHECK_ITEM_WRAP_CHARS = 18
+PREVENTIVE_HWPX_TABLE_ROW_BASE_HEIGHT = 282
+PREVENTIVE_HWPX_TABLE_ROW_LINE_HEIGHT = 1200
+PREVENTIVE_HWPX_TABLE_HEIGHT_PADDING = 2000
+PREVENTIVE_HWPX_TABLE_PARAGRAPH_HEIGHT_PADDING = 566
 HWPX_NAMESPACES = {
     "ha": "http://www.hancom.co.kr/hwpml/2011/app",
     "hp": "http://www.hancom.co.kr/hwpml/2011/paragraph",
@@ -1932,6 +1937,7 @@ def render_preventive_hwpx_host_section(
 
     table_paragraph_index = find_preventive_hwpx_detail_table_paragraph_index(section_children)
     extra_row_count = render_preventive_hwpx_detail_rows(section_children, details_for_host)
+    resize_preventive_hwpx_table_paragraph(section_children, table_paragraph_index)
     remove_hwpx_spacer_paragraphs_after_index(section_children, table_paragraph_index, extra_row_count)
     replace_hwpx_placeholders(section_children, replacements)
 
@@ -1957,6 +1963,7 @@ def render_preventive_hwpx_detail_rows(
 
     table.remove(data_row)
     render_details = list(details_for_host) or [None]
+    spacer_remove_count = max(len(render_details) - 1, 0)
     for detail_index, detail_row in enumerate(render_details, start=1):
         row = copy.deepcopy(data_row)
         set_hwpx_table_row_address(row, detail_index)
@@ -1965,42 +1972,174 @@ def render_preventive_hwpx_detail_rows(
                 [row],
                 {
                     "{{NUM}}": "",
-                    "{{CHECK_ITEM}}": "상세 데이터가 없습니다.",
                     "{{IS_PASS}}": " ",
                     "{{IS_FAILED}}": " ",
                 },
             )
+            set_hwpx_table_cell_wrapped_text(row, 1, "상세 데이터가 없습니다.")
+            set_preventive_hwpx_table_row_height(row, 1)
             set_hwpx_table_cell_text(row, 4, "")
         else:
             status_type = classify_detail_result_status(detail_row.result_status)
+            check_item_lines = wrap_preventive_hwpx_check_item(
+                build_government_checklist_item_label(detail_row)
+            )
             replace_hwpx_placeholders(
                 [row],
                 {
                     "{{NUM}}": str(detail_index),
-                    "{{CHECK_ITEM}}": truncate_preventive_hwpx_check_item(
-                        build_government_checklist_item_label(detail_row)
-                    ),
                     "{{IS_PASS}}": "✔" if status_type == "pass" else " ",
                     "{{IS_FAILED}}": "✔" if status_type == "fail" else " ",
                 },
             )
+            set_hwpx_table_cell_wrapped_text(row, 1, check_item_lines)
+            set_preventive_hwpx_table_row_height(row, len(check_item_lines))
+            spacer_remove_count += max(len(check_item_lines) - 1, 0)
             set_hwpx_table_cell_text(row, 4, "")
         table.insert(data_row_index + detail_index - 1, row)
 
     table.set("rowCnt", str(max(len(rows) - 1, 0) + len(render_details)))
-    return max(len(render_details) - 1, 0)
+    resize_preventive_hwpx_table_height(table)
+    return spacer_remove_count
 
 
-def truncate_preventive_hwpx_check_item(value: Any) -> str:
-    text = str(value if value is not None else "")
-    if len(text) <= PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS:
-        return text
+def wrap_preventive_hwpx_check_item(value: Any) -> List[str]:
+    text = " ".join(str(value if value is not None else "").split())
+    if not text:
+        return [""]
 
-    suffix = "..."
-    keep_length = PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS - len(suffix)
-    if keep_length < 1:
-        return suffix[:PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS]
-    return text[:keep_length].rstrip() + suffix
+    wrapped_lines = []
+    for raw_line in text.splitlines() or [""]:
+        wrapped_lines.extend(
+            textwrap.wrap(
+                raw_line,
+                width=PREVENTIVE_HWPX_CHECK_ITEM_WRAP_CHARS,
+                break_long_words=True,
+                break_on_hyphens=False,
+            )
+            or [""]
+        )
+    return wrapped_lines or [""]
+
+
+def set_hwpx_table_cell_wrapped_text(row: ET.Element, column_index: int, value: Any) -> None:
+    lines = list(value) if isinstance(value, (list, tuple)) else wrap_preventive_hwpx_check_item(value)
+    cells = row.findall(HP_TAG + "tc")
+    if column_index >= len(cells):
+        return
+
+    cell = cells[column_index]
+    sub_list = cell.find(HP_TAG + "subList")
+    if sub_list is None:
+        set_hwpx_table_cell_text(row, column_index, "\n".join(lines))
+        return
+
+    sub_list_children = list(sub_list)
+    paragraphs = [child for child in sub_list_children if child.tag == HP_TAG + "p"]
+    if not paragraphs:
+        set_hwpx_table_cell_text(row, column_index, "\n".join(lines))
+        return
+
+    first_paragraph_index = sub_list_children.index(paragraphs[0])
+    paragraph_template = paragraphs[0]
+    for paragraph in paragraphs:
+        sub_list.remove(paragraph)
+
+    insert_index = first_paragraph_index
+    for line in lines:
+        paragraph = copy.deepcopy(paragraph_template)
+        set_hwpx_paragraph_text(paragraph, line)
+        sub_list.insert(insert_index, paragraph)
+        insert_index += 1
+
+
+def set_hwpx_paragraph_text(paragraph: ET.Element, value: Any) -> None:
+    text_elements = list(paragraph.iter(HP_TAG + "t"))
+    if text_elements:
+        set_hwpx_text_element_plain_text(text_elements[0], value)
+        for extra_text_element in text_elements[1:]:
+            set_hwpx_text_element_plain_text(extra_text_element, "")
+        return
+
+    run = paragraph.find(".//" + HP_TAG + "run")
+    if run is not None:
+        text_element = ET.SubElement(run, HP_TAG + "t")
+        text_element.text = "" if value is None else str(value)
+
+
+def set_hwpx_text_element_plain_text(text_element: ET.Element, value: Any) -> None:
+    for child in list(text_element):
+        text_element.remove(child)
+    text_element.text = "" if value is None else str(value)
+
+
+def set_preventive_hwpx_table_row_height(row: ET.Element, line_count: int) -> None:
+    row_height = estimate_preventive_hwpx_table_row_height(line_count)
+    for cell in row.findall(HP_TAG + "tc"):
+        cell_size = cell.find(HP_TAG + "cellSz")
+        if cell_size is not None:
+            cell_size.set("height", str(row_height))
+
+
+def estimate_preventive_hwpx_table_row_height(line_count: int) -> int:
+    extra_line_count = max(line_count - 1, 0)
+    return PREVENTIVE_HWPX_TABLE_ROW_BASE_HEIGHT + (
+        extra_line_count * PREVENTIVE_HWPX_TABLE_ROW_LINE_HEIGHT
+    )
+
+
+def resize_preventive_hwpx_table_height(table: ET.Element) -> None:
+    table_size = table.find(HP_TAG + "sz")
+    if table_size is None:
+        return
+
+    table_height = PREVENTIVE_HWPX_TABLE_HEIGHT_PADDING
+    for row in table.findall(HP_TAG + "tr"):
+        cell_heights = []
+        for cell in row.findall(HP_TAG + "tc"):
+            cell_size = cell.find(HP_TAG + "cellSz")
+            if cell_size is not None:
+                cell_heights.append(parse_hwpx_int(cell_size.get("height"), 0))
+        table_height += max(cell_heights) if cell_heights else 0
+
+    current_height = parse_hwpx_int(table_size.get("height"), 0)
+    table_size.set("height", str(max(current_height, table_height)))
+
+
+def resize_preventive_hwpx_table_paragraph(
+    section_children: Sequence[ET.Element],
+    paragraph_index: Optional[int],
+) -> None:
+    if paragraph_index is None or paragraph_index >= len(section_children):
+        return
+
+    paragraph = section_children[paragraph_index]
+    table = find_preventive_hwpx_detail_table([paragraph])
+    if table is None:
+        return
+
+    table_size = table.find(HP_TAG + "sz")
+    if table_size is None:
+        return
+
+    paragraph_height = parse_hwpx_int(table_size.get("height"), 0) + PREVENTIVE_HWPX_TABLE_PARAGRAPH_HEIGHT_PADDING
+    if paragraph_height < 1:
+        return
+
+    line_segment = paragraph.find(HP_TAG + "linesegarray/" + HP_TAG + "lineseg")
+    if line_segment is None:
+        return
+
+    line_segment.set("vertsize", str(paragraph_height))
+    line_segment.set("textheight", str(paragraph_height))
+    line_segment.set("baseline", str(int(paragraph_height * 0.85)))
+
+
+def parse_hwpx_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def find_preventive_hwpx_detail_table_paragraph_index(section_children: Sequence[ET.Element]) -> Optional[int]:

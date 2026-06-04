@@ -9,7 +9,6 @@ from typing import List, Optional, Set
 from report.generate_report import (
     DefaultInspectionReportGenerator,
     GovernmentChecklistReportGenerator,
-    PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS,
     PreventiveInspectionReportGenerator,
     build_mock_report_rows,
     build_output_path,
@@ -97,12 +96,30 @@ def get_hwpx_row_cell_texts(section_xml: str, item_label: str) -> List[str]:
     root = ET.fromstring(section_xml)
     for row in root.iter(HWPX_HP_TAG + "tr"):
         cells = row.findall(HWPX_HP_TAG + "tc")
-        cell_texts = [
-            "".join(text_element.text or "" for text_element in cell.iter(HWPX_HP_TAG + "t"))
-            for cell in cells
-        ]
-        if item_label in cell_texts:
+        cell_texts = [get_hwpx_cell_text(cell) for cell in cells]
+        if any(item_label in cell_text for cell_text in cell_texts):
             return cell_texts
+    return []
+
+
+def get_hwpx_cell_text(cell: ET.Element) -> str:
+    paragraphs = list(cell.iter(HWPX_HP_TAG + "p"))
+    if paragraphs:
+        return "\n".join("".join(paragraph.itertext()) for paragraph in paragraphs)
+    return "".join(cell.itertext())
+
+
+def get_hwpx_row_cell_heights(section_xml: str, item_label: str) -> List[int]:
+    root = ET.fromstring(section_xml)
+    for row in root.iter(HWPX_HP_TAG + "tr"):
+        cells = row.findall(HWPX_HP_TAG + "tc")
+        cell_texts = [get_hwpx_cell_text(cell) for cell in cells]
+        if any(item_label in cell_text for cell_text in cell_texts):
+            heights = []
+            for cell in cells:
+                cell_size = cell.find(HWPX_HP_TAG + "cellSz")
+                heights.append(int(cell_size.get("height")) if cell_size is not None else 0)
+            return heights
     return []
 
 
@@ -1009,10 +1026,9 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertEqual(log_row_cells[4], "")
         self.assertIn("정상 1개, 비정상 0개", section_xml)
 
-    def test_save_preventive_hwpx_reports_truncates_long_check_item_text(self) -> None:
+    def test_save_preventive_hwpx_reports_wraps_long_check_item_text(self) -> None:
         summary_rows = [make_summary_row(1, "host-a")]
         long_item_name = "매우 긴 점검 항목 이름입니다 " * 4
-        expected_item_name = long_item_name[: PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS - 3].rstrip() + "..."
         detail_rows = [
             make_detail_row(1, "host-a", "시스템", "LIN-001", long_item_name, "PASS", "ok"),
         ]
@@ -1025,11 +1041,14 @@ class GenerateReportHelpersTest(unittest.TestCase):
             )
             with zipfile.ZipFile(report_path) as hwpx_handle:
                 section_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
-                row_cells = get_hwpx_row_cell_texts(section_xml, expected_item_name)
+                row_cells = get_hwpx_row_cell_texts(section_xml, "매우 긴 점검 항목")
+                row_heights = get_hwpx_row_cell_heights(section_xml, "매우 긴 점검 항목")
 
-        self.assertIn(expected_item_name, section_xml)
-        self.assertNotIn(long_item_name, section_xml)
-        self.assertEqual(row_cells[1], expected_item_name)
+        self.assertIn("매우 긴 점검 항목", section_xml)
+        self.assertNotIn("...", section_xml)
+        self.assertEqual(" ".join(row_cells[1].split()), long_item_name.strip())
+        self.assertIn("\n", row_cells[1])
+        self.assertGreater(row_heights[1], 282)
 
     def test_save_preventive_hwpx_reports_consumes_reserved_space_for_extra_rows(self) -> None:
         summary_rows = [make_summary_row(1, "host-a")]

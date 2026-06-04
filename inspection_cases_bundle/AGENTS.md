@@ -8,16 +8,19 @@
 
 ## 프로젝트 구조 및 모듈 구성
 
-- `inspection_cases/`: 점검 케이스 모음. 현재 주요 분류는 `server/`, `network/`, `was/`, `web/`, `tutorial/`이다.
+- `inspection_cases/`: 점검 케이스 모음. 현재 주요 분류는 `server/`, `network/`, `was/`, `web/`, `storage/`, `dbms/`, `backup/`, `tutorial/`이다.
 - `inspection_cases/server/`: `rocky`, `windows`, `solaris`, `hpux`, `esxi` 서버 계열 케이스를 둔다.
-- `inspection_cases/network/`: `cisco_ios`, `nx_os` 등 네트워크 장비 케이스를 둔다.
+- `inspection_cases/network/`: `cisco_ios`, `nx_os`, `juniper_junos`, `piolink_pas` 등 네트워크 장비 케이스를 둔다.
 - `inspection_cases/was/`와 `inspection_cases/web/`: JEUS, WebtoB처럼 애플리케이션 계열 점검 케이스를 둔다.
+- `inspection_cases/storage/`: Dell DDOS 등 스토리지 장비 케이스를 둔다.
+- `inspection_cases/dbms/`: Oracle 등 DBMS 계열 점검 케이스를 둔다.
+- `inspection_cases/backup/`: NetBackup Appliance 등 백업 장비 또는 백업 솔루션 케이스를 둔다.
 - `inspection_cases/tutorial/`: SSH, WinRM, Paramiko 작성 패턴을 확인하는 튜토리얼 케이스를 둔다.
 - `inspection_runtime/`: replay/live 실행 최소 런타임이다. 일반 케이스 추가 작업에서는 수정하지 않는다.
 - `raw_data/`: 점검 명령어, 출력 결과, 판단 근거를 담은 원천 Markdown 자료다.
 - `api_data/`: API 문서화 또는 변환 산출물 성격의 Markdown 자료다. 명시 요청이 없으면 불필요하게 갱신하지 않는다.
 
-새 점검 로직의 기본 위치는 `inspection_cases/<domain>/<platform>/<case_name>/`이다. 예: `inspection_cases/server/rocky/rocky_memory_usage_free_check/`.
+새 점검 로직의 기본 위치는 `inspection_cases/<domain>/<platform_or_product>/<case_name>/`이다. 예: `inspection_cases/server/rocky/rocky_memory_usage_free_check/`, `inspection_cases/network/nx_os/mds_c9148s/1_1_cpu_check/`, `inspection_cases/backup/netbackup_appliance_5240/nbu_1_1_catalog_backup_status_check/`. 기존에 장비 모델, 제품, OS 하위 디렉터리가 있으면 가장 가까운 구조를 따른다.
 
 ## 빌드, 테스트, 개발 명령
 
@@ -70,7 +73,7 @@ inspection_cases/<domain>/<platform>/<case_name>/
 └── outputs/
 ```
 
-`outputs/`는 긴 stdout이 없으면 생략 가능하지만, 일반적으로 만드는 편이 안전하다. 일부 기존 Windows 또는 Solaris 케이스에는 호환용 `raw_data.md`가 있을 수 있으나, 새 Rocky 계열 케이스는 `raw_data/server/rocky/*.md`를 정본으로 본다.
+`outputs/`는 긴 stdout이 없으면 생략 가능하지만, 일반적으로 만드는 편이 안전하다. 일부 기존 Windows, Solaris, Backup 케이스에는 호환용 `raw_data.md`가 있을 수 있으나, 새 Rocky 계열 케이스는 `raw_data/server/rocky/*.md`를 정본으로 본다.
 
 ## OS 및 연결 방식별 작성 규칙
 
