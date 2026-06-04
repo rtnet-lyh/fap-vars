@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import copy
 import configparser
 import html
 import json
@@ -12,7 +11,6 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 import zipfile
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -23,36 +21,9 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 
 DEFAULT_FAP_CONFIG_FILE = Path("/fap/ansible/conf/fap.conf")
 DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parent / "output"
-DEFAULT_PREVENTIVE_HWPX_TEMPLATE = (
-    Path(__file__).resolve().parent / "templates" / "PREVENTIVE_CHECK_TEMPLATE .hwpx"
-)
 INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
 INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 MAX_SHEETS_PER_WORKBOOK = 250
-HWPX_SECTION_PATH = "Contents/section0.xml"
-PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS = 32
-HWPX_NAMESPACES = {
-    "ha": "http://www.hancom.co.kr/hwpml/2011/app",
-    "hp": "http://www.hancom.co.kr/hwpml/2011/paragraph",
-    "hp10": "http://www.hancom.co.kr/hwpml/2016/paragraph",
-    "hs": "http://www.hancom.co.kr/hwpml/2011/section",
-    "hc": "http://www.hancom.co.kr/hwpml/2011/core",
-    "hh": "http://www.hancom.co.kr/hwpml/2011/head",
-    "hhs": "http://www.hancom.co.kr/hwpml/2011/history",
-    "hm": "http://www.hancom.co.kr/hwpml/2011/master-page",
-    "hpf": "http://www.hancom.co.kr/schema/2011/hpf",
-    "dc": "http://purl.org/dc/elements/1.1/",
-    "opf": "http://www.idpf.org/2007/opf/",
-    "ooxmlchart": "http://www.hancom.co.kr/hwpml/2016/ooxmlchart",
-    "hwpunitchar": "http://www.hancom.co.kr/hwpml/2016/HwpUnitChar",
-    "epub": "http://www.idpf.org/2007/ops",
-    "config": "urn:oasis:names:tc:opendocument:xmlns:config:1.0",
-}
-HP_NAMESPACE = HWPX_NAMESPACES["hp"]
-HP_TAG = "{%s}" % HP_NAMESPACE
-
-for _hwpx_prefix, _hwpx_namespace in HWPX_NAMESPACES.items():
-    ET.register_namespace(_hwpx_prefix, _hwpx_namespace)
 
 
 class SummaryRow(object):
@@ -374,7 +345,7 @@ class PreventiveInspectionReportGenerator(BaseReportGenerator):
 
 
 class GovernmentChecklistReportGenerator(BaseReportGenerator):
-    aliases = ("default", "government-checklist")
+    aliases = ("default", "government-checklist", "preventive")
 
     def build_workbook(
         self,
@@ -423,10 +394,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--output-format",
         choices=("xlsx", "docx"),
         default="xlsx",
-        help=(
-            "Output format. xlsx creates Excel reports; docx creates one document per inspection area. "
-            "report-type=preventive always creates HWPX output."
-        ),
+        help="Output format. xlsx creates Excel reports; docx creates one document per inspection area.",
     )
     parser.add_argument("--output-dir", help="Optional output root. A dated directory is created below it.")
     parser.add_argument("--output-name", default="점검보고서", help="Output filename prefix. Default: 점검보고서")
@@ -1370,7 +1338,7 @@ def classify_detail_result_status(result_status: Any) -> str:
     normalized = ("" if result_status is None else str(result_status)).strip().lower()
     if normalized in {"pass", "양호", "success", "ok"}:
         return "pass"
-    if normalized in {"fail", "취약", "error", "failed", "warn", "warning"}:
+    if normalized in {"fail", "취약", "error", "failed"}:
         return "fail"
     return "unknown"
 
@@ -1787,333 +1755,20 @@ def save_government_checklist_docx_reports(
     return build_zip_archive(saved_paths, build_zip_output_path(output_path))
 
 
-def save_preventive_hwpx_reports(
-    summary_rows: Sequence[SummaryRow],
-    detail_rows: Sequence[DetailRow],
-    output_path: Path,
-    template_path: Path = DEFAULT_PREVENTIVE_HWPX_TEMPLATE,
-) -> Path:
-    if not summary_rows:
-        raise RuntimeError("summary query returned no rows")
-
-    grouped_details = defaultdict(list)
-    for detail in detail_rows:
-        grouped_details[detail.host_key].append(detail)
-
-    area_sections = build_government_checklist_area_sections(summary_rows, grouped_details)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if len(area_sections) == 1:
-        section = area_sections[0]
-        output_path.write_bytes(
-            build_preventive_hwpx(
-                section["area_name"],
-                section["host_entries"],
-                template_path=template_path,
-            )
-        )
-        return output_path.resolve()
-
-    document_dir = output_path.with_suffix("")
-    document_dir.mkdir(parents=True, exist_ok=True)
-
-    saved_paths = []
-    used_names = set()
-    for section_index, section in enumerate(area_sections, start=1):
-        area_name = section["area_name"]
-        filename = build_area_document_filename(
-            output_path.stem,
-            area_name,
-            section_index,
-            used_names,
-            suffix=".hwpx",
-        )
-        document_path = document_dir / filename
-        document_path.write_bytes(
-            build_preventive_hwpx(
-                area_name,
-                section["host_entries"],
-                template_path=template_path,
-            )
-        )
-        saved_paths.append(document_path)
-
-    return build_zip_archive(saved_paths, build_zip_output_path(output_path))
-
-
-def build_preventive_hwpx(
-    area_name: str,
-    host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
-    template_path: Path = DEFAULT_PREVENTIVE_HWPX_TEMPLATE,
-) -> bytes:
-    if not template_path.exists():
-        raise FileNotFoundError("preventive HWPX template not found: %s" % template_path)
-
-    from io import BytesIO
-
-    buffer = BytesIO()
-    with zipfile.ZipFile(str(template_path), "r") as template_zip:
-        section_xml = template_zip.read(HWPX_SECTION_PATH)
-        rendered_section_xml = build_preventive_hwpx_section_xml(section_xml, area_name, host_entries)
-
-        with zipfile.ZipFile(buffer, "w") as output_zip:
-            for info in template_zip.infolist():
-                data = (
-                    rendered_section_xml
-                    if info.filename == HWPX_SECTION_PATH
-                    else template_zip.read(info.filename)
-                )
-                output_zip.writestr(info, data)
-
-    return buffer.getvalue()
-
-
-def build_preventive_hwpx_section_xml(
-    template_section_xml: bytes,
-    area_name: str,
-    host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
-) -> bytes:
-    root = ET.fromstring(template_section_xml)
-    template_children = list(root)
-    for child in template_children:
-        root.remove(child)
-
-    entries = list(host_entries)
-    if not entries:
-        return serialize_hwpx_section(root)
-
-    for host_index, (summary_row, details_for_host) in enumerate(entries):
-        section_children = [copy.deepcopy(child) for child in template_children]
-        if host_index > 0:
-            mark_hwpx_section_page_break(section_children)
-
-        render_preventive_hwpx_host_section(
-            section_children,
-            area_name,
-            summary_row,
-            details_for_host,
-        )
-        root.extend(section_children)
-
-    return serialize_hwpx_section(root)
-
-
-def serialize_hwpx_section(root: ET.Element) -> bytes:
-    body = ET.tostring(root, encoding="utf-8", short_empty_elements=True)
-    return b'<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>' + body
-
-
-def mark_hwpx_section_page_break(section_children: Sequence[ET.Element]) -> None:
-    for child in section_children:
-        if child.tag == HP_TAG + "p":
-            child.set("pageBreak", "1")
-            return
-
-
-def render_preventive_hwpx_host_section(
-    section_children: List[ET.Element],
-    area_name: str,
-    summary_row: SummaryRow,
-    details_for_host: Sequence[DetailRow],
-) -> None:
-    checked_time = format_datetime(
-        first_present_value(
-            *build_government_checklist_checked_time_candidates([(summary_row, details_for_host)])
-        )
-    )
-    pass_count, fail_count = count_detail_result_statuses(details_for_host)
-    replacements = {
-        "{{INSPECTION_AREA}}": (area_name or "").strip() or "점검 영역",
-        "{{HOST_NAME}}": build_host_label(summary_row),
-        "{{CHECK_DATE}}": checked_time,
-        "{{IS_PASS_CNT}}": str(pass_count),
-        "{{IS_FAILED_CNT}}": str(fail_count),
-    }
-
-    table_paragraph_index = find_preventive_hwpx_detail_table_paragraph_index(section_children)
-    extra_row_count = render_preventive_hwpx_detail_rows(section_children, details_for_host)
-    remove_hwpx_spacer_paragraphs_after_index(section_children, table_paragraph_index, extra_row_count)
-    replace_hwpx_placeholders(section_children, replacements)
-
-
-def render_preventive_hwpx_detail_rows(
-    section_children: Sequence[ET.Element],
-    details_for_host: Sequence[DetailRow],
-) -> int:
-    table = find_preventive_hwpx_detail_table(section_children)
-    if table is None:
-        return 0
-
-    rows = table.findall(HP_TAG + "tr")
-    data_row = None
-    data_row_index = None
-    for row_index, row in enumerate(list(table)):
-        if row.tag == HP_TAG + "tr" and hwpx_element_contains_text(row, "{{NUM}}"):
-            data_row = row
-            data_row_index = row_index
-            break
-    if data_row is None or data_row_index is None:
-        return 0
-
-    table.remove(data_row)
-    render_details = list(details_for_host) or [None]
-    for detail_index, detail_row in enumerate(render_details, start=1):
-        row = copy.deepcopy(data_row)
-        set_hwpx_table_row_address(row, detail_index)
-        if detail_row is None:
-            replace_hwpx_placeholders(
-                [row],
-                {
-                    "{{NUM}}": "",
-                    "{{CHECK_ITEM}}": "상세 데이터가 없습니다.",
-                    "{{IS_PASS}}": " ",
-                    "{{IS_FAILED}}": " ",
-                },
-            )
-            set_hwpx_table_cell_text(row, 4, "")
-        else:
-            status_type = classify_detail_result_status(detail_row.result_status)
-            replace_hwpx_placeholders(
-                [row],
-                {
-                    "{{NUM}}": str(detail_index),
-                    "{{CHECK_ITEM}}": truncate_preventive_hwpx_check_item(
-                        build_government_checklist_item_label(detail_row)
-                    ),
-                    "{{IS_PASS}}": "✔" if status_type == "pass" else " ",
-                    "{{IS_FAILED}}": "✔" if status_type == "fail" else " ",
-                },
-            )
-            set_hwpx_table_cell_text(row, 4, "")
-        table.insert(data_row_index + detail_index - 1, row)
-
-    table.set("rowCnt", str(max(len(rows) - 1, 0) + len(render_details)))
-    return max(len(render_details) - 1, 0)
-
-
-def truncate_preventive_hwpx_check_item(value: Any) -> str:
-    text = str(value if value is not None else "")
-    if len(text) <= PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS:
-        return text
-
-    suffix = "..."
-    keep_length = PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS - len(suffix)
-    if keep_length < 1:
-        return suffix[:PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS]
-    return text[:keep_length].rstrip() + suffix
-
-
-def find_preventive_hwpx_detail_table_paragraph_index(section_children: Sequence[ET.Element]) -> Optional[int]:
-    for child_index, child in enumerate(section_children):
-        if child.tag == HP_TAG + "p" and find_preventive_hwpx_detail_table([child]) is not None:
-            return child_index
-    return None
-
-
-def remove_hwpx_spacer_paragraphs_after_index(
-    section_children: List[ET.Element],
-    paragraph_index: Optional[int],
-    remove_count: int,
-) -> None:
-    if paragraph_index is None or remove_count < 1:
-        return
-
-    child_index = paragraph_index + 1
-    removed_count = 0
-    while child_index < len(section_children) and removed_count < remove_count:
-        child = section_children[child_index]
-        if not is_blank_hwpx_paragraph(child):
-            break
-        del section_children[child_index]
-        removed_count += 1
-
-
-def is_blank_hwpx_paragraph(element: ET.Element) -> bool:
-    if element.tag != HP_TAG + "p":
-        return False
-    if element.find(".//" + HP_TAG + "tbl") is not None:
-        return False
-    return all(not (text_element.text or "").strip() for text_element in element.iter(HP_TAG + "t"))
-
-
-def find_preventive_hwpx_detail_table(section_children: Sequence[ET.Element]) -> Optional[ET.Element]:
-    for child in section_children:
-        for table in child.iter(HP_TAG + "tbl"):
-            if hwpx_element_contains_text(table, "{{NUM}}"):
-                return table
-    return None
-
-
-def hwpx_element_contains_text(element: ET.Element, needle: str) -> bool:
-    for text_element in element.iter(HP_TAG + "t"):
-        if needle in (text_element.text or ""):
-            return True
-    return False
-
-
-def replace_hwpx_placeholders(elements: Sequence[ET.Element], replacements: Mapping[str, Any]) -> None:
-    for element in elements:
-        for text_element in element.iter(HP_TAG + "t"):
-            text = text_element.text or ""
-            for placeholder, value in replacements.items():
-                text = text.replace(placeholder, str(value))
-            text_element.text = text
-
-
-def set_hwpx_table_row_address(row: ET.Element, row_address: int) -> None:
-    for cell in row.findall(HP_TAG + "tc"):
-        cell_address = cell.find(HP_TAG + "cellAddr")
-        if cell_address is not None:
-            cell_address.set("rowAddr", str(row_address))
-
-
-def set_hwpx_table_cell_text(row: ET.Element, column_index: int, value: Any) -> None:
-    cells = row.findall(HP_TAG + "tc")
-    if column_index >= len(cells):
-        return
-
-    cell = cells[column_index]
-    text_elements = list(cell.iter(HP_TAG + "t"))
-    if text_elements:
-        text_elements[0].text = "" if value is None else str(value)
-        for extra_text_element in text_elements[1:]:
-            extra_text_element.text = ""
-        return
-
-    run = cell.find(".//" + HP_TAG + "run")
-    if run is not None:
-        text_element = ET.SubElement(run, HP_TAG + "t")
-        text_element.text = "" if value is None else str(value)
-
-
-def count_detail_result_statuses(details_for_host: Sequence[DetailRow]) -> Tuple[int, int]:
-    pass_count = 0
-    fail_count = 0
-    for detail_row in details_for_host:
-        status_type = classify_detail_result_status(detail_row.result_status)
-        if status_type == "pass":
-            pass_count += 1
-        elif status_type == "fail":
-            fail_count += 1
-    return pass_count, fail_count
-
-
 def build_area_document_filename(
     output_stem: str,
     area_name: str,
     section_index: int,
     used_names: Set[str],
-    suffix: str = ".docx",
 ) -> str:
-    normalized_suffix = normalize_suffix(suffix)
     cleaned_area = INVALID_FILENAME_CHARS.sub("_", area_name or "").strip().strip(".")
     cleaned_area = re.sub(r"\s+", " ", cleaned_area) or "점검 영역"
     base_name = f"{output_stem}_{section_index:02d}_{cleaned_area}"
-    candidate = f"{base_name}{normalized_suffix}"
-    dedupe_suffix = 1
+    candidate = f"{base_name}.docx"
+    suffix = 1
     while candidate.lower() in used_names:
-        candidate = f"{base_name}_{dedupe_suffix}{normalized_suffix}"
-        dedupe_suffix += 1
+        candidate = f"{base_name}_{suffix}.docx"
+        suffix += 1
     used_names.add(candidate.lower())
     return candidate
 
@@ -2643,12 +2298,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print(json.dumps(payload, ensure_ascii=False))
             return 1
 
-        if args.report_type == "preventive":
-            output_suffix = ".hwpx"
-        elif args.output_format == "docx":
-            output_suffix = ".docx"
-        else:
-            output_suffix = ".xlsx"
+        output_suffix = ".docx" if args.output_format == "docx" else ".xlsx"
         if args.file_name:
             output_path = build_named_output_path(args.file_name, args.output_path, args.output_dir, output_suffix)
         elif args.output_path:
@@ -2656,9 +2306,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         else:
             output_path = build_output_path(args.output_name, args.output_dir, output_suffix)
         msg = "success"
-        if args.report_type == "preventive":
-            primary_report_path = str(save_preventive_hwpx_reports(summary_rows, detail_rows, output_path))
-        elif args.output_format == "docx":
+        if args.output_format == "docx":
             primary_report_path = str(save_government_checklist_docx_reports(summary_rows, detail_rows, output_path))
         else:
             generator = get_report_generator(args.report_type)

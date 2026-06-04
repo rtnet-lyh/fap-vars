@@ -1,13 +1,15 @@
+from io import BytesIO
 import tempfile
 import unittest
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Set
+from typing import List, Optional, Set
 
 from report.generate_report import (
     DefaultInspectionReportGenerator,
     GovernmentChecklistReportGenerator,
+    PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS,
     PreventiveInspectionReportGenerator,
     build_mock_report_rows,
     build_output_path,
@@ -18,13 +20,111 @@ from report.generate_report import (
     extract_row_list,
     format_importance,
     get_report_generator,
+    classify_detail_result_status,
     load_api_config,
     normalize_output_name,
     normalize_sheet_name,
     parse_args,
+    save_preventive_hwpx_reports,
     save_government_checklist_docx_reports,
 )
 from report.generate_report import DetailRow, SummaryRow
+
+
+HWPX_HP_TAG = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
+
+
+def make_summary_row(host_id: int, host_name: str, host_ip: Optional[str] = None) -> SummaryRow:
+    return SummaryRow(
+        job_id=10,
+        category_type_name="Linux",
+        run_status="done",
+        started_time="2026-03-17 08:00:00",
+        finished_time=None,
+        host_id=host_id,
+        host_name=host_name,
+        host_ip=host_ip or f"10.0.0.{host_id}",
+        host_status="done",
+        total_items=3,
+        vuln_items=1,
+        error_items=1,
+        score=80.0,
+        host_started="2026-03-17 09:00:00",
+        host_finished=None,
+        duration_sec=10,
+        error_message="",
+    )
+
+
+def make_detail_row(
+    host_id: int,
+    host_name: str,
+    area_name: str,
+    inspection_code: str,
+    inspection_item_name: str,
+    result_status: str,
+    message: str,
+    *,
+    checked_time: str = "2026-03-17 09:30:00",
+) -> DetailRow:
+    return DetailRow(
+        job_id=10,
+        host_id=host_id,
+        host_name=host_name,
+        host_ip=f"10.0.0.{host_id}",
+        inspection_code=inspection_code,
+        inspection_item_name=inspection_item_name,
+        type_name="계정관리",
+        category_name="패스워드",
+        area_name=area_name,
+        importance="1",
+        is_required=True,
+        application_type_name="system",
+        application_name="sshd",
+        application_version="9.7",
+        result_status=result_status,
+        message=message,
+        raw_output="raw",
+        description="desc",
+        inspection_command="cmd",
+        is_service_affect="무",
+        action_content="",
+        checked_time=checked_time,
+    )
+
+
+def get_hwpx_row_cell_texts(section_xml: str, item_label: str) -> List[str]:
+    root = ET.fromstring(section_xml)
+    for row in root.iter(HWPX_HP_TAG + "tr"):
+        cells = row.findall(HWPX_HP_TAG + "tc")
+        cell_texts = [
+            "".join(text_element.text or "" for text_element in cell.iter(HWPX_HP_TAG + "t"))
+            for cell in cells
+        ]
+        if item_label in cell_texts:
+            return cell_texts
+    return []
+
+
+def count_hwpx_blank_paragraphs_between_table_and_summary(section_xml: str) -> int:
+    root = ET.fromstring(section_xml)
+    found_table = False
+    blank_count = 0
+    for child in list(root):
+        if not found_table:
+            found_table = child.find(".//" + HWPX_HP_TAG + "tbl") is not None
+            continue
+
+        text = "".join(text_element.text or "" for text_element in child.iter(HWPX_HP_TAG + "t"))
+        if "점검 결과 요약" in text:
+            return blank_count
+        if (
+            child.tag == HWPX_HP_TAG + "p"
+            and child.find(".//" + HWPX_HP_TAG + "tbl") is None
+            and not text.strip()
+        ):
+            blank_count += 1
+    return blank_count
 
 
 class GenerateReportHelpersTest(unittest.TestCase):
@@ -251,8 +351,13 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertEqual(format_importance("3"), "상")
         self.assertEqual(format_importance("critical"), "critical")
 
-    def test_get_report_generator_supports_preventive(self) -> None:
-        self.assertIsInstance(get_report_generator("preventive"), GovernmentChecklistReportGenerator)
+    def test_classify_detail_result_status_treats_warn_as_failed(self) -> None:
+        self.assertEqual(classify_detail_result_status("WARN"), "fail")
+        self.assertEqual(classify_detail_result_status("warning"), "fail")
+
+    def test_get_report_generator_does_not_route_preventive_to_excel(self) -> None:
+        with self.assertRaisesRegex(ValueError, "unsupported report type: preventive"):
+            get_report_generator("preventive")
 
     def test_get_report_generator_uses_government_checklist_for_default(self) -> None:
         self.assertIsInstance(get_report_generator("default"), GovernmentChecklistReportGenerator)
@@ -871,6 +976,139 @@ class GenerateReportHelpersTest(unittest.TestCase):
         self.assertIn("정상", document_xml)
         self.assertIn("비정상", document_xml)
         self.assertIn("비고", document_xml)
+
+    def test_save_preventive_hwpx_reports_writes_valid_template_package(self) -> None:
+        summary_rows = [make_summary_row(1, "host-a")]
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok"),
+            make_detail_row(1, "host-a", "시스템", "LIN-002", "로그 설정", "미실행", "skip"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            report_path = save_preventive_hwpx_reports(
+                summary_rows,
+                detail_rows,
+                Path(tmp_dir) / "preventive.hwpx",
+            )
+            with zipfile.ZipFile(report_path) as hwpx_handle:
+                package_names = set(hwpx_handle.namelist())
+                section_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+                ET.fromstring(section_xml)
+                log_row_cells = get_hwpx_row_cell_texts(section_xml, "로그 설정")
+
+        self.assertEqual(report_path.name, "preventive.hwpx")
+        self.assertIn("mimetype", package_names)
+        self.assertIn("Contents/header.xml", package_names)
+        self.assertNotIn("{{", section_xml)
+        self.assertIn("시스템 점검 일지", section_xml)
+        self.assertIn("host-a", section_xml)
+        self.assertIn("SSH 설정", section_xml)
+        self.assertIn("로그 설정", section_xml)
+        self.assertNotIn("skip", section_xml)
+        self.assertNotIn("결과: 미실행", section_xml)
+        self.assertEqual(log_row_cells[4], "")
+        self.assertIn("정상 1개, 비정상 0개", section_xml)
+
+    def test_save_preventive_hwpx_reports_truncates_long_check_item_text(self) -> None:
+        summary_rows = [make_summary_row(1, "host-a")]
+        long_item_name = "매우 긴 점검 항목 이름입니다 " * 4
+        expected_item_name = long_item_name[: PREVENTIVE_HWPX_CHECK_ITEM_MAX_CHARS - 3].rstrip() + "..."
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", long_item_name, "PASS", "ok"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            report_path = save_preventive_hwpx_reports(
+                summary_rows,
+                detail_rows,
+                Path(tmp_dir) / "preventive.hwpx",
+            )
+            with zipfile.ZipFile(report_path) as hwpx_handle:
+                section_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+                row_cells = get_hwpx_row_cell_texts(section_xml, expected_item_name)
+
+        self.assertIn(expected_item_name, section_xml)
+        self.assertNotIn(long_item_name, section_xml)
+        self.assertEqual(row_cells[1], expected_item_name)
+
+    def test_save_preventive_hwpx_reports_consumes_reserved_space_for_extra_rows(self) -> None:
+        summary_rows = [make_summary_row(1, "host-a")]
+        one_detail = [make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok")]
+        three_details = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok"),
+            make_detail_row(1, "host-a", "시스템", "LIN-002", "로그 설정", "취약", "warn"),
+            make_detail_row(1, "host-a", "시스템", "LIN-003", "백업 설정", "PASS", "ok"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            one_detail_path = save_preventive_hwpx_reports(
+                summary_rows,
+                one_detail,
+                Path(tmp_dir) / "one.hwpx",
+            )
+            three_detail_path = save_preventive_hwpx_reports(
+                summary_rows,
+                three_details,
+                Path(tmp_dir) / "three.hwpx",
+            )
+            with zipfile.ZipFile(one_detail_path) as hwpx_handle:
+                one_detail_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+            with zipfile.ZipFile(three_detail_path) as hwpx_handle:
+                three_detail_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+
+        self.assertEqual(
+            count_hwpx_blank_paragraphs_between_table_and_summary(one_detail_xml)
+            - count_hwpx_blank_paragraphs_between_table_and_summary(three_detail_xml),
+            2,
+        )
+
+    def test_save_preventive_hwpx_reports_zips_multiple_area_documents(self) -> None:
+        summary_rows = [make_summary_row(1, "host-a")]
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok"),
+            make_detail_row(1, "host-a", "보안", "LIN-002", "로그 설정", "취약", "warn"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            report_path = save_preventive_hwpx_reports(
+                summary_rows,
+                detail_rows,
+                Path(tmp_dir) / "preventive.hwpx",
+            )
+            with zipfile.ZipFile(report_path) as zip_handle:
+                archive_names = sorted(zip_handle.namelist())
+                first_hwpx = zip_handle.read(archive_names[0])
+            with zipfile.ZipFile(BytesIO(first_hwpx)) as hwpx_handle:
+                section_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+                ET.fromstring(section_xml)
+
+        self.assertEqual(report_path.name, "preventive.zip")
+        self.assertEqual(len(archive_names), 2)
+        self.assertTrue(all(name.endswith(".hwpx") for name in archive_names))
+        self.assertNotIn("{{", section_xml)
+
+    def test_save_preventive_hwpx_reports_repeats_hosts_in_same_area(self) -> None:
+        summary_rows = [make_summary_row(1, "host-a"), make_summary_row(2, "host-b")]
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok"),
+            make_detail_row(2, "host-b", "시스템", "LIN-001", "SSH 설정", "취약", "warn"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            report_path = save_preventive_hwpx_reports(
+                summary_rows,
+                detail_rows,
+                Path(tmp_dir) / "preventive.hwpx",
+            )
+            with zipfile.ZipFile(report_path) as hwpx_handle:
+                section_xml = hwpx_handle.read("Contents/section0.xml").decode("utf-8")
+                root = ET.fromstring(section_xml)
+
+        self.assertEqual(report_path.name, "preventive.hwpx")
+        self.assertIn("host-a", section_xml)
+        self.assertIn("host-b", section_xml)
+        self.assertEqual(section_xml.count("시스템 점검 일지"), 2)
+        self.assertEqual(len(root.findall('.//*[@pageBreak="1"]')), 1)
 
     def test_build_workbook_creates_one_detail_sheet_per_host(self) -> None:
         duplicate_host_rows = [
