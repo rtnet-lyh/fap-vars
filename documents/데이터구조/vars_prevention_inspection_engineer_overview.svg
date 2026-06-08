@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1280" viewBox="0 0 1900 1280" role="img" aria-labelledby="title desc">
+  <title id="title">호스트 등록 기반 예방점검 실행 구조</title>
+  <desc id="desc">호스트 등록 시 입력한 점검 분야, 기술 스택, 점검계정을 기준으로 실행 화면에서 선택한 유형 또는 분야에 맞는 실제 실행 가능 스크립트만 서버가 골라 실행하는 구조</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#102033" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L14,8 L2,14 Z" fill="#315d90"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L14,8 L2,14 Z" fill="#6d5cae"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L14,8 L2,14 Z" fill="#4f8a5b"/>
+    </marker>
+    <style>
+      text {
+        font-family: "Noto Sans CJK KR", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+        fill: #111827;
+      }
+      .title { font-size: 42px; font-weight: 800; }
+      .subtitle { font-size: 19px; fill: #475569; }
+      .section { font-size: 25px; font-weight: 800; }
+      .card-title { font-size: 22px; font-weight: 800; }
+      .label { font-size: 18px; font-weight: 800; }
+      .body { font-size: 17px; fill: #334155; }
+      .small { font-size: 15px; fill: #475569; }
+      .tiny { font-size: 13px; fill: #64748b; }
+      .white { fill: #ffffff; }
+      .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 22; filter: url(#shadow); }
+      .box { fill: #f8fafc; stroke: #d7dee8; stroke-width: 1.5; rx: 16; }
+      .line-blue { stroke: #315d90; stroke-width: 3; fill: none; marker-end: url(#arrowBlue); }
+      .line-purple { stroke: #6d5cae; stroke-width: 3; fill: none; marker-end: url(#arrowPurple); }
+      .line-green { stroke: #4f8a5b; stroke-width: 3; fill: none; marker-end: url(#arrowGreen); }
+      .dash { stroke-dasharray: 8 8; }
+    </style>
+  </defs>
+
+  <rect width="1900" height="1280" fill="#f4f7fb"/>
+
+  <text x="64" y="72" class="title">호스트 등록 정보를 기준으로 실행 가능한 점검만 골라 실행하는 구조</text>
+  <text x="64" y="108" class="subtitle">호스트마다 “어떤 분야의 어떤 기술 스택인지”와 “어떤 계정으로 점검할지”를 먼저 등록하고, 실행 시에는 선택한 유형 또는 분야에 맞는 스크립트만 서버가 필터링한다.</text>
+
+  <rect x="60" y="155" width="520" height="820" class="panel"/>
+  <text x="95" y="205" class="section">1. 호스트 등록</text>
+  <text x="95" y="235" class="body">호스트별 점검 가능 조건을 미리 만든다.</text>
+
+  <rect x="95" y="275" width="450" height="76" rx="18" fill="#e9f2ff" stroke="#8fb6e8" stroke-width="1.7"/>
+  <circle cx="135" cy="313" r="24" fill="#cfe4ff" stroke="#5c8bc8" stroke-width="2"/>
+  <path d="M124 302 h22 v13 h-22 z M124 319 h22 v13 h-22 z" fill="#5c8bc8"/>
+  <text x="175" y="305" class="label">호스트 기본 정보</text>
+  <text x="175" y="331" class="small">호스트명, IP, 그룹, 인벤토리</text>
+
+  <rect x="95" y="378" width="450" height="236" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.7"/>
+  <text x="125" y="414" class="card-title">점검 대상 속성</text>
+  <rect x="125" y="438" width="150" height="44" rx="12" fill="#eaf8e8" stroke="#8dc28b" stroke-width="1.5"/>
+  <text x="200" y="466" text-anchor="middle" class="label">점검 분야</text>
+  <rect x="300" y="438" width="190" height="44" rx="12" fill="#e9f2ff" stroke="#8fb6e8" stroke-width="1.5"/>
+  <text x="395" y="466" text-anchor="middle" class="label">OS/애플리케이션</text>
+  <rect x="125" y="500" width="150" height="44" rx="12" fill="#fff1f1" stroke="#dd8b8b" stroke-width="1.5"/>
+  <text x="200" y="528" text-anchor="middle" class="label">제품명</text>
+  <rect x="300" y="500" width="92" height="44" rx="12" fill="#f3f0ff" stroke="#a998e7" stroke-width="1.5"/>
+  <text x="346" y="528" text-anchor="middle" class="label">패밀리</text>
+  <rect x="406" y="500" width="84" height="44" rx="12" fill="#fff7db" stroke="#d6b75b" stroke-width="1.5"/>
+  <text x="448" y="528" text-anchor="middle" class="label">버전</text>
+  <text x="125" y="575" class="small">패밀리와 버전은 선택값이다. 값이 있으면 더 좁은 범위로 매칭된다.</text>
+  <text x="125" y="598" class="tiny">예: 서버 / LINUX / Rocky / 8, DBMS / PostgreSQL, WEB/WAS / Tomcat</text>
+
+  <rect x="95" y="642" width="450" height="164" rx="18" fill="#fffdf5" stroke="#d6b75b" stroke-width="1.7"/>
+  <circle cx="135" cy="687" r="24" fill="#fff1c2" stroke="#d2a23a" stroke-width="2"/>
+  <path d="M128 686 a7 7 0 1 1 14 0 v8 h-14 z M126 694 h18 v12 h-18 z" fill="#9b741f"/>
+  <text x="175" y="681" class="card-title">점검계정</text>
+  <text x="175" y="710" class="body">대상에 접속하거나 제품을 점검할 때 사용할 계정</text>
+  <text x="125" y="748" class="small">예: SSH, WinRM, DB 계정, 애플리케이션 계정</text>
+  <text x="125" y="772" class="tiny">이미지에는 계정 종류만 표현하고 비밀번호는 포함하지 않는다.</text>
+
+  <rect x="95" y="835" width="450" height="92" rx="18" fill="#eef6ff" stroke="#8fb6e8" stroke-width="1.7"/>
+  <text x="125" y="869" class="label">등록 결과</text>
+  <text x="125" y="898" class="body">호스트별 “점검 가능 프로필”이 만들어진다.</text>
+
+  <rect x="680" y="155" width="540" height="310" class="panel"/>
+  <text x="715" y="205" class="section">2. 점검 실행 화면</text>
+  <text x="715" y="235" class="body">운영자가 실행 범위를 선택한다.</text>
+
+  <rect x="725" y="276" width="210" height="70" rx="18" fill="#eaf8e8" stroke="#8dc28b" stroke-width="1.7"/>
+  <text x="830" y="305" text-anchor="middle" class="label">유형으로 선택</text>
+  <text x="830" y="331" text-anchor="middle" class="small">취약점진단, 상태점검</text>
+
+  <text x="952" y="319" text-anchor="middle" class="label" fill="#64748b">또는</text>
+
+  <rect x="970" y="276" width="210" height="70" rx="18" fill="#e9f2ff" stroke="#8fb6e8" stroke-width="1.7"/>
+  <text x="1075" y="305" text-anchor="middle" class="label">분야로 선택</text>
+  <text x="1075" y="331" text-anchor="middle" class="small">서버, DBMS, WEB/WAS</text>
+
+  <rect x="725" y="376" width="455" height="58" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="755" y="412" class="body">점검 대상 호스트, 그룹, 인벤토리를 선택하고 실행</text>
+
+  <path d="M545 882 C610 882 610 580 675 580" class="line-blue"/>
+  <path d="M950 465 C950 510 950 520 950 555" class="line-purple"/>
+
+  <rect x="650" y="555" width="650" height="470" class="panel"/>
+  <text x="690" y="606" class="section">3. 서버의 실행 가능 스크립트 필터링</text>
+  <text x="690" y="635" class="body">전체 점검 스크립트 중에서 현재 호스트에서 실제 실행 가능한 항목만 남긴다.</text>
+
+  <rect x="690" y="680" width="270" height="68" rx="18" fill="#eef6ff" stroke="#8fb6e8" stroke-width="1.7"/>
+  <text x="825" y="708" text-anchor="middle" class="label">후보 항목 조회</text>
+  <text x="825" y="733" text-anchor="middle" class="small">실행 화면의 유형 또는 분야 조건</text>
+
+  <rect x="1030" y="680" width="230" height="68" rx="18" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.7"/>
+  <text x="1145" y="708" text-anchor="middle" class="label">후보 스크립트</text>
+  <text x="1145" y="733" text-anchor="middle" class="small">아직 실행 여부 미확정</text>
+  <path d="M960 714 H1020" class="line-purple"/>
+
+  <rect x="690" y="790" width="570" height="154" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.7"/>
+  <text x="725" y="826" class="card-title">스크립트별 실행 조건 검사</text>
+  <circle cx="735" cy="858" r="5" fill="#6d5cae"/>
+  <text x="755" y="864" class="body">호스트의 점검 분야와 선택한 분야가 맞는가</text>
+  <circle cx="735" cy="892" r="5" fill="#6d5cae"/>
+  <text x="755" y="898" class="body">OS/애플리케이션과 제품명이 스크립트 대상과 맞는가</text>
+  <circle cx="735" cy="926" r="5" fill="#6d5cae"/>
+  <text x="755" y="932" class="body">패밀리/버전 전용 스크립트라면 호스트 값도 일치하는가</text>
+
+  <rect x="690" y="972" width="270" height="58" rx="16" fill="#fffdf5" stroke="#d6b75b" stroke-width="1.5"/>
+  <text x="825" y="997" text-anchor="middle" class="label">점검계정 확인</text>
+  <text x="825" y="1021" text-anchor="middle" class="small">접속과 제품 점검에 필요한 계정 존재</text>
+
+  <rect x="990" y="972" width="270" height="58" rx="16" fill="#eef8ef" stroke="#8dc28b" stroke-width="1.5"/>
+  <text x="1125" y="997" text-anchor="middle" class="label">실행 목록 확정</text>
+  <text x="1125" y="1021" text-anchor="middle" class="small">조건을 통과한 스크립트만 실행</text>
+  <path d="M960 1001 H980" class="line-green"/>
+
+  <path d="M1260 1001 C1330 1001 1330 1001 1390 1001" class="line-green"/>
+
+  <rect x="1380" y="155" width="460" height="870" class="panel"/>
+  <text x="1415" y="205" class="section">4. 실행 결과</text>
+  <text x="1415" y="235" class="body">필터링을 통과한 스크립트만 실제 대상에서 실행된다.</text>
+
+  <rect x="1415" y="280" width="385" height="126" rx="18" fill="#eaf8e8" stroke="#8dc28b" stroke-width="1.7"/>
+  <circle cx="1458" cy="343" r="25" fill="#dff4df" stroke="#65a56d" stroke-width="2"/>
+  <path d="M1446 344 l8 8 l18 -24" fill="none" stroke="#4f8a5b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1498" y="329" class="card-title">실행됨</text>
+  <text x="1498" y="358" class="body">선택 유형/분야, 기술 스택, 계정 조건을 모두 만족</text>
+  <text x="1498" y="383" class="small">예: 서버 + LINUX + Rocky 전용 점검</text>
+
+  <rect x="1415" y="440" width="385" height="184" rx="18" fill="#fff1f1" stroke="#dd8b8b" stroke-width="1.7"/>
+  <circle cx="1458" cy="496" r="25" fill="#ffe2e2" stroke="#dc7676" stroke-width="2"/>
+  <path d="M1448 486 l20 20 M1468 486 l-20 20" stroke="#b94b4b" stroke-width="4" stroke-linecap="round"/>
+  <text x="1498" y="482" class="card-title">실행 제외</text>
+  <text x="1498" y="512" class="body">조건이 맞지 않는 스크립트는 서버에서 제외</text>
+  <circle cx="1498" cy="545" r="4" fill="#b94b4b"/>
+  <text x="1514" y="551" class="small">선택한 유형 또는 분야 밖의 항목</text>
+  <circle cx="1498" cy="572" r="4" fill="#b94b4b"/>
+  <text x="1514" y="578" class="small">OS/제품명/패밀리/버전 불일치</text>
+  <circle cx="1498" cy="599" r="4" fill="#b94b4b"/>
+  <text x="1514" y="605" class="small">필요한 점검계정 없음</text>
+
+  <rect x="1415" y="660" width="385" height="176" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.7"/>
+  <text x="1445" y="698" class="card-title">운영 화면에서 기대되는 동작</text>
+  <text x="1445" y="733" class="body">대상 호스트를 선택하면 가능한 점검만 실행된다.</text>
+  <text x="1445" y="762" class="body">불가능한 점검은 실행 전에 걸러진다.</text>
+  <text x="1445" y="791" class="body">결과에는 실행된 항목과 판정만 기록된다.</text>
+
+  <rect x="1415" y="872" width="385" height="96" rx="18" fill="#eef6ff" stroke="#8fb6e8" stroke-width="1.7"/>
+  <text x="1445" y="909" class="label">핵심</text>
+  <text x="1445" y="937" class="body">호스트 등록 정보가 곧 “실행 가능 여부”를 판단하는 기준이다.</text>
+
+  <rect x="60" y="1065" width="1780" height="155" class="panel"/>
+  <text x="95" y="1115" class="section">관리 엔지니어 관점의 요약</text>
+
+  <rect x="95" y="1148" width="390" height="48" rx="14" fill="#e9f2ff" stroke="#8fb6e8" stroke-width="1.5"/>
+  <text x="290" y="1178" text-anchor="middle" class="label">호스트 등록: 분야 + 기술 스택 + 점검계정</text>
+
+  <rect x="520" y="1148" width="360" height="48" rx="14" fill="#eaf8e8" stroke="#8dc28b" stroke-width="1.5"/>
+  <text x="700" y="1178" text-anchor="middle" class="label">실행 선택: 유형 또는 분야</text>
+
+  <rect x="915" y="1148" width="420" height="48" rx="14" fill="#eee9ff" stroke="#a998e7" stroke-width="1.5"/>
+  <text x="1125" y="1178" text-anchor="middle" class="label">서버 필터링: 조건이 맞는 스크립트만 추림</text>
+
+  <rect x="1370" y="1148" width="430" height="48" rx="14" fill="#fffdf5" stroke="#d6b75b" stroke-width="1.5"/>
+  <text x="1585" y="1178" text-anchor="middle" class="label">실행: 실제 점검 가능한 항목만 수행</text>
+</svg>

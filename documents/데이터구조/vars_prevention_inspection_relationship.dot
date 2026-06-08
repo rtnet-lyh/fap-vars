@@ -1,0 +1,227 @@
+digraph vars_prevention_inspection_relationship {
+  graph [
+    rankdir=LR,
+    splines=polyline,
+    nodesep=0.55,
+    ranksep=0.95,
+    pad=0.25,
+    bgcolor="white",
+    fontname="Noto Sans CJK KR",
+    label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="24"><B>VARS 예방점검 데이터 관계 요약</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">점검 유형/분류/분야 축과 OS·애플리케이션/제품/패밀리/버전 축은 vars_inspection_item_mapping에서 결합된다.</FONT></TD></TR>
+      </TABLE>
+    >,
+    labelloc=t,
+    labeljust=l
+  ];
+
+  node [
+    shape=plain,
+    fontname="Noto Sans CJK KR"
+  ];
+
+  edge [
+    fontname="Noto Sans CJK KR",
+    color="#4a5568",
+    penwidth=1.4,
+    arrowsize=0.75
+  ];
+
+  subgraph cluster_classification {
+    label="점검 분류 축";
+    color="#a7b7c7";
+    style="rounded";
+    fontname="Noto Sans CJK KR";
+
+    vars_category_type [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#557a95">
+          <TR><TD BGCOLOR="#d8e8f2"><B>vars_category_type</B></TD></TR>
+          <TR><TD ALIGN="LEFT">점검 유형</TD></TR>
+          <TR><TD ALIGN="LEFT">id, name</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 15건</TD></TR>
+          <TR><TD ALIGN="LEFT">예: 취약점진단, 상태점검, 일상점검</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_area [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#557a95">
+          <TR><TD BGCOLOR="#d8e8f2"><B>vars_area</B></TD></TR>
+          <TR><TD ALIGN="LEFT">분야</TD></TR>
+          <TR><TD ALIGN="LEFT">id, name</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 27건</TD></TR>
+          <TR><TD ALIGN="LEFT">예: WEB/WAS, DBMS, 서버, 네트워크</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_area_category_type_map [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#b27c35">
+          <TR><TD BGCOLOR="#f6dfbd"><B>vars_area_category_type_map</B></TD></TR>
+          <TR><TD ALIGN="LEFT">분야별 허용 점검 유형</TD></TR>
+          <TR><TD ALIGN="LEFT">PK area_id + category_type_id</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 32건</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_category [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#5e8f61">
+          <TR><TD BGCOLOR="#d9ead3"><B>vars_category</B></TD></TR>
+          <TR><TD ALIGN="LEFT">분류</TD></TR>
+          <TR><TD ALIGN="LEFT">type_id &#8594; 점검 유형</TD></TR>
+          <TR><TD ALIGN="LEFT">area_id &#8594; 분야</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 216건</TD></TR>
+        </TABLE>
+      >
+    ];
+  }
+
+  subgraph cluster_item {
+    label="점검 항목과 적용 대상 결합";
+    color="#a7b7c7";
+    style="rounded";
+    fontname="Noto Sans CJK KR";
+
+    vars_inspection_item [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#76609a">
+          <TR><TD BGCOLOR="#ded7eb"><B>vars_inspection_item</B></TD></TR>
+          <TR><TD ALIGN="LEFT">실제 점검 항목 본문</TD></TR>
+          <TR><TD ALIGN="LEFT">type_id, area_id, category_id</TD></TR>
+          <TR><TD ALIGN="LEFT">inspection_code, inspection_name</TD></TR>
+          <TR><TD ALIGN="LEFT">item_id는 현재 id와 동일</TD></TR>
+          <TR><TD ALIGN="LEFT">전체 874건 / 활성 866건</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_inspection_item_mapping [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#76609a">
+          <TR><TD BGCOLOR="#ded7eb"><B>vars_inspection_item_mapping</B></TD></TR>
+          <TR><TD ALIGN="LEFT">점검 항목별 실행 스크립트와 대상 매핑</TD></TR>
+          <TR><TD ALIGN="LEFT">item_id &#8594; 점검 항목</TD></TR>
+          <TR><TD ALIGN="LEFT">application_type_id 필수</TD></TR>
+          <TR><TD ALIGN="LEFT">application_id / family_id / version_id 선택</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 item_id 기준 1:1, 활성 866건</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    mapping_levels [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#8a6f2a">
+          <TR><TD BGCOLOR="#f4e7b4"><B>활성 매핑 적용 범위</B></TD></TR>
+          <TR><TD ALIGN="LEFT">OS/애플리케이션 유형 단위: 373건</TD></TR>
+          <TR><TD ALIGN="LEFT">제품명 단위: 404건</TD></TR>
+          <TR><TD ALIGN="LEFT">패밀리 단위: 86건</TD></TR>
+          <TR><TD ALIGN="LEFT">버전 단위: 3건</TD></TR>
+        </TABLE>
+      >
+    ];
+  }
+
+  subgraph cluster_target {
+    label="OS·애플리케이션 / 제품 축";
+    color="#a7b7c7";
+    style="rounded";
+    fontname="Noto Sans CJK KR";
+
+    vars_application_type [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#b05f5f">
+          <TR><TD BGCOLOR="#f2d4d4"><B>vars_application_type</B></TD></TR>
+          <TR><TD ALIGN="LEFT">OS/애플리케이션 유형</TD></TR>
+          <TR><TD ALIGN="LEFT">id, name</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 22건</TD></TR>
+          <TR><TD ALIGN="LEFT">예: WEB, DBMS, LINUX, WAS, 전체 장비 대상</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_application [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#b05f5f">
+          <TR><TD BGCOLOR="#f2d4d4"><B>vars_application</B></TD></TR>
+          <TR><TD ALIGN="LEFT">제품명</TD></TR>
+          <TR><TD ALIGN="LEFT">application_type_id &#8594; 유형</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 37건</TD></TR>
+          <TR><TD ALIGN="LEFT">예: PostgreSQL, Oracle, Rocky, Tomcat</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_application_family [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#b05f5f">
+          <TR><TD BGCOLOR="#f2d4d4"><B>vars_application_family</B></TD></TR>
+          <TR><TD ALIGN="LEFT">제품 패밀리</TD></TR>
+          <TR><TD ALIGN="LEFT">application_id &#8594; 제품명</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 3건</TD></TR>
+          <TR><TD ALIGN="LEFT">예: CISCO/IOS, JEUS/Rocky</TD></TR>
+        </TABLE>
+      >
+    ];
+
+    vars_application_version [
+      label=<
+        <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#b05f5f">
+          <TR><TD BGCOLOR="#f2d4d4"><B>vars_application_version</B></TD></TR>
+          <TR><TD ALIGN="LEFT">제품 버전</TD></TR>
+          <TR><TD ALIGN="LEFT">application_id &#8594; 제품명</TD></TR>
+          <TR><TD ALIGN="LEFT">현재 6건</TD></TR>
+          <TR><TD ALIGN="LEFT">패밀리가 아니라 제품에 직접 연결</TD></TR>
+        </TABLE>
+      >
+    ];
+  }
+
+  data_quality [
+    label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#6b7280">
+        <TR><TD BGCOLOR="#eeeeee"><B>분석 메모</B></TD></TR>
+        <TR><TD ALIGN="LEFT">제품 계층 참조 무결성 문제는 발견되지 않음</TD></TR>
+        <TR><TD ALIGN="LEFT">vars_area_application_type_map은 현재 0건</TD></TR>
+        <TR><TD ALIGN="LEFT">분야/점검유형 허용 맵과 실제 항목 일부가 불일치</TD></TR>
+        <TR><TD ALIGN="LEFT">일부 삭제 항목은 누락된 분야/분류 참조를 보유</TD></TR>
+        <TR><TD ALIGN="LEFT">DB 접속 정보와 비밀번호는 다이어그램에서 제외</TD></TR>
+      </TABLE>
+    >
+  ];
+
+  { rank=same; vars_category_type; vars_area; }
+  { rank=same; vars_application_type; }
+  { rank=same; vars_inspection_item; vars_inspection_item_mapping; }
+  { rank=same; vars_application_family; vars_application_version; }
+
+  vars_category_type -> vars_area_category_type_map [label="category_type_id"];
+  vars_area -> vars_area_category_type_map [label="area_id"];
+  vars_category_type -> vars_category [label="type_id"];
+  vars_area -> vars_category [label="area_id"];
+  vars_category_type -> vars_inspection_item [label="type_id"];
+  vars_area -> vars_inspection_item [label="area_id"];
+  vars_category -> vars_inspection_item [label="category_id"];
+
+  vars_inspection_item -> vars_inspection_item_mapping [label="item_id"];
+  vars_inspection_item_mapping -> mapping_levels [style=dashed, arrowhead=none, color="#8a6f2a"];
+
+  vars_application_type -> vars_application [label="application_type_id"];
+  vars_application -> vars_application_family [label="application_id"];
+  vars_application -> vars_application_version [label="application_id"];
+
+  vars_application_type -> vars_inspection_item_mapping [label="application_type_id"];
+  vars_application -> vars_inspection_item_mapping [label="application_id", style=dashed];
+  vars_application_family -> vars_inspection_item_mapping [label="application_family_id", style=dashed];
+  vars_application_version -> vars_inspection_item_mapping [label="application_version_id", style=dashed];
+
+  vars_area_category_type_map -> data_quality [style=dotted, arrowhead=none, color="#6b7280"];
+  vars_inspection_item -> data_quality [style=dotted, arrowhead=none, color="#6b7280"];
+  vars_application_version -> data_quality [style=dotted, arrowhead=none, color="#6b7280"];
+}
