@@ -1,0 +1,62 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-4-3-DUMP-LOG",
+    "item_id": 96009,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "Dump 파일 생성 여부 확인",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "최근 Oracle trace 파일 존재 여부를 확인하여 수동 분석 대상을 식별합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; ls -ltr /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/*.trc 2>/dev/null | tail -5",
+    "is_service_affect": "N",
+    "action_content": "trace 파일이 있으면 alert log와 함께 장애 원인을 수동 분석합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "trace_path",
+        "value1": "/koem/oracle/diag/rdbms/unidev/UNIDEV/trace"
+      },
+      {
+        "name": "recent_file_count",
+        "value1": "5"
+      }
+    ]
+  }
+}

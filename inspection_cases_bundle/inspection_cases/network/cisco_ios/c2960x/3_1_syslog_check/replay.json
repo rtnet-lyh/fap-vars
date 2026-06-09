@@ -1,0 +1,27 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "C2960X_Service#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "terminal length 0"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "terminal length 0\nC2960X_Service#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "show logging"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/show_logging.stdout"
+  }
+]

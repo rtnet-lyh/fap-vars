@@ -1,0 +1,67 @@
+[
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[fap@slunidb-dev241 ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - root"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - root\r\nPassword:"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "redacted": true
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "[root@slunidb-dev241 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "/usr/bin/id"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "id\r\nuid=0(root) gid=0(root) groups=0(root)\r\n[root@slunidb-dev241 ~]#"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "su - lyh"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "su - lyh\r\nLast login: Tue Jun  9 10:00:00 KST 2026 on pts/0\r\n[lyh@slunidb-dev241 ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "whoami"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout": "whoami\r\nlyh\r\n[lyh@slunidb-dev241 ~]$"
+  },
+  {
+    "channel": "terminal",
+    "action": "send",
+    "matcher_value": "ps -eo pid,comm,%cpu --sort=-%cpu | grep ora_ | grep -v grep | head -10"
+  },
+  {
+    "channel": "terminal",
+    "action": "recv",
+    "stdout_file": "outputs/oracle_cpu.stdout"
+  }
+]

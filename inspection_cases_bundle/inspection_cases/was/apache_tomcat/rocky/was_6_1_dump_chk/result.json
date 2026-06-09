@@ -1,0 +1,121 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-014",
+      "item_id": 93014,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_dump_count",
+          "value1": "0"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'find /home/koem01/apache-tomcat-8.0.32/ -name \"*.hprof\" -o -name \"core.*\"'\nCOMMAND_TIMEOUT = 20\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    def run(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Apache Tomcat Dump 파일 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        dump_files = [\n            line.strip() for line in stdout.splitlines()\n            if line.strip() and not line.strip().startswith('[')\n        ]\n        threshold = self.get_threshold_var('max_dump_count', default=0, value_type='int')\n        metrics = {\n            'dump_count': len(dump_files),\n            'dump_files': dump_files,\n        }\n        thresholds = {'max_dump_count': threshold}\n        if len(dump_files) > threshold:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='신규 Dump 파일이 기준보다 많이 발견되었습니다.',\n                message='Apache Tomcat Dump 파일 경고: dump_count=%s, 기준=%s' % (\n                    len(dump_files),\n                    threshold,\n                ),\n            )\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='신규 Dump 파일이 기준 이내입니다.',\n            message='Apache Tomcat Dump 파일 정상: dump_count=%s, 기준=%s' % (\n                len(dump_files),\n                threshold,\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'find /home/koem01/apache-tomcat-8.0.32/ -name \"*.hprof\" -o -name \"core.*\"'",
+        "COMMAND_TIMEOUT = 20",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    def run(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='Apache Tomcat Dump 파일 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "",
+        "        dump_files = [",
+        "            line.strip() for line in stdout.splitlines()",
+        "            if line.strip() and not line.strip().startswith('[')",
+        "        ]",
+        "        threshold = self.get_threshold_var('max_dump_count', default=0, value_type='int')",
+        "        metrics = {",
+        "            'dump_count': len(dump_files),",
+        "            'dump_files': dump_files,",
+        "        }",
+        "        thresholds = {'max_dump_count': threshold}",
+        "        if len(dump_files) > threshold:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='신규 Dump 파일이 기준보다 많이 발견되었습니다.',",
+        "                message='Apache Tomcat Dump 파일 경고: dump_count=%s, 기준=%s' % (",
+        "                    len(dump_files),",
+        "                    threshold,",
+        "                ),",
+        "            )",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='신규 Dump 파일이 기준 이내입니다.',",
+        "            message='Apache Tomcat Dump 파일 정상: dump_count=%s, 기준=%s' % (",
+        "                len(dump_files),",
+        "                threshold,",
+        "            ),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-014",
+      "item_id": 93014,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_dump_count",
+          "value1": "0"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "dump_count": 0,
+        "dump_files": []
+      },
+      "thresholds": {
+        "max_dump_count": 0
+      },
+      "reasons": "신규 Dump 파일이 기준 이내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: find /home/koem01/apache-tomcat-8.0.32/ -name \"*.hprof\" -o -name \"core.*\"\n - 명령 종료코드: rc=0 (정상 종료)",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: find /home/koem01/apache-tomcat-8.0.32/ -name \"*.hprof\" -o -name \"core.*\"",
+        " - 명령 종료코드: rc=0 (정상 종료)"
+      ],
+      "message": "Apache Tomcat Dump 파일 정상: dump_count=0, 기준=0"
+    }
+  ],
+  "failed_items": []
+}

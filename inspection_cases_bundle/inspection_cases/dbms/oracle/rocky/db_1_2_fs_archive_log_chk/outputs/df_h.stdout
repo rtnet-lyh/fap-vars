@@ -1,0 +1,15 @@
+Filesystem           Size  Used Avail Use% Mounted on
+devtmpfs             4.0M     0  4.0M   0% /dev
+tmpfs                 32G     0   32G   0% /dev/shm
+tmpfs                 13G  1.3G   12G  10% /run
+/dev/mapper/rl-root  200G   39G  162G  20% /
+/dev/md126p2         960M  298M  663M  32% /boot
+/dev/mapper/rl-home  617G  4.4G  612G   1% /home
+/dev/mapper/vg0-lv0  196G   42G  145G  23% /koem/oracle
+/dev/mapper/vg2-lv1  1.5T  476G  970G  33% /koem/oradata/data
+/dev/mapper/vg1-lv0  295G  6.7G  273G   3% /koem/oradata/arch
+/dev/md126p1         599M  7.1M  592M   2% /boot/efi
+tmpfs                6.3G  104K  6.3G   1% /run/user/0
+/dev/loop0            11G   11G     0 100% /mnt
+tmpfs                6.3G   36K  6.3G   1% /run/user/1000
+[lyh@slunidb-dev241 ~]$

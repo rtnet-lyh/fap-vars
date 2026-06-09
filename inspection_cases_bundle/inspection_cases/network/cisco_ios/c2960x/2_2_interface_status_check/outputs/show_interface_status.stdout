@@ -1,0 +1,11 @@
+show interface status
+
+Port      Name               Status       Vlan       Duplex  Speed Type
+Gi0/1     ===Service_FW_eth1 connected    99         a-full a-1000 10/100/1000BaseTX
+Gi0/2     ===10F===          connected    99         a-full a-1000 10/100/1000BaseTX
+Gi0/3     ===B1F===          notconnect   99           auto   auto 10/100/1000BaseTX
+Gi0/4                        disabled     1            auto   auto 10/100/1000BaseTX
+Gi0/5     ===fileserver_NAS= connected    99         a-full a-1000 10/100/1000BaseTX
+Gi0/6                        disabled     99           auto   auto 10/100/1000BaseTX
+Fa0       ===MGMT_Fa0/4===   connected    routed     a-full  a-100 10/100BaseTX
+C2960X_Service#

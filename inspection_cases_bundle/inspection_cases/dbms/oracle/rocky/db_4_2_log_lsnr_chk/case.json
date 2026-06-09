@@ -1,0 +1,62 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-4-2-LISTENER-LOG",
+    "item_id": 96008,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "리스너 로그 파일 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "리스너 로그에서 접속 거부, timeout, TNS 오류 패턴을 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; grep -i -E 'connection refused|timeout|TNS listener stopped|warning|TNS-12541|TNS-12514|TNS-12170' /koem/oracle/diag/tnslsnr/slunidb-dev241/listener/trace/listener.log || echo '에러로그없음'",
+    "is_service_affect": "N",
+    "action_content": "오류 발생 시 listener 상태와 WAS-DB 네트워크 경로를 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "listener_log_path",
+        "value1": "/koem/oracle/diag/tnslsnr/slunidb-dev241/listener/trace/listener.log"
+      },
+      {
+        "name": "fatal_error_patterns",
+        "value1": "connection refused|timeout|TNS listener stopped|warning|TNS-12541|TNS-12514|TNS-12170"
+      }
+    ]
+  }
+}

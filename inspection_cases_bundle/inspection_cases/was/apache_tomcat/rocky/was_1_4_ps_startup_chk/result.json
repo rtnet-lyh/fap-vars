@@ -1,0 +1,103 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-004",
+      "item_id": 93004,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'ps -ef | grep tomcat | grep -v grep'\nCOMMAND_TIMEOUT = 20\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    def run(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Apache Tomcat 기동 프로세스 확인 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        tomcat_lines = [\n            line for line in lines\n            if 'tomcat' in line.lower() and 'grep' not in line.lower()\n        ]\n        metrics = {\n            'tomcat_process_count': len(tomcat_lines),\n            'processes': tomcat_lines,\n        }\n        if not tomcat_lines:\n            return self.warn(\n                metrics=metrics,\n                reasons='Apache Tomcat 기동 프로세스가 확인되지 않습니다.',\n                message='Apache Tomcat 프로세스 기동 경고: 프로세스 없음',\n            )\n        return self.ok(\n            metrics=metrics,\n            reasons='Apache Tomcat 기동 프로세스가 확인되었습니다.',\n            message='Apache Tomcat 프로세스 기동 정상: process_count=%s' % len(tomcat_lines),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'ps -ef | grep tomcat | grep -v grep'",
+        "COMMAND_TIMEOUT = 20",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    def run(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='Apache Tomcat 기동 프로세스 확인 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "",
+        "        lines = [line.strip() for line in stdout.splitlines() if line.strip()]",
+        "        tomcat_lines = [",
+        "            line for line in lines",
+        "            if 'tomcat' in line.lower() and 'grep' not in line.lower()",
+        "        ]",
+        "        metrics = {",
+        "            'tomcat_process_count': len(tomcat_lines),",
+        "            'processes': tomcat_lines,",
+        "        }",
+        "        if not tomcat_lines:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                reasons='Apache Tomcat 기동 프로세스가 확인되지 않습니다.',",
+        "                message='Apache Tomcat 프로세스 기동 경고: 프로세스 없음',",
+        "            )",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            reasons='Apache Tomcat 기동 프로세스가 확인되었습니다.',",
+        "            message='Apache Tomcat 프로세스 기동 정상: process_count=%s' % len(tomcat_lines),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-004",
+      "item_id": 93004,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "tomcat_process_count": 1,
+        "processes": [
+          "root      729184       1  4 10:40 pts/1    00:00:17 /usr/bin/java -Djava.util.logging.config.file=/home/koem01/apache-tomcat-8.0.32/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms8192m -Xmx8192m -Xloggc:/home/koem01/apache-tomcat-8.0.32/logs/gc_%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/koem01/apache-tomcat-8.0.32/dump -Djava.endorsed.dirs=/home/koem01/apache-tomcat-8.0.32/endorsed -classpath /home/koem01/apache-tomcat-8.0.32/bin/bootstrap.jar:/home/koem01/apache-tomcat-8.0.32/bin/tomcat-juli.jar -Dcatalina.base=/home/koem01/apache-tomcat-8.0.32 -Dcatalina.home=/home/koem01/apache-tomcat-8.0.32 -Djava.io.tmpdir=/home/koem01/apache-tomcat-8.0.32/temp org.apache.catalina.startup.Bootstrap start"
+        ]
+      },
+      "thresholds": {},
+      "reasons": "Apache Tomcat 기동 프로세스가 확인되었습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps -ef | grep tomcat | grep -v grep\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: root      729184       1  4 10:40 pts/1    00:00:17 /usr/bin/java -Djava.util.logging.config.file=/home/koem01/apache-tomcat-8.0.32/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms8192m -Xmx8192m -Xloggc:/home/koem01/apache-tomcat-8.0.32/logs/gc_%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/koem01/apache-tomcat-8.0.32/dump -Djava.endorsed.dirs=/home/koem01/apache-tomcat-8.0.32/endorsed -classpath /home/koem01/apache-tomcat-8.0.32/bin/bootstrap.jar:/home/koem01/apache-tomcat-8.0.32/bin/tomcat-juli.jar -Dcatalina.base=/home/koem01/apache-tomcat-8.0.32 -Dcatalina.home=/home/koem01/apache-tomcat-8.0.32 -Djava.io.tmpdir=/home/koem01/apache-tomcat-8.0.32/temp org.apache.catalina.startup.Bootstrap start",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: ps -ef | grep tomcat | grep -v grep",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: root      729184       1  4 10:40 pts/1    00:00:17 /usr/bin/java -Djava.util.logging.config.file=/home/koem01/apache-tomcat-8.0.32/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms8192m -Xmx8192m -Xloggc:/home/koem01/apache-tomcat-8.0.32/logs/gc_%t.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/koem01/apache-tomcat-8.0.32/dump -Djava.endorsed.dirs=/home/koem01/apache-tomcat-8.0.32/endorsed -classpath /home/koem01/apache-tomcat-8.0.32/bin/bootstrap.jar:/home/koem01/apache-tomcat-8.0.32/bin/tomcat-juli.jar -Dcatalina.base=/home/koem01/apache-tomcat-8.0.32 -Dcatalina.home=/home/koem01/apache-tomcat-8.0.32 -Djava.io.tmpdir=/home/koem01/apache-tomcat-8.0.32/temp org.apache.catalina.startup.Bootstrap start"
+      ],
+      "message": "Apache Tomcat 프로세스 기동 정상: process_count=1"
+    }
+  ],
+  "failed_items": []
+}

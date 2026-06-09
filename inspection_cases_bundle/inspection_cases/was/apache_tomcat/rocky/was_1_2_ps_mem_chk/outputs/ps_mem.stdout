@@ -1,0 +1,15 @@
+[root@re-test-POTAL ~]# ps -eo pid,comm,%mem,rss --sort=-%mem
+    PID COMMAND         %MEM   RSS
+1277821 java            42.8 3368548
+1277850 firefox          8.3 658704
+1276745 gnome-shell      5.9 465024
+1278187 Isolated Web Co  2.8 226576
+1278140 Privileged Cont  1.8 146112
+1278068 Isolated Web Co  1.6 129760
+1278123 Isolated Web Co  1.6 126648
+1278047 WebExtensions    1.4 116684
+1277021 gnome-software   1.3 102568
+1278401 Web Content      1.1 91616
+1278350 Web Content      1.1 91256
+1278378 Web Content      1.1 89672
+[root@re-test-POTAL ~]#

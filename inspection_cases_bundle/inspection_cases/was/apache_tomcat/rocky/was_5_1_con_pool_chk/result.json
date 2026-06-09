@@ -1,0 +1,142 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-012",
+      "item_id": 93012,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_established_conn",
+          "value1": "1000"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = \"netstat -ntp | grep -E '8080|8009' | awk '{print $6}' | sort | uniq -c\"\nCOMMAND_TIMEOUT = 20\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    def _parse_state_counts(self, stdout):\n        counts = {}\n        for line in stdout.splitlines():\n            parts = line.strip().split()\n            if len(parts) != 2:\n                continue\n            try:\n                count = int(parts[0])\n            except ValueError:\n                continue\n            counts[parts[1].upper()] = count\n        return counts\n\n    def run(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return self.fail(\n                '점검 명령 실행 실패',\n                message='Apache Tomcat Connection Pool 연결 상태 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n\n        state_counts = self._parse_state_counts(stdout)\n        threshold = self.get_threshold_var('max_established_conn', default=1000, value_type='int')\n        established_count = state_counts.get('ESTABLISHED', 0)\n        close_wait_count = state_counts.get('CLOSE_WAIT', 0)\n        metrics = {\n            'state_counts': state_counts,\n            'established_count': established_count,\n            'close_wait_count': close_wait_count,\n        }\n        thresholds = {'max_established_conn': threshold, 'max_close_wait_count': 0}\n        if established_count > threshold or close_wait_count > 0:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='연결 수가 기준을 초과했거나 CLOSE_WAIT 상태가 확인되었습니다.',\n                message='Apache Tomcat Connection Pool 경고: ESTABLISHED=%s, CLOSE_WAIT=%s, 기준=%s' % (\n                    established_count,\n                    close_wait_count,\n                    threshold,\n                ),\n            )\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='활성 연결 수와 CLOSE_WAIT 상태가 기준 이내입니다.',\n            message='Apache Tomcat Connection Pool 정상: ESTABLISHED=%s, 기준=%s' % (\n                established_count,\n                threshold,\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = \"netstat -ntp | grep -E '8080|8009' | awk '{print $6}' | sort | uniq -c\"",
+        "COMMAND_TIMEOUT = 20",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    def _parse_state_counts(self, stdout):",
+        "        counts = {}",
+        "        for line in stdout.splitlines():",
+        "            parts = line.strip().split()",
+        "            if len(parts) != 2:",
+        "                continue",
+        "            try:",
+        "                count = int(parts[0])",
+        "            except ValueError:",
+        "                continue",
+        "            counts[parts[1].upper()] = count",
+        "        return counts",
+        "",
+        "    def run(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='Apache Tomcat Connection Pool 연결 상태 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "",
+        "        state_counts = self._parse_state_counts(stdout)",
+        "        threshold = self.get_threshold_var('max_established_conn', default=1000, value_type='int')",
+        "        established_count = state_counts.get('ESTABLISHED', 0)",
+        "        close_wait_count = state_counts.get('CLOSE_WAIT', 0)",
+        "        metrics = {",
+        "            'state_counts': state_counts,",
+        "            'established_count': established_count,",
+        "            'close_wait_count': close_wait_count,",
+        "        }",
+        "        thresholds = {'max_established_conn': threshold, 'max_close_wait_count': 0}",
+        "        if established_count > threshold or close_wait_count > 0:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='연결 수가 기준을 초과했거나 CLOSE_WAIT 상태가 확인되었습니다.',",
+        "                message='Apache Tomcat Connection Pool 경고: ESTABLISHED=%s, CLOSE_WAIT=%s, 기준=%s' % (",
+        "                    established_count,",
+        "                    close_wait_count,",
+        "                    threshold,",
+        "                ),",
+        "            )",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='활성 연결 수와 CLOSE_WAIT 상태가 기준 이내입니다.',",
+        "            message='Apache Tomcat Connection Pool 정상: ESTABLISHED=%s, 기준=%s' % (",
+        "                established_count,",
+        "                threshold,",
+        "            ),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-012",
+      "item_id": 93012,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_established_conn",
+          "value1": "1000"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "state_counts": {
+          "ESTABLISHED": 4,
+          "TIME_WAIT": 2
+        },
+        "established_count": 4,
+        "close_wait_count": 0
+      },
+      "thresholds": {
+        "max_established_conn": 1000,
+        "max_close_wait_count": 0
+      },
+      "reasons": "활성 연결 수와 CLOSE_WAIT 상태가 기준 이내입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: netstat -ntp | grep -E '8080|8009' | awk '{print $6}' | sort | uniq -c\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: 4 ESTABLISHED\n      2 TIME_WAIT",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: netstat -ntp | grep -E '8080|8009' | awk '{print $6}' | sort | uniq -c",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: 4 ESTABLISHED",
+        "      2 TIME_WAIT"
+      ],
+      "message": "Apache Tomcat Connection Pool 정상: ESTABLISHED=4, 기준=1000"
+    }
+  ],
+  "failed_items": []
+}

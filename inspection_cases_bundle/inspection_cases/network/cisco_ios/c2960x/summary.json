@@ -1,0 +1,36 @@
+{
+  "total_cases": 5,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "1_1_cpu_check",
+      "result_file": "1_1_cpu_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "1_2_memory_check",
+      "result_file": "1_2_memory_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "2_1_interface_traffic_check",
+      "result_file": "2_1_interface_traffic_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "2_2_interface_status_check",
+      "result_file": "2_2_interface_status_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "3_1_syslog_check",
+      "result_file": "3_1_syslog_check/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

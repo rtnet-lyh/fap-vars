@@ -1,0 +1,6 @@
+-rw-r----- 1 oracle dba     1414  6월  3 22:00 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3673719.trc
+-rw-r----- 1 oracle dba    30967  6월  4 22:00 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_cjq0_3234419.trc
+-rw-r----- 1 oracle dba     1414  6월  4 22:00 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3875968.trc
+-rw-r----- 1 oracle dba  1375409  6월  5 13:05 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_vkrm_3229820.trc
+-rw-r----- 1 oracle dba 14114554  6월  5 13:57 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_dbrm_3229816.trc
+[lyh@slunidb-dev241 ~]$

@@ -1,0 +1,11 @@
+[
+  {"channel": "terminal", "action": "recv", "stdout": "[fap@re-test-POTAL ~]$"},
+  {"channel": "terminal", "action": "send", "matcher_value": "su - root"},
+  {"channel": "terminal", "action": "recv", "stdout": "su - root\nPassword:"},
+  {"channel": "terminal", "action": "send", "redacted": true},
+  {"channel": "terminal", "action": "recv", "stdout": "[root@re-test-POTAL ~]#"},
+  {"channel": "terminal", "action": "send", "matcher_value": "id"},
+  {"channel": "terminal", "action": "recv", "stdout": "id\nuid=0(root) gid=0(root) groups=0(root)\n[root@re-test-POTAL ~]#"},
+  {"channel": "terminal", "action": "send", "matcher_value": "ps -eo pid,comm,%mem,rss --sort=-%mem"},
+  {"channel": "terminal", "action": "recv", "stdout_file": "outputs/ps_mem.stdout"}
+]

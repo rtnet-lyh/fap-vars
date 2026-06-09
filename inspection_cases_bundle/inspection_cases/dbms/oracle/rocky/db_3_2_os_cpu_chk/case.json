@@ -1,0 +1,58 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-3-2-OS-CPU",
+    "item_id": 96006,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "Oracle 프로세스 CPU 사용률",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "Oracle 프로세스별 CPU 사용률의 최대값을 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; ps -eo pid,comm,%cpu --sort=-%cpu | grep ora_ | grep -v grep | head -10",
+    "is_service_affect": "N",
+    "action_content": "기준 초과 프로세스와 SQL 부하 원인을 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "max_usage_percent",
+        "value1": "80"
+      }
+    ]
+  }
+}

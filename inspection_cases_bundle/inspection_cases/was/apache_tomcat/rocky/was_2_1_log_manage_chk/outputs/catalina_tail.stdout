@@ -1,0 +1,21 @@
+[root@re-test-POTAL ~]# tail -n 100 /home/koem01/apache-tomcat-8.0.32/logs/catalina.out
+08-Apr-2026 14:47:57.017 SEVERE [localhost-startStop-1] org.apache.catalina.startup.ContextConfig.processAnnotationsJar Unable to process Jar entry [module-info.class] from Jar [jar:file:/home/koem01/apache-tomcat-8.0.32/webapps/koem/WEB-INF/lib/jaxb-api-2.3.1.jar!/] for annotations
+ org.apache.tomcat.util.bcel.classfile.ClassFormatException: Invalid byte tag in constant pool: 19
+        at org.apache.tomcat.util.bcel.classfile.Constant.readConstant(Constant.java:97)
+        at org.apache.tomcat.util.bcel.classfile.ClassParser.parse(ClassParser.java:85)
+08-Apr-2026 14:48:00.439 INFO [localhost-startStop-1] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs.
+08-Apr-2026 14:48:08.525 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployDirectory Deployment of web application directory /home/koem01/apache-tomcat-8.0.32/webapps/koem has finished in 13,795 ms
+08-Apr-2026 14:48:08.530 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-8443"]
+08-Apr-2026 14:48:08.537 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-8090"]
+08-Apr-2026 14:48:08.537 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["ajp-nio-8009"]
+08-Apr-2026 14:48:08.538 INFO [main] org.apache.catalina.startup.Catalina.start Server startup in 14053 ms
+2026-04-08 16:17:04.334 ERROR [LogManager.java:errorHandler:49] [] - [Error]No bean named 'attendanceOracleBO' available
+org.springframework.beans.factory.NoSuchBeanDefinitionException: No bean named 'attendanceOracleBO' available
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanDefinition(DefaultListableBeanFactory.java:687)
+        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:284)
+        at com.ontheit.bzr.framework.core.ControlCoreBase.getBean(ControlCoreBase.java:419)
+        at com.ontheit.bzr.portlet.control.teamAttendance.Normal.preRenderAsPortlet(Normal.java:69)
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:207)
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+        at java.lang.Thread.run(Thread.java:750)
+[root@re-test-POTAL ~]#

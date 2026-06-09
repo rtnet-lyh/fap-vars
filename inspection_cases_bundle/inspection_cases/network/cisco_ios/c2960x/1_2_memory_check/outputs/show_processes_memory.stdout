@@ -1,0 +1,9 @@
+show processes memory
+Processor Pool Total:   97691252 Used:   40244996 Free:   57446256
+      I/O Pool Total:   33554432 Used:    6897976 Free:   26656456
+Driver te Pool Total:    1048576 Used:         40 Free:    1048536
+
+ PID TTY  Allocated      Freed    Holding    Getbufs    Retbufs Process
+   0   0   65060500   25123900   36119084          0          0 *Init*
+                                 47137532 Total
+C2960X_Service#

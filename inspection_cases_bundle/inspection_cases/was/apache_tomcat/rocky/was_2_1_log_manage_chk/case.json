@@ -1,0 +1,46 @@
+{
+  "host": "172.18.9.62",
+  "port": 222,
+  "user": "fap",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 203,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<PASSWORD>",
+          "become": "true",
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<BECOME_PASSWORD>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 1,
+  "host_id": 1,
+  "job_id": 1,
+  "item": {
+    "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-005",
+    "item_id": 93005,
+    "application_id": 203,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Apache Tomcat",
+    "application_family_name": "WAS",
+    "host_vars": {},
+    "threshold_list": [
+      {
+        "name": "max_error_count",
+        "value1": "0"
+      }
+    ]
+  }
+}

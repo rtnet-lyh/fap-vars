@@ -1,0 +1,23 @@
+[root@re-test-POTAL ~]# ps -eo pid,stat,comm
+    PID STAT COMMAND
+      1 Ss   systemd
+      2 S    kthreadd
+      3 I<   rcu_gp
+      4 I<   rcu_par_gp
+      5 I<   slub_flushwq
+      6 I<   netns
+      8 I<   kworker/0:0H-events_highpri
+     10 I<   mm_percpu_wq
+     12 I    rcu_tasks_kthre
+     13 I    rcu_tasks_rude_
+     14 I    rcu_tasks_trace
+     15 S    ksoftirqd/0
+     16 S    pr/tty0
+     17 I    rcu_preempt
+     18 S    migration/0
+     19 S    idle_inject/0
+ 728842 S    bash
+ 728877 S    su
+ 728881 S    bash
+1277821 Sl   java
+[root@re-test-POTAL ~]#

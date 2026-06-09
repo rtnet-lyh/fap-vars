@@ -1,0 +1,30 @@
+show interfaces
+Vlan99 is up, line protocol is up
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 output errors, 0 interface resets
+FastEthernet0 is up, line protocol is up
+  MTU 1500 bytes, BW 100000 Kbit/sec, DLY 100 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  5 minute input rate 2000 bits/sec, 3 packets/sec
+  5 minute output rate 1000 bits/sec, 1 packets/sec
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 output errors, 0 collisions, 0 interface resets
+GigabitEthernet0/2 is up, line protocol is up (connected)
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec,
+     reliability 255/255, txload 3/255, rxload 4/255
+  5 minute input rate 16892000 bits/sec, 2062 packets/sec
+  5 minute output rate 13902000 bits/sec, 1874 packets/sec
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 output errors, 0 collisions, 0 interface resets
+GigabitEthernet0/5 is up, line protocol is up (connected)
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec,
+     reliability 255/255, txload 4/255, rxload 3/255
+  5 minute input rate 13844000 bits/sec, 1862 packets/sec
+  5 minute output rate 16840000 bits/sec, 2051 packets/sec
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 output errors, 0 collisions, 0 interface resets
+C2960X_Service#

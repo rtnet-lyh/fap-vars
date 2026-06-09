@@ -1,0 +1,62 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-4-4-ENGINE-LOG",
+    "item_id": 96010,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "DB 엔진 로그 파일 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "alert log 최근 100줄에서 DB 엔진 치명적 오류 패턴을 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; tail -100 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/alert_UNIDEV.log",
+    "is_service_affect": "N",
+    "action_content": "엔진 내부 오류와 관련 trace 파일의 원인 및 서비스 영향을 분석합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "log_path",
+        "value1": "/koem/oracle/diag/rdbms/unidev/UNIDEV/trace/alert_UNIDEV.log"
+      },
+      {
+        "name": "fatal_error_patterns",
+        "value1": "ORA-12012|ORA-00600|ORA-07445|ORA-04031|ORA-01578|ORA-00060|cannot allocate new log"
+      }
+    ]
+  }
+}

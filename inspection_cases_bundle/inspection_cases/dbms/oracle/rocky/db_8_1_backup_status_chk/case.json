@@ -1,0 +1,62 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-8-1-RMAN-BACKUP",
+    "item_id": 96013,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "DB 백업 상태 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "RMAN 백업 요약에서 실패 문구와 최근 정상 백업 일자를 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; rman TARGET / <<'EOF'\nLIST BACKUP SUMMARY;\nEXIT;\nEOF",
+    "is_service_affect": "N",
+    "action_content": "백업 없음, 실패 또는 기준일 초과 시 백업 작업과 복구 가능성을 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "max_backup_age_days",
+        "value1": "7"
+      },
+      {
+        "name": "failure_patterns",
+        "value1": "specification does not match any backup|no backup|failed|failure"
+      }
+    ]
+  }
+}

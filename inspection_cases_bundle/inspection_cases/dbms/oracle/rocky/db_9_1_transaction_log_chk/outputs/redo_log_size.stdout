@@ -1,0 +1,6 @@
+GROUP#    MEMBERS    SIZE_MB STATUS
+---------- ---------- ---------- ----------------
+         1          1        200 INACTIVE
+         2          1        200 INACTIVE
+         3          1        200 CURRENT
+[lyh@slunidb-dev241 ~]$

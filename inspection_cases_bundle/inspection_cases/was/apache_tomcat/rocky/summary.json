@@ -1,0 +1,90 @@
+{
+  "total_cases": 14,
+  "failed_cases": [],
+  "cases": [
+    {
+      "case_name": "was_1_1_ps_cpu_chk",
+      "result_file": "was_1_1_ps_cpu_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_1_2_ps_mem_chk",
+      "result_file": "was_1_2_ps_mem_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_1_3_ps_status_chk",
+      "result_file": "was_1_3_ps_status_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_1_4_ps_startup_chk",
+      "result_file": "was_1_4_ps_startup_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_2_1_log_manage_chk",
+      "result_file": "was_2_1_log_manage_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_2_2_log_service_chk",
+      "result_file": "was_2_2_log_service_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_2_3_log_cli_acs_chk",
+      "result_file": "was_2_3_log_cli_acs_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_2_4_log_gc_chk",
+      "result_file": "was_2_4_log_gc_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_2_5_log_con_pool_chk",
+      "result_file": "was_2_5_log_con_pool_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_4_1_work_thrd_chk",
+      "result_file": "was_4_1_work_thrd_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_4_2_runnable_thrd_chk",
+      "result_file": "was_4_2_runnable_thrd_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_5_1_con_pool_chk",
+      "result_file": "was_5_1_con_pool_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_5_2_db_con_chk",
+      "result_file": "was_5_2_db_con_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    },
+    {
+      "case_name": "was_6_1_dump_chk",
+      "result_file": "was_6_1_dump_chk/result.json",
+      "failed_items": [],
+      "is_success": true
+    }
+  ]
+}

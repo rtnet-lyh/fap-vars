@@ -1,0 +1,16 @@
+Recovery Manager: Release 19.0.0.0.0 - Production on Fri Jun 5 14:08:48 2026
+Version 19.25.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: UNIDEV (DBID=1665036402)
+
+RMAN> LIST BACKUP SUMMARY;
+using target database control file instead of recovery catalog
+specification does not match any backup in the repository
+
+
+RMAN> EXIT;
+
+Recovery Manager complete.
+[lyh@slunidb-dev241 ~]$

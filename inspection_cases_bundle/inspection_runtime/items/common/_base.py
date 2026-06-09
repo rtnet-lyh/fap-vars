@@ -1219,6 +1219,8 @@ class BaseCheck:
             return all_results
         return command_results
 
+    _run_account_commands = _run_solaris_account_commands
+
     def _paramiko_reuse_session_enabled(self):
         # 우선순위:
         # 1) runner ctx의 paramiko_reuse_session

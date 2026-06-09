@@ -1,0 +1,62 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-1-3-FS-DB-SYSTEM-LOG",
+    "item_id": 96003,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "DB 시스템 로그 파일시스템 사용률",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "DB 시스템 로그 파일시스템의 사용률을 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; df -h",
+    "is_service_affect": "N",
+    "action_content": "DB 시스템 로그 공간이 기준을 초과하면 로그 보존 및 정리 정책을 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "max_usage_percent",
+        "value1": "80"
+      },
+      {
+        "name": "target_mount_patterns",
+        "value1": "/koem/oracle"
+      }
+    ]
+  }
+}

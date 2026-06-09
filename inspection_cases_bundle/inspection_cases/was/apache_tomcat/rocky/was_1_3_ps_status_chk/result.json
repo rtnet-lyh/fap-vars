@@ -1,0 +1,291 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-003",
+      "item_id": 93003,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'ps -eo pid,stat,comm'\nCOMMAND_TIMEOUT = 20\nTOP_PROCESS_LIMIT = 20\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    def _run_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='Apache Tomcat 프로세스 상태 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _bad_state_set(self):\n        raw_states = self.get_threshold_var('bad_states', default='Z,D,T', value_type='str')\n        return {\n            value.strip().upper()\n            for value in re.split(r'[,|]+', raw_states)\n            if value.strip()\n        }\n\n    def _parse_rows(self, stdout):\n        rows = []\n        header_found = False\n        for line in stdout.splitlines():\n            parts = line.strip().split()\n            if not parts:\n                continue\n            if 'PID' in parts and 'STAT' in parts and 'COMMAND' in parts:\n                header_found = True\n                continue\n            if not header_found or len(parts) < 3:\n                continue\n            try:\n                pid = int(parts[0])\n            except ValueError:\n                continue\n            rows.append({\n                'pid': pid,\n                'stat': parts[1],\n                'command': ' '.join(parts[2:]),\n            })\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_command()\n        if error:\n            return error\n\n        rows = self._parse_rows(stdout)\n        if not rows:\n            return self.fail(\n                '프로세스 상태 파싱 실패',\n                message='ps 출력에서 프로세스 상태 정보를 해석할 수 없습니다.',\n                stdout=stdout,\n            )\n\n        bad_states = self._bad_state_set()\n        bad_rows = [\n            row for row in rows\n            if (row.get('stat') or '').upper()[:1] in bad_states\n        ]\n        metrics = {\n            'process_count': len(rows),\n            'states': sorted({row['stat'] for row in rows}),\n            'bad_process_count': len(bad_rows),\n            'bad_processes': bad_rows,\n            'sample_processes': rows[:TOP_PROCESS_LIMIT],\n        }\n        thresholds = {'bad_process_states': sorted(bad_states)}\n        if bad_rows:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='비정상 프로세스 상태가 발견되었습니다.',\n                message='Apache Tomcat 프로세스 상태 경고: 비정상 상태 %s건' % len(bad_rows),\n            )\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='프로세스 상태에 Z/D/T 상태가 없습니다.',\n            message='Apache Tomcat 프로세스 상태 정상: 상태=%s' % ','.join(metrics['states']),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'ps -eo pid,stat,comm'",
+        "COMMAND_TIMEOUT = 20",
+        "TOP_PROCESS_LIMIT = 20",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    def _run_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='Apache Tomcat 프로세스 상태 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def _bad_state_set(self):",
+        "        raw_states = self.get_threshold_var('bad_states', default='Z,D,T', value_type='str')",
+        "        return {",
+        "            value.strip().upper()",
+        "            for value in re.split(r'[,|]+', raw_states)",
+        "            if value.strip()",
+        "        }",
+        "",
+        "    def _parse_rows(self, stdout):",
+        "        rows = []",
+        "        header_found = False",
+        "        for line in stdout.splitlines():",
+        "            parts = line.strip().split()",
+        "            if not parts:",
+        "                continue",
+        "            if 'PID' in parts and 'STAT' in parts and 'COMMAND' in parts:",
+        "                header_found = True",
+        "                continue",
+        "            if not header_found or len(parts) < 3:",
+        "                continue",
+        "            try:",
+        "                pid = int(parts[0])",
+        "            except ValueError:",
+        "                continue",
+        "            rows.append({",
+        "                'pid': pid,",
+        "                'stat': parts[1],",
+        "                'command': ' '.join(parts[2:]),",
+        "            })",
+        "        return rows",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_command()",
+        "        if error:",
+        "            return error",
+        "",
+        "        rows = self._parse_rows(stdout)",
+        "        if not rows:",
+        "            return self.fail(",
+        "                '프로세스 상태 파싱 실패',",
+        "                message='ps 출력에서 프로세스 상태 정보를 해석할 수 없습니다.',",
+        "                stdout=stdout,",
+        "            )",
+        "",
+        "        bad_states = self._bad_state_set()",
+        "        bad_rows = [",
+        "            row for row in rows",
+        "            if (row.get('stat') or '').upper()[:1] in bad_states",
+        "        ]",
+        "        metrics = {",
+        "            'process_count': len(rows),",
+        "            'states': sorted({row['stat'] for row in rows}),",
+        "            'bad_process_count': len(bad_rows),",
+        "            'bad_processes': bad_rows,",
+        "            'sample_processes': rows[:TOP_PROCESS_LIMIT],",
+        "        }",
+        "        thresholds = {'bad_process_states': sorted(bad_states)}",
+        "        if bad_rows:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='비정상 프로세스 상태가 발견되었습니다.',",
+        "                message='Apache Tomcat 프로세스 상태 경고: 비정상 상태 %s건' % len(bad_rows),",
+        "            )",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='프로세스 상태에 Z/D/T 상태가 없습니다.',",
+        "            message='Apache Tomcat 프로세스 상태 정상: 상태=%s' % ','.join(metrics['states']),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-003",
+      "item_id": 93003,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "process_count": 20,
+        "states": [
+          "I",
+          "I<",
+          "S",
+          "Sl",
+          "Ss"
+        ],
+        "bad_process_count": 0,
+        "bad_processes": [],
+        "sample_processes": [
+          {
+            "pid": 1,
+            "stat": "Ss",
+            "command": "systemd"
+          },
+          {
+            "pid": 2,
+            "stat": "S",
+            "command": "kthreadd"
+          },
+          {
+            "pid": 3,
+            "stat": "I<",
+            "command": "rcu_gp"
+          },
+          {
+            "pid": 4,
+            "stat": "I<",
+            "command": "rcu_par_gp"
+          },
+          {
+            "pid": 5,
+            "stat": "I<",
+            "command": "slub_flushwq"
+          },
+          {
+            "pid": 6,
+            "stat": "I<",
+            "command": "netns"
+          },
+          {
+            "pid": 8,
+            "stat": "I<",
+            "command": "kworker/0:0H-events_highpri"
+          },
+          {
+            "pid": 10,
+            "stat": "I<",
+            "command": "mm_percpu_wq"
+          },
+          {
+            "pid": 12,
+            "stat": "I",
+            "command": "rcu_tasks_kthre"
+          },
+          {
+            "pid": 13,
+            "stat": "I",
+            "command": "rcu_tasks_rude_"
+          },
+          {
+            "pid": 14,
+            "stat": "I",
+            "command": "rcu_tasks_trace"
+          },
+          {
+            "pid": 15,
+            "stat": "S",
+            "command": "ksoftirqd/0"
+          },
+          {
+            "pid": 16,
+            "stat": "S",
+            "command": "pr/tty0"
+          },
+          {
+            "pid": 17,
+            "stat": "I",
+            "command": "rcu_preempt"
+          },
+          {
+            "pid": 18,
+            "stat": "S",
+            "command": "migration/0"
+          },
+          {
+            "pid": 19,
+            "stat": "S",
+            "command": "idle_inject/0"
+          },
+          {
+            "pid": 728842,
+            "stat": "S",
+            "command": "bash"
+          },
+          {
+            "pid": 728877,
+            "stat": "S",
+            "command": "su"
+          },
+          {
+            "pid": 728881,
+            "stat": "S",
+            "command": "bash"
+          },
+          {
+            "pid": 1277821,
+            "stat": "Sl",
+            "command": "java"
+          }
+        ]
+      },
+      "thresholds": {
+        "bad_process_states": [
+          "D",
+          "T",
+          "Z"
+        ]
+      },
+      "reasons": "프로세스 상태에 Z/D/T 상태가 없습니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps -eo pid,stat,comm\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID STAT COMMAND\n      1 Ss   systemd\n      2 S    kthreadd\n      3 I<   rcu_gp\n      4 I<   rcu_par_gp\n      5 I<   slub_flushwq\n      6 I<   netns\n      8 I<   kworker/0:0H-events_highpri\n     10 I<   mm_percpu_wq\n     12 I    rcu_tasks_kthre\n     13 I    rcu_tasks_rude_\n     14 I    rcu_tasks_trace\n     15 S    ksoftirqd/0\n     16 S    pr/tty0\n     17 I    rcu_preempt\n     18 S    migration/0\n     19 S    idle_inject/0\n 728842 S    bash\n 728877 S    su\n 728881 S    bash\n1277821 Sl   java",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: ps -eo pid,stat,comm",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: PID STAT COMMAND",
+        "      1 Ss   systemd",
+        "      2 S    kthreadd",
+        "      3 I<   rcu_gp",
+        "      4 I<   rcu_par_gp",
+        "      5 I<   slub_flushwq",
+        "      6 I<   netns",
+        "      8 I<   kworker/0:0H-events_highpri",
+        "     10 I<   mm_percpu_wq",
+        "     12 I    rcu_tasks_kthre",
+        "     13 I    rcu_tasks_rude_",
+        "     14 I    rcu_tasks_trace",
+        "     15 S    ksoftirqd/0",
+        "     16 S    pr/tty0",
+        "     17 I    rcu_preempt",
+        "     18 S    migration/0",
+        "     19 S    idle_inject/0",
+        " 728842 S    bash",
+        " 728877 S    su",
+        " 728881 S    bash",
+        "1277821 Sl   java"
+      ],
+      "message": "Apache Tomcat 프로세스 상태 정상: 상태=I,I<,S,Sl,Ss"
+    }
+  ],
+  "failed_items": []
+}

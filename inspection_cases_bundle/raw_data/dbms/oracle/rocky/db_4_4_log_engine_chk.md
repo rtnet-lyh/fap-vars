@@ -1,0 +1,137 @@
+# 영역
+로그 점검
+
+# 세부 점검항목
+DB 엔진 로그 파일 점검
+
+# 점검 내용
+DB 엔진에서 발생되는 Internal(DB 엔진 내부 기능) 에러 로그에 대한 점검
+
+# 구분
+필수
+
+# 명령어
+```bash
+tail -100 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/alert_UNIDEV.log
+```
+
+# 출력 결과
+```text
+[OS: Rocky 9.4] 추출된 결과입니다.
+slunidb-dev241:/koem/oracle/diag/rdbms/unidev/UNIDEV/trace> tail -100 /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/alert_UNIDEV.log
+ORA-12012: error on auto execute of job "SYS"."ORA$AT_SQ_SQL_SW_3509"
+ORA-38153: Software edition is incompatible with SQL plan management.
+ORA-06512: at "SYS.DBMS_SPM_INTERNAL", line 6420
+ORA-06512: at "SYS.DBMS_SPM", line 2840
+ORA-06512: at line 34
+2026-05-31T06:00:04.320016+09:00
+TABLE SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY: ADDED INTERVAL PARTITION SYS_P2393 (46172) VALUES LESS THAN (TO_DATE(' 2026-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+TABLE SYS.WRI$_OPTSTAT_HISTGRM_HISTORY: ADDED INTERVAL PARTITION SYS_P2396 (46172) VALUES LESS THAN (TO_DATE(' 2026-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+2026-05-31T10:09:03.894822+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_2967433.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3512"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-05-31T10:09:06.647260+09:00
+Thread 1 cannot allocate new log, sequence 141
+Private strand flush not complete
+  Current log# 2 seq# 140 mem# 0: /koem/oradata/redo/redo02.log
+2026-05-31T10:09:09.677464+09:00
+Thread 1 advanced to log sequence 141 (LGWR switch),  current SCN: 41990311310295
+  Current log# 3 seq# 141 mem# 0: /koem/oradata/redo/redo03.log
+2026-05-31T14:09:44.576669+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3000997.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3515"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-05-31T18:10:25.412900+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3034709.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3518"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-05-31T22:11:06.322727+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3068300.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3521"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-06-01T22:00:02.175674+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3269415.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3524"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-06-01T22:00:04.434780+09:00
+TABLE SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY: ADDED INTERVAL PARTITION SYS_P2397 (46173) VALUES LESS THAN (TO_DATE(' 2026-06-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+TABLE SYS.WRI$_OPTSTAT_HISTGRM_HISTORY: ADDED INTERVAL PARTITION SYS_P2400 (46173) VALUES LESS THAN (TO_DATE(' 2026-06-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+2026-06-01T22:00:14.187476+09:00
+Thread 1 cannot allocate new log, sequence 142
+Private strand flush not complete
+  Current log# 3 seq# 141 mem# 0: /koem/oradata/redo/redo03.log
+2026-06-01T22:00:17.197439+09:00
+Thread 1 advanced to log sequence 142 (LGWR switch),  current SCN: 41990311419860
+  Current log# 1 seq# 142 mem# 0: /koem/oradata/redo/redo01.log
+2026-06-02T22:00:02.175637+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3471560.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3527"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-06-02T22:00:02.684575+09:00
+TABLE SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY: ADDED INTERVAL PARTITION SYS_P2401 (46174) VALUES LESS THAN (TO_DATE(' 2026-06-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+TABLE SYS.WRI$_OPTSTAT_HISTGRM_HISTORY: ADDED INTERVAL PARTITION SYS_P2404 (46174) VALUES LESS THAN (TO_DATE(' 2026-06-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+2026-06-03T10:32:22.829726+09:00
+Thread 1 advanced to log sequence 143 (LGWR switch),  current SCN: 41990311529320
+  Current log# 2 seq# 143 mem# 0: /koem/oradata/redo/redo02.log
+2026-06-03T22:00:02.300554+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3673719.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3530"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-06-03T22:00:04.562055+09:00
+TABLE SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY: ADDED INTERVAL PARTITION SYS_P2405 (46175) VALUES LESS THAN (TO_DATE(' 2026-06-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+TABLE SYS.WRI$_OPTSTAT_HISTGRM_HISTORY: ADDED INTERVAL PARTITION SYS_P2408 (46175) VALUES LESS THAN (TO_DATE(' 2026-06-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+2026-06-04T22:00:02.234411+09:00
+Errors in file /koem/oracle/diag/rdbms/unidev/UNIDEV/trace/UNIDEV_j002_3875968.trc:
+ORA-12012: 작업 "SYS"."ORA$AT_SQ_SQL_SW_3533"의 자동 실행중 오류 발생
+ORA-38153: 소프트웨어 에디션이 SQL 계획 관리와 호환되지 않습니다.
+ORA-06512: "SYS.DBMS_SPM_INTERNAL",  6420행
+ORA-06512: "SYS.DBMS_SPM",  2840행
+ORA-06512:  34행
+2026-06-04T22:00:02.742014+09:00
+TABLE SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY: ADDED INTERVAL PARTITION SYS_P2409 (46176) VALUES LESS THAN (TO_DATE(' 2026-06-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+TABLE SYS.WRI$_OPTSTAT_HISTGRM_HISTORY: ADDED INTERVAL PARTITION SYS_P2412 (46176) VALUES LESS THAN (TO_DATE(' 2026-06-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+2026-06-04T22:00:11.755499+09:00
+Thread 1 cannot allocate new log, sequence 144
+Private strand flush not complete
+  Current log# 2 seq# 143 mem# 0: /koem/oradata/redo/redo02.log
+2026-06-04T22:00:14.758557+09:00
+Thread 1 advanced to log sequence 144 (LGWR switch),  current SCN: 41990311647287
+  Current log# 3 seq# 144 mem# 0: /koem/oradata/redo/redo03.log
+
+
+
+---
+```
+
+# 설명
+- `alert.log` 및 `listener.log`, `*.trc` 등의 파일 내용을 점검하여 DB와 리스너에서 발생한 오류나 경고를 파악합니다.
+
+# 임계치
+에러 로깅 빈도 및 치명적 에러 존재 여부
+
+# 판단기준
+- **양호**: 시스템 장애를 유발할 수 있는 치명적인 에러 로그가 없음
+- **경고**: 서비스 지연이나 장애를 일으키는 에러 다수 발생
+- **확인 필요**: 파일 경로 오류 등으로 로그 확인 불가

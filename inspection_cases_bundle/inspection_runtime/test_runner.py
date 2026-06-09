@@ -175,6 +175,50 @@ CHECK_CLASS = Check
 
 
 class RunnerWinrmTest(unittest.TestCase):
+    def test_build_command_results_uses_only_requested_keys(self):
+        command_results = runner.build_command_results([
+            {
+                'cmd': 'check-one',
+                'rc': 1,
+                'stdout': 'standard output\n',
+                'stderr': 'error output\n',
+            },
+            {
+                'cmd': 'check-two',
+                'rc': 0,
+                'stdout': 'ok\n',
+                'stderr': '',
+            },
+            {
+                'cmd': 'check-three',
+                'rc': 1,
+                'stdout': '',
+                'stderr': 'error only\n',
+            },
+        ])
+
+        self.assertEqual(
+            command_results,
+            [
+                {
+                    'step': 1,
+                    'command': 'check-one',
+                    'result': 'standard output',
+                },
+                {
+                    'step': 2,
+                    'command': 'check-two',
+                    'result': 'ok',
+                },
+                {
+                    'step': 3,
+                    'command': 'check-three',
+                    'result': 'error only',
+                },
+            ],
+        )
+        self.assertEqual(set(command_results[0]), {'step', 'command', 'result'})
+
     def test_decode_stream_bytes_falls_back_to_cp949(self):
         raw = '한글 경로'.encode('cp949')
         self.assertEqual(runner.decode_stream_bytes(raw), '한글 경로')
@@ -279,6 +323,12 @@ class RunnerWinrmTest(unittest.TestCase):
 
 
 class SolarisAccountCommandTest(unittest.TestCase):
+    def test_generic_account_command_name_reuses_solaris_implementation(self):
+        self.assertIs(
+            BaseCheck._run_account_commands,
+            BaseCheck._run_solaris_account_commands,
+        )
+
     def make_check(self):
         return BaseCheck({
             'host': '10.0.0.10',
@@ -614,6 +664,16 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
         ]
 
         self.assertEqual([res['status'] for res in output['results']], ['ok', 'ok'])
+        self.assertEqual(
+            output['results'][0]['results'],
+            [
+                {
+                    'step': 1,
+                    'command': 'actual-check',
+                    'result': 'ok',
+                }
+            ],
+        )
         self.assertEqual(len(default_prechecks), 1)
         self.assertEqual(len(isolated_prechecks), 1)
         self.assertEqual(len(isolated_checks), 1)

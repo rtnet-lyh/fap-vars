@@ -1,0 +1,58 @@
+{
+  "host": "192.0.2.10",
+  "port": 22,
+  "user": "fap",
+  "password": "<ssh-password>",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 601,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "fap",
+          "password": "<ssh-password>",
+          "port": 22,
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "<root-password>"
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 61,
+  "host_id": 610,
+  "job_id": 6100,
+  "item": {
+    "inspection_code": "DBMS-ORACLE-ROCKY-DB-7-1-TABLESPACE",
+    "item_id": 96012,
+    "application_id": 601,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "Oracle",
+    "application_family_name": "DBMS",
+    "inspection_item_name": "테이블 스페이스 사용률 점검",
+    "type_name": "일상점검",
+    "area_name": "상태점검",
+    "category_name": "DBMS",
+    "description": "DBA_TABLESPACE_USAGE_METRICS의 최대 사용률을 점검합니다.",
+    "inspection_command": "su - root; id; su - <oracle_account>; whoami; sqlplus -S /nolog <<'EOF'\nCONNECT / AS SYSDBA\nselect * from DBA_TABLESPACE_USAGE_METRICS;\nEXIT;\nEOF",
+    "is_service_affect": "N",
+    "action_content": "기준 초과 시 datafile 증설 또는 autoextend 설정을 확인합니다.",
+    "threshold_list": [
+      {
+        "name": "oracle_account",
+        "value1": "lyh"
+      },
+      {
+        "name": "max_usage_percent",
+        "value1": "90"
+      }
+    ]
+  }
+}

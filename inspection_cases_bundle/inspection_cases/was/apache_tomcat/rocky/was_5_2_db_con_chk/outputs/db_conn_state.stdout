@@ -1,0 +1,4 @@
+[root@re-test-POTAL ~]# netstat -ntp | grep '3306' | awk '{print $6}' | sort | uniq -c
+      3 ESTABLISHED
+      1 TIME_WAIT
+[root@re-test-POTAL ~]#

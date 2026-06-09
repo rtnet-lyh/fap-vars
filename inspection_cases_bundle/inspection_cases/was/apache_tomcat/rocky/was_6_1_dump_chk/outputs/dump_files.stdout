@@ -1,0 +1,2 @@
+[root@re-test-POTAL ~]# find /home/koem01/apache-tomcat-8.0.32/ -name "*.hprof" -o -name "core.*"
+[root@re-test-POTAL ~]#

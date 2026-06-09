@@ -464,11 +464,28 @@ class ReplayCliTest(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(output['failed_items'], [])
-            self.assertEqual(output['results'][0]['status'], 'ok')
-            self.assertEqual(output['results'][0]['metrics']['expected'], 'base')
+            result = output['results'][0]
+            self.assertEqual(result['status'], 'ok')
+            self.assertEqual(result['metrics']['expected'], 'base')
+            self.assertEqual(
+                result['results'],
+                [
+                    {
+                        'step': 1,
+                        'command': 'echo hello',
+                        'result': 'hello',
+                    }
+                ],
+            )
 
             result_path = os.path.join(case_dir, 'result.json')
             self.assertTrue(os.path.isfile(result_path))
+            with open(result_path, 'r', encoding='utf-8') as fh:
+                saved_result = json.load(fh)
+            self.assertEqual(
+                saved_result['results'][0]['results'],
+                result['results'],
+            )
 
     def test_run_path_replay_ssh_become_matches_wrapped_command(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -833,6 +850,11 @@ CHECK_CLASS = Check
             self.assertTrue(output['results'][0]['metrics']['hide_command'])
             self.assertIn('실행 명령어: *******', output['results'][0]['raw_output'])
             self.assertNotIn('super-secret-password', output['results'][0]['raw_output'])
+            self.assertEqual(output['results'][0]['results'][0]['command'], '*******')
+            self.assertNotIn(
+                'super-secret-password',
+                json.dumps(output['results'][0]['results'], ensure_ascii=False),
+            )
 
 
 if __name__ == '__main__':

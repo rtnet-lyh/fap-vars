@@ -1,0 +1,249 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-002",
+      "item_id": 93002,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_usage_percent",
+          "value1": "80"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'ps -eo pid,comm,%mem,rss --sort=-%mem'\nCOMMAND_TIMEOUT = 20\nTOP_PROCESS_LIMIT = 10\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    def _run_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='Apache Tomcat 메모리 사용률 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def _parse_rows(self, stdout):\n        rows = []\n        header_found = False\n        for line in stdout.splitlines():\n            parts = line.strip().split()\n            if not parts:\n                continue\n            if 'PID' in parts and 'COMMAND' in parts and '%MEM' in parts and 'RSS' in parts:\n                header_found = True\n                continue\n            if not header_found or len(parts) < 4:\n                continue\n            try:\n                pid = int(parts[0])\n                mem_percent = float(parts[-2])\n                rss_kib = int(parts[-1])\n            except ValueError:\n                continue\n            command = ' '.join(parts[1:-2]).strip()\n            if command:\n                rows.append({\n                    'pid': pid,\n                    'command': command,\n                    'mem_percent': mem_percent,\n                    'rss_kib': rss_kib,\n                })\n        return rows\n\n    def run(self):\n        stdout, _stderr, error = self._run_command()\n        if error:\n            return error\n\n        threshold = self.get_threshold_var('max_usage_percent', default=80.0, value_type='float')\n        thresholds = {'max_usage_percent': threshold}\n        rows = self._parse_rows(stdout)\n        if not rows:\n            return self.fail(\n                '메모리 사용률 파싱 실패',\n                message='ps 출력에서 프로세스 메모리 사용률 정보를 해석할 수 없습니다.',\n                stdout=stdout,\n                thresholds=thresholds,\n            )\n\n        max_row = max(rows, key=lambda row: row['mem_percent'])\n        over_rows = [row for row in rows if row['mem_percent'] > threshold]\n        metrics = {\n            'process_count': len(rows),\n            'max_usage_percent': max_row['mem_percent'],\n            'max_usage_pid': max_row['pid'],\n            'max_usage_command': max_row['command'],\n            'max_usage_rss_kib': max_row['rss_kib'],\n            'over_threshold_count': len(over_rows),\n            'over_threshold_processes': over_rows,\n            'top_processes': rows[:TOP_PROCESS_LIMIT],\n        }\n        if over_rows:\n            return self.warn(\n                metrics=metrics,\n                thresholds=thresholds,\n                reasons='메모리 사용률이 기준을 초과한 프로세스가 있습니다.',\n                message='Apache Tomcat 프로세스 메모리 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (\n                    max_row['mem_percent'],\n                    threshold,\n                ),\n            )\n        return self.ok(\n            metrics=metrics,\n            thresholds=thresholds,\n            reasons='프로세스 메모리 사용률이 기준 이하입니다.',\n            message='Apache Tomcat 프로세스 메모리 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (\n                max_row['mem_percent'],\n                threshold,\n            ),\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'ps -eo pid,comm,%mem,rss --sort=-%mem'",
+        "COMMAND_TIMEOUT = 20",
+        "TOP_PROCESS_LIMIT = 10",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    def _run_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='Apache Tomcat 메모리 사용률 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def _parse_rows(self, stdout):",
+        "        rows = []",
+        "        header_found = False",
+        "        for line in stdout.splitlines():",
+        "            parts = line.strip().split()",
+        "            if not parts:",
+        "                continue",
+        "            if 'PID' in parts and 'COMMAND' in parts and '%MEM' in parts and 'RSS' in parts:",
+        "                header_found = True",
+        "                continue",
+        "            if not header_found or len(parts) < 4:",
+        "                continue",
+        "            try:",
+        "                pid = int(parts[0])",
+        "                mem_percent = float(parts[-2])",
+        "                rss_kib = int(parts[-1])",
+        "            except ValueError:",
+        "                continue",
+        "            command = ' '.join(parts[1:-2]).strip()",
+        "            if command:",
+        "                rows.append({",
+        "                    'pid': pid,",
+        "                    'command': command,",
+        "                    'mem_percent': mem_percent,",
+        "                    'rss_kib': rss_kib,",
+        "                })",
+        "        return rows",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_command()",
+        "        if error:",
+        "            return error",
+        "",
+        "        threshold = self.get_threshold_var('max_usage_percent', default=80.0, value_type='float')",
+        "        thresholds = {'max_usage_percent': threshold}",
+        "        rows = self._parse_rows(stdout)",
+        "        if not rows:",
+        "            return self.fail(",
+        "                '메모리 사용률 파싱 실패',",
+        "                message='ps 출력에서 프로세스 메모리 사용률 정보를 해석할 수 없습니다.',",
+        "                stdout=stdout,",
+        "                thresholds=thresholds,",
+        "            )",
+        "",
+        "        max_row = max(rows, key=lambda row: row['mem_percent'])",
+        "        over_rows = [row for row in rows if row['mem_percent'] > threshold]",
+        "        metrics = {",
+        "            'process_count': len(rows),",
+        "            'max_usage_percent': max_row['mem_percent'],",
+        "            'max_usage_pid': max_row['pid'],",
+        "            'max_usage_command': max_row['command'],",
+        "            'max_usage_rss_kib': max_row['rss_kib'],",
+        "            'over_threshold_count': len(over_rows),",
+        "            'over_threshold_processes': over_rows,",
+        "            'top_processes': rows[:TOP_PROCESS_LIMIT],",
+        "        }",
+        "        if over_rows:",
+        "            return self.warn(",
+        "                metrics=metrics,",
+        "                thresholds=thresholds,",
+        "                reasons='메모리 사용률이 기준을 초과한 프로세스가 있습니다.',",
+        "                message='Apache Tomcat 프로세스 메모리 사용률 경고: 최대 %.1f%%, 기준 %.1f%%' % (",
+        "                    max_row['mem_percent'],",
+        "                    threshold,",
+        "                ),",
+        "            )",
+        "        return self.ok(",
+        "            metrics=metrics,",
+        "            thresholds=thresholds,",
+        "            reasons='프로세스 메모리 사용률이 기준 이하입니다.',",
+        "            message='Apache Tomcat 프로세스 메모리 사용률 정상: 최대 %.1f%%, 기준 %.1f%%' % (",
+        "                max_row['mem_percent'],",
+        "                threshold,",
+        "            ),",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-APACHE-TOMCAT-ROCKY-REPLAY-002",
+      "item_id": 93002,
+      "application_id": 203,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "Apache Tomcat",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_usage_percent",
+          "value1": "80"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "process_count": 12,
+        "max_usage_percent": 42.8,
+        "max_usage_pid": 1277821,
+        "max_usage_command": "java",
+        "max_usage_rss_kib": 3368548,
+        "over_threshold_count": 0,
+        "over_threshold_processes": [],
+        "top_processes": [
+          {
+            "pid": 1277821,
+            "command": "java",
+            "mem_percent": 42.8,
+            "rss_kib": 3368548
+          },
+          {
+            "pid": 1277850,
+            "command": "firefox",
+            "mem_percent": 8.3,
+            "rss_kib": 658704
+          },
+          {
+            "pid": 1276745,
+            "command": "gnome-shell",
+            "mem_percent": 5.9,
+            "rss_kib": 465024
+          },
+          {
+            "pid": 1278187,
+            "command": "Isolated Web Co",
+            "mem_percent": 2.8,
+            "rss_kib": 226576
+          },
+          {
+            "pid": 1278140,
+            "command": "Privileged Cont",
+            "mem_percent": 1.8,
+            "rss_kib": 146112
+          },
+          {
+            "pid": 1278068,
+            "command": "Isolated Web Co",
+            "mem_percent": 1.6,
+            "rss_kib": 129760
+          },
+          {
+            "pid": 1278123,
+            "command": "Isolated Web Co",
+            "mem_percent": 1.6,
+            "rss_kib": 126648
+          },
+          {
+            "pid": 1278047,
+            "command": "WebExtensions",
+            "mem_percent": 1.4,
+            "rss_kib": 116684
+          },
+          {
+            "pid": 1277021,
+            "command": "gnome-software",
+            "mem_percent": 1.3,
+            "rss_kib": 102568
+          },
+          {
+            "pid": 1278401,
+            "command": "Web Content",
+            "mem_percent": 1.1,
+            "rss_kib": 91616
+          }
+        ]
+      },
+      "thresholds": {
+        "max_usage_percent": 80.0
+      },
+      "reasons": "프로세스 메모리 사용률이 기준 이하입니다.",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: ps -eo pid,comm,%mem,rss --sort=-%mem\n - 명령 종료코드: rc=0 (정상 종료)\n - 출력 내용: PID COMMAND         %MEM   RSS\n1277821 java            42.8 3368548\n1277850 firefox          8.3 658704\n1276745 gnome-shell      5.9 465024\n1278187 Isolated Web Co  2.8 226576\n1278140 Privileged Cont  1.8 146112\n1278068 Isolated Web Co  1.6 129760\n1278123 Isolated Web Co  1.6 126648\n1278047 WebExtensions    1.4 116684\n1277021 gnome-software   1.3 102568\n1278401 Web Content      1.1 91616\n1278350 Web Content      1.1 91256\n1278378 Web Content      1.1 89672",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: ps -eo pid,comm,%mem,rss --sort=-%mem",
+        " - 명령 종료코드: rc=0 (정상 종료)",
+        " - 출력 내용: PID COMMAND         %MEM   RSS",
+        "1277821 java            42.8 3368548",
+        "1277850 firefox          8.3 658704",
+        "1276745 gnome-shell      5.9 465024",
+        "1278187 Isolated Web Co  2.8 226576",
+        "1278140 Privileged Cont  1.8 146112",
+        "1278068 Isolated Web Co  1.6 129760",
+        "1278123 Isolated Web Co  1.6 126648",
+        "1278047 WebExtensions    1.4 116684",
+        "1277021 gnome-software   1.3 102568",
+        "1278401 Web Content      1.1 91616",
+        "1278350 Web Content      1.1 91256",
+        "1278378 Web Content      1.1 89672"
+      ],
+      "message": "Apache Tomcat 프로세스 메모리 사용률 정상: 최대 42.8%, 기준 80.0%"
+    }
+  ],
+  "failed_items": []
+}
