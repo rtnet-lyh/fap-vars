@@ -86,7 +86,7 @@ application: solaris
 | raw root | `inspection_cases_bundle/raw_data` |
 | case root | `inspection_cases_bundle/inspection_cases` |
 | output root | `inspection_cases_bundle/api_data/os` |
-| report root | `inspection_cases_bundle/api_data/os/_reports` |
+| report root | `inspection_cases_bundle/api_data/_reports` |
 | reference root | `inspection_cases_bundle/api_data/os/_reference` |
 
 ## 생성 대상과 제외 대상
@@ -244,12 +244,14 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 
 `inspection_script`는 기준 예시와 같이 코드펜스로 감싸지 않고 `script.py` 전문을 그대로 붙입니다.
 
+`type_name`과 `area_name`은 항상 같은 값이라고 가정하지 않으며, 실행 시 `--type-name`, `--area-name`으로 조정할 수 있습니다.
+
 ## metadata 매핑 규칙
 
 | 출력 section | 값 | Source |
 | --- | --- | --- |
-| `type_name` | `일상점검` | 고정값 |
-| `area_name` | `상태점검` | 고정값 |
+| `type_name` | `--type-name` 값, 기본 `일상점검` | 실행 옵션 |
+| `area_name` | `--area-name` 값, 기본 `상태점검` | 실행 옵션 |
 | `category_name` | path segment 1 | `<category_name>` |
 | `application_type` | path segment 2 | `<application_type>` |
 | `application` | path segment 3 | `<application>` |
@@ -288,8 +290,8 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 생성 결과는 사람이 검토하기 쉬운 Markdown report와 자동 처리 가능한 JSON summary로 남깁니다.
 
 ```text
-inspection_cases_bundle/api_data/os/_reports/skip_report.md
-inspection_cases_bundle/api_data/os/_reports/summary.json
+inspection_cases_bundle/api_data/_reports/skip_report.md
+inspection_cases_bundle/api_data/_reports/summary.json
 ```
 
 report에는 최소한 다음 항목을 포함합니다.

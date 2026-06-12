@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Synchronize API inspection_script fields back to matched local script.py files.
+
+This helper relies on match_raw_data_commands.py output and updates only the
+script_path selected by that match result. It validates all API scripts before
+--write and writes a backup manifest for existing script.py files.
+"""
 
 from __future__ import annotations
 
@@ -16,10 +22,10 @@ import sys
 from pathlib import Path
 
 try:
-    from . import fetch_hpux_inspection_details as api
+    from . import fetch_inspection_details as api
     from . import match_raw_data_commands
 except ImportError:
-    import fetch_hpux_inspection_details as api
+    import fetch_inspection_details as api
     import match_raw_data_commands
 
 
@@ -76,6 +82,9 @@ def sha256_text(text: str) -> str:
 
 
 def script_path_for_match(match: dict) -> Path:
+    script_path = str(match.get("script_path") or "").strip()
+    if script_path:
+        return Path(script_path)
     raw_data_path = Path(match["raw_data_path"])
     return raw_data_path.parent / "script.py"
 
@@ -131,6 +140,8 @@ def build_plan() -> dict:
             "inspection_command": match.get("inspection_command"),
             "raw_data_path": match.get("raw_data_path"),
             "script_path": str(script_path),
+            "match_strategy": match.get("match_strategy", ""),
+            "expected_script": match.get("expected_script", ""),
             "script_exists": script_path.exists(),
             "api_script_length": len(api_script),
             "old_script_length": len(old_script),

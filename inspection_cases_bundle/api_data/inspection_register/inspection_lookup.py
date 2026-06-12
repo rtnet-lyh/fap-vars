@@ -45,6 +45,33 @@ def _parse_markdown_sections(text: str, pattern: re.Pattern[str]) -> dict[str, s
     return sections
 
 
+
+
+def _find_api_data_dir(path: Path) -> Path:
+    for parent in path.resolve().parents:
+        if parent.name == "api_data":
+            return parent
+    raise ValueError(f"api_data 디렉터리를 찾지 못했습니다: {path}")
+
+
+def _resolve_context_path(api_data_dir: Path) -> Path:
+    context_path = api_data_dir / "api_context.md"
+    if context_path.exists():
+        return context_path
+    legacy_path = api_data_dir / "session.md"
+    if legacy_path.exists():
+        return legacy_path
+    raise ValueError(f"api_context.md 파일이 없습니다: {context_path}")
+
+
+
+def _normalize_jsessionid(value: str) -> str:
+    text = str(value or "").strip().strip('",')
+    match = re.search(r"JSESSIONID=([^;\s,\"]+)", text)
+    if match:
+        return match.group(1)
+    return text
+
 def _extract_available_values_from_error(message: str) -> list[str]:
     match = re.search(r"가능한 값:\s*\[(?P<values>.*)\]\s*$", str(message or ""))
     if not match:
@@ -104,19 +131,17 @@ class InspectionLookupClient:
     @staticmethod
     def _load_session_config(md_path: str | Path) -> dict[str, str]:
         md_file = Path(md_path).resolve()
-        api_data_dir = md_file.parents[3]
-        session_path = api_data_dir / "session.md"
-        if not session_path.exists():
-            raise ValueError(f"session.md 파일이 없습니다: {session_path}")
+        api_data_dir = _find_api_data_dir(md_file)
+        context_path = _resolve_context_path(api_data_dir)
 
-        sections = _parse_markdown_sections(session_path.read_text(encoding="utf-8"), SESSION_PATTERN)
+        sections = _parse_markdown_sections(context_path.read_text(encoding="utf-8"), SESSION_PATTERN)
 
-        session_id = _clean(sections.get("SESSION_ID", ""))
+        session_id = _normalize_jsessionid(_clean(sections.get("SESSION_ID", "") or sections.get("JSESSIONID", "")))
         base_url = _clean(sections.get("URL", ""))
         language = _clean(sections.get("language", "")) or "ko-KR"
 
         if not session_id:
-            raise ValueError("SESSION_ID 값이 없습니다.")
+            raise ValueError("SESSION_ID 또는 JSESSIONID 값이 없습니다.")
         if not base_url:
             raise ValueError("URL 값이 없습니다.")
 
@@ -124,7 +149,7 @@ class InspectionLookupClient:
             "base_url": base_url.rstrip("/"),
             "jsessionid": session_id,
             "language": language,
-            "session_path": str(session_path),
+            "context_path": str(context_path),
         }
 
     @classmethod
