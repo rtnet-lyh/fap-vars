@@ -98,6 +98,7 @@
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md",
       "dry_run": true,
       "match_strategy": "same_parent:exact"
+      "dry_run": true
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md",
