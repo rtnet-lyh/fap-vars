@@ -1,375 +1,564 @@
-# Inspection Register 작업 규칙
+# Inspection Register Workflow
 
-이 문서는 `inspection_cases_bundle/api_data/inspection_register/` 작업 흐름을 설명한다.
+이 문서는 `inspection_cases_bundle/api_data/inspection_register/` 도구를 Codex CLI가 혼동 없이 사용할 수 있도록 정리한 실행 지침입니다.
 
-이 문서만 읽어도 다음 세션에서 사용자가 아래처럼 말했을 때 바로 작업할 수 있어야 한다.
+핵심 원칙은 다음과 같습니다.
+
+1. **등록/수정 기준 문서는 `api_data/os/**/*.md`입니다.**
+2. **API 접속 정보는 `api_data/api_context.md`만 우선 사용합니다.** `session.md`는 legacy fallback입니다.
+3. **`--execute` 또는 `--write`가 없는 명령은 서버/파일에 쓰지 않는 검증 단계로 취급합니다.**
+4. **live API 호출은 사용자가 명시적으로 요청한 경우에만 수행합니다.** 문서 정리, parser/generator 검증, fixture 테스트에서는 호출하지 않습니다.
+5. **`type_name`, `area_name`, `application_type`은 고정값으로 가정하지 않습니다.** 문서 또는 API 응답 값을 우선 사용하고, CLI fallback은 명시된 경우에만 사용합니다.
+
+---
+
+## 1. 디렉터리와 역할
 
 ```text
-API로 서버에 등록해주세요.
+inspection_cases_bundle/
+├── raw_data/                         # 원천 Markdown 정본
+├── inspection_cases/                 # replay case: case.json, script.py, replay.json
+└── api_data/
+    ├── api_context.md                # API 작업 context
+    ├── os/                           # 등록/수정 기준 Markdown
+    ├── _reports/                     # raw/case -> api_data/os 생성 리포트
+    └── inspection_register/          # API 등록/조회/생성/동기화 도구
 ```
 
-## 목적
+`api_data/os` Markdown의 표준 경로는 아래 형식입니다.
 
-- 목적은 `api_data/os/<os>/*.md` 파일을 기준으로 내부 API 서버에 점검 항목을 등록하는 것이다.
-- 등록 전에는 반드시 lookup API를 먼저 호출해 필요한 id 값을 조회해야 한다.
-- 등록 API 호출은 `inspection_create.py`가 담당한다.
+```text
+inspection_cases_bundle/api_data/os/<category_name>/<application_type>/<application>/<case_name>.md
+```
 
-## 입력 파일
+`raw_data` 원천 Markdown의 권장 경로는 아래 형식입니다.
 
-등록 작업의 기준 입력은 아래 파일들이다.
+```text
+inspection_cases_bundle/raw_data/<category>/<application_type>/<application>/<case>.md
+```
 
-1. `api_data/os/<os>/<case_name>.md`
-2. `api_data/api_context.md`
+---
 
-### 1. `api_data/os/<os>/<case_name>.md`
+## 2. 표준 입력 스펙
 
-이 파일에서 아래 값을 읽는다.
+### 2.1 `api_data/api_context.md`
 
-- `type_name`
-- `area_name`
-- `category_name`
-- `application_type`
-- `application`
-- `inspection_code`
-- `inspection_name`
-- `inspection_content`
-- `inspection_command`
-- `inspection_output`
-- `description`
-- `thresholds`
-- `inspection_script`
-- `is_required`
+`api_context.md`는 session 전용 파일이 아니라 API 작업 전체의 context 파일입니다.
 
-### 2. `api_data/api_context.md`
+필수/권장 값은 다음과 같습니다.
 
-이 파일에서 아래 값을 읽는다.
-
-- `SESSION_ID`
-- `URL`
-- `language`
-
-이 값은 lookup API 호출과 create API 호출에 모두 사용한다.
-
-
-## 표준 입력/출력 스키마
-
-### `api_data/api_context.md`
-
-`api_context.md`는 세션 전용 파일이 아니라 API 작업 전체의 context 파일이다. 아래 값은 현재 등록, 조회, fetch 계열 도구가 공통으로 사용하는 표준 값이다.
-
-| section | 필수 여부 | 사용처 | 비고 |
+| section | 필수 여부 | 사용 도구 | 설명 |
 | --- | --- | --- | --- |
-| `URL` | 필수 | lookup, create, update, fetch | API 서버 base URL |
-| `SESSION_ID` 또는 `JSESSIONID` | 필수 | lookup, create, update, fetch | 쿠키의 JSESSIONID 값으로 사용 |
-| `language` | 선택 | lookup, create, update, fetch | 없으면 `ko-KR` 기본값 |
-| `application_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
-| `type_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
+| `URL` | 필수 | lookup/create/update/fetch | API base URL |
+| `SESSION_ID` 또는 `JSESSIONID` | 필수 | lookup/create/update/fetch | 쿠키 `JSESSIONID` 값 |
+| `language` | 권장 | lookup/create/update/fetch | 없으면 보통 `ko-KR` 기본값 |
+| `application_name` | fetch/match/sync에서 필요 | fetch/match/sync | `/data/inspection/items` 목록 필터 또는 raw 필터 |
+| `type_name` | fetch/match/sync에서 필요 | fetch/match/sync | `/data/inspection/items` 목록 필터 |
 
-`item_id`, `item_ids`, `mapping_id`는 `api_context.md`에 넣지 않는다. fetch 흐름은 `/data/inspection/items` 목록 응답 row의 `item_id`, `mapping_id`를 사용해 상세 API를 조회한다.
+금지 사항:
 
-### `api_data/os/**/*.md`
-
-`api_data/os` Markdown의 표준은 `inspection_create.py`의 `parse_api_data_md()`가 읽는 영문 section이다. 신규 등록, 수정, JSON 변환, raw/case 변환의 최종 Markdown은 이 형식을 따라야 한다.
-
-| section | 필수 여부 | payload key |
-| --- | --- | --- |
-| `type_name` | 필수 | `type_name`, lookup `inspection_type` |
-| `area_name` | 필수 | `area_name`, lookup `area` |
-| `category_name` | 필수 | `category_name`, lookup `category` |
-| `application_type` | 필수 | `application_type_name`, lookup `application_type` |
-| `application` | 필수 | `application_name`, lookup `application` |
-| `inspection_code` | 필수 | `inspection_code` |
-| `is_required` | 필수 | `is_required` (`필수`이면 `1`, 그 외 `0`) |
-| `inspection_name` | 필수 | `inspection_name` |
-| `inspection_content` | 필수 | `inspection_content` |
-| `inspection_command` | 필수 | `inspection_command` |
-| `inspection_output` | 필수 | `inspection_output` |
-| `description` | 필수 | `description` |
-| `thresholds` | 선택 | `thresholds` |
-| `inspection_script` | 필수 | `inspection_script` |
-
-`type_name`과 `area_name`은 항상 고정값이라고 가정하지 않는다. raw/case 기반 생성 시에는 `generate_os_md_from_cases.py --type-name ... --area-name ...`로 조정할 수 있다.
-
-### fetch JSON
-
-`fetch_inspection_details.py`의 JSON 출력은 서버 목록 row와 상세 API 응답을 병합한 배열이다. 각 원소는 이후 `generate_os_md_from_api_json.py`가 Markdown으로 변환할 수 있는 아래 key를 기준으로 한다.
-
-| key | 출처 | 비고 |
-| --- | --- | --- |
-| `item_id` | 목록 row | 상세 조회 대상 |
-| `mapping_id` | 목록 row | 상세 응답의 target mapping 선택 |
-| `type_name` | 상세 `item` | Markdown `type_name` |
-| `area_name` | 상세 `item` | Markdown `area_name` |
-| `category_name` | 상세 `item` | output path segment 1 |
-| `inspection_code` | 상세 `item` | Markdown `inspection_code` |
-| `inspection_name` | 상세 `item` | Markdown `inspection_name` |
-| `inspection_content` | 상세 `item` | Markdown `inspection_content` |
-| `application_type_name` 또는 `application_type` | 상세 mapping 또는 fallback | output path segment 2 |
-| `application_name` | 상세 mapping | output path segment 3 |
-| `inspection_command` | 상세 mapping | Markdown `inspection_command` |
-| `inspection_output` | 상세 mapping | Markdown `inspection_output` |
-| `description` | 상세 mapping | Markdown `description` |
-| `inspection_script` | 상세 mapping | Markdown `inspection_script` |
-| `thresholds` | optional thresholds API | `--include-thresholds`일 때만 포함 |
-
-### legacy Markdown parser
-
-`inspection_md_parser.py`는 표준 `api_data/os` parser가 아니다. 한글 heading 기반 과거 문서를 migration/compatibility 목적으로 읽는 legacy parser이며, 표준 운영 플로우는 `inspection_create.py`의 `parse_api_data_md()`를 기준으로 한다.
-
-## lookup 단계
-
-등록 전에 반드시 `inspection_lookup.py`를 사용해 아래 값을 조회한다.
-
-- `type_id`
-- `area_id`
-- `category_id`
-- `application_type_id`
-- `application_id`
-
-lookup 결과는 최종적으로 아래 구조를 채운다.
-
-```python
-{
-    "type_id": type_id,
-    "type_name": inspection_type,
-    "area_id": area_id,
-    "area_name": area,
-    "category_id": category_id,
-    "category_name": category,
-    "application_type_id": application_type_id,
-    "application_type_name": application_type,
-    "application_id": application_id,
-    "application_name": application,
-}
-```
-
-### lookup 실패 시 재시도 규칙
-
-lookup 단계에서 특정 `*name` 값을 찾지 못하면 바로 종료하지 말고, 먼저 API가 반환한 가능한 값을 확인한 뒤 같은 의미의 서버 실제 값으로 한 번 더 재시도한다.
-
-특히 `category_name`은 md 문서 값과 서버 lookup 값이 다를 수 있으므로 아래 순서로 처리한다.
-
-1. md의 `category_name`으로 먼저 lookup을 시도한다.
-2. 실패하면 오류 메시지의 `가능한 값: ...` 목록을 확인한다.
-3. 같은 의미의 서버 실제 값이 있으면 그 값으로 다시 lookup 한다.
-4. 재시도에 성공하면 그 값을 사용해 다음 create 단계로 진행한다.
-5. 가능한 값 목록에도 대응되는 값이 없으면 그때 실패로 보고 중단한다.
-
-대표 예시는 아래와 같다.
-
-- `category_name=LOG` 로 실패하고 가능한 값이 `CPU, Cluster, DISK, MEMORY, Network, OS, 로그, 커널` 이면 `로그`로 다시 lookup 한다.
-- `category_name=KERNAL` 로 실패하고 가능한 값이 `CPU, Cluster, DISK, MEMORY, Network, OS, 로그, 커널` 이면 `커널`로 다시 lookup 한다.
-
-즉, 문서 값이 영문 대문자 분류여도 서버가 한글 분류 체계를 쓰고 있으면 가능한 값 기준으로 서버 값을 선택해 재조회해야 한다.
-
-## create 단계
-
-`inspection_create.py`는 아래 순서로 동작해야 한다.
-
-1. `api_data/os/<os>/<case_name>.md`를 읽는다.
-2. 공용 `api_data/api_context.md`를 읽는다.
-3. `inspection_lookup.py`를 호출해 lookup id들을 가져온다.
-4. md에서 읽은 나머지 값과 lookup id를 합쳐 payload를 만든다.
-5. `/data/inspection/items`로 POST 요청을 보낸다.
-
-## update 단계
-
-이미 서버에 등록된 `api_data/os/<os>/*.md` 항목을 md 기준으로 수정할 때는 `inspection_update.py`를 사용한다.
-
-`inspection_update.py`는 아래 순서로 동작한다.
-
-1. `api_data/os/<os>/*.md` 또는 `--recursive` 지정 시 하위 `*.md`를 읽는다.
-2. 공용 `api_data/api_context.md`를 읽어 `JSESSIONID`와 `Language` 쿠키를 설정한다.
-3. `/data/inspection/items/search`를 `application/x-www-form-urlencoded` POST로 호출해 서버 항목 목록을 가져온다. 기본 `search_data`는 빈 문자열이며 전체 검색 형태로 조회한다.
-4. 서버 응답에서 `inspection_code`와 `application_name`이 md의 `inspection_code`, `application`과 일치하는 항목을 찾는다.
-5. 매칭된 서버 항목의 `id`, `item_id`, `mapping_id`, `cve_id`, `importance`, `application_family_id`, `application_version_id`를 보존한다.
-6. md 값과 lookup id를 합쳐 PATCH payload를 만든다.
-7. `/data/inspection/items`로 PATCH 요청을 보낸다.
-
-PATCH payload는 기존 서버 식별자와 md 기준 값을 결합한다.
-
-```python
-{
-    "id": existing["id"],
-    "item_id": existing["item_id"],
-    "mapping_id": existing["mapping_id"],
-    "type_id": resolved["type_id"],
-    "type_name": resolved["type_name"],
-    "area_id": resolved["area_id"],
-    "area_name": resolved["area_name"],
-    "category_id": resolved["category_id"],
-    "category_name": resolved["category_name"],
-    "application_type_id": resolved["application_type_id"],
-    "application_type_name": resolved["application_type_name"],
-    "application_id": resolved["application_id"],
-    "application_name": resolved["application_name"],
-    "inspection_code": parsed["inspection_code"],
-    "inspection_name": parsed["inspection_name"],
-    "inspection_content": parsed["inspection_content"],
-    "inspection_command": parsed["inspection_command"],
-    "inspection_output": parsed["inspection_output"],
-    "description": parsed["description"],
-    "inspection_script": parsed["inspection_script"],
-    "is_required": parsed["is_required"],
-    "thresholds": parsed["thresholds"],
-    "revision_num": revision_num,
-    "is_fix": False,
-}
-```
-
-서버에 없는 항목이 있으면 기본적으로 중단한다. 누락 항목을 먼저 생성한 뒤 수정까지 이어가야 하면 `--create-missing --execute`를 같이 사용한다.
-
-## 진행 규칙
-
-사용자가 `"API로 서버에 등록해주세요."`라고 하면 아래 순서로 진행한다.
-
-1. 사용자가 기준으로 삼을 `api_data/os/<os>/<case_name>.md` 파일을 확인한다.
-2. `api_data/api_context.md`가 있는지 확인한다.
-3. `inspection_lookup.py`를 통해 id 조회가 정상 수행되는지 먼저 확인한다.
-4. id 조회가 성공하면 `inspection_create.py`로 payload preview를 만들거나 바로 등록한다.
-5. 등록 API 응답을 확인한다.
-6. 성공/실패 결과를 사용자에게 간단히 보고한다.
-
-사용자가 `"api_data/os/<os>/*.md 기준으로 서버 항목을 수정해주세요."`라고 하면 아래 순서로 진행한다.
-
-1. `inspection_update.py --os <os>`로 dry-run을 먼저 실행해 매칭 결과를 확인한다.
-2. `missing` 항목이 없으면 `inspection_update.py --os <os> --execute`로 PATCH 수정한다.
-3. `missing` 항목이 있으면 사용자의 의도에 따라 `inspection_update.py --os <os> --create-missing --execute`로 누락 항목을 POST 생성한 뒤 PATCH 수정한다.
-4. 실행 후 다시 `inspection_update.py --os <os>` dry-run을 실행해 `matched`, `missing`, payload 준비 상태를 검증한다.
-
-## 중단 조건
-
-아래 경우에는 다음 단계로 진행하지 말고 즉시 중단한다.
-
-- md 파일에 lookup에 필요한 `*name` 값이 없을 때
-- `api_context.md`에 `SESSION_ID` 또는 `URL` 값이 없을 때
-- lookup API가 id를 반환하지 못하고, 가능한 값 기준 재시도도 실패할 때
-- update 단계에서 `inspection_code + application_name` 기준 서버 항목이 여러 개 매칭될 때
-- update 단계에서 서버 항목의 `id`, `item_id`, `mapping_id` 등 PATCH 필수 식별자가 없을 때
-- 세션 오류, 위치 제한, 인증 실패 등으로 API 접근이 거부될 때
-
-이 경우에는 어떤 값이 없는지 또는 어떤 API 단계에서 실패했는지 분명하게 알려준다.
+- `item_id`, `item_ids`, `mapping_id`를 `api_context.md`에 추가하지 않습니다.
+- 상세 조회가 필요하면 `/data/inspection/items` 목록 응답 row의 `item_id`, `mapping_id`를 사용합니다.
 
 예시:
 
-- `type_name 값이 없습니다.`
-- `SESSION_ID 값이 없습니다.`
-- `category_name 값을 API에서 찾지 못했습니다.`
-- `category_name=LOG 조회에 실패했고 가능한 값 [CPU, Cluster, DISK, MEMORY, Network, OS, 로그, 커널] 기준으로 로그로 재시도했으나 여전히 찾지 못했습니다.`
-- `lookup API 호출은 되었지만 accessfromanotherlocation 오류로 중단합니다.`
+```md
+# URL
 
-## 성공 판정
+https://example.internal
 
-아래 두 조건을 만족하면 등록 성공으로 본다.
+# JSESSIONID
 
-1. lookup API가 필요한 모든 id를 정상 반환한다.
-2. create API 응답이 성공 상태를 반환한다.
+xxxxxxxxxxxxxxxx
 
-예시 성공 응답:
+# language
 
-```python
-{"status": "success", "message": None, "data": None}
+ko-KR
+
+# application_name
+
+rocky
+
+# type_name
+
+정기점검
 ```
 
-## 현재 구현 기준
+### 2.2 `api_data/os/**/*.md`
 
-현재 구현은 아래와 같이 동작한다.
+표준 parser는 `inspection_create.py`의 `parse_api_data_md()`입니다. 이 parser가 읽는 영문 section을 표준으로 사용합니다.
+
+| section | 설명 |
+| --- | --- |
+| `type_name` | 점검 유형 이름 |
+| `area_name` | 점검 분야 이름 |
+| `category_name` | 점검 분류 이름 |
+| `application_type` | 애플리케이션/OS 계열 이름 |
+| `application` | 제품/애플리케이션 이름 |
+| `inspection_code` | 점검 코드 |
+| `is_required` | `필수`이면 required 처리 |
+| `inspection_name` | 점검 항목명 |
+| `inspection_content` | 점검 내용 |
+| `inspection_command` | 점검 명령 |
+| `inspection_output` | 예시 출력 |
+| `description` | 설명 |
+| `thresholds` | 선택: threshold 배열/텍스트 |
+| `inspection_script` | 등록/수정할 Python script 내용 |
+
+`inspection_md_parser.py`는 한글 heading 기반 과거 문서 호환용 legacy parser입니다. 신규 표준 플로우에서는 직접 사용하지 말고 `parse_api_data_md()` 기준으로 판단합니다.
+
+### 2.3 fetch JSON
+
+`fetch_inspection_details.py` 출력 JSON은 `/data/inspection/items` 목록 row와 상세 API 응답을 합친 데이터입니다. 이후 `generate_os_md_from_api_json.py`가 이 JSON을 `api_data/os` Markdown으로 변환합니다.
+
+주요 key:
+
+- 목록 row 기준: `item_id`, `mapping_id`, `inspection_code`, `inspection_name`, `category_name`, `application_name`, `inspection_command`
+- 상세 응답 기준: `type_name`, `area_name`, `inspection_content`, `application_type_name` 또는 `application_type`, `inspection_output`, `description`, `inspection_script`
+- `--include-thresholds`를 지정한 경우에만 `thresholds` 포함
+
+---
+
+## 3. Codex Agent 공통 작업 규칙
+
+### 3.1 작업 전 확인
+
+항상 먼저 확인합니다.
+
+```bash
+git status --short
+```
+
+다음 파일이 있는지 확인합니다.
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+for path in [
+    Path('inspection_cases_bundle/api_data/api_context.md'),
+    Path('inspection_cases_bundle/api_data/os'),
+    Path('inspection_cases_bundle/api_data/inspection_register'),
+]:
+    print(path, 'OK' if path.exists() else 'MISSING')
+PY
+```
+
+### 3.2 API 호출 안전 규칙
+
+- `inspection_create.py`는 `--execute`가 없으면 POST하지 않습니다.
+- `inspection_update.py`는 `--execute`가 없으면 PATCH/POST하지 않습니다.
+- `sync_scripts_from_api.py`는 `--write`가 없으면 `script.py`를 덮어쓰지 않습니다.
+- `fetch_inspection_details.py`, `match_raw_data_commands.py`, `sync_scripts_from_api.py`는 서버 조회가 필요하므로 사용자가 API 호출을 명시했을 때만 실행합니다.
+- 운영 DB/API/credential에 쓰는 명령은 사용자 요청 범위 안에서만 실행합니다.
+
+### 3.3 권장 검증 명령
+
+코드 변경 후 최소 검증:
+
+```bash
+python3 -m unittest discover inspection_cases_bundle/api_data/inspection_register
+python3 -m py_compile inspection_cases_bundle/api_data/inspection_register/*.py
+git diff --check
+```
+
+---
+
+## 4. 일반 등록 플로우: `api_data/os` Markdown → 서버 POST
+
+대상 도구:
 
 - `inspection_lookup.py`
-  - `api_data/os/<os>/<case_name>.md`에서 lookup용 `*name` 값을 읽는다.
-  - `api_data/api_context.md`에서 세션 정보를 읽는다.
-  - 내부 lookup API를 호출해 id를 조회한다.
-  - lookup 실패 시 가능한 값 목록을 확인해 같은 의미의 서버 실제 값으로 재시도할 수 있어야 한다.
-
 - `inspection_create.py`
-  - `api_data/os/<os>/<case_name>.md`를 직접 읽는다.
-  - `inspection_lookup.py` 결과를 이용해 payload에 id를 연결한다.
-  - `/data/inspection/items`로 POST 요청을 보낸다.
 
-## 빠른 실행 예시
+### Agent 지침
 
-기준 md 파일이 아래일 때:
+1. 기준 Markdown이 `api_data/os/**/*.md` 표준 section을 갖는지 확인합니다.
+2. `api_context.md`에서 `URL`, `SESSION_ID`/`JSESSIONID`, `language`를 확인합니다.
+3. lookup은 `type_name`, `area_name`, `category_name`, `application_type`, `application`으로 id를 찾습니다.
+4. lookup 실패 시 가능한 값 목록이 있으면 의미가 같은 서버 값으로 재시도할 수 있습니다.
+5. 등록은 반드시 preview 후 실행합니다.
+6. 사용자가 실제 등록을 요청했을 때만 `--execute`를 붙입니다.
+
+### 수동 실행
+
+단일 파일 preview:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_create.py \
+  --md-file inspection_cases_bundle/api_data/os/<category>/<application_type>/<application>/<case>.md
+```
+
+단일 파일 실제 POST:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_create.py \
+  --md-file inspection_cases_bundle/api_data/os/<category>/<application_type>/<application>/<case>.md \
+  --execute
+```
+
+디렉터리 preview:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_create.py \
+  --md-dir inspection_cases_bundle/api_data/os/<category>/<application_type>/<application> \
+  --recursive
+```
+
+특정 코드만 실제 POST:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_create.py \
+  --md-dir inspection_cases_bundle/api_data/os/<category>/<application_type>/<application> \
+  --recursive \
+  --code <inspection_code> \
+  --execute
+```
+
+---
+
+## 5. 일반 수정 플로우: `api_data/os` Markdown → 서버 PATCH
+
+대상 도구:
+
+- `inspection_update.py`
+- `inspection_lookup.py`
+- 필요 시 `inspection_create.py`
+
+### Agent 지침
+
+1. update는 기본적으로 full-search입니다. `--search-data` 기본값은 빈 문자열입니다.
+2. 서버 항목 매칭 기준은 `inspection_code + application_name`입니다.
+3. 매칭된 서버 항목의 기존 식별자(`id`, `item_id`, `mapping_id` 등)는 보존합니다.
+4. `--execute`가 없으면 PATCH하지 않고 preview/match만 수행합니다.
+5. 서버에 없는 항목을 자동 생성하려면 사용자가 명시한 경우에만 `--create-missing --execute`를 사용합니다.
+6. 중복 매칭 또는 PATCH 필수 식별자 누락 시 중단합니다.
+
+### 수동 실행
+
+OS 하위 폴더 preview:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_update.py \
+  --os <category_or_os_folder> \
+  --recursive
+```
+
+직접 디렉터리 preview:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_update.py \
+  --md-dir inspection_cases_bundle/api_data/os/<category>/<application_type>/<application> \
+  --recursive
+```
+
+특정 코드 PATCH:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_update.py \
+  --md-dir inspection_cases_bundle/api_data/os/<category>/<application_type>/<application> \
+  --recursive \
+  --code <inspection_code> \
+  --execute
+```
+
+누락 항목을 생성한 뒤 PATCH까지 진행해야 할 때:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_update.py \
+  --md-dir inspection_cases_bundle/api_data/os/<category>/<application_type>/<application> \
+  --recursive \
+  --create-missing \
+  --execute
+```
+
+---
+
+## 6. raw/case 기반 Markdown 생성: `raw_data + inspection_cases` → `api_data/os`
+
+대상 도구:
+
+- `generate_os_md_from_cases.py`
+
+### 목적
+
+`inspection_cases_bundle/raw_data/**/*.md`, `inspection_cases/**/case.json`, `inspection_cases/**/script.py`를 조합해 표준 `api_data/os/**/*.md`를 생성합니다.
+
+### Agent 지침
+
+1. raw 정본은 가능하면 `inspection_cases_bundle/raw_data/<category>/<application_type>/<application>/<case>.md`를 사용합니다.
+2. `script.py` 위치는 `resolve_case_dir()` 결과를 따릅니다.
+3. report root는 `inspection_cases_bundle/api_data/_reports`입니다.
+4. `type_name`, `area_name`은 고정값으로 가정하지 말고 필요한 경우 CLI로 지정합니다.
+5. 먼저 `--dry-run`으로 생성/skip/warning 리포트를 확인합니다.
+6. 실제 파일 생성은 사용자가 요청했을 때만 `--overwrite` 여부를 결정해 실행합니다.
+
+### 수동 실행
+
+Dry-run:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py \
+  --raw-root inspection_cases_bundle/raw_data \
+  --case-root inspection_cases_bundle/inspection_cases \
+  --output-root inspection_cases_bundle/api_data/os \
+  --report-root inspection_cases_bundle/api_data/_reports \
+  --type-name '<type_name>' \
+  --area-name '<area_name>' \
+  --dry-run
+```
+
+실제 생성:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py \
+  --raw-root inspection_cases_bundle/raw_data \
+  --case-root inspection_cases_bundle/inspection_cases \
+  --output-root inspection_cases_bundle/api_data/os \
+  --report-root inspection_cases_bundle/api_data/_reports \
+  --type-name '<type_name>' \
+  --area-name '<area_name>'
+```
+
+기존 Markdown까지 덮어쓰기:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py \
+  --raw-root inspection_cases_bundle/raw_data \
+  --case-root inspection_cases_bundle/inspection_cases \
+  --output-root inspection_cases_bundle/api_data/os \
+  --report-root inspection_cases_bundle/api_data/_reports \
+  --type-name '<type_name>' \
+  --area-name '<area_name>' \
+  --overwrite
+```
+
+---
+
+## 7. API JSON 기반 Markdown 생성: fetch JSON → `api_data/os`
+
+대상 도구:
+
+- `fetch_inspection_details.py`
+- `generate_os_md_from_api_json.py`
+
+### Agent 지침
+
+1. fetch는 사용자가 live API 조회를 명시했을 때만 실행합니다.
+2. `fetch_inspection_details.py`는 `api_context.md`의 `URL`, `SESSION_ID`/`JSESSIONID`, `language`, `application_name`, `type_name`을 사용합니다.
+3. `api_context.md`에서 `item_id`/`item_ids`를 읽지 않습니다.
+4. 목록 API row의 `item_id`, `mapping_id`로 상세 API를 조회합니다.
+5. thresholds는 `--include-thresholds`가 있을 때만 조회합니다.
+6. JSON → Markdown 변환 시 `application_type_name` 또는 `application_type`을 우선 사용하고, 없을 때만 `--application-type` fallback을 사용합니다.
+7. 생성 후 `parse_api_data_md()` round-trip 검증을 수행합니다.
+
+### 수동 실행
+
+Fetch:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/fetch_inspection_details.py \
+  --context inspection_cases_bundle/api_data/api_context.md \
+  --output inspection_cases_bundle/api_data/inspection_register/outputs/<application_name>_inspection_details.json
+```
+
+Threshold 포함 fetch:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/fetch_inspection_details.py \
+  --context inspection_cases_bundle/api_data/api_context.md \
+  --output inspection_cases_bundle/api_data/inspection_register/outputs/<application_name>_inspection_details.json \
+  --include-thresholds
+```
+
+JSON → Markdown dry-run:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_api_json.py \
+  --input inspection_cases_bundle/api_data/inspection_register/outputs/<application_name>_inspection_details.json \
+  --output-root inspection_cases_bundle/api_data/os \
+  --application-type '<fallback_application_type>' \
+  --dry-run
+```
+
+실제 생성:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_api_json.py \
+  --input inspection_cases_bundle/api_data/inspection_register/outputs/<application_name>_inspection_details.json \
+  --output-root inspection_cases_bundle/api_data/os \
+  --application-type '<fallback_application_type>'
+```
+
+덮어쓰기:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_api_json.py \
+  --input inspection_cases_bundle/api_data/inspection_register/outputs/<application_name>_inspection_details.json \
+  --output-root inspection_cases_bundle/api_data/os \
+  --application-type '<fallback_application_type>' \
+  --overwrite
+```
+
+---
+
+## 8. API 기존 항목과 로컬 script.py 연결/역동기화 보조 플로우
+
+대상 도구:
+
+- `match_raw_data_commands.py`
+- `sync_scripts_from_api.py`
+
+이 플로우는 create/update 일반 등록 플로우가 아닙니다. 서버에 이미 존재하는 항목의 `inspection_command` 등을 기준으로 로컬 raw Markdown 및 `script.py`를 찾고, 필요 시 API의 `inspection_script`를 로컬 `script.py`로 역동기화하는 보조 도구입니다.
+
+### 8.1 `match_raw_data_commands.py`
+
+#### Agent 지침
+
+1. 서버 입력은 `/data/inspection/items` 목록 API 결과입니다.
+2. 서버 매칭 값은 `inspection_command`, `category_name`, `inspection_name`, `inspection_code`, `item_id`, `mapping_id`, `application_name`입니다.
+3. 로컬 raw 입력은 canonical `inspection_cases_bundle/raw_data/**/*.md`를 우선 사용합니다.
+4. `script.py` 위치는 `generate_os_md_from_cases.py`의 `resolve_case_dir()`와 같은 방식으로 찾습니다.
+5. match 결과에는 반드시 `raw_data_path`, `script_path`, `match_strategy`가 있어야 합니다.
+6. 결과 파일은 기본적으로 `inspection_cases_bundle/raw_data_command_matches.json`입니다.
+
+#### 수동 실행
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/match_raw_data_commands.py
+```
+
+결과에서 확인할 항목:
+
+- `matched_count`
+- `duplicate_api_count`
+- `unmatched_api_count`
+- `unmatched_raw_count`
+- 각 match의 `raw_data_path`, `script_path`, `match_strategy`
+
+### 8.2 `sync_scripts_from_api.py`
+
+#### Agent 지침
+
+1. 먼저 match를 수행해 `script_path`가 정확한지 확인합니다.
+2. sync는 match 결과의 `script_path`를 우선 사용합니다.
+3. API 상세 응답의 `inspection_script`를 검증합니다.
+4. `--write` 전 validation error가 있으면 중단합니다.
+5. `--write` 시 기존 `script.py` backup과 `backup_manifest.json`을 남깁니다.
+6. 사용자가 실제 역동기화를 요청하지 않으면 `--write`를 사용하지 않습니다.
+
+#### 수동 실행
+
+Validation report만 생성:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_api.py \
+  --report inspection_cases_bundle/api_script_sync_validation.json
+```
+
+실제 역동기화:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_api.py \
+  --report inspection_cases_bundle/api_script_sync_validation.json \
+  --write
+```
+
+unmatched 항목이 있어도 validation error가 없으면 일부만 쓰기:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_api.py \
+  --report inspection_cases_bundle/api_script_sync_validation.json \
+  --allow-partial \
+  --write
+```
+
+명시 backup 위치 사용:
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_api.py \
+  --report inspection_cases_bundle/api_script_sync_validation.json \
+  --backup-dir inspection_cases_bundle/api_data/inspection_register/backups/manual_sync \
+  --write
+```
+
+---
+
+## 9. 파일별 Agent 지침 요약
+
+| 파일 | 역할 | Agent가 지켜야 할 점 | 수동 실행 성격 |
+| --- | --- | --- | --- |
+| `inspection_lookup.py` | 이름 기반 id lookup client | `api_context.md` 우선, `session.md`는 legacy fallback만 허용 | 직접 CLI보다는 create/update 내부에서 사용 |
+| `inspection_create.py` | 표준 Markdown을 서버에 POST 등록 | `--execute` 없으면 POST 금지, 먼저 preview | `--md-file` 또는 `--md-dir`, `--recursive`, `--code`, `--execute` |
+| `inspection_update.py` | 표준 Markdown 기준 서버 PATCH 수정 | 기본 full-search, 매칭 기준은 `inspection_code + application_name`, `--execute` 없으면 PATCH 금지 | `--os` 또는 `--md-dir`, `--recursive`, `--code`, `--execute` |
+| `fetch_inspection_details.py` | 목록 API row 기반 상세 JSON fetch | `item_id(s)`를 context에서 읽지 않음, thresholds는 옵션 | `--context`, `--output`, `--include-thresholds` |
+| `generate_os_md_from_api_json.py` | fetch JSON을 `api_data/os` Markdown으로 변환 | JSON의 `application_type_name/application_type` 우선, fallback은 옵션 | `--input`, `--output-root`, `--application-type`, `--dry-run`, `--overwrite` |
+| `generate_os_md_from_cases.py` | raw/case/script 조합으로 `api_data/os` Markdown 생성 | report root는 `api_data/_reports`, `type_name/area_name`은 CLI로 조정 | `--raw-root`, `--case-root`, `--output-root`, `--report-root`, `--dry-run`, `--overwrite` |
+| `inspection_md_parser.py` | legacy 한글 heading parser | 표준 parser로 사용하지 않음 | 필요 시 migration/compatibility 테스트에서만 사용 |
+| `match_raw_data_commands.py` | API 목록 row와 raw/script 매칭 | create/update 아님, 결과에 `raw_data_path/script_path/match_strategy` 확인 | live API 목록 조회 후 JSON report 생성 |
+| `sync_scripts_from_api.py` | API `inspection_script`를 local `script.py`로 역동기화 | `script_path` 우선, validation error면 `--write` 중단, backup manifest 필수 | `--report`, `--write`, `--allow-partial`, `--backup-dir` |
+
+---
+
+## 10. 중단 조건
+
+아래 상황에서는 다음 단계로 진행하지 않고 사용자에게 원인과 필요한 값을 보고합니다.
+
+- `api_context.md`에 `URL` 또는 `SESSION_ID`/`JSESSIONID`가 없음
+- 표준 Markdown에 lookup 필수 값(`type_name`, `area_name`, `category_name`, `application_type`, `application`)이 없음
+- lookup 결과가 없고 가능한 값 기반 재시도도 실패함
+- update에서 `inspection_code + application_name` 기준 매칭이 0개 또는 여러 개임
+- PATCH에 필요한 서버 식별자(`id`, `item_id`, `mapping_id`)가 없음
+- sync validation error가 있음
+- match 결과의 `script_path`가 비어 있거나 의도한 case가 아님
+- 세션 만료, 인증 실패, 위치 제한 등으로 API 접근이 거부됨
+
+보고 예시:
 
 ```text
-/home/fap/projects/fap-vars/inspection_cases_bundle/api_data/os/solaris/solaris_memory_recognition_prtdiag_check.md
+중단: api_context.md에 JSESSIONID가 없습니다.
+중단: category_name=LOG를 서버 lookup에서 찾지 못했습니다. 가능한 값: [CPU, 로그, 커널]
+중단: CODE-001 + rocky 매칭 서버 항목이 2개입니다.
+중단: sync validation error가 있어 --write를 실행하지 않았습니다.
 ```
 
-실행 흐름은 아래와 같다.
+---
 
-1. `inspection_lookup.py`로 id 조회
-2. `inspection_create.py`로 payload 생성
-3. `inspection_create.py`로 등록 API POST 실행
+## 11. 자주 쓰는 작업별 최소 명령
 
-## 사용자 보고 방식
-
-등록이 성공하면 아래처럼 짧게 보고한다.
-
-- 어떤 md 파일로 진행했는지
-- lookup id 조회가 성공했는지
-- 등록 API 응답이 성공인지
-
-등록이 실패하면 아래를 포함해 보고한다.
-
-- 실패 단계
-- 실패 원인
-- 어떤 값 또는 어떤 API 응답 때문에 중단됐는지
-- 재시도한 값이 있으면 어떤 값으로 다시 조회했는지
-
-## 금지 사항
-
-- lookup 없이 바로 create API를 호출하지 않는다.
-- search API로 기존 서버 항목의 `id`, `item_id`, `mapping_id`를 확인하지 않고 PATCH를 호출하지 않는다.
-- `api_context.md` 값을 하드코딩해 고정하지 않는다.
-- md 값이 비어 있는데 임의 문자열로 대체하지 않는다.
-- 실패했는데 계속 다음 단계로 진행하지 않는다.
-
-## update 빠른 실행 예시
-
-Solaris md 항목을 서버 기존 항목에 반영하기 전 dry-run:
+### Markdown parser/generator 테스트만 수행
 
 ```bash
-python3 inspection_update.py --os solaris
+python3 -m unittest discover inspection_cases_bundle/api_data/inspection_register
 ```
 
-Solaris md 항목을 실제 PATCH 수정:
+### raw/case에서 `api_data/os` Markdown 생성 가능성 확인
 
 ```bash
-python3 inspection_update.py --os solaris --execute
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py \
+  --dry-run \
+  --report-root inspection_cases_bundle/api_data/_reports
 ```
 
-서버에 없는 항목을 먼저 생성한 뒤 전체 수정:
+### 등록 payload preview
 
 ```bash
-python3 inspection_update.py --os solaris --create-missing --execute
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_create.py \
+  --md-file <api_data/os markdown path>
 ```
 
-특정 코드만 확인 또는 수정:
+### 수정 매칭 preview
 
 ```bash
-python3 inspection_update.py --os solaris --code SVR-4-1
-python3 inspection_update.py --os solaris --code SVR-4-1 --execute
+python3 inspection_cases_bundle/api_data/inspection_register/inspection_update.py \
+  --md-dir <api_data/os directory> \
+  --recursive
 ```
 
-## API 상세 수집 및 JSON 기반 Markdown 생성
+### API JSON을 Markdown으로 변환 dry-run
 
-기존 서버에 등록된 특정 계열의 상세 값을 내려받을 때는 `fetch_inspection_details.py`를 사용한다. 이 도구는 `api_data/api_context.md`의 `URL`, `SESSION_ID` 또는 `JSESSIONID`, `language`, `application_name`, `type_name`을 읽고 `/data/inspection/items` 목록 API를 조회한다. 목록 응답 row에는 상세 조회에 필요한 `item_id`와 `mapping_id`가 포함되어 있으므로 `api_context.md`에 `item_id`를 별도로 넣어 직접 상세 조회하지 않는다.
-
-1. `/data/inspection/items` 목록 API를 `type_name`, `application_name` filter로 조회한다.
-2. 각 row의 `item_id`, `mapping_id`로 `/data/inspection/items/{item_id}` 상세 API를 조회한다.
-3. 상세 응답의 `mappings` 중 `mapping_id`가 일치하는 mapping에서 `application_name`, `inspection_command`, `inspection_output`, `description`, `inspection_script`를 가져온다.
-4. 기본 출력은 `api_data/inspection_register/outputs/<application_name>_inspection_details.json`이다.
-5. `--include-thresholds`를 지정한 경우에만 `/data/inspection/items/{item_id}/thresholds`도 추가 조회한다.
-
-수집된 JSON을 `api_data/os/<category_name>/<application_type>/<application>/<case_name>.md`로 변환할 때는 `generate_os_md_from_api_json.py`를 사용한다. `application_type`은 JSON의 `application_type_name` 또는 `application_type`을 우선 사용하고, 없으면 CLI `--application-type` 값을 fallback으로 사용한다.
-
-## `match_raw_data_commands.py`의 목적
-
-이 도구는 등록/수정용 일반 플로우가 아니라, 서버 API에 이미 존재하는 점검 항목과 로컬 replay case를 명령어 기준으로 연결하기 위한 보조 매칭 도구다.
-
-- 서버 쪽 입력: `fetch_inspection_details.py`와 같은 `/data/inspection/items` 목록 API 결과이며, `api_context.md`의 `type_name`, `application_name` filter로 가져온다.
-- 서버 쪽 매칭 값: 목록 row의 `inspection_command`, `category_name`, `inspection_name`, `inspection_code`, `item_id`, `mapping_id`, `application_name`이다.
-- 로컬 쪽 입력: 현재 구현 기준으로 `inspection_cases/**/raw_data.md` 파일이다.
-- 로컬 쪽 매칭 값: raw 문서의 `영역`, `세부 점검항목`, `명령어`이다.
-- 1차 매칭 키: 정규화한 `(inspection_command, category_name)`과 정규화한 `(명령어, 영역)`이다.
-
-매칭 결과는 `sync_scripts_from_api.py`가 API의 `inspection_script`를 어떤 로컬 `script.py`에 역동기화할지 결정하는 데 사용한다. 새 raw data 정본인 `inspection_cases_bundle/raw_data/**/*.md` 기준으로 재편할 때는 이 도구의 raw 탐색 위치도 함께 바꿔야 한다.
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_api_json.py \
+  --input <fetch output json> \
+  --output-root inspection_cases_bundle/api_data/os \
+  --dry-run
+```
