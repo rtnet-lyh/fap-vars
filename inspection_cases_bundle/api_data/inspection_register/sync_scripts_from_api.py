@@ -16,10 +16,10 @@ import sys
 from pathlib import Path
 
 try:
-    from . import fetch_hpux_inspection_details as api
+    from . import fetch_inspection_details as api
     from . import match_raw_data_commands
 except ImportError:
-    import fetch_hpux_inspection_details as api
+    import fetch_inspection_details as api
     import match_raw_data_commands
 
 

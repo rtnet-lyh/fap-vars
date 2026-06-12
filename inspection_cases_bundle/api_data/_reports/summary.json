@@ -3,7 +3,7 @@
   "raw_root": "inspection_cases_bundle/raw_data",
   "case_root": "inspection_cases_bundle/inspection_cases",
   "output_root": "inspection_cases_bundle/api_data/os",
-  "report_root": "inspection_cases_bundle/api_data/os/_reports",
+  "report_root": "inspection_cases_bundle/api_data/_reports",
   "total_raw_md": 294,
   "excluded_agents": 1,
   "excluded_reference": 3,
