@@ -42,7 +42,7 @@
     "inspection_command": "pyVmomi HostSystem.summary 및 HostServiceSystem.serviceInfo.service 조회",
     "is_service_affect": "N",
     "action_content": "vCenter 관리 대상인데 vpxa 또는 연결 상태가 비정상인 경우 vCenter Agent 통신 상태를 확인합니다.",
-    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_vcenter_agent_check",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_vcenter_agent_check",
     "replay_vcenter_agent_json_file": "outputs/vcenter_agent.json",
     "threshold_list": [
       {

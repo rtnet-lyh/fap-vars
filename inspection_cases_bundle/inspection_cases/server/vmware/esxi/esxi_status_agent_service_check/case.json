@@ -42,7 +42,7 @@
     "inspection_command": "pyVmomi HostServiceSystem.serviceInfo.service 조회",
     "is_service_affect": "N",
     "action_content": "hostd 또는 vCenter 관리 대상의 vpxa가 중지된 경우 ESXi 관리 Agent 상태와 vCenter 연동 상태를 확인합니다.",
-    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_status_agent_service_check",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_agent_service_check",
     "replay_agent_services_json_file": "outputs/agent_services.json",
     "threshold_list": [
       {

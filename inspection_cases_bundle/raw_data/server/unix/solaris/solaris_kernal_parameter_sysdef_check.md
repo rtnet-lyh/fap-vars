@@ -97,4 +97,4 @@ ulimit -n
 
 # inspection_script
 
-`inspection_cases/server/solaris/solaris_kernal_parameter_sysdef_check/script.py`를 정본으로 사용한다.
+`inspection_cases/server/unix/solaris/solaris_kernal_parameter_sysdef_check/script.py`를 정본으로 사용한다.

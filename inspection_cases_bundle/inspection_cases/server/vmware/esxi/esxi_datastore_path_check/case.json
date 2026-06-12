@@ -42,7 +42,7 @@
     "inspection_command": "pyVmomi Datastore.summary 목록 조회",
     "is_service_affect": "N",
     "action_content": "Datastore 접근 불가, 사용률 초과, 여유 공간 부족, 필수 Datastore 누락 시 스토리지 연결과 용량 상태를 확인합니다.",
-    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/esxi/esxi_datastore_path_check",
+    "replay_base_dir": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_datastore_path_check",
     "replay_datastore_json_file": "outputs/datastores.json",
     "threshold_list": [
       {
