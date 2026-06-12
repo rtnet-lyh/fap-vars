@@ -137,6 +137,13 @@ raw_data/network/nx_os/mds_c9148s/1_1_cpu.md
 inspection_cases/network/nx_os/mds_c9148s/1_1_cpu_check/script.py
 ```
 
+raw 파일명과 replay case 이름이 설명 suffix까지 다르지만 같은 점검 번호를 포함하는 경우를 위해, exact 및 `_check` fallback 실패 시 말단 case 이름에서 첫 번째 숫자 키(`1_1`, `2_4` 등)를 추출해 같은 부모 아래의 단일 matching case도 확인합니다. backup처럼 raw path에 vendor segment가 있고 replay case parent에는 vendor segment가 없는 기존 구조를 위해 `<category>/<application>/` parent도 함께 확인합니다.
+
+```text
+raw_data/backup/veritas/netbackup_appliance_5240/1_1_catalog.md
+inspection_cases/backup/netbackup_appliance_5240/nbu_1_1_catalog_backup_status_check/script.py
+```
+
 `script.py`가 없으면 출력 Markdown을 생성하지 않습니다. 이 파일은 skip report에 `missing_script` 사유로 기록합니다.
 
 ## raw Markdown heading 파싱 규칙

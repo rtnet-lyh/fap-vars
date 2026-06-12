@@ -7,2017 +7,2032 @@
   "total_raw_md": 294,
   "excluded_agents": 1,
   "excluded_reference": 3,
-  "generated_count": 263,
-  "skipped_count": 27,
+  "generated_count": 278,
+  "skipped_count": 12,
   "warning_count": 0,
   "skip_reasons": {
-    "missing_script": 27
+    "missing_script": 12
   },
   "warning_reasons": {},
   "generated": [
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/1_1_catalog.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_1_1_catalog_backup_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_1_catalog.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/1_2_swlog.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_1_2_backup_job_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_2_swlog.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_1_tape_device_recognition_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_2_tape_drive_active_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_3_tape_media_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_4_disk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_4_disk_fault_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_4_disk.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_5_schedule.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_5_schedule_backup_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_5_schedule.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_6_etc.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_2_6_hardware_sensor_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_6_etc.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_3_1_capacity_and_listen_port_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/backup/netbackup_appliance_5240/nbu_4_1_software_job_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md",
+      "dry_run": true,
+      "match_strategy": "collapsed_application_type_parent:number_key"
+    },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_1_1_fs_engine_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_1_1_fs_engine_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_1_fs_engine_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_1_2_fs_archive_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_3_1_os_mem_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_3_1_os_mem_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_1_os_mem_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_3_2_os_cpu_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_3_2_os_cpu_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_2_os_cpu_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_4_1_log_db_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_4_1_log_db_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_1_log_db_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_4_2_log_lsnr_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_4_2_log_lsnr_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_2_log_lsnr_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_4_3_log_dump_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_4_3_log_dump_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_3_log_dump_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_4_4_log_engine_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_4_4_log_engine_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_4_log_engine_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_5_1_param_ps_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_5_1_param_ps_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_5_1_param_ps_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_7_1_table_space_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_7_1_table_space_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_7_1_table_space_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_8_1_backup_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_8_1_backup_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_8_1_backup_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/rocky/db_9_1_transaction_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/rocky/db_9_1_transaction_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_9_1_transaction_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_1_1_fs_engine_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_1_1_fs_engine_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_1_fs_engine_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_1_2_fs_archive_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_1_2_fs_archive_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_2_fs_archive_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_2_1_ps_main_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_2_1_ps_main_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_1_ps_main_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_3_1_os_mem_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_3_1_os_mem_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_1_os_mem_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_3_2_os_cpu_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_3_2_os_cpu_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_2_os_cpu_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_4_1_log_db_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_4_1_log_db_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_1_log_db_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_4_2_log_lsnr_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_4_2_log_lsnr_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_2_log_lsnr_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_4_3_log_dump_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_4_3_log_dump_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_3_log_dump_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_4_4_log_engine_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_4_4_log_engine_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_4_log_engine_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_5_1_param_ps_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_5_1_param_ps_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_1_param_ps_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_5_2_param_sga_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_5_2_param_sga_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_2_param_sga_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_6_1_active_standby_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_6_1_active_standby_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_1_active_standby_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_6_2_ctrl_file_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_6_2_ctrl_file_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_2_ctrl_file_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_6_3_redo_file_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_6_3_redo_file_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_3_redo_file_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_7_1_table_space_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_7_1_table_space_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_7_1_table_space_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_8_1_backup_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_8_1_backup_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_1_backup_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_8_2_backup_archive_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_8_2_backup_archive_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_2_backup_archive_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_8_3_backup_config_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_8_3_backup_config_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_3_backup_config_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/dbms/oracle/solaris/db_9_1_transaction_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/dbms/oracle/solaris/db_9_1_transaction_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_9_1_transaction_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/1_1_cpu_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md",
+      "dry_run": true,
+      "match_strategy": "same_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/1_2_memory_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md",
+      "dry_run": true,
+      "match_strategy": "same_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/2_1_interface_traffic_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md",
+      "dry_run": true,
+      "match_strategy": "same_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/2_2_interface_status_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md",
+      "dry_run": true,
+      "match_strategy": "same_parent:number_key"
+    },
+    {
+      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md",
+      "script_path": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/3_1_syslog_check/script.py",
+      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md",
+      "dry_run": true,
+      "match_strategy": "same_parent:number_key"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/1_1_cpu.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/1_1_cpu_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_1_cpu.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/1_2_memory.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/1_2_memory_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_2_memory.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/1_3_interface.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/1_3_interface_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_3_interface.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/2_1_inter_module.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/2_1_inter_module_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_1_inter_module.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/2_2_vlan.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/2_2_vlan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_2_vlan.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_1_lb.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_1_lb_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_1_lb.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_2_mac.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_2_mac_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_2_mac.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_3_route.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_3_route_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_3_route.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_4_stp.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_4_stp_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_4_stp.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_5_vrrp.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_5_vrrp_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_5_vrrp.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/3_6_ping.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/3_6_ping_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_6_ping.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/4_1_syslog.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/4_1_syslog_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/4_1_syslog.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/juniper_junos/ex4300/5_1_etc.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/juniper_junos/ex4300/5_1_etc_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/5_1_etc.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/1_1_cpu.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/1_1_cpu_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_1_cpu.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/1_2_memory.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/1_2_memory_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_2_memory.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/1_3_interface.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/1_3_interface_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_3_interface.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/2_1_inter_module.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/2_1_inter_module_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_1_inter_module.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/2_2_vlan.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/2_2_vlan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_2_vlan.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_1_lb.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_1_lb_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_1_lb.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_2_mac.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_2_mac_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_2_mac.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_3_route.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_3_route_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_3_route.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_4_stp.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_4_stp_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_4_stp.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_5_vrrp.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_5_vrrp_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_5_vrrp.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/3_6_ping.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/3_6_ping_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_6_ping.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/4_1_syslog.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/4_1_syslog_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/4_1_syslog.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/nx_os/mds_c9148s/5_1_etc.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/nx_os/mds_c9148s/5_1_etc_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/5_1_etc.md",
       "dry_run": true,
-      "match_strategy": "suffix_check"
+      "match_strategy": "same_parent:suffix_check"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_4_1_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_4_1_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_4_1_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/piolink_pas/pas_k3200x/pio_5_1_env_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/network/piolink_pas/pas_k3200x/pio_5_1_env_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_5_1_env_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_cluster_daemon_crm_mon_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_cluster_daemon_crm_mon_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_daemon_crm_mon_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_cluster_shared_volume_mount_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_cluster_shared_volume_mount_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_shared_volume_mount_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_cpu_core_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_cpu_core_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cpu_core_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_cpu_usage_procstat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_cpu_usage_procstat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cpu_usage_procstat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_filesystem_inode_df_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_filesystem_inode_df_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_filesystem_inode_df_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_filesystem_usage_df_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_filesystem_usage_df_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_filesystem_usage_df_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_io_diskstats_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_io_diskstats_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_io_diskstats_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_raid_mdadm_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_raid_mdadm_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_raid_mdadm_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_recognition_lsblk_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_recognition_lsblk_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_recognition_lsblk_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_disk_swap_swapon_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_disk_swap_swapon_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_swap_swapon_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_kernel_parameter_sysctl_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_kernel_parameter_sysctl_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_kernel_parameter_sysctl_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_cluster_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_cluster_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cluster_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_cpu_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_cpu_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cpu_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_fan_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_fan_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_fan_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_hba_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_hba_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_hba_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_io_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_io_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_io_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_kernel_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_kernel_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_kernel_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_memory_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_memory_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_memory_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_nic_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_nic_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_nic_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_power_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_power_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_power_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_log_system_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_log_system_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_system_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_memory_recognition_dmidecode_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_memory_recognition_dmidecode_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_recognition_dmidecode_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_memory_swap_swapon_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_memory_swap_swapon_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_swap_swapon_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_memory_usage_free_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_memory_usage_free_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_usage_free_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_network_link_status_ip_link_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_network_link_status_ip_link_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_link_status_ip_link_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_network_nic_redundancy_bonding_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_network_nic_redundancy_bonding_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_nic_redundancy_bonding_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_network_ping_loss_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_network_ping_loss_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_ping_loss_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_os_hba_connection_systool_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_os_hba_connection_systool_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_hba_connection_systool_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/linux/rocky/rocky_os_path_redundancy_multipath_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_os_path_redundancy_multipath_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_path_redundancy_multipath_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_cluster_daemon_cmviewcl_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_cluster_daemon_cmviewcl_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cluster_daemon_cmviewcl_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_cluster_shared_volume_mount_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_cluster_shared_volume_mount_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cluster_shared_volume_mount_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_cpu_core_ioscan_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_cpu_core_ioscan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cpu_core_ioscan_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_cpu_usage_sar_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_cpu_usage_sar_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cpu_usage_sar_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_filesystem_inode_bdf_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_filesystem_inode_bdf_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_filesystem_inode_bdf_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_filesystem_usage_bdf_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_filesystem_usage_bdf_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_filesystem_usage_bdf_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_io_sar_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_io_sar_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_io_sar_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_raid_vgdisplay_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_raid_vgdisplay_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_raid_vgdisplay_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_recognition_ioscan_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_recognition_ioscan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_recognition_ioscan_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_disk_swap_swapinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_disk_swap_swapinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_swap_swapinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_kernel_parameter_kctune_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_kernel_parameter_kctune_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_kernel_parameter_kctune_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_cluster_serviceguard_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_cluster_serviceguard_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_cluster_serviceguard_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_cpu_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_cpu_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_cpu_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_fan_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_fan_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_fan_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_hba_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_hba_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_hba_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_io_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_io_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_io_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_kernel_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_kernel_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_kernel_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_memory_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_memory_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_memory_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_nic_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_nic_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_nic_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_power_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_power_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_power_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_log_system_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_log_system_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_system_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_memory_recognition_machinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_memory_recognition_machinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_recognition_machinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_memory_swap_swapinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_memory_swap_swapinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_swap_swapinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_memory_usage_swapinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_memory_usage_swapinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_usage_swapinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_network_link_status_lanscan_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_network_link_status_lanscan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_link_status_lanscan_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_network_nic_redundancy_hpapa_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_network_nic_redundancy_hpapa_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_nic_redundancy_hpapa_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_network_ping_loss_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_network_ping_loss_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_ping_loss_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_os_hba_connection_ioscan_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_os_hba_connection_ioscan_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_os_hba_connection_ioscan_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/hpux/hpux_os_path_redundancy_scsimgr_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/hpux/hpux_os_path_redundancy_scsimgr_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_os_path_redundancy_scsimgr_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_cluster_daemon_scstat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_cluster_daemon_scstat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_daemon_scstat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_cluster_shared_volume_mount_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_cluster_shared_volume_mount_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_shared_volume_mount_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_cpu_core_psrinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_cpu_core_psrinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cpu_core_psrinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_cpu_usage_prstat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_cpu_usage_prstat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cpu_usage_prstat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_filesystem_usage_df_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_filesystem_usage_df_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_filesystem_usage_df_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_inode_df_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_inode_df_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_inode_df_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_io_iostat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_io_iostat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_io_iostat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_recognition_format_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_recognition_format_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_recognition_format_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_redundancy_metastat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_redundancy_metastat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_redundancy_metastat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_disk_swap_swap_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_disk_swap_swap_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_disk_swap_swap_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_kernal_parameter_sysdef_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_kernal_parameter_sysdef_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_kernal_parameter_sysdef_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_cluster_clog_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_cluster_clog_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_cluster_clog_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_cpu_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_cpu_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_cpu_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_fan_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_fan_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_fan_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_hba_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_hba_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_hba_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_io_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_io_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_io_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_kernel_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_kernel_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_kernel_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_memory_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_memory_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_memory_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_nic_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_nic_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_nic_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_power_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_power_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_power_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_log_system_dmesg_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_log_system_dmesg_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_log_system_dmesg_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_memory_paging_space_swap_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_memory_paging_space_swap_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_memory_paging_space_swap_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_memory_recognition_prtdiag_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_memory_recognition_prtdiag_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_memory_recognition_prtdiag_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_memory_usage_vmstat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_memory_usage_vmstat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_memory_usage_vmstat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_network_link_status_dladm_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_network_link_status_dladm_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_network_link_status_dladm_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_network_nic_redundancy_ipmpstat_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_network_nic_redundancy_ipmpstat_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_network_nic_redundancy_ipmpstat_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_network_ping_loss_ping_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_network_ping_loss_ping_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_network_ping_loss_ping_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_os_hba_connection_status_fcinfo_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_os_hba_connection_status_fcinfo_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_os_hba_connection_status_fcinfo_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/unix/solaris/solaris_os_path_redundancy_mpathadm_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/unix/solaris/solaris_os_path_redundancy_mpathadm_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_os_path_redundancy_mpathadm_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_datastore_path_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_datastore_path_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_datastore_path_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_status_agent_service_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_agent_service_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_status_agent_service_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_status_basic_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_basic_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_status_basic_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_status_hardware_health_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_hardware_health_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_status_hardware_health_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_status_vcenter_agent_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_vcenter_agent_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_status_vcenter_agent_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/vmware/esxi/esxi_status_vm_list_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/vmware/esxi/esxi_status_vm_list_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/vmware/esxi/esxi_status_vm_list_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_cluster_daemon_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_cluster_daemon_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_cluster_daemon_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_cluster_shared_volume_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_cluster_shared_volume_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_cluster_shared_volume_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_cpu_core_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_cpu_core_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_cpu_core_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_cpu_usage_counter_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_cpu_usage_counter_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_cpu_usage_counter_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_ swap_usage_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_ swap_usage_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_ swap_usage_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_filesystem_usage_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_filesystem_usage_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_filesystem_usage_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_inode_not_applicable_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_inode_not_applicable_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_inode_not_applicable_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_io_counter_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_io_counter_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_io_counter_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_recognition_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_recognition_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_recognition_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_disk_redundancy_health_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_disk_redundancy_health_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_disk_redundancy_health_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_kernel_parameter_nettcp_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_kernel_parameter_nettcp_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_kernel_parameter_nettcp_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_cluster_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_cluster_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_cluster_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_cpu_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_cpu_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_cpu_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_fan_manual_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_fan_manual_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_fan_manual_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_hba_manual_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_hba_manual_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_hba_manual_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_io_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_io_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_io_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_kernel_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_kernel_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_kernel_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_memory_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_memory_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_memory_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_nic_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_nic_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_nic_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_power_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_power_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_power_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_log_system_event_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_log_system_event_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_log_system_event_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_memory_pagefile_usage_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_memory_pagefile_usage_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_memory_pagefile_usage_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_memory_recognition_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_memory_recognition_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_memory_recognition_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_memory_usage_cim_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_memory_usage_cim_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_memory_usage_cim_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_network_link_status_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_network_link_status_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_network_link_status_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_network_nic_teaming_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_network_nic_teaming_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_network_nic_teaming_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_network_ping_loss_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_network_ping_loss_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_network_ping_loss_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_os_hba_connection_manual_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_os_hba_connection_manual_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_os_hba_connection_manual_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/server/windows/windows2019/windows_os_mpio_path_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/server/windows/windows2019/windows_os_mpio_path_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/server/windows/windows2019/windows_os_mpio_path_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_10_strg_controller_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_10_strg_controller_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_10_strg_controller_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_11_sps_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_11_sps_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_11_sps_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_12_strg_controller_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_12_strg_controller_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_12_strg_controller_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_13_strg_battery_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_13_strg_battery_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_13_strg_battery_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_1_event_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_1_event_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_1_event_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_2_memory_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_2_memory_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_2_memory_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_3_disk_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_3_disk_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_3_disk_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_4_fan_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_4_fan_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_4_fan_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_5_power_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_5_power_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_5_power_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_6_hba_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_6_hba_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_6_hba_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_7_battery_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_7_battery_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_7_battery_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_8_controller_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_8_controller_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_8_controller_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_1_9_data_strg_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_1_9_data_strg_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_1_9_data_strg_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_2_1_multipath_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_2_1_multipath_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_2_1_multipath_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_3_1_env_power_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_3_1_env_power_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_3_1_env_power_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_3_2_env_log_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_3_2_env_log_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_3_2_env_log_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/storage/dell/ddos/dell_3_3_env_hw_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/storage/dell/ddos/dell_3_3_env_hw_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/storage/dell/ddos/dell_3_3_env_hw_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_1_1_ps_cpu_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_1_1_ps_cpu_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_1_1_ps_cpu_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_1_2_ps_mem_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_1_2_ps_mem_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_1_2_ps_mem_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_1_3_ps_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_1_3_ps_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_1_3_ps_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_1_4_ps_startup_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_1_4_ps_startup_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_1_4_ps_startup_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_2_1_log_manage_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_2_1_log_manage_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_2_1_log_manage_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_2_2_log_service_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_2_2_log_service_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_2_2_log_service_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_2_3_log_cli_acs_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_2_3_log_cli_acs_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_2_3_log_cli_acs_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_2_4_log_gc_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_2_4_log_gc_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_2_4_log_gc_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_2_5_log_con_pool_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_2_5_log_con_pool_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_2_5_log_con_pool_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_4_1_work_thrd_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_4_1_work_thrd_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_4_1_work_thrd_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_4_2_runnable_thrd_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_4_2_runnable_thrd_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_4_2_runnable_thrd_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_5_1_con_pool_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_5_1_con_pool_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_5_1_con_pool_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_5_2_db_con_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_5_2_db_con_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_5_2_db_con_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/apache_tomcat/rocky/was_6_1_dump_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/apache_tomcat/rocky/was_6_1_dump_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/apache_tomcat/rocky/was_6_1_dump_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_1_1_ps_cpu_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_1_1_ps_cpu_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_1_1_ps_cpu_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_1_2_ps_mem_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_1_2_ps_mem_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_1_2_ps_mem_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_1_3_ps_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_1_3_ps_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_1_3_ps_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_1_4_ps_startup_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_1_4_ps_startup_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_1_4_ps_startup_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_2_1_log_manage_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_2_1_log_manage_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_2_1_log_manage_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_2_2_log_service_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_2_2_log_service_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_2_2_log_service_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_2_3_log_cli_acs_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_2_3_log_cli_acs_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_2_3_log_cli_acs_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_2_4_log_gc_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_2_4_log_gc_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_2_4_log_gc_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_2_5_log_con_pool_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_2_5_log_con_pool_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_2_5_log_con_pool_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_3_1_jvm_heap_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_3_1_jvm_heap_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_3_1_jvm_heap_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_4_1_work_thrd_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_4_1_work_thrd_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_4_1_work_thrd_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_4_2_runnable_thrd_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_4_2_runnable_thrd_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_4_2_runnable_thrd_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_5_1_con_pool_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_5_1_con_pool_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_5_1_con_pool_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_5_2_db_con_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_5_2_db_con_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_5_2_db_con_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_6_1_dump_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_6_1_dump_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_6_1_dump_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_7_1_deploy_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_7_1_deploy_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_7_1_deploy_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_8_1_thrd_pool_status_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_8_1_thrd_pool_status_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_8_1_thrd_pool_status_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/was/jeus/rocky/was_9_1_start_script_chk.md",
       "script_path": "inspection_cases_bundle/inspection_cases/was/jeus/rocky/was_9_1_start_script_chk/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/was/jeus/rocky/was_9_1_start_script_chk.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_config_web_was_connection_webtob_ctl_status_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_config_web_was_connection_webtob_ctl_status_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_config_web_was_connection_webtob_ctl_status_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_filesystem_web_application_filesystem_df_h_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_filesystem_web_application_filesystem_df_h_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_filesystem_web_application_filesystem_df_h_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_filesystem_web_engine_filesystem_df_h_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_filesystem_web_engine_filesystem_df_h_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_filesystem_web_engine_filesystem_df_h_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_filesystem_web_log_filesystem_df_h_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_filesystem_web_log_filesystem_df_h_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_filesystem_web_log_filesystem_df_h_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_access_log_awk_status_200_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_access_log_awk_status_200_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_access_log_awk_status_200_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_error_log_grep_error_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_error_log_grep_error_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_error_log_grep_error_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_request_document_unavailable_awk_status_404_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_request_document_unavailable_awk_status_404_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_request_document_unavailable_awk_status_404_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_service_temporarily_unavailable_grep_status_503_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_service_temporarily_unavailable_grep_status_503_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_service_temporarily_unavailable_grep_status_503_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_was_response_time_awk_response_time_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_was_response_time_awk_response_time_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_was_response_time_awk_response_time_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_log_web_service_unavailable_grep_status_500_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_log_web_service_unavailable_grep_status_500_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_log_web_service_unavailable_grep_status_500_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_process_cpu_usage_top_grep_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_process_cpu_usage_top_grep_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_process_cpu_usage_top_grep_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_process_memory_usage_top_grep_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_process_memory_usage_top_grep_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_process_memory_usage_top_grep_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_process_startup_ps_aux_grep_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_process_startup_ps_aux_grep_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_process_startup_ps_aux_grep_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_process_status_top_grep_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_process_status_top_grep_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_process_status_top_grep_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_service_port_connection_telnet_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_service_port_connection_telnet_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_service_port_connection_telnet_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_service_port_open_netstat_grep_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_service_port_open_netstat_grep_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_service_port_open_netstat_grep_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/web/webtob/rocky/webtob_service_request_count_webtob_ctl_status_check.md",
       "script_path": "inspection_cases_bundle/inspection_cases/web/webtob/rocky/webtob_service_request_count_webtob_ctl_status_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/web/webtob/rocky/webtob_service_request_count_webtob_ctl_status_check.md",
       "dry_run": true,
-      "match_strategy": "exact"
+      "match_strategy": "same_parent:exact"
     }
   ],
   "skipped": [
     {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/1_1_catalog.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/1_1_catalog/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/1_1_catalog_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_1_catalog.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/1_2_swlog.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/1_2_swlog/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/1_2_swlog_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_2_swlog.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_1_tape_status/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_1_tape_status_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_2_tape_active/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_2_tape_active_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_3_tape_used/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_3_tape_used_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_4_disk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_4_disk/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_4_disk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_4_disk.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_5_schedule.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_5_schedule/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_5_schedule_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_5_schedule.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/2_6_etc.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_6_etc/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/2_6_etc_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_6_etc.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/3_1_disk_port/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/3_1_disk_port_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/4_1_swstatus/script.py, inspection_cases_bundle/inspection_cases/backup/veritas/netbackup_appliance_5240/4_1_swstatus_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_2_2_if_status_chk/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_2_2_if_status_chk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md"
-    },
-    {
-      "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md",
-      "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk_check/script.py",
-      "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md"
-    },
-    {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_HW상태점검_VLAN상태점검/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_HW상태점검_VLAN상태점검_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_HW상태점검_VLAN상태점검.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_HW상태점검_인터페이스모듈상태/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_HW상태점검_인터페이스모듈상태_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_HW상태점검_인터페이스모듈상태.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_로그_로그점검.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_로그_로그점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_로그_로그점검_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_로그_로그점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_로그_로그점검_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_로그_로그점검/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_로그_로그점검_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_로그_로그점검.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_MacArpTable상태확인/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_MacArpTable상태확인_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_MacArpTable상태확인.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_STP상태점검/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_STP상태점검_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_STP상태점검.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_각LB상태확인/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_각LB상태확인_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_각LB상태확인.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_라우팅Table상태/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_라우팅Table상태_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_라우팅Table상태.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_이중화구성상태점검/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_이중화구성상태점검_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_이중화구성상태점검.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_통신테스트/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_서비스_통신테스트_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_서비스_통신테스트.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_CPU사용률/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_CPU사용률_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_자원사용률점검_CPU사용률.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_자원사용률점검_네트워크인터페이스사용률.md"
     },
     {
       "raw_path": "inspection_cases_bundle/raw_data/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률.md",
       "reason": "missing_script",
-      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률_check/script.py",
+      "expected_script": "inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률/script.py, inspection_cases_bundle/inspection_cases/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률_check/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_메모리사용률/script.py, inspection_cases_bundle/inspection_cases/network/c3650/cisco_ios_자원사용률점검_메모리사용률_check/script.py",
       "output_path": "inspection_cases_bundle/api_data/os/network/cisco_ios/c3650/cisco_ios_자원사용률점검_메모리사용률.md"
     }
   ],

@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -264,18 +265,71 @@ def classify_raw_path(raw_path: Path, raw_root: Path) -> tuple[str, Path | None]
     return 'candidate', rel_path
 
 
+def extract_number_key(case_name: str) -> str:
+    match = re.search(r'(?<!\d)(\d+(?:_\d+)+)(?!\d)', case_name)
+    if not match:
+        return ''
+    return match.group(1)
+
+
+def case_parent_candidates(case_root: Path, rel_path: Path) -> list[tuple[str, Path]]:
+    rel_parent = rel_path.with_suffix('').parent
+    candidates = [('same_parent', case_root / rel_parent)]
+
+    if len(rel_path.parts) >= 4:
+        category, _application_type, application = rel_path.parts[:3]
+        collapsed_parent = case_root / category / application
+        if collapsed_parent != candidates[0][1]:
+            candidates.append(('collapsed_application_type_parent', collapsed_parent))
+
+    return candidates
+
+
+def find_number_key_case_dir(parent: Path, number_key: str) -> Path | None:
+    if not number_key or not parent.is_dir():
+        return None
+
+    matches = [
+        child
+        for child in sorted(parent.iterdir())
+        if child.is_dir()
+        and extract_number_key(child.name) == number_key
+        and (child / 'script.py').exists()
+    ]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def resolve_case_dir(case_root: Path, rel_path: Path) -> tuple[Path | None, str, list[Path]]:
     base_case_dir = case_root / rel_path.with_suffix('')
-    candidates = [
-        ('exact', base_case_dir),
-        ('suffix_check', base_case_dir.parent / f'{base_case_dir.name}_check'),
-    ]
-
+    number_key = extract_number_key(base_case_dir.name)
     tried = []
-    for strategy, case_dir in candidates:
-        tried.append(case_dir / 'script.py')
-        if (case_dir / 'script.py').exists():
-            return case_dir, strategy, tried
+
+    for parent_strategy, parent in case_parent_candidates(case_root, rel_path):
+        exact_dir = parent / base_case_dir.name
+        suffix_dir = parent / f'{base_case_dir.name}_check'
+        direct_candidates = [
+            (f'{parent_strategy}:exact', exact_dir),
+            (f'{parent_strategy}:suffix_check', suffix_dir),
+        ]
+
+        for strategy, case_dir in direct_candidates:
+            tried.append(case_dir / 'script.py')
+            if (case_dir / 'script.py').exists():
+                return case_dir, strategy, tried
+
+        number_key_case_dir = find_number_key_case_dir(parent, number_key)
+        if number_key_case_dir is not None:
+            tried.append(number_key_case_dir / 'script.py')
+            return number_key_case_dir, f'{parent_strategy}:number_key', tried
+
+        if number_key and parent.is_dir():
+            tried.extend(
+                child / 'script.py'
+                for child in sorted(parent.iterdir())
+                if child.is_dir() and extract_number_key(child.name) == number_key
+            )
 
     return None, 'missing_script', tried
 
