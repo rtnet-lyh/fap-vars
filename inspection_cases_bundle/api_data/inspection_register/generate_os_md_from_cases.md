@@ -86,7 +86,7 @@ application: solaris
 | raw root | `inspection_cases_bundle/raw_data` |
 | case root | `inspection_cases_bundle/inspection_cases` |
 | output root | `inspection_cases_bundle/api_data/os` |
-| report root | `inspection_cases_bundle/api_data/os/_reports` |
+| report root | `inspection_cases_bundle/api_data/_reports` |
 | reference root | `inspection_cases_bundle/api_data/os/_reference` |
 
 ## 생성 대상과 제외 대상
@@ -288,8 +288,8 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 생성 결과는 사람이 검토하기 쉬운 Markdown report와 자동 처리 가능한 JSON summary로 남깁니다.
 
 ```text
-inspection_cases_bundle/api_data/os/_reports/skip_report.md
-inspection_cases_bundle/api_data/os/_reports/summary.json
+inspection_cases_bundle/api_data/_reports/skip_report.md
+inspection_cases_bundle/api_data/_reports/summary.json
 ```
 
 report에는 최소한 다음 항목을 포함합니다.

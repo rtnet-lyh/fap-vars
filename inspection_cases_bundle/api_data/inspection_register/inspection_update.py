@@ -46,9 +46,10 @@ def _compact_response(response: requests.Response) -> str:
 
 
 class InspectionUpdateClient:
-    def __init__(self, md_dir: str | Path, *, batch_size: int = 1000):
+    def __init__(self, md_dir: str | Path, *, batch_size: int = 1000, recursive: bool = False):
         self.md_dir = Path(md_dir).resolve()
         self.batch_size = batch_size
+        self.recursive = recursive
         self.md_records = self._load_md_records()
         if not self.md_records:
             raise InspectionUpdateError(f"수정할 md 파일이 없습니다: {self.md_dir}")
@@ -58,14 +59,22 @@ class InspectionUpdateClient:
         self.create_client, _ = InspectionCreateClient.from_api_data_md(first_md)
 
     @classmethod
-    def from_os(cls, os_name: str, *, batch_size: int = 1000) -> "InspectionUpdateClient":
+    def from_os(cls, os_name: str, *, batch_size: int = 1000, recursive: bool = False) -> "InspectionUpdateClient":
         base_dir = Path(__file__).resolve().parents[1]
-        return cls(base_dir / "os" / os_name, batch_size=batch_size)
+        return cls(base_dir / "os" / os_name, batch_size=batch_size, recursive=recursive)
+
+    def _iter_md_paths(self) -> list[Path]:
+        paths = self.md_dir.rglob("*.md") if self.recursive else self.md_dir.glob("*.md")
+        excluded_parts = {"_reports", "_reference", "참고"}
+        return sorted(
+            path
+            for path in paths
+            if not any(part in excluded_parts for part in path.relative_to(self.md_dir).parts)
+        )
 
     def _load_md_records(self) -> list[dict[str, Any]]:
-        paths = sorted(self.md_dir.glob("*.md"))
         records: list[dict[str, Any]] = []
-        for path in paths:
+        for path in self._iter_md_paths():
             parsed = parse_api_data_md(path)
             records.append(
                 {
@@ -76,7 +85,7 @@ class InspectionUpdateClient:
                     "parsed": parsed,
                 }
             )
-        records.sort(key=lambda item: _code_sort_key(item["code"]))
+        records.sort(key=lambda item: (_normalize_name(item["application"]), _code_sort_key(item["code"])))
         return records
 
     def _search_page(self, start: int, end: int, search_data: str) -> dict[str, Any]:
@@ -148,7 +157,7 @@ class InspectionUpdateClient:
         codes: set[str] | None = None,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         if search_data is None:
-            search_data = self.md_records[0]["application"]
+            search_data = ""
         server_items = self.search_server_items(search_data)
 
         matched: list[dict[str, Any]] = []
@@ -274,7 +283,8 @@ def parse_args() -> argparse.Namespace:
     target.add_argument("--md-dir", help="Direct path to an OS md directory")
     parser.add_argument("--execute", action="store_true", help="Send PATCH requests. Without this, only match and preview.")
     parser.add_argument("--create-missing", action="store_true", help="POST-create missing md items before PATCH update.")
-    parser.add_argument("--search-data", help="Value for /data/inspection/items/search. Defaults to the md application value.")
+    parser.add_argument("--search-data", default="", help="Value for /data/inspection/items/search. Defaults to an empty full search.")
+    parser.add_argument("--recursive", action="store_true", help="Read Markdown files recursively below --os/--md-dir.")
     parser.add_argument("--code", action="append", help="Limit to one inspection_code. Can be repeated.")
     return parser.parse_args()
 
@@ -282,9 +292,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     updater = (
-        InspectionUpdateClient.from_os(args.os_name)
+        InspectionUpdateClient.from_os(args.os_name, recursive=args.recursive)
         if args.os_name
-        else InspectionUpdateClient(args.md_dir)
+        else InspectionUpdateClient(args.md_dir, recursive=args.recursive)
     )
     try:
         summary = updater.update(
