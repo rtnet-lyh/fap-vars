@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import contextlib
 import importlib
+import io
 import json
 import sys
+from argparse import Namespace
 import tempfile
 import types
 import unittest
@@ -32,6 +35,8 @@ sys.modules.setdefault("requests", requests_stub)
 inspection_create = importlib.import_module("inspection_create")
 inspection_md_parser = importlib.import_module("inspection_md_parser")
 fetch_inspection_details = importlib.import_module("fetch_inspection_details")
+inspection_update = importlib.import_module("inspection_update")
+inspection_lookup = importlib.import_module("inspection_lookup")
 generate_os_md_from_api_json = importlib.import_module("generate_os_md_from_api_json")
 generate_os_md_from_cases = importlib.import_module("generate_os_md_from_cases")
 
@@ -372,6 +377,216 @@ CPU 사용률을 확인합니다.
         self.assertEqual(parsed["inspection_output"], "Cpu(s): 1.0 us")
         self.assertIn("임계치 미만", parsed["description"])
         self.assertEqual(parsed["thresholds"], [{"id": None, "key": "max_cpu_usage_percent", "value": "80", "sortOrder": 0}])
+
+    def test_fetch_details_uses_list_row_ids_and_thresholds_only_when_requested(self) -> None:
+        original_get_items = fetch_inspection_details.get_inspection_items
+        original_get_detail = fetch_inspection_details.get_item_detail
+        original_get_thresholds = fetch_inspection_details.get_item_thresholds
+        calls: list[tuple[str, object, object | None]] = []
+
+        def fake_get_items() -> dict[str, object]:
+            return {
+                "data": {
+                    "items": [
+                        {"item_id": 101, "mapping_id": 501},
+                        {"item_id": 102, "mapping_id": 502},
+                    ]
+                }
+            }
+
+        def fake_get_detail(item_id: object, mapping_id: object) -> dict[str, object]:
+            calls.append(("detail", item_id, mapping_id))
+            return {"item_id": item_id, "mapping_id": mapping_id, "inspection_code": f"CODE-{item_id}"}
+
+        def fake_get_thresholds(item_id: object) -> list[dict[str, object]]:
+            calls.append(("thresholds", item_id, None))
+            return [{"key": "limit", "value": str(item_id)}]
+
+        try:
+            fetch_inspection_details.get_inspection_items = fake_get_items
+            fetch_inspection_details.get_item_detail = fake_get_detail
+            fetch_inspection_details.get_item_thresholds = fake_get_thresholds
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                without_thresholds = fetch_inspection_details.fetch_details(include_thresholds=False)
+            self.assertEqual(calls, [("detail", 101, 501), ("detail", 102, 502)])
+            self.assertNotIn("thresholds", without_thresholds[0])
+
+            calls.clear()
+            with contextlib.redirect_stdout(io.StringIO()):
+                with_thresholds = fetch_inspection_details.fetch_details(include_thresholds=True)
+            self.assertEqual(
+                calls,
+                [
+                    ("detail", 101, 501),
+                    ("thresholds", 101, None),
+                    ("detail", 102, 502),
+                    ("thresholds", 102, None),
+                ],
+            )
+            self.assertEqual(with_thresholds[0]["thresholds"], [{"key": "limit", "value": "101"}])
+        finally:
+            fetch_inspection_details.get_inspection_items = original_get_items
+            fetch_inspection_details.get_item_detail = original_get_detail
+            fetch_inspection_details.get_item_thresholds = original_get_thresholds
+
+    def test_fetch_get_inspection_items_uses_context_filters(self) -> None:
+        original_get = fetch_inspection_details.requests.get
+        original_session = fetch_inspection_details.SESSION
+        original_host = fetch_inspection_details.HOST
+        captured: dict[str, object] = {}
+
+        class FakeResponse:
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict[str, object]:
+                return {"status": "success", "data": {"items": []}}
+
+        def fake_get(url: str, *, params: dict[str, object], headers: dict[str, str], timeout: int) -> FakeResponse:
+            captured["url"] = url
+            captured["params"] = params
+            captured["headers"] = headers
+            captured["timeout"] = timeout
+            return FakeResponse()
+
+        try:
+            fetch_inspection_details.requests.get = fake_get
+            fetch_inspection_details.SESSION = {
+                "host": "http://api.example.test",
+                "language": "ko-KR",
+                "jsessionid": "session-id",
+                "application_name": "Solaris",
+                "type_name": "정기점검",
+            }
+            fetch_inspection_details.HOST = "http://api.example.test"
+
+            fetch_inspection_details.get_inspection_items()
+
+            filter_data = json.loads(captured["params"]["filterData"])
+        finally:
+            fetch_inspection_details.requests.get = original_get
+            fetch_inspection_details.SESSION = original_session
+            fetch_inspection_details.HOST = original_host
+
+        self.assertEqual(captured["url"], "http://api.example.test/data/inspection/items")
+        self.assertEqual(captured["timeout"], 30)
+        self.assertEqual(
+            filter_data,
+            [
+                {"column": "type_name", "values": ["정기점검"]},
+                {"column": "application_name", "values": ["Solaris"]},
+            ],
+        )
+
+    def test_inspection_lookup_prefers_api_context_and_falls_back_to_legacy_session(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            api_data = Path(tmp_dir) / "api_data"
+            md_path = api_data / "os" / "server" / "linux" / "rocky" / "case.md"
+            md_path.parent.mkdir(parents=True, exist_ok=True)
+            md_path.write_text("# placeholder\n", encoding="utf-8")
+            (api_data / "api_context.md").write_text(
+                """## URL
+
+http://context.example/
+
+## SESSION_ID
+
+ctx-session
+
+## language
+
+ko-KR
+""",
+                encoding="utf-8",
+            )
+            (api_data / "session.md").write_text(
+                """## URL
+
+http://legacy.example/
+
+## SESSION_ID
+
+legacy-session
+""",
+                encoding="utf-8",
+            )
+
+            preferred = inspection_lookup.InspectionLookupClient._load_session_config(md_path)
+            (api_data / "api_context.md").unlink()
+            fallback = inspection_lookup.InspectionLookupClient._load_session_config(md_path)
+
+        self.assertEqual(preferred["base_url"], "http://context.example")
+        self.assertEqual(preferred["jsessionid"], "ctx-session")
+        self.assertEqual(fallback["base_url"], "http://legacy.example")
+        self.assertEqual(fallback["jsessionid"], "legacy-session")
+
+    def test_inspection_create_main_previews_without_post_when_execute_is_false(self) -> None:
+        original_parse_args = inspection_create.parse_args
+        original_iter = inspection_create._iter_md_paths
+        original_parse_md = inspection_create.parse_api_data_md
+        original_from_md = inspection_create.InspectionCreateClient.from_api_data_md
+        calls: list[str] = []
+        fake_path = Path("/tmp/fake.md")
+
+        class FakeClient:
+            def build_payload_from_md(self, md_path: Path) -> dict[str, object]:
+                calls.append(f"build:{md_path}")
+                return {"inspection_code": "CODE-1"}
+
+            def create_from_md(self, md_path: Path) -> dict[str, object]:
+                calls.append(f"create:{md_path}")
+                return {"status": "success"}
+
+        try:
+            inspection_create.parse_args = lambda: Namespace(
+                md_file=None,
+                md_dir="unused",
+                recursive=False,
+                execute=False,
+                code=None,
+            )
+            inspection_create._iter_md_paths = lambda md_file, md_dir, *, recursive: [fake_path]
+            inspection_create.parse_api_data_md = lambda md_path: {
+                "inspection_code": "CODE-1",
+                "inspection_name": "점검",
+            }
+            inspection_create.InspectionCreateClient.from_api_data_md = classmethod(lambda cls, md_path: (FakeClient(), {}))
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                exit_code = inspection_create.main()
+        finally:
+            inspection_create.parse_args = original_parse_args
+            inspection_create._iter_md_paths = original_iter
+            inspection_create.parse_api_data_md = original_parse_md
+            inspection_create.InspectionCreateClient.from_api_data_md = original_from_md
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(calls, ["build:/tmp/fake.md"])
+
+    def test_inspection_update_defaults_to_full_search_and_matches_code_and_application(self) -> None:
+        updater = inspection_update.InspectionUpdateClient.__new__(inspection_update.InspectionUpdateClient)
+        updater.md_records = [
+            {"code": "CODE-1", "application": "Solaris", "name": "match"},
+            {"code": "CODE-2", "application": "Solaris", "name": "missing"},
+        ]
+        captured: dict[str, str] = {}
+
+        def fake_search(search_data: str) -> list[dict[str, object]]:
+            captured["search_data"] = search_data
+            return [
+                {"id": 1, "inspection_code": "CODE-1", "application_name": "Solaris"},
+                {"id": 2, "inspection_code": "CODE-2", "application_name": "AIX"},
+            ]
+
+        updater.search_server_items = fake_search
+
+        matched, missing = updater.match_records()
+
+        self.assertEqual(captured["search_data"], "")
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0]["existing"]["id"], 1)
+        self.assertEqual([record["code"] for record in missing], ["CODE-2"])
 
 
 if __name__ == "__main__":
