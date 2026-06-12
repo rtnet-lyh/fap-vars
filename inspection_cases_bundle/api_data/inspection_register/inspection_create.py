@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 import re
@@ -246,26 +248,66 @@ class InspectionCreateClient:
         return self._post("/data/inspection/items", payload)
 
 
-if __name__ == "__main__":
-    import sys
-    import os
+def _iter_md_paths(md_file: str | None, md_dir: str | None, *, recursive: bool) -> list[Path]:
+    if md_file:
+        return [Path(md_file).resolve()]
+    if not md_dir:
+        raise ValueError("--md-file 또는 --md-dir 중 하나를 지정해야 합니다.")
 
-    base_dir = Path(__file__).resolve().parents[1] / "os" / "solaris"
-    md_files = [f for f in os.listdir(base_dir) if f.endswith('.md')]
+    base_dir = Path(md_dir).resolve()
+    paths = base_dir.rglob("*.md") if recursive else base_dir.glob("*.md")
+    excluded_parts = {"_reports", "_reference", "참고"}
+    return sorted(
+        path
+        for path in paths
+        if not any(part in excluded_parts for part in path.relative_to(base_dir).parts)
+    )
 
-    for md_file in md_files:
-        md_path = base_dir / md_file
-        print(f"Processing {md_file}...")
-        try:
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Create inspection items from api_data/os Markdown files.")
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--md-file", help="Single api_data/os Markdown file to register.")
+    target.add_argument("--md-dir", help="Directory containing api_data/os Markdown files.")
+    parser.add_argument("--recursive", action="store_true", help="Read Markdown files recursively below --md-dir.")
+    parser.add_argument("--execute", action="store_true", help="Send POST requests. Without this, only preview payloads.")
+    parser.add_argument("--code", action="append", help="Limit to one inspection_code. Can be repeated.")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    codes = set(args.code or [])
+    try:
+        md_paths = _iter_md_paths(args.md_file, args.md_dir, recursive=args.recursive)
+        if not md_paths:
+            raise ValueError("처리할 Markdown 파일이 없습니다.")
+
+        created_or_ready = 0
+        for md_path in md_paths:
+            parsed = parse_api_data_md(md_path)
+            if codes and parsed["inspection_code"] not in codes:
+                continue
             client, _ = InspectionCreateClient.from_api_data_md(md_path)
             payload = client.build_payload_from_md(md_path)
-            print("[PAYLOAD PREVIEW]")
-            print(payload)
+            print(f"[POST] {parsed['inspection_code']} {md_path} execute={args.execute}")
+            if not args.execute:
+                print(json.dumps(payload, ensure_ascii=False, indent=2))
+                created_or_ready += 1
+                continue
 
-            # 실제 등록 시 아래 주석 해제
             result = client.create_from_md(md_path)
-            print("[RESULT]")
-            print(result)
-        except Exception as e:
-            print(f"Error processing {md_file}: {e}")
-        print("-" * 50)
+            print(f"[RESULT] {json.dumps(result, ensure_ascii=False)}")
+            if result.get("status") != "success":
+                raise RuntimeError(f"{parsed['inspection_code']} POST 응답 실패: {result}")
+            created_or_ready += 1
+
+        print(f"[SUMMARY] {json.dumps({'created_or_ready': created_or_ready}, ensure_ascii=False)}")
+        return 0
+    except Exception as exc:
+        print(f"[FAILED] {type(exc).__name__}: {exc}")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

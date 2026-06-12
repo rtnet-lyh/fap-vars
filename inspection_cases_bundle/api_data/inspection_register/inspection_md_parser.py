@@ -11,7 +11,7 @@ SECTION_PATTERN = re.compile(
 )
 
 
-REQUIRED_FIELDS = {
+LEGACY_REQUIRED_FIELDS = {
     "유형": "inspection_type",
     "분야": "area",
     "분류": "category",
@@ -27,6 +27,11 @@ REQUIRED_FIELDS = {
     "기준치": "thresholds",
     "점검 스크립트": "inspection_script",
 }
+
+# Backward-compatible alias for older imports. New code should use the
+# LEGACY_REQUIRED_FIELDS name to avoid confusing this legacy Korean-heading
+# parser with the standard api_data/os parser in inspection_create.py.
+REQUIRED_FIELDS = LEGACY_REQUIRED_FIELDS
 
 
 class MarkdownParseError(ValueError):
@@ -79,12 +84,18 @@ def _parse_thresholds(text: str) -> list[dict[str, Any]]:
 
 
 def _validate_sections(sections: dict[str, str]) -> None:
-    missing = [title for title in REQUIRED_FIELDS if title not in sections or not sections[title].strip()]
+    missing = [title for title in LEGACY_REQUIRED_FIELDS if title not in sections or not sections[title].strip()]
     if missing:
         raise MarkdownParseError(f"필수 섹션이 없습니다: {missing}")
 
 
-def parse_inspection_md(md_path: str | Path) -> dict[str, Any]:
+def parse_legacy_inspection_md(md_path: str | Path) -> dict[str, Any]:
+    """Parse the legacy Korean-heading inspection Markdown format.
+
+    The standard api_data/os Markdown schema is the English-section format
+    parsed by inspection_create.parse_api_data_md. This function is kept only
+    for migration/compatibility with older source documents.
+    """
     text = Path(md_path).read_text(encoding="utf-8")
 
     sections: dict[str, str] = {}
@@ -95,14 +106,8 @@ def parse_inspection_md(md_path: str | Path) -> dict[str, Any]:
 
     _validate_sections(sections)
 
-    inspection_type = _clean(sections["유형"])
-    if inspection_type != "일상점검(상태점검)":
-        raise MarkdownParseError(
-            f"유형 값은 '일상점검(상태점검)' 이어야 합니다. 현재 값: {inspection_type}"
-        )
-
     parsed = {
-        "inspection_type": inspection_type,
+        "inspection_type": _clean(sections["유형"]),
         "area": _clean(sections["분야"]),
         "category": _clean(sections["분류"]).lower(),
         "application_type": _clean(sections["OS/애플리케이션"]),
@@ -118,7 +123,14 @@ def parse_inspection_md(md_path: str | Path) -> dict[str, Any]:
         "inspection_script": _strip_code_fence(sections["점검 스크립트"]),
     }
 
+    if not parsed["inspection_type"]:
+        raise MarkdownParseError("유형 값이 없습니다.")
     if not parsed["thresholds"]:
         raise MarkdownParseError("기준치(thresholds)를 파싱하지 못했습니다.")
 
     return parsed
+
+
+def parse_inspection_md(md_path: str | Path) -> dict[str, Any]:
+    """Backward-compatible alias for parse_legacy_inspection_md."""
+    return parse_legacy_inspection_md(md_path)
