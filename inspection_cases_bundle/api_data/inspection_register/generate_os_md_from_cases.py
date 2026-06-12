@@ -12,7 +12,7 @@ from typing import Any
 DEFAULT_RAW_ROOT = Path('inspection_cases_bundle/raw_data')
 DEFAULT_CASE_ROOT = Path('inspection_cases_bundle/inspection_cases')
 DEFAULT_OUTPUT_ROOT = Path('inspection_cases_bundle/api_data/os')
-DEFAULT_REPORT_ROOT = Path('inspection_cases_bundle/api_data/os/_reports')
+DEFAULT_REPORT_ROOT = Path('inspection_cases_bundle/api_data/_reports')
 
 EXCLUDED_PATH_PARTS = {'참고'}
 RAW_HEADINGS = {
