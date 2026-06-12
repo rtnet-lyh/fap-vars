@@ -49,6 +49,13 @@ def pick_first(item: dict[str, Any], *keys: str, default: str = "") -> str:
     return default
 
 
+def require_value(value: Any, field_name: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        raise ValueError(f"{field_name} 값이 없습니다.")
+    return text
+
+
 def normalize_required(value: Any) -> str:
     if isinstance(value, bool):
         return "필수" if value else "선택"
@@ -97,16 +104,20 @@ def build_md(item: dict[str, Any], *, application_type: str = "") -> str:
 
     application_type_name = pick_first(item, "application_type_name", "application_type", default=application_type)
     values = [
-        ("type_name", pick_first(item, "type_name")),
-        ("area_name", pick_first(item, "area_name")),
-        ("category_name", pick_first(item, "category_name")),
-        ("application_type", application_type_name),
-        ("application", pick_first(item, "application_name", "application")),
-        ("inspection_code", pick_first(item, "inspection_code")),
+        ("type_name", require_value(pick_first(item, "type_name"), "type_name")),
+        ("area_name", require_value(pick_first(item, "area_name"), "area_name")),
+        ("category_name", require_value(pick_first(item, "category_name"), "category_name")),
+        ("application_type", require_value(application_type_name, "application_type")),
+        ("application", require_value(pick_first(item, "application_name", "application"), "application")),
+        ("inspection_code", require_value(pick_first(item, "inspection_code"), "inspection_code")),
         ("is_required", normalize_required(item.get("is_required"))),
-        ("inspection_name", pick_first(item, "inspection_name")),
-        ("inspection_content", pick_first(item, "inspection_content")),
+        ("inspection_name", require_value(pick_first(item, "inspection_name"), "inspection_name")),
+        ("inspection_content", require_value(pick_first(item, "inspection_content"), "inspection_content")),
     ]
+    require_value(inspection_command, "inspection_command")
+    require_value(inspection_output, "inspection_output")
+    require_value(description, "description")
+    require_value(script, "inspection_script")
 
     chunks = [f"# {heading}\n\n{value}".rstrip() for heading, value in values]
     chunks.append(f"# inspection_command\n\n```bash\n{inspection_command}\n```")
@@ -118,12 +129,15 @@ def build_md(item: dict[str, Any], *, application_type: str = "") -> str:
 
 
 def output_path_for_item(item: dict[str, Any], output_root: pathlib.Path, *, application_type: str = "") -> pathlib.Path:
-    category_name = sanitize_path_part(pick_first(item, "category_name"), fallback="category")
+    category_name = sanitize_path_part(require_value(pick_first(item, "category_name"), "category_name"), fallback="category")
     application_type_name = sanitize_path_part(
-        pick_first(item, "application_type_name", "application_type", default=application_type),
+        require_value(pick_first(item, "application_type_name", "application_type", default=application_type), "application_type"),
         fallback="application_type",
     )
-    application_name = sanitize_path_part(pick_first(item, "application_name", "application"), fallback="application")
+    application_name = sanitize_path_part(
+        require_value(pick_first(item, "application_name", "application"), "application"),
+        fallback="application",
+    )
     script = normalize_newlines(item.get("inspection_script"))
     case_name = extract_case_name(script, pick_first(item, "inspection_code"), pick_first(item, "inspection_name"))
     return output_root / category_name / application_type_name / application_name / f"{case_name}.md"
