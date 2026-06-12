@@ -13,6 +13,8 @@ DEFAULT_RAW_ROOT = Path('inspection_cases_bundle/raw_data')
 DEFAULT_CASE_ROOT = Path('inspection_cases_bundle/inspection_cases')
 DEFAULT_OUTPUT_ROOT = Path('inspection_cases_bundle/api_data/os')
 DEFAULT_REPORT_ROOT = Path('inspection_cases_bundle/api_data/_reports')
+DEFAULT_TYPE_NAME = '일상점검'
+DEFAULT_AREA_NAME = '상태점검'
 
 EXCLUDED_PATH_PARTS = {'참고'}
 RAW_HEADINGS = {
@@ -220,6 +222,9 @@ def render_markdown(
     sections: dict[str, str],
     case_data: dict[str, Any] | None,
     script_text: str,
+    *,
+    type_name: str = DEFAULT_TYPE_NAME,
+    area_name: str = DEFAULT_AREA_NAME,
 ) -> str:
     category_name, application_type, application = rel_path.parts[:3]
     case_thresholds = extract_threshold_entries(case_data)
@@ -228,8 +233,8 @@ def render_markdown(
     description = '\n\n'.join(part for part in description_parts if part)
 
     field_values = [
-        ('type_name', '일상점검'),
-        ('area_name', '상태점검'),
+        ('type_name', type_name),
+        ('area_name', area_name),
         ('category_name', category_name),
         ('application_type', application_type),
         ('application', application),
@@ -341,6 +346,9 @@ def convert_all(
     report_root: Path,
     dry_run: bool,
     overwrite: bool,
+    *,
+    type_name: str = DEFAULT_TYPE_NAME,
+    area_name: str = DEFAULT_AREA_NAME,
 ) -> ConversionSummary:
     summary = ConversionSummary(
         dry_run=dry_run,
@@ -403,7 +411,7 @@ def convert_all(
 
         sections = parse_markdown_sections(read_text(raw_path))
         script_text = read_text(script_path)
-        rendered = render_markdown(rel_path, sections, case_data, script_text)
+        rendered = render_markdown(rel_path, sections, case_data, script_text, type_name=type_name, area_name=area_name)
 
         if not dry_run:
             write_text(output_path, rendered)
@@ -533,6 +541,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--report-root', default=str(DEFAULT_REPORT_ROOT), help='report output root')
     parser.add_argument('--dry-run', action='store_true', help='do not create api_data/os Markdown files')
     parser.add_argument('--overwrite', action='store_true', help='overwrite existing generated Markdown files')
+    parser.add_argument('--type-name', default=DEFAULT_TYPE_NAME, help='type_name value for generated Markdown')
+    parser.add_argument('--area-name', default=DEFAULT_AREA_NAME, help='area_name value for generated Markdown')
     return parser.parse_args()
 
 
@@ -550,6 +560,8 @@ def main() -> int:
         report_root=report_root,
         dry_run=bool(args.dry_run),
         overwrite=bool(args.overwrite),
+        type_name=args.type_name,
+        area_name=args.area_name,
     )
     write_reports(summary, report_root)
 

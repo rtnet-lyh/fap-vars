@@ -50,6 +50,72 @@ API로 서버에 등록해주세요.
 
 이 값은 lookup API 호출과 create API 호출에 모두 사용한다.
 
+
+## 표준 입력/출력 스키마
+
+### `api_data/api_context.md`
+
+`api_context.md`는 세션 전용 파일이 아니라 API 작업 전체의 context 파일이다. 아래 값은 현재 등록, 조회, fetch 계열 도구가 공통으로 사용하는 표준 값이다.
+
+| section | 필수 여부 | 사용처 | 비고 |
+| --- | --- | --- | --- |
+| `URL` | 필수 | lookup, create, update, fetch | API 서버 base URL |
+| `SESSION_ID` 또는 `JSESSIONID` | 필수 | lookup, create, update, fetch | 쿠키의 JSESSIONID 값으로 사용 |
+| `language` | 선택 | lookup, create, update, fetch | 없으면 `ko-KR` 기본값 |
+| `application_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
+| `type_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
+
+`item_id`, `item_ids`, `mapping_id`는 `api_context.md`에 넣지 않는다. fetch 흐름은 `/data/inspection/items` 목록 응답 row의 `item_id`, `mapping_id`를 사용해 상세 API를 조회한다.
+
+### `api_data/os/**/*.md`
+
+`api_data/os` Markdown의 표준은 `inspection_create.py`의 `parse_api_data_md()`가 읽는 영문 section이다. 신규 등록, 수정, JSON 변환, raw/case 변환의 최종 Markdown은 이 형식을 따라야 한다.
+
+| section | 필수 여부 | payload key |
+| --- | --- | --- |
+| `type_name` | 필수 | `type_name`, lookup `inspection_type` |
+| `area_name` | 필수 | `area_name`, lookup `area` |
+| `category_name` | 필수 | `category_name`, lookup `category` |
+| `application_type` | 필수 | `application_type_name`, lookup `application_type` |
+| `application` | 필수 | `application_name`, lookup `application` |
+| `inspection_code` | 필수 | `inspection_code` |
+| `is_required` | 필수 | `is_required` (`필수`이면 `1`, 그 외 `0`) |
+| `inspection_name` | 필수 | `inspection_name` |
+| `inspection_content` | 필수 | `inspection_content` |
+| `inspection_command` | 필수 | `inspection_command` |
+| `inspection_output` | 필수 | `inspection_output` |
+| `description` | 필수 | `description` |
+| `thresholds` | 선택 | `thresholds` |
+| `inspection_script` | 필수 | `inspection_script` |
+
+`type_name`과 `area_name`은 항상 고정값이라고 가정하지 않는다. raw/case 기반 생성 시에는 `generate_os_md_from_cases.py --type-name ... --area-name ...`로 조정할 수 있다.
+
+### fetch JSON
+
+`fetch_inspection_details.py`의 JSON 출력은 서버 목록 row와 상세 API 응답을 병합한 배열이다. 각 원소는 이후 `generate_os_md_from_api_json.py`가 Markdown으로 변환할 수 있는 아래 key를 기준으로 한다.
+
+| key | 출처 | 비고 |
+| --- | --- | --- |
+| `item_id` | 목록 row | 상세 조회 대상 |
+| `mapping_id` | 목록 row | 상세 응답의 target mapping 선택 |
+| `type_name` | 상세 `item` | Markdown `type_name` |
+| `area_name` | 상세 `item` | Markdown `area_name` |
+| `category_name` | 상세 `item` | output path segment 1 |
+| `inspection_code` | 상세 `item` | Markdown `inspection_code` |
+| `inspection_name` | 상세 `item` | Markdown `inspection_name` |
+| `inspection_content` | 상세 `item` | Markdown `inspection_content` |
+| `application_type_name` 또는 `application_type` | 상세 mapping 또는 fallback | output path segment 2 |
+| `application_name` | 상세 mapping | output path segment 3 |
+| `inspection_command` | 상세 mapping | Markdown `inspection_command` |
+| `inspection_output` | 상세 mapping | Markdown `inspection_output` |
+| `description` | 상세 mapping | Markdown `description` |
+| `inspection_script` | 상세 mapping | Markdown `inspection_script` |
+| `thresholds` | optional thresholds API | `--include-thresholds`일 때만 포함 |
+
+### legacy Markdown parser
+
+`inspection_md_parser.py`는 표준 `api_data/os` parser가 아니다. 한글 heading 기반 과거 문서를 migration/compatibility 목적으로 읽는 legacy parser이며, 표준 운영 플로우는 `inspection_create.py`의 `parse_api_data_md()`를 기준으로 한다.
+
 ## lookup 단계
 
 등록 전에 반드시 `inspection_lookup.py`를 사용해 아래 값을 조회한다.
