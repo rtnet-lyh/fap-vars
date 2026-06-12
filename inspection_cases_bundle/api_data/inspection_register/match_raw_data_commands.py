@@ -8,9 +8,9 @@ import re
 from pathlib import Path
 
 try:
-    from . import fetch_hpux_inspection_details as api
+    from . import fetch_inspection_details as api
 except ImportError:
-    import fetch_hpux_inspection_details as api
+    import fetch_inspection_details as api
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]

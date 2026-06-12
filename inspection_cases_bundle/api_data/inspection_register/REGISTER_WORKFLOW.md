@@ -19,7 +19,7 @@ API로 서버에 등록해주세요.
 등록 작업의 기준 입력은 아래 파일들이다.
 
 1. `api_data/os/<os>/<case_name>.md`
-2. `api_data/session.md`
+2. `api_data/api_context.md`
 
 ### 1. `api_data/os/<os>/<case_name>.md`
 
@@ -40,7 +40,7 @@ API로 서버에 등록해주세요.
 - `inspection_script`
 - `is_required`
 
-### 2. `api_data/session.md`
+### 2. `api_data/api_context.md`
 
 이 파일에서 아래 값을 읽는다.
 
@@ -49,6 +49,72 @@ API로 서버에 등록해주세요.
 - `language`
 
 이 값은 lookup API 호출과 create API 호출에 모두 사용한다.
+
+
+## 표준 입력/출력 스키마
+
+### `api_data/api_context.md`
+
+`api_context.md`는 세션 전용 파일이 아니라 API 작업 전체의 context 파일이다. 아래 값은 현재 등록, 조회, fetch 계열 도구가 공통으로 사용하는 표준 값이다.
+
+| section | 필수 여부 | 사용처 | 비고 |
+| --- | --- | --- | --- |
+| `URL` | 필수 | lookup, create, update, fetch | API 서버 base URL |
+| `SESSION_ID` 또는 `JSESSIONID` | 필수 | lookup, create, update, fetch | 쿠키의 JSESSIONID 값으로 사용 |
+| `language` | 선택 | lookup, create, update, fetch | 없으면 `ko-KR` 기본값 |
+| `application_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
+| `type_name` | fetch 필수 | fetch | `/data/inspection/items` 목록 filter |
+
+`item_id`, `item_ids`, `mapping_id`는 `api_context.md`에 넣지 않는다. fetch 흐름은 `/data/inspection/items` 목록 응답 row의 `item_id`, `mapping_id`를 사용해 상세 API를 조회한다.
+
+### `api_data/os/**/*.md`
+
+`api_data/os` Markdown의 표준은 `inspection_create.py`의 `parse_api_data_md()`가 읽는 영문 section이다. 신규 등록, 수정, JSON 변환, raw/case 변환의 최종 Markdown은 이 형식을 따라야 한다.
+
+| section | 필수 여부 | payload key |
+| --- | --- | --- |
+| `type_name` | 필수 | `type_name`, lookup `inspection_type` |
+| `area_name` | 필수 | `area_name`, lookup `area` |
+| `category_name` | 필수 | `category_name`, lookup `category` |
+| `application_type` | 필수 | `application_type_name`, lookup `application_type` |
+| `application` | 필수 | `application_name`, lookup `application` |
+| `inspection_code` | 필수 | `inspection_code` |
+| `is_required` | 필수 | `is_required` (`필수`이면 `1`, 그 외 `0`) |
+| `inspection_name` | 필수 | `inspection_name` |
+| `inspection_content` | 필수 | `inspection_content` |
+| `inspection_command` | 필수 | `inspection_command` |
+| `inspection_output` | 필수 | `inspection_output` |
+| `description` | 필수 | `description` |
+| `thresholds` | 선택 | `thresholds` |
+| `inspection_script` | 필수 | `inspection_script` |
+
+`type_name`과 `area_name`은 항상 고정값이라고 가정하지 않는다. raw/case 기반 생성 시에는 `generate_os_md_from_cases.py --type-name ... --area-name ...`로 조정할 수 있다.
+
+### fetch JSON
+
+`fetch_inspection_details.py`의 JSON 출력은 서버 목록 row와 상세 API 응답을 병합한 배열이다. 각 원소는 이후 `generate_os_md_from_api_json.py`가 Markdown으로 변환할 수 있는 아래 key를 기준으로 한다.
+
+| key | 출처 | 비고 |
+| --- | --- | --- |
+| `item_id` | 목록 row | 상세 조회 대상 |
+| `mapping_id` | 목록 row | 상세 응답의 target mapping 선택 |
+| `type_name` | 상세 `item` | Markdown `type_name` |
+| `area_name` | 상세 `item` | Markdown `area_name` |
+| `category_name` | 상세 `item` | output path segment 1 |
+| `inspection_code` | 상세 `item` | Markdown `inspection_code` |
+| `inspection_name` | 상세 `item` | Markdown `inspection_name` |
+| `inspection_content` | 상세 `item` | Markdown `inspection_content` |
+| `application_type_name` 또는 `application_type` | 상세 mapping 또는 fallback | output path segment 2 |
+| `application_name` | 상세 mapping | output path segment 3 |
+| `inspection_command` | 상세 mapping | Markdown `inspection_command` |
+| `inspection_output` | 상세 mapping | Markdown `inspection_output` |
+| `description` | 상세 mapping | Markdown `description` |
+| `inspection_script` | 상세 mapping | Markdown `inspection_script` |
+| `thresholds` | optional thresholds API | `--include-thresholds`일 때만 포함 |
+
+### legacy Markdown parser
+
+`inspection_md_parser.py`는 표준 `api_data/os` parser가 아니다. 한글 heading 기반 과거 문서를 migration/compatibility 목적으로 읽는 legacy parser이며, 표준 운영 플로우는 `inspection_create.py`의 `parse_api_data_md()`를 기준으로 한다.
 
 ## lookup 단계
 
@@ -101,7 +167,7 @@ lookup 단계에서 특정 `*name` 값을 찾지 못하면 바로 종료하지 �
 `inspection_create.py`는 아래 순서로 동작해야 한다.
 
 1. `api_data/os/<os>/<case_name>.md`를 읽는다.
-2. 공용 `api_data/session.md`를 읽는다.
+2. 공용 `api_data/api_context.md`를 읽는다.
 3. `inspection_lookup.py`를 호출해 lookup id들을 가져온다.
 4. md에서 읽은 나머지 값과 lookup id를 합쳐 payload를 만든다.
 5. `/data/inspection/items`로 POST 요청을 보낸다.
@@ -112,9 +178,9 @@ lookup 단계에서 특정 `*name` 값을 찾지 못하면 바로 종료하지 �
 
 `inspection_update.py`는 아래 순서로 동작한다.
 
-1. `api_data/os/<os>/*.md` 최상위 파일만 읽는다.
-2. 공용 `api_data/session.md`를 읽어 `JSESSIONID`와 `Language` 쿠키를 설정한다.
-3. `/data/inspection/items/search`를 `application/x-www-form-urlencoded` POST로 호출해 서버 항목 목록을 가져온다.
+1. `api_data/os/<os>/*.md` 또는 `--recursive` 지정 시 하위 `*.md`를 읽는다.
+2. 공용 `api_data/api_context.md`를 읽어 `JSESSIONID`와 `Language` 쿠키를 설정한다.
+3. `/data/inspection/items/search`를 `application/x-www-form-urlencoded` POST로 호출해 서버 항목 목록을 가져온다. 기본 `search_data`는 빈 문자열이며 전체 검색 형태로 조회한다.
 4. 서버 응답에서 `inspection_code`와 `application_name`이 md의 `inspection_code`, `application`과 일치하는 항목을 찾는다.
 5. 매칭된 서버 항목의 `id`, `item_id`, `mapping_id`, `cve_id`, `importance`, `application_family_id`, `application_version_id`를 보존한다.
 6. md 값과 lookup id를 합쳐 PATCH payload를 만든다.
@@ -158,7 +224,7 @@ PATCH payload는 기존 서버 식별자와 md 기준 값을 결합한다.
 사용자가 `"API로 서버에 등록해주세요."`라고 하면 아래 순서로 진행한다.
 
 1. 사용자가 기준으로 삼을 `api_data/os/<os>/<case_name>.md` 파일을 확인한다.
-2. `api_data/session.md`가 있는지 확인한다.
+2. `api_data/api_context.md`가 있는지 확인한다.
 3. `inspection_lookup.py`를 통해 id 조회가 정상 수행되는지 먼저 확인한다.
 4. id 조회가 성공하면 `inspection_create.py`로 payload preview를 만들거나 바로 등록한다.
 5. 등록 API 응답을 확인한다.
@@ -176,7 +242,7 @@ PATCH payload는 기존 서버 식별자와 md 기준 값을 결합한다.
 아래 경우에는 다음 단계로 진행하지 말고 즉시 중단한다.
 
 - md 파일에 lookup에 필요한 `*name` 값이 없을 때
-- `session.md`에 `SESSION_ID` 또는 `URL` 값이 없을 때
+- `api_context.md`에 `SESSION_ID` 또는 `URL` 값이 없을 때
 - lookup API가 id를 반환하지 못하고, 가능한 값 기준 재시도도 실패할 때
 - update 단계에서 `inspection_code + application_name` 기준 서버 항목이 여러 개 매칭될 때
 - update 단계에서 서버 항목의 `id`, `item_id`, `mapping_id` 등 PATCH 필수 식별자가 없을 때
@@ -211,7 +277,7 @@ PATCH payload는 기존 서버 식별자와 md 기준 값을 결합한다.
 
 - `inspection_lookup.py`
   - `api_data/os/<os>/<case_name>.md`에서 lookup용 `*name` 값을 읽는다.
-  - `api_data/session.md`에서 세션 정보를 읽는다.
+  - `api_data/api_context.md`에서 세션 정보를 읽는다.
   - 내부 lookup API를 호출해 id를 조회한다.
   - lookup 실패 시 가능한 값 목록을 확인해 같은 의미의 서버 실제 값으로 재시도할 수 있어야 한다.
 
@@ -253,7 +319,7 @@ PATCH payload는 기존 서버 식별자와 md 기준 값을 결합한다.
 
 - lookup 없이 바로 create API를 호출하지 않는다.
 - search API로 기존 서버 항목의 `id`, `item_id`, `mapping_id`를 확인하지 않고 PATCH를 호출하지 않는다.
-- `session.md` 값을 하드코딩해 고정하지 않는다.
+- `api_context.md` 값을 하드코딩해 고정하지 않는다.
 - md 값이 비어 있는데 임의 문자열로 대체하지 않는다.
 - 실패했는데 계속 다음 단계로 진행하지 않는다.
 
@@ -284,48 +350,26 @@ python3 inspection_update.py --os solaris --code SVR-4-1
 python3 inspection_update.py --os solaris --code SVR-4-1 --execute
 ```
 
-## HP-UX update 로드맵
+## API 상세 수집 및 JSON 기반 Markdown 생성
 
-`fetch_hpux_inspection_details.py`를 사용해 서버에서 HP-UX 점검 항목 상세 값을 수집한 뒤,
-`api_data/os/hp-ux/*.md` 파일을 자동 생성하고 `inspection_update.py --os hp-ux --execute`로 PATCH 수정합니다.
+기존 서버에 등록된 특정 계열의 상세 값을 내려받을 때는 `fetch_inspection_details.py`를 사용한다. 이 도구는 `api_data/api_context.md`의 `URL`, `SESSION_ID` 또는 `JSESSIONID`, `language`, `application_name`, `type_name`을 읽고 `/data/inspection/items` 목록 API를 조회한다. 목록 응답 row에는 상세 조회에 필요한 `item_id`와 `mapping_id`가 포함되어 있으므로 `api_context.md`에 `item_id`를 별도로 넣어 직접 상세 조회하지 않는다.
 
-1. `fetch_hpux_inspection_details.py`로 `/data/inspection/items` 목록과 `/data/inspection/items/{item_id}` 상세를 조회.
-2. 서버 응답에서 `inspection_code`, `application_name`, `type_name`, `category_name`, `area_name`, `inspection_name`, `inspection_content`, `inspection_command`, `inspection_output`, `description`을 그대로 사용.
-3. `inspection_script`는 `inspection_cases/server/hpux/*/script.py`에서 가져와 md에 삽입.
-4. `thresholds`는 생성하지 않습니다.
-5. `is_required`는 `/api_data/os/solaris/참고/is_essential.md`의 `세부 점검항목` 기준으로 매핑합니다.
+1. `/data/inspection/items` 목록 API를 `type_name`, `application_name` filter로 조회한다.
+2. 각 row의 `item_id`, `mapping_id`로 `/data/inspection/items/{item_id}` 상세 API를 조회한다.
+3. 상세 응답의 `mappings` 중 `mapping_id`가 일치하는 mapping에서 `application_name`, `inspection_command`, `inspection_output`, `description`, `inspection_script`를 가져온다.
+4. 기본 출력은 `api_data/inspection_register/outputs/<application_name>_inspection_details.json`이다.
+5. `--include-thresholds`를 지정한 경우에만 `/data/inspection/items/{item_id}/thresholds`도 추가 조회한다.
 
-- 현재 매칭 가능한 HP-UX 점검명:
-  - HBA 연결 상태 점검 -> 권고
-  - Path 이중화 점검 -> 권고
-  - Ping Loss -> 권고
-  - NIC 이중화 점검 -> 권고
-  - NW 링크 상태 점검 -> 필수
-  - 공유 볼륨 상태 점검 -> 권고
-  - Cluster 데몬 상태 -> 권고
-  - Kernel Parameter Check -> 권고
-  - I-Node 사용률 -> 권고
-  - Disk I/O 점검 -> 권고
-  - Disk 인식 여부 점검 -> 권고
-  - Disk 이중화 정상 여부 -> 권고
-  - Disk Swap 사용률 -> 필수
-  - 파일시스템 사용량 -> 필수
-  - Paging Space -> 필수
-  - 메모리 상태 확인 -> 권고
-  - 메모리 사용률 -> 필수
-  - CPU 사용률 -> 필수
+수집된 JSON을 `api_data/os/<category_name>/<application_type>/<application>/<case_name>.md`로 변환할 때는 `generate_os_md_from_api_json.py`를 사용한다. `application_type`은 JSON의 `application_type_name` 또는 `application_type`을 우선 사용하고, 없으면 CLI `--application-type` 값을 fallback으로 사용한다.
 
-- 현재 `is_essential.md`에서 매칭되지 않는 HP-UX 점검명:
-  - I/O 에러 로그
-  - NIC 로그
-  - HBA 로그
-  - POWER 로그
-  - FAN 로그
-  - MEMORY 로그
-  - CPU 로그
-  - 커널로그
-  - 클러스터 로그
-  - 시스템 로그
-  - CPU 코어별 상태 점검
+## `match_raw_data_commands.py`의 목적
 
-이 경우 생성된 md는 서버값과 최대한 일치하도록 구성하고, `is_required`는 매칭 가능한 항목에 대해 `is_essential.md` 기준을 적용합니다.
+이 도구는 등록/수정용 일반 플로우가 아니라, 서버 API에 이미 존재하는 점검 항목과 로컬 replay case를 명령어 기준으로 연결하기 위한 보조 매칭 도구다.
+
+- 서버 쪽 입력: `fetch_inspection_details.py`와 같은 `/data/inspection/items` 목록 API 결과이며, `api_context.md`의 `type_name`, `application_name` filter로 가져온다.
+- 서버 쪽 매칭 값: 목록 row의 `inspection_command`, `category_name`, `inspection_name`, `inspection_code`, `item_id`, `mapping_id`, `application_name`이다.
+- 로컬 쪽 입력: 현재 구현 기준으로 `inspection_cases/**/raw_data.md` 파일이다.
+- 로컬 쪽 매칭 값: raw 문서의 `영역`, `세부 점검항목`, `명령어`이다.
+- 1차 매칭 키: 정규화한 `(inspection_command, category_name)`과 정규화한 `(명령어, 영역)`이다.
+
+매칭 결과는 `sync_scripts_from_api.py`가 API의 `inspection_script`를 어떤 로컬 `script.py`에 역동기화할지 결정하는 데 사용한다. 새 raw data 정본인 `inspection_cases_bundle/raw_data/**/*.md` 기준으로 재편할 때는 이 도구의 raw 탐색 위치도 함께 바꿔야 한다.
