@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Match existing API inspection items to canonical raw Markdown and script.py files.
+
+This helper is not part of the create/update registration flow. It consumes the
+/data/inspection/items list response and connects each server row to the local
+raw_data/<category>/<application_type>/<application>/<case>.md source plus the
+script.py resolved with the same case-directory strategy used by
+generate_os_md_from_cases.py.
+"""
 
 import contextlib
 import io
@@ -9,11 +17,15 @@ from pathlib import Path
 
 try:
     from . import fetch_inspection_details as api
+    from . import generate_os_md_from_cases
 except ImportError:
     import fetch_inspection_details as api
+    import generate_os_md_from_cases
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_RAW_ROOT = ROOT_DIR / "raw_data"
+DEFAULT_CASE_ROOT = ROOT_DIR / "inspection_cases"
 OUTPUT_PATH = ROOT_DIR / "raw_data_command_matches.json"
 
 CATEGORY_ALIASES = {
@@ -93,7 +105,10 @@ def extract_bold_field(text, label_names):
     return strip_code_fence(tail[:end])
 
 
-def parse_raw_data(path):
+def parse_raw_data(path, raw_root=DEFAULT_RAW_ROOT, case_root=DEFAULT_CASE_ROOT):
+    path = Path(path)
+    raw_root = Path(raw_root)
+    case_root = Path(case_root)
     text = path.read_text(encoding="utf-8")
     area = extract_hash_section(text, "영역") or extract_bold_field(text, ["영역", "area"])
     name = (
@@ -101,14 +116,32 @@ def parse_raw_data(path):
         or extract_bold_field(text, ["세부 점검항목", "점검 항목", "inspection item"])
     )
     command = extract_hash_section(text, "명령어") or extract_bold_field(text, ["명령어", "command"])
+
+    try:
+        rel_path = path.relative_to(raw_root)
+    except ValueError:
+        rel_path = Path(path.name)
+
+    case_dir, match_strategy, tried_scripts = generate_os_md_from_cases.resolve_case_dir(
+        case_root,
+        rel_path,
+    )
+    script_path = case_dir / "script.py" if case_dir is not None else None
+
     return {
         "path": str(path),
-        "case_name": path.parent.name,
+        "raw_data_path": str(path),
+        "relative_path": rel_path.as_posix(),
+        "case_name": path.stem,
         "area": area.strip(),
         "normalized_area": normalize_category(area),
         "raw_item_name": name.strip(),
         "raw_command": command.strip(),
         "normalized_command": normalize_command(command),
+        "script_path": str(script_path) if script_path is not None else "",
+        "script_exists": bool(script_path and script_path.exists()),
+        "match_strategy": match_strategy,
+        "expected_script": ", ".join(str(item) for item in tried_scripts),
     }
 
 
@@ -123,11 +156,23 @@ def application_path_variants(application_name):
     return {variant for variant in variants if variant}
 
 
-def iter_raw_data_files(application_name):
+def iter_raw_data_files(application_name=None, raw_root=DEFAULT_RAW_ROOT):
+    raw_root = Path(raw_root)
     variants = application_path_variants(application_name)
-    for path in (ROOT_DIR / "inspection_cases").rglob("raw_data.md"):
-        parts = {part.lower() for part in path.parts}
-        if parts.intersection(variants):
+    for path in sorted(raw_root.rglob("*.md")):
+        if path.name == "AGENTS.md" or "참고" in path.parts:
+            continue
+        try:
+            rel_path = path.relative_to(raw_root)
+        except ValueError:
+            continue
+        if len(rel_path.parts) != 4:
+            continue
+        if not variants:
+            yield path
+            continue
+        application_part = rel_path.parts[2]
+        if application_path_variants(application_part).intersection(variants):
             yield path
 
 
@@ -206,9 +251,12 @@ def choose_match_for_raw_path(matches):
     return matches[0]
 
 
-def build_matches():
+def build_matches(raw_root=DEFAULT_RAW_ROOT, case_root=DEFAULT_CASE_ROOT):
     items, meta = api_items()
-    raws = [parse_raw_data(path) for path in iter_raw_data_files(api.SESSION["application_name"])]
+    raws = [
+        parse_raw_data(path, raw_root=raw_root, case_root=case_root)
+        for path in iter_raw_data_files(api.SESSION["application_name"], raw_root=raw_root)
+    ]
     raw_by_key = {}
     for raw in raws:
         if not raw["normalized_command"]:
@@ -245,6 +293,10 @@ def build_matches():
             candidate_matches.append({
                 **record,
                 "raw_data_path": chosen["path"],
+                "script_path": chosen.get("script_path", ""),
+                "script_exists": chosen.get("script_exists", False),
+                "match_strategy": chosen.get("match_strategy", ""),
+                "expected_script": chosen.get("expected_script", ""),
                 "raw_area": chosen["area"],
                 "raw_item_name": chosen["raw_item_name"],
                 "raw_command": chosen["raw_command"],
@@ -315,7 +367,8 @@ def main():
     for item in result["matches"][:10]:
         print(
             f"- {item['inspection_code']} | {item['inspection_name']} | "
-            f"{item['inspection_command']} -> {item['raw_data_path']}"
+            f"{item['inspection_command']} -> {item['raw_data_path']} | "
+            f"script={item.get('script_path', '')} | strategy={item.get('match_strategy', '')}"
         )
     if result["unmatched_api"]:
         print("\nunmatched_api:")

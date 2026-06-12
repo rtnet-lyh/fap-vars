@@ -39,6 +39,8 @@ inspection_update = importlib.import_module("inspection_update")
 inspection_lookup = importlib.import_module("inspection_lookup")
 generate_os_md_from_api_json = importlib.import_module("generate_os_md_from_api_json")
 generate_os_md_from_cases = importlib.import_module("generate_os_md_from_cases")
+match_raw_data_commands = importlib.import_module("match_raw_data_commands")
+sync_scripts_from_api = importlib.import_module("sync_scripts_from_api")
 
 
 STANDARD_MD = """# type_name
@@ -587,6 +589,118 @@ legacy-session
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0]["existing"]["id"], 1)
         self.assertEqual([record["code"] for record in missing], ["CODE-2"])
+
+    def test_match_raw_data_commands_uses_canonical_raw_and_resolves_script_path(self) -> None:
+        original_api_items = match_raw_data_commands.api_items
+        original_session = dict(match_raw_data_commands.api.SESSION)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw_root = root / "raw_data"
+            case_root = root / "inspection_cases"
+            raw_path = raw_root / "server" / "linux" / "rocky" / "cpu_usage.md"
+            script_path = case_root / "server" / "linux" / "rocky" / "cpu_usage" / "script.py"
+            raw_path.parent.mkdir(parents=True)
+            script_path.parent.mkdir(parents=True)
+            raw_path.write_text(
+                "# 영역\n\nCPU\n\n"
+                "# 세부 점검항목\n\nCPU 사용률 점검\n\n"
+                "# 명령어\n\n```bash\ntop -bn1\n```\n",
+                encoding="utf-8",
+            )
+            script_path.write_text("class Check:\n    pass\n\nCHECK_CLASS = Check\n", encoding="utf-8")
+
+            def fake_api_items() -> tuple[list[dict[str, object]], dict[str, object]]:
+                return [
+                    {
+                        "item_id": 101,
+                        "mapping_id": 202,
+                        "inspection_code": "LINUX-CPU-001",
+                        "inspection_name": "CPU 사용률 점검",
+                        "category_name": "CPU",
+                        "application_name": "rocky",
+                        "inspection_command": "top -bn1",
+                    }
+                ], {"total": 1}
+
+            try:
+                match_raw_data_commands.api_items = fake_api_items
+                match_raw_data_commands.api.SESSION.update({"application_name": "rocky", "type_name": "정기점검"})
+                result = match_raw_data_commands.build_matches(raw_root=raw_root, case_root=case_root)
+            finally:
+                match_raw_data_commands.api_items = original_api_items
+                match_raw_data_commands.api.SESSION.clear()
+                match_raw_data_commands.api.SESSION.update(original_session)
+
+        self.assertEqual(result["matched_count"], 1)
+        match = result["matches"][0]
+        self.assertEqual(match["raw_data_path"], str(raw_path))
+        self.assertEqual(match["script_path"], str(script_path))
+        self.assertEqual(match["match_strategy"], "same_parent:exact")
+        self.assertEqual(match["item_id"], 101)
+        self.assertEqual(match["mapping_id"], 202)
+
+    def test_sync_scripts_uses_match_script_path_and_blocks_validation_errors(self) -> None:
+        explicit_script = Path("/tmp/correct/script.py")
+        fallback_raw = Path("/tmp/wrong/raw_data.md")
+        resolved = sync_scripts_from_api.script_path_for_match({
+            "script_path": str(explicit_script),
+            "raw_data_path": str(fallback_raw),
+        })
+
+        self.assertEqual(resolved, explicit_script)
+        with self.assertRaisesRegex(RuntimeError, "validation_error_count=1"):
+            sync_scripts_from_api.ensure_safe_to_write(
+                {
+                    "summary": {
+                        "validation_error_count": 1,
+                        "unmatched_api_count": 0,
+                        "unmatched_raw_count": 0,
+                    }
+                },
+                allow_partial=True,
+            )
+
+    def test_sync_apply_updates_writes_backup_manifest(self) -> None:
+        original_root = sync_scripts_from_api.ROOT_DIR
+        old_script = "class Check:\n    pass\n\nCHECK_CLASS = Check\n"
+        new_script = "class Check:\n    value = 1\n\nCHECK_CLASS = Check\n"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script_path = root / "inspection_cases" / "server" / "linux" / "rocky" / "cpu_usage" / "script.py"
+            backup_dir = root / "backups" / "sync"
+            script_path.parent.mkdir(parents=True)
+            script_path.write_text(old_script, encoding="utf-8")
+            detail_key = (101, 202)
+            plan = {
+                "records": [
+                    {
+                        "item_id": 101,
+                        "mapping_id": 202,
+                        "script_path": str(script_path),
+                        "changed": True,
+                        "old_script_sha256": sync_scripts_from_api.sha256_text(old_script),
+                    }
+                ],
+                "_details": {detail_key: {"inspection_script": new_script}},
+            }
+
+            try:
+                sync_scripts_from_api.ROOT_DIR = root
+                result = sync_scripts_from_api.apply_updates(plan, backup_dir)
+            finally:
+                sync_scripts_from_api.ROOT_DIR = original_root
+
+            manifest_path = backup_dir / "backup_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            backup_path = Path(manifest[0]["backup_path"])
+
+            self.assertEqual(result["backup_count"], 1)
+            self.assertEqual(result["updated_count"], 1)
+            self.assertEqual(script_path.read_text(encoding="utf-8"), new_script)
+            self.assertEqual(backup_path.read_text(encoding="utf-8"), old_script)
+            self.assertEqual(manifest[0]["script_path"], str(script_path))
 
 
 if __name__ == "__main__":
