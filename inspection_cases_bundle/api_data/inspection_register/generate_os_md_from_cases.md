@@ -274,6 +274,8 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 생성 결과는 사람이 검토하기 쉬운 Markdown report와 자동 처리 가능한 JSON summary로 남깁니다.
 
 ```text
+inspection_cases_bundle/api_data/os/_reports/skip_report.md
+inspection_cases_bundle/api_data/os/_reports/summary.json
 inspection_cases_bundle/api_data/os/_reports/generate_os_md_skip_report.md
 inspection_cases_bundle/api_data/os/_reports/generate_os_md_summary.json
 ```
