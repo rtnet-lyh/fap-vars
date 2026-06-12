@@ -9,7 +9,7 @@
 ## 프로젝트 구조 및 모듈 구성
 
 - `inspection_cases/`: 점검 케이스 모음. 현재 주요 분류는 `server/`, `network/`, `was/`, `web/`, `storage/`, `dbms/`, `backup/`, `tutorial/`이다.
-- `inspection_cases/server/`: `rocky`, `windows`, `solaris`, `hpux`, `esxi` 서버 계열 케이스를 둔다.
+- `inspection_cases/server/`: `server/<os_family>/<platform>/` 구조로 `linux/rocky`, `windows/windows2019`, `unix/solaris`, `unix/hpux`, `vmware/esxi` 서버 계열 케이스를 둔다.
 - `inspection_cases/network/`: `cisco_ios`, `nx_os`, `juniper_junos`, `piolink_pas` 등 네트워크 장비 케이스를 둔다.
 - `inspection_cases/was/`와 `inspection_cases/web/`: JEUS, WebtoB처럼 애플리케이션 계열 점검 케이스를 둔다.
 - `inspection_cases/storage/`: Dell DDOS 등 스토리지 장비 케이스를 둔다.
@@ -20,33 +20,33 @@
 - `raw_data/`: 점검 명령어, 출력 결과, 판단 근거를 담은 원천 Markdown 자료다.
 - `api_data/`: API 문서화 또는 변환 산출물 성격의 Markdown 자료다. 명시 요청이 없으면 불필요하게 갱신하지 않는다.
 
-새 점검 로직의 기본 위치는 `inspection_cases/<domain>/<platform_or_product>/<case_name>/`이다. 예: `inspection_cases/server/rocky/rocky_memory_usage_free_check/`, `inspection_cases/network/nx_os/mds_c9148s/1_1_cpu_check/`, `inspection_cases/backup/netbackup_appliance_5240/nbu_1_1_catalog_backup_status_check/`. 기존에 장비 모델, 제품, OS 하위 디렉터리가 있으면 가장 가까운 구조를 따른다.
+새 점검 로직의 기본 위치는 `inspection_cases/<domain>/<application_type>/<application>/<case_name>/`이다. 예: `inspection_cases/server/linux/rocky/rocky_memory_usage_free_check/`, `inspection_cases/network/nx_os/mds_c9148s/1_1_cpu_check/`, `inspection_cases/backup/netbackup_appliance_5240/nbu_1_1_catalog_backup_status_check/`. 기존에 장비 모델, 제품, OS 하위 디렉터리가 있으면 가장 가까운 구조를 따른다.
 
 ## 빌드, 테스트, 개발 명령
 
 저장소 루트(`fap-vars/`)에서 실행할 때:
 
 ```bash
-python3 inspection_cases_bundle/inspection_runtime/replay_cli.py inspection_cases_bundle/inspection_cases/server/rocky/rocky_memory_usage_free_check
+python3 inspection_cases_bundle/inspection_runtime/replay_cli.py inspection_cases_bundle/inspection_cases/server/linux/rocky/rocky_memory_usage_free_check
 ```
 
 번들 루트(`inspection_cases_bundle/`)에서 실행할 때:
 
 ```bash
-python3 inspection_runtime/replay_cli.py inspection_cases/server/rocky/rocky_memory_usage_free_check
+python3 inspection_runtime/replay_cli.py inspection_cases/server/linux/rocky/rocky_memory_usage_free_check
 ```
 
 분류 단위 또는 전체 재생:
 
 ```bash
-python3 inspection_runtime/replay_cli.py inspection_cases/server/rocky
+python3 inspection_runtime/replay_cli.py inspection_cases/server/linux/rocky
 python3 inspection_runtime/replay_cli.py inspection_cases
 ```
 
 실제 접속 기반 live 실행은 단일 케이스만 지원하며, 사용자가 명시적으로 요청한 경우에만 실행한다.
 
 ```bash
-python3 inspection_runtime/replay_cli.py --mode live inspection_cases/server/rocky/rocky_memory_usage_free_check
+python3 inspection_runtime/replay_cli.py --mode live inspection_cases/server/linux/rocky/rocky_memory_usage_free_check
 ```
 
 ## 기본 원칙
@@ -65,7 +65,7 @@ python3 inspection_runtime/replay_cli.py --mode live inspection_cases/server/roc
 각 케이스는 보통 아래 구조를 따른다.
 
 ```text
-inspection_cases/<domain>/<platform>/<case_name>/
+inspection_cases/<domain>/<application_type>/<application>/<case_name>/
 ├── case.json
 ├── replay.json
 ├── result.json
@@ -73,7 +73,7 @@ inspection_cases/<domain>/<platform>/<case_name>/
 └── outputs/
 ```
 
-`outputs/`는 긴 stdout이 없으면 생략 가능하지만, 일반적으로 만드는 편이 안전하다. 일부 기존 Windows, Solaris, Backup 케이스에는 호환용 `raw_data.md`가 있을 수 있으나, 새 Rocky 계열 케이스는 `raw_data/server/rocky/*.md`를 정본으로 본다.
+`outputs/`는 긴 stdout이 없으면 생략 가능하지만, 일반적으로 만드는 편이 안전하다. 일부 기존 Windows, Solaris, Backup 케이스에는 호환용 `raw_data.md`가 있을 수 있으나, 새 Rocky 계열 케이스는 `raw_data/server/linux/rocky/*.md`를 정본으로 본다.
 
 ## OS 및 연결 방식별 작성 규칙
 
@@ -101,7 +101,7 @@ inspection_cases/<domain>/<platform>/<case_name>/
 ### ESXi 및 API 기반 케이스
 
 - 장비 접속 명령보다 API 또는 replay payload 평가가 핵심이면 `USE_HOST_CONNECTION = False` 패턴을 따른다.
-- live 실행 가능 여부와 필요한 credential 형식은 가까운 `server/esxi/*/script.py` 케이스를 기준으로 맞춘다.
+- live 실행 가능 여부와 필요한 credential 형식은 가까운 `server/vmware/esxi/*/script.py` 케이스를 기준으로 맞춘다.
 
 ## `script.py` 작성 규칙
 
@@ -151,7 +151,7 @@ Python 코드는 루트 규칙과 같이 공백 4칸 들여쓰기, 표준 라이
 새 점검 요청을 받으면 아래 순서로 처리한다.
 
 1. 가장 가까운 기존 케이스 또는 `tutorial/` starter를 찾는다.
-2. 새 디렉터리를 `inspection_cases/<domain>/<platform>/<case_name>/`으로 만든다.
+2. 새 디렉터리를 `inspection_cases/<domain>/<application_type>/<application>/<case_name>/`으로 만든다.
 3. `case.json`을 기준 케이스 기반으로 작성하고 필요한 threshold를 넣는다.
 4. `script.py`를 작성한다.
 5. `replay.json`과 필요 시 `outputs/*`를 작성한다.
