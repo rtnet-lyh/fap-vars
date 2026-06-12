@@ -1,0 +1,258 @@
+# type_name
+
+일상점검
+
+# area_name
+
+상태점검
+
+# category_name
+
+server
+
+# application_type
+
+windows
+
+# application
+
+windows2019
+
+# inspection_code
+
+W-REPLAY-IO-LOG-01
+
+# is_required
+
+필수
+
+# inspection_name
+
+# inspection_content
+
+디스크, 파일시스템, I/O 오류와 관련된 최근 이벤트를 검색합니다.
+
+# inspection_command
+
+```bash
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -match 'disk|storport|stornvme|nvme|ntfs|partmgr|iaStor|storahci|mpio' -or $_.Message -match '(?i)i/o error|timeout|timed out|transport failed|media error|reset to device|bad block|fc packet|dropped request|corrupt' }; if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\r?\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No I/O timeout/transport/media-like warning or error events found in the last 30 days.'}
+```
+
+# inspection_output
+
+```text
+No I/O timeout/transport/media-like warning or error events found in the last 30 days.
+```
+
+# description
+
+- 디스크 오류, 파일시스템 손상, I/O timeout 성격의 이벤트를 수집합니다.
+- 저장장치 장애 조기 징후를 로그 기반으로 확인하는 항목입니다.
+
+- **정상**: 디스크/I/O 관련 이벤트 수가 허용 범위 이내입니다.
+- **경고**: 디스크 오류, 파일시스템 오류, I/O timeout 이벤트가 임계치를 초과합니다.
+
+# thresholds
+
+[
+    {id: null, key: "max_io_event_count", value: "0", sortOrder: 0}
+,
+{id: null, key: "failure_keywords", value: "", sortOrder: 1}
+]
+
+# inspection_script
+
+# -*- coding: utf-8 -*-
+
+import json
+
+from .common._base import BaseCheck
+
+
+LOG_IO_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "$e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | "
+    "Where-Object { $_.ProviderName -match 'disk|storport|stornvme|nvme|ntfs|partmgr|iaStor|storahci|mpio' -or $_.Message -match '(?i)i/o error|timeout|timed out|transport failed|media error|reset to device|bad block|fc packet|dropped request|corrupt' }; "
+    "if($e){@($e | Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}}) | ConvertTo-Json -Depth 4}else{'No I/O timeout/transport/media-like warning or error events found in the last 30 days.'}"
+)
+
+
+def _parse_int(value):
+    return int(str(value).strip())
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if value in (None, ''):
+        return []
+    return [value]
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'winrm'
+    WINRM_SHELL = 'powershell'
+
+    def run(self):
+        max_io_event_count = self.get_threshold_var('max_io_event_count', default=0, value_type='int')
+        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+
+        rc, out, err = self._run_ps(LOG_IO_COMMAND)
+
+        if self._is_connection_error(rc, err):
+            return self.fail(
+                '호스트 연결 실패',
+                message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        if self._is_not_applicable(rc, err):
+            return self.fail(
+                'WinRM 실행 환경을 사용할 수 없습니다.',
+                message='Windows I/O 로그 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        if rc != 0:
+            return self.fail(
+                '점검 명령 실행 실패',
+                message='Windows I/O 로그 점검 명령 실행에 실패했습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        text = (out or '').strip()
+        if not text or 'No I/O timeout/transport/media-like warning or error events found in the last 30 days.' in text:
+            return self.ok(
+                metrics={
+                    'io_event_count': 0,
+                    'storport_129_154_event_count': 0,
+                    'timeout_event_count': 0,
+                    'media_error_event_count': 0,
+                    'corrupt_event_count': 0,
+                    'matched_failure_keywords': [],
+                },
+                thresholds={
+                    'max_io_event_count': max_io_event_count,
+                    'failure_keywords': [],
+                },
+                reasons='최근 30일 내 I/O timeout, transport failed, media error, corrupt 관련 이벤트가 확인되지 않았습니다.',
+                message=(
+                    'Windows I/O 로그 점검이 정상입니다. '
+                    '현재 상태: 최근 30일 내 I/O timeout, transport failed, media error, corrupt 관련 이벤트가 없어 0건으로 집계했습니다.'
+                ),
+            )
+
+        failure_keywords = [
+            keyword.strip()
+            for keyword in failure_keywords_raw.split(',')
+            if keyword.strip()
+        ]
+        matched_failure_keywords = [
+            keyword for keyword in failure_keywords if keyword.lower() in text.lower()
+        ]
+        if matched_failure_keywords:
+            return self.fail(
+                'I/O 로그 실패 키워드 감지',
+                message='I/O 로그 결과에서 실패 키워드가 확인되었습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        try:
+            raw_entries = json.loads(text)
+        except json.JSONDecodeError:
+            return self.fail(
+                'I/O 로그 파싱 실패',
+                message='저장소 I/O 관련 이벤트 JSON을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        entries = []
+        for entry in _as_list(raw_entries):
+            if not isinstance(entry, dict):
+                continue
+            event_id = entry.get('Id', '')
+            entries.append({
+                'time_created': str(entry.get('TimeCreated', '')).strip(),
+                'provider_name': str(entry.get('ProviderName', '')).strip(),
+                'event_id': _parse_int(event_id) if str(event_id).strip() else 0,
+                'level': str(entry.get('LevelDisplayName', '')).strip(),
+                'message': str(entry.get('Message', '')).strip(),
+            })
+
+        if not entries:
+            return self.fail(
+                'I/O 로그 파싱 실패',
+                message='저장소 I/O 관련 이벤트 항목을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        timeout_entries = [
+            entry for entry in entries
+            if 'timeout' in entry['message'].lower() or 'timed out' in entry['message'].lower()
+        ]
+        media_error_entries = [
+            entry for entry in entries
+            if 'media error' in entry['message'].lower() or 'bad block' in entry['message'].lower()
+        ]
+        corrupt_entries = [
+            entry for entry in entries
+            if 'corrupt' in entry['message'].lower()
+        ]
+        storport_129_154_entries = [
+            entry for entry in entries
+            if entry['provider_name'].lower() == 'storport' and entry['event_id'] in (129, 154)
+        ]
+        repeated_event_keys = {}
+        for entry in entries:
+            key = f"{entry['provider_name']}:{entry['event_id']}"
+            repeated_event_keys[key] = repeated_event_keys.get(key, 0) + 1
+        repeated_events = [
+            f"{key}({count})"
+            for key, count in repeated_event_keys.items()
+            if count > 1
+        ]
+        latest_entry = entries[0]
+
+        if len(entries) > max_io_event_count:
+            return self.fail(
+                'I/O 로그 이벤트 감지',
+                message='최근 30일 내 저장소 I/O 관련 경고/오류 이벤트가 기준치를 초과했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        return self.ok(
+            metrics={
+                'io_event_count': len(entries),
+                'storport_129_154_event_count': len(storport_129_154_entries),
+                'timeout_event_count': len(timeout_entries),
+                'media_error_event_count': len(media_error_entries),
+                'corrupt_event_count': len(corrupt_entries),
+                'latest_event_time': latest_entry['time_created'],
+                'latest_event_provider': latest_entry['provider_name'],
+                'latest_event_id': latest_entry['event_id'],
+                'repeated_events': repeated_events,
+                'matched_failure_keywords': matched_failure_keywords,
+            },
+            thresholds={
+                'max_io_event_count': max_io_event_count,
+                'failure_keywords': failure_keywords,
+            },
+            reasons='최근 30일 내 저장소 I/O 관련 이벤트 수가 기준 범위 내입니다.',
+            message=(
+                f'Windows I/O 로그 점검이 정상입니다. 현재 상태: '
+                f'이벤트 {len(entries)}건 (기준 {max_io_event_count}건 이하), '
+                f'Storport 129/154 {len(storport_129_154_entries)}건, Timeout {len(timeout_entries)}건, '
+                f'Media error {len(media_error_entries)}건, Corrupt {len(corrupt_entries)}건.'
+            ),
+        )
+
+
+CHECK_CLASS = Check

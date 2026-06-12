@@ -1,0 +1,258 @@
+# type_name
+
+일상점검
+
+# area_name
+
+상태점검
+
+# category_name
+
+server
+
+# application_type
+
+windows
+
+# application
+
+windows2019
+
+# inspection_code
+
+W-REPLAY-MEM-01
+
+# is_required
+
+필수
+
+# inspection_name
+
+# inspection_content
+
+물리 메모리 총량/사용량/여유량과 PageFile 기반 스왑 사용률을 함께 점검합니다.
+
+# inspection_command
+
+```bash
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $os=Get-CimInstance Win32_OperatingSystem;$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;$mt=[double]$os.TotalVisibleMemorySize*1KB;$mf=[double]$os.FreePhysicalMemory*1KB;$mu=$mt-$mf;$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;if(-not $pt){$pt=0};if(-not $pu){$pu=0};$pfree=[Math]::Max($pt-$pu,0);'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f ($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)
+```
+
+# inspection_output
+
+```text
+MEM total=15.73GiB used=6.92GiB free=8.81GiB usage=44.00% | SWAP total=2.00GiB used=0.10GiB free=1.90GiB
+```
+
+# description
+
+- 메모리 사용률, 메모리 여유율, 스왑 사용률을 각각 계산해 종합 판정합니다.
+- 메모리는 정상인데 스왑이 과도하게 쓰이는 상황도 분리해서 감지합니다.
+
+- **정상**: 메모리 사용률과 스왑 사용률이 낮고 메모리 여유율이 충분합니다.
+- **경고**: 메모리 사용률 과다, 여유율 부족, 스왑 사용률 과다 중 하나라도 발생합니다.
+
+# thresholds
+
+[
+    {id: null, key: "max_memory_usage_percent", value: "80.0", sortOrder: 0}
+,
+{id: null, key: "min_memory_free_percent", value: "20.0", sortOrder: 1}
+,
+{id: null, key: "max_swap_usage_percent", value: "50.0", sortOrder: 2}
+,
+{id: null, key: "failure_keywords", value: "", sortOrder: 3}
+]
+
+# inspection_script
+
+# -*- coding: utf-8 -*-
+
+import re
+
+from .common._base import BaseCheck
+
+
+MEMORY_USAGE_COMMAND = (
+    "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    '$os=Get-CimInstance Win32_OperatingSystem;'
+    '$pf=Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue;'
+    '$mt=[double]$os.TotalVisibleMemorySize*1KB;'
+    '$mf=[double]$os.FreePhysicalMemory*1KB;'
+    '$mu=$mt-$mf;'
+    '$pt=([double](($pf|Measure-Object -Property AllocatedBaseSize -Sum).Sum))*1MB;'
+    '$pu=([double](($pf|Measure-Object -Property CurrentUsage -Sum).Sum))*1MB;'
+    'if(-not $pt){$pt=0};'
+    'if(-not $pu){$pu=0};'
+    '$pfree=[Math]::Max($pt-$pu,0);'
+    "'MEM total={0:N2}GiB used={1:N2}GiB free={2:N2}GiB usage={3:N2}% | SWAP total={4:N2}GiB used={5:N2}GiB free={6:N2}GiB' -f "
+    '($mt/1GB),($mu/1GB),($mf/1GB),(($mu/$mt)*100),($pt/1GB),($pu/1GB),($pfree/1GB)'
+)
+
+
+def _parse_float(value):
+    return round(float(value), 2)
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    CONNECTION_METHOD = 'winrm'
+    WINRM_SHELL = 'powershell'
+
+    def run(self):
+        max_memory_usage_percent = self.get_threshold_var('max_memory_usage_percent', default=80.0, value_type='float')
+        min_memory_free_percent = self.get_threshold_var('min_memory_free_percent', default=20.0, value_type='float')
+        max_swap_usage_percent = self.get_threshold_var('max_swap_usage_percent', default=50.0, value_type='float')
+        failure_keywords_raw = self.get_threshold_var('failure_keywords', default='', value_type='str')
+
+        rc, out, err = self._run_ps(MEMORY_USAGE_COMMAND)
+
+        if self._is_connection_error(rc, err):
+            return self.fail(
+                '호스트 연결 실패',
+                message=(err or 'WinRM 연결 확인에 실패했습니다.').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        if self._is_not_applicable(rc, err):
+            return self.fail(
+                'WinRM 실행 환경을 사용할 수 없습니다.',
+                message='Windows 메모리 사용률 점검을 수행할 수 없습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        if rc != 0:
+            return self.fail(
+                '점검 명령 실행 실패',
+                message='Windows 메모리 사용률 점검 명령 실행에 실패했습니다.',
+                stdout=(out or '').strip(),
+                stderr=(err or '').strip(),
+            )
+
+        text = (out or '').strip()
+        if not text:
+            return self.fail(
+                '메모리 사용률 정보 없음',
+                message='메모리 사용률 결과가 비어 있습니다.',
+                stdout='',
+                stderr=(err or '').strip(),
+            )
+
+        failure_keywords = [
+            keyword.strip()
+            for keyword in failure_keywords_raw.split(',')
+            if keyword.strip()
+        ]
+        matched_failure_keywords = [
+            keyword for keyword in failure_keywords if keyword.lower() in text.lower()
+        ]
+        if matched_failure_keywords:
+            return self.fail(
+                '메모리 점검 실패 키워드 감지',
+                message='메모리 사용률 결과에서 실패 키워드가 확인되었습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        match = re.search(
+            r'MEM total=([0-9]+(?:\.[0-9]+)?)GiB '
+            r'used=([0-9]+(?:\.[0-9]+)?)GiB '
+            r'free=([0-9]+(?:\.[0-9]+)?)GiB '
+            r'usage=([0-9]+(?:\.[0-9]+)?)% \| '
+            r'SWAP total=([0-9]+(?:\.[0-9]+)?)GiB '
+            r'used=([0-9]+(?:\.[0-9]+)?)GiB '
+            r'free=([0-9]+(?:\.[0-9]+)?)GiB',
+            text,
+        )
+        if not match:
+            return self.fail(
+                '메모리 사용률 파싱 실패',
+                message='메모리 사용률 출력 형식을 해석하지 못했습니다.',
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        memory_total_gib = _parse_float(match.group(1))
+        memory_used_gib = _parse_float(match.group(2))
+        memory_free_gib = _parse_float(match.group(3))
+        memory_usage_percent = _parse_float(match.group(4))
+        swap_total_gib = _parse_float(match.group(5))
+        swap_used_gib = _parse_float(match.group(6))
+        swap_free_gib = _parse_float(match.group(7))
+
+        memory_free_percent = round((memory_free_gib / memory_total_gib) * 100, 2) if memory_total_gib > 0 else 0.0
+        swap_usage_percent = round((swap_used_gib / swap_total_gib) * 100, 2) if swap_total_gib > 0 else 0.0
+
+        if memory_usage_percent >= max_memory_usage_percent:
+            return self.fail(
+                '메모리 사용률 임계치 초과',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'물리 메모리 사용률 {memory_usage_percent:.2f}% '
+                    f'(기준 {max_memory_usage_percent:.2f}% 미만), '
+                    f'총 {memory_total_gib:.2f}GiB, 사용 {memory_used_gib:.2f}GiB, 여유 {memory_free_gib:.2f}GiB.'
+                ),
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        if memory_free_percent <= min_memory_free_percent:
+            return self.fail(
+                '가용 메모리 비율 임계치 미달',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'가용 메모리 비율 {memory_free_percent:.2f}% '
+                    f'(기준 {min_memory_free_percent:.2f}% 초과), '
+                    f'여유 메모리 {memory_free_gib:.2f}GiB.'
+                ),
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        if swap_usage_percent >= max_swap_usage_percent:
+            return self.fail(
+                '스왑 사용률 임계치 초과',
+                message=(
+                    f'Windows 메모리 사용률 점검에 실패했습니다. 현재 상태: '
+                    f'스왑 사용률 {swap_usage_percent:.2f}% '
+                    f'(기준 {max_swap_usage_percent:.2f}% 미만), '
+                    f'총 {swap_total_gib:.2f}GiB, 사용 {swap_used_gib:.2f}GiB, 여유 {swap_free_gib:.2f}GiB.'
+                ),
+                stdout=text,
+                stderr=(err or '').strip(),
+            )
+
+        return self.ok(
+            metrics={
+                'memory_total_gib': memory_total_gib,
+                'memory_used_gib': memory_used_gib,
+                'memory_free_gib': memory_free_gib,
+                'memory_usage_percent': memory_usage_percent,
+                'memory_free_percent': memory_free_percent,
+                'swap_total_gib': swap_total_gib,
+                'swap_used_gib': swap_used_gib,
+                'swap_free_gib': swap_free_gib,
+                'swap_usage_percent': swap_usage_percent,
+                'matched_failure_keywords': matched_failure_keywords,
+            },
+            thresholds={
+                'max_memory_usage_percent': max_memory_usage_percent,
+                'min_memory_free_percent': min_memory_free_percent,
+                'max_swap_usage_percent': max_swap_usage_percent,
+                'failure_keywords': failure_keywords,
+            },
+            reasons='물리 메모리 사용률, 가용 메모리 비율, 스왑 사용률이 모두 기준 범위 내입니다.',
+            message=(
+                f'Windows 메모리 사용률 점검이 정상입니다. 현재 상태: '
+                f'물리 메모리 총 {memory_total_gib:.2f}GiB, 사용 {memory_used_gib:.2f}GiB, '
+                f'여유 {memory_free_gib:.2f}GiB, 사용률 {memory_usage_percent:.2f}% '
+                f'(기준 {max_memory_usage_percent:.2f}% 미만), 여유율 {memory_free_percent:.2f}% '
+                f'(기준 {min_memory_free_percent:.2f}% 초과), 스왑 사용률 {swap_usage_percent:.2f}% '
+                f'(기준 {max_swap_usage_percent:.2f}% 미만).'
+            ),
+        )
+
+
+CHECK_CLASS = Check
