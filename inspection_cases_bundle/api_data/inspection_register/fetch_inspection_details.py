@@ -16,6 +16,7 @@ API_DATA_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_CONTEXT_PATH = API_DATA_DIR / "api_context.md"
 LEGACY_CONTEXT_PATH = API_DATA_DIR / "session.md"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
+SESSION_COOKIE_NAME = "VARS-JSESSIONID"
 
 
 def read_context_md(path: str | Path | None = None) -> dict[str, str]:
@@ -72,7 +73,7 @@ def require_context_value(context: dict[str, str], key: str, *, context_path: Pa
 
 def normalize_jsessionid(value: str | None) -> str:
     text = str(value or "").strip().strip('",')
-    match = re.search(r"JSESSIONID=([^;\s,\"]+)", text)
+    match = re.search(r"(?:VARS-)?JSESSIONID=([^;\s,\"]+)", text)
     if match:
         return match.group(1)
     return text
@@ -83,9 +84,11 @@ def load_context_config(path: str | Path | None = None) -> dict[str, str]:
     context = read_context_md(context_path)
     host = require_context_value(context, "URL", context_path=context_path).rstrip("/")
     language = str(context.get("language") or "ko-KR").strip()
-    jsessionid = normalize_jsessionid(context.get("JSESSIONID") or context.get("SESSION_ID"))
+    jsessionid = normalize_jsessionid(
+        context.get(SESSION_COOKIE_NAME) or context.get("SESSION_ID") or context.get("JSESSIONID")
+    )
     if not jsessionid:
-        raise ValueError(f"{context_path}에 SESSION_ID 또는 JSESSIONID 값이 없습니다.")
+        raise ValueError(f"{context_path}에 {SESSION_COOKIE_NAME}, SESSION_ID 또는 JSESSIONID 값이 없습니다.")
 
     return {
         "context_path": str(context_path),
@@ -106,7 +109,7 @@ def build_headers(config: dict[str, str]) -> dict[str, str]:
         "Accept-Encoding": "gzip, deflate",
         "Accept-Language": f"{language},ko;q=0.9,en-US;q=0.8,en;q=0.7",
         "Connection": "keep-alive",
-        "Cookie": f"Language={language}; JSESSIONID={jsessionid}",
+        "Cookie": f"Language={language}; {SESSION_COOKIE_NAME}={jsessionid}",
         "Referer": f"{host}/",
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

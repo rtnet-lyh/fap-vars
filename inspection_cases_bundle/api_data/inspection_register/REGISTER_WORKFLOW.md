@@ -50,7 +50,7 @@ inspection_cases_bundle/raw_data/<category>/<application_type>/<application>/<ca
 | section | 필수 여부 | 사용 도구 | 설명 |
 | --- | --- | --- | --- |
 | `URL` | 필수 | lookup/create/update/fetch | API base URL |
-| `SESSION_ID` 또는 `JSESSIONID` | 필수 | lookup/create/update/fetch | 쿠키 `JSESSIONID` 값 |
+| `SESSION_ID` 또는 `VARS-JSESSIONID` | 필수 | lookup/create/update/fetch | 쿠키 `VARS-JSESSIONID` 값 (`JSESSIONID`는 legacy fallback) |
 | `language` | 권장 | lookup/create/update/fetch | 없으면 보통 `ko-KR` 기본값 |
 | `application_name` | fetch/match/sync에서 필요 | fetch/match/sync | `/data/inspection/items` 목록 필터 또는 raw 필터 |
 | `type_name` | fetch/match/sync에서 필요 | fetch/match/sync | `/data/inspection/items` 목록 필터 |
@@ -67,9 +67,9 @@ inspection_cases_bundle/raw_data/<category>/<application_type>/<application>/<ca
 
 https://example.internal
 
-# JSESSIONID
+# VARS-JSESSIONID
 
-xxxxxxxxxxxxxxxx
+VARS-JSESSIONID=xxxxxxxxxxxxxxxx
 
 # language
 
@@ -173,7 +173,7 @@ git diff --check
 ### Agent 지침
 
 1. 기준 Markdown이 `api_data/os/**/*.md` 표준 section을 갖는지 확인합니다.
-2. `api_context.md`에서 `URL`, `SESSION_ID`/`JSESSIONID`, `language`를 확인합니다.
+2. `api_context.md`에서 `URL`, `SESSION_ID`/`VARS-JSESSIONID`, `language`를 확인합니다.
 3. lookup은 `type_name`, `area_name`, `category_name`, `application_type`, `application`으로 id를 찾습니다.
 4. lookup 실패 시 가능한 값 목록이 있으면 의미가 같은 서버 값으로 재시도할 수 있습니다.
 5. 등록은 반드시 preview 후 실행합니다.
@@ -344,7 +344,7 @@ python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from
 ### Agent 지침
 
 1. fetch는 사용자가 live API 조회를 명시했을 때만 실행합니다.
-2. `fetch_inspection_details.py`는 `api_context.md`의 `URL`, `SESSION_ID`/`JSESSIONID`, `language`, `application_name`, `type_name`을 사용합니다.
+2. `fetch_inspection_details.py`는 `api_context.md`의 `URL`, `SESSION_ID`/`VARS-JSESSIONID`, `language`, `application_name`, `type_name`을 사용합니다.
 3. `api_context.md`에서 `item_id`/`item_ids`를 읽지 않습니다.
 4. 목록 API row의 `item_id`, `mapping_id`로 상세 API를 조회합니다.
 5. thresholds는 `--include-thresholds`가 있을 때만 조회합니다.
@@ -503,7 +503,7 @@ python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_a
 
 아래 상황에서는 다음 단계로 진행하지 않고 사용자에게 원인과 필요한 값을 보고합니다.
 
-- `api_context.md`에 `URL` 또는 `SESSION_ID`/`JSESSIONID`가 없음
+- `api_context.md`에 `URL` 또는 `SESSION_ID`/`VARS-JSESSIONID`가 없음
 - 표준 Markdown에 lookup 필수 값(`type_name`, `area_name`, `category_name`, `application_type`, `application`)이 없음
 - lookup 결과가 없고 가능한 값 기반 재시도도 실패함
 - update에서 `inspection_code + application_name` 기준 매칭이 0개 또는 여러 개임
@@ -515,7 +515,7 @@ python3 inspection_cases_bundle/api_data/inspection_register/sync_scripts_from_a
 보고 예시:
 
 ```text
-중단: api_context.md에 JSESSIONID가 없습니다.
+중단: api_context.md에 VARS-JSESSIONID 또는 SESSION_ID가 없습니다.
 중단: category_name=LOG를 서버 lookup에서 찾지 못했습니다. 가능한 값: [CPU, 로그, 커널]
 중단: CODE-001 + rocky 매칭 서버 항목이 2개입니다.
 중단: sync validation error가 있어 --write를 실행하지 않았습니다.

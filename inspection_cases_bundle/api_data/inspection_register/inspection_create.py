@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from inspection_lookup import InspectionLookupClient
+from inspection_lookup import InspectionLookupClient, SESSION_COOKIE_NAME
 
 
 REQUIRED_FIELDS = {
@@ -46,6 +46,10 @@ def _strip_code_fence(text: str) -> str:
     if match:
         return match.group("code").rstrip()
     return text
+
+
+def _compact_response(response: requests.Response) -> str:
+    return str(getattr(response, "text", "") or "")[:4000]
 
 
 def _parse_sections(text: str) -> dict[str, str]:
@@ -144,7 +148,7 @@ class InspectionCreateClient:
         )
         self.session.cookies.update(
             {
-                "JSESSIONID": jsessionid,
+                SESSION_COOKIE_NAME: jsessionid,
                 "Language": language,
             }
         )
@@ -168,7 +172,10 @@ class InspectionCreateClient:
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         response = self.session.post(f"{self.base_url}{path}", json=payload, timeout=30)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            raise RuntimeError(f"POST {path} HTTP {response.status_code}: {_compact_response(response)}") from exc
         return response.json()
 
     def build_payload_from_md(
@@ -289,6 +296,7 @@ def main() -> int:
             if codes and parsed["inspection_code"] not in codes:
                 continue
             client, _ = InspectionCreateClient.from_api_data_md(md_path)
+            print(f"[LOOKUP] {parsed['inspection_code']} {md_path}", flush=True)
             payload = client.build_payload_from_md(md_path)
             print(f"[POST] {parsed['inspection_code']} {md_path} execute={args.execute}")
             if not args.execute:

@@ -31,6 +31,8 @@ CATEGORY_RETRY_ALIASES = {
     "kernel": ["커널"],
 }
 
+SESSION_COOKIE_NAME = "VARS-JSESSIONID"
+
 
 def _clean(text: str) -> str:
     return str(text or "").strip()
@@ -67,10 +69,15 @@ def _resolve_context_path(api_data_dir: Path) -> Path:
 
 def _normalize_jsessionid(value: str) -> str:
     text = str(value or "").strip().strip('",')
-    match = re.search(r"JSESSIONID=([^;\s,\"]+)", text)
+    match = re.search(r"(?:VARS-)?JSESSIONID=([^;\s,\"]+)", text)
     if match:
         return match.group(1)
     return text
+
+
+def _compact_response(response: requests.Response) -> str:
+    return str(getattr(response, "text", "") or "")[:4000]
+
 
 def _extract_available_values_from_error(message: str) -> list[str]:
     match = re.search(r"가능한 값:\s*\[(?P<values>.*)\]\s*$", str(message or ""))
@@ -100,7 +107,7 @@ class InspectionLookupClient:
         )
         self.session.cookies.update(
             {
-                "JSESSIONID": jsessionid,
+                SESSION_COOKIE_NAME: jsessionid,
                 "Language": language,
             }
         )
@@ -136,12 +143,18 @@ class InspectionLookupClient:
 
         sections = _parse_markdown_sections(context_path.read_text(encoding="utf-8"), SESSION_PATTERN)
 
-        session_id = _normalize_jsessionid(_clean(sections.get("SESSION_ID", "") or sections.get("JSESSIONID", "")))
+        session_id = _normalize_jsessionid(
+            _clean(
+                sections.get(SESSION_COOKIE_NAME, "")
+                or sections.get("SESSION_ID", "")
+                or sections.get("JSESSIONID", "")
+            )
+        )
         base_url = _clean(sections.get("URL", ""))
         language = _clean(sections.get("language", "")) or "ko-KR"
 
         if not session_id:
-            raise ValueError("SESSION_ID 또는 JSESSIONID 값이 없습니다.")
+            raise ValueError(f"{SESSION_COOKIE_NAME}, SESSION_ID 또는 JSESSIONID 값이 없습니다.")
         if not base_url:
             raise ValueError("URL 값이 없습니다.")
 
@@ -165,7 +178,10 @@ class InspectionLookupClient:
 
     def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         response = self.session.get(f"{self.base_url}{path}", params=params, timeout=30)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            raise RuntimeError(f"GET {path} HTTP {response.status_code}: {_compact_response(response)}") from exc
         return response.json()
 
     @staticmethod
@@ -191,7 +207,8 @@ class InspectionLookupClient:
         return self._find_by_name(data["data"]["types"], inspection_type)
 
     def get_area_id(self, type_id: int, area: str) -> int:
-        data = self._get(f"/data/inspection/areas/{type_id}")
+        _ = type_id
+        data = self._get("/data/inspection/areas")
         return self._find_by_name(data["data"]["areas"], area)
 
     def get_category_id(self, area_id: int, type_id: int, category: str) -> int:

@@ -1,0 +1,103 @@
+{
+  "items": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-013",
+      "item_id": 92013,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_message_count",
+          "value1": "0"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nfrom .common._base import BaseCheck\n\n\nCOMMAND = 'grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    PARAMIKO_PROFILE = 'linux'\n    PARAMIKO_REUSE_SESSION = False\n\n    COMMAND_TIMEOUT = 20\n\n    def _run_jeus_command(self):\n        result = self._run_paramiko_commands(\n            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],\n            become=True,\n            profile='linux',\n        )[0]\n        stdout = (result.get('stdout') or '').strip()\n        stderr = (result.get('stderr') or '').strip()\n        if result.get('rc') != 0:\n            return stdout, stderr, self.fail(\n                '점검 명령 실행 실패',\n                message='JEUS 점검 명령 실행에 실패했습니다.',\n                stdout=stdout,\n                stderr=stderr,\n            )\n        return stdout, stderr, None\n\n    def run(self):\n        stdout, _stderr, error = self._run_jeus_command()\n        if error:\n            return error\n        lines = [line.strip() for line in stdout.splitlines() if line.strip()]\n        threshold = self.get_threshold_var('max_message_count', default=0, value_type='int')\n        metrics = {'message_count': len(lines), 'sample_lines': lines[:20]}\n        thresholds = {'max_message_count': threshold}\n        if len(lines) > threshold:\n            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준을 초과했습니다.', message='Connection Pool 메시지 경고: count=%s, 기준=%s' % (len(lines), threshold))\n        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준 이하입니다.', message='Connection Pool 메시지 정상: count=%s, 기준=%s' % (len(lines), threshold))\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "from .common._base import BaseCheck",
+        "",
+        "",
+        "COMMAND = 'grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'paramiko'",
+        "    PARAMIKO_PROFILE = 'linux'",
+        "    PARAMIKO_REUSE_SESSION = False",
+        "",
+        "    COMMAND_TIMEOUT = 20",
+        "",
+        "    def _run_jeus_command(self):",
+        "        result = self._run_paramiko_commands(",
+        "            [{'command': COMMAND, 'timeout': self.COMMAND_TIMEOUT}],",
+        "            become=True,",
+        "            profile='linux',",
+        "        )[0]",
+        "        stdout = (result.get('stdout') or '').strip()",
+        "        stderr = (result.get('stderr') or '').strip()",
+        "        if result.get('rc') != 0:",
+        "            return stdout, stderr, self.fail(",
+        "                '점검 명령 실행 실패',",
+        "                message='JEUS 점검 명령 실행에 실패했습니다.',",
+        "                stdout=stdout,",
+        "                stderr=stderr,",
+        "            )",
+        "        return stdout, stderr, None",
+        "",
+        "    def run(self):",
+        "        stdout, _stderr, error = self._run_jeus_command()",
+        "        if error:",
+        "            return error",
+        "        lines = [line.strip() for line in stdout.splitlines() if line.strip()]",
+        "        threshold = self.get_threshold_var('max_message_count', default=0, value_type='int')",
+        "        metrics = {'message_count': len(lines), 'sample_lines': lines[:20]}",
+        "        thresholds = {'max_message_count': threshold}",
+        "        if len(lines) > threshold:",
+        "            return self.warn(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준을 초과했습니다.', message='Connection Pool 메시지 경고: count=%s, 기준=%s' % (len(lines), threshold))",
+        "        return self.ok(metrics=metrics, thresholds=thresholds, reasons='Connection pool exhausted 메시지 수가 기준 이하입니다.', message='Connection Pool 메시지 정상: count=%s, 기준=%s' % (len(lines), threshold))",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "WAS-JEUS-ROCKY-REPLAY-013",
+      "item_id": 92013,
+      "application_id": 202,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "JEUS",
+      "application_family_name": "WAS",
+      "host_vars": {},
+      "threshold_list": [
+        {
+          "name": "max_message_count",
+          "value1": "0"
+        }
+      ],
+      "status": "fail",
+      "error": "점검 명령 실행 실패",
+      "message": "JEUS 점검 명령 실행에 실패했습니다.",
+      "stdout": "",
+      "stderr": "PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output": "[점검 단계 1]\n - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true\n - 명령 종료코드: rc=255 (SSH/원격 실행 오류)\n - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        " - 실행 명령어: grep -i \"connection pool exhausted\" /home/exTMS/tmax/jeus/log/jdbc.log || true",
+        " - 명령 종료코드: rc=255 (SSH/원격 실행 오류)",
+        " - 출력 내용: PARAMIKO_CONNECTION_ERROR: No module named 'paramiko'"
+      ]
+    }
+  ],
+  "failed_items": [
+    "WAS-JEUS-ROCKY-REPLAY-013"
+  ]
+}

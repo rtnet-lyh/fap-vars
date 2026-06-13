@@ -1,0 +1,16 @@
+/bin/sh -c 'PATH=/usr/sbin:/usr/bin:/sbin:/bin:/usr/platform/unknown/sbin:/root/.codex/tmp/arg0/codex-arg0tQDBPe:/usr/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/path:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin; sysdef; rc=0; echo __FAP_CMD_RC__:'
+* Tunable Parameters *
+maxuproc: 4096
+
+* File System Parameters *
+maxfiles: 65536
+
+* Memory Management Parameters *
+minfree: 1024
+
+* IPC Parameters *
+shmmax: 4294967296
+seminfo_semmsl: 250
+msginfo_msgmax: 8192
+__FAP_CMD_RC__:0
+#

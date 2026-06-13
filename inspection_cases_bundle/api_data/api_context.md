@@ -1,10 +1,10 @@
 ## SESSION_ID
 
-2F50F33B32E26ED1FDEB2D041EACBCEA
+2566C9ED383D006F9F08658EE3D4746C
 
 ## URL
 
-http://192.168.1.233:8080/
+http://192.168.1.112:8080/
 
 ## language
 
@@ -16,4 +16,4 @@ Solaris
 
 ## type_name
 
-일상점검(상태점검)
+일상점검

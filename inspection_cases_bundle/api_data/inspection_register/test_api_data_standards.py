@@ -213,9 +213,9 @@ class ApiDataStandardsTest(unittest.TestCase):
 
 http://example.test/
 
-## JSESSIONID
+## VARS-JSESSIONID
 
-JSESSIONID=abc123; Path=/
+VARS-JSESSIONID=abc123; Path=/
 
 ## language
 
@@ -245,6 +245,19 @@ Solaris
         self.assertEqual(config["type_name"], "정기점검")
         self.assertNotIn("item_id", config)
         self.assertNotIn("item_ids", config)
+
+        headers = fetch_inspection_details.build_headers(config)
+        self.assertIn("; VARS-JSESSIONID=abc123", headers["Cookie"])
+        self.assertNotIn("; JSESSIONID=abc123", headers["Cookie"])
+
+    def test_api_clients_send_vars_jsessionid_cookie(self) -> None:
+        lookup_client = inspection_lookup.InspectionLookupClient("http://example.test", "session-id")
+        create_client = inspection_create.InspectionCreateClient("http://example.test", "session-id")
+
+        for client in (lookup_client, create_client, create_client.lookup):
+            self.assertEqual(client.session.cookies["VARS-JSESSIONID"], "session-id")
+            self.assertEqual(client.session.cookies["Language"], "ko-KR")
+            self.assertNotIn("JSESSIONID", client.session.cookies)
 
     def test_generate_os_md_from_api_json_round_trips_with_parse_api_data_md(self) -> None:
         item = {
@@ -522,6 +535,19 @@ legacy-session
         self.assertEqual(preferred["jsessionid"], "ctx-session")
         self.assertEqual(fallback["base_url"], "http://legacy.example")
         self.assertEqual(fallback["jsessionid"], "legacy-session")
+
+    def test_inspection_lookup_get_area_id_uses_area_collection_endpoint(self) -> None:
+        client = inspection_lookup.InspectionLookupClient.__new__(inspection_lookup.InspectionLookupClient)
+        calls: list[tuple[str, object]] = []
+
+        def fake_get(path: str, params: object = None) -> dict[str, object]:
+            calls.append((path, params))
+            return {"data": {"areas": [{"id": 9, "name": "백업"}]}}
+
+        client._get = fake_get
+
+        self.assertEqual(client.get_area_id(3, "백업"), 9)
+        self.assertEqual(calls, [("/data/inspection/areas", None)])
 
     def test_inspection_create_main_previews_without_post_when_execute_is_false(self) -> None:
         original_parse_args = inspection_create.parse_args
