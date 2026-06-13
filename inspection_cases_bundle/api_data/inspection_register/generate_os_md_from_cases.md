@@ -21,15 +21,15 @@ inspection_cases_bundle/api_data/os/_reference/example.md
 `raw_data`, `inspection_cases`, `api_data/os`는 다음 논리 구조를 기준으로 맞춥니다.
 
 ```text
-<category_name>/<application_type>/<application>/<case>
+<area_name>/<application_type>/<application>/<case>
 ```
 
 각 segment의 의미는 다음과 같습니다.
 
 | Segment | Metadata field | 설명 |
 | --- | --- | --- |
-| `category_name` | `category_name` | `server`, `network`, `was`, `web`, `storage`, `dbms`, `backup` 같은 최상위 분류 |
-| `application_type` | `application_type` | OS family, 제품 family, 장비 OS, 솔루션 family 등 category 하위의 1차 분류 |
+| `area_name` | `area_name` | `server`, `network`, `was`, `web`, `storage`, `dbms`, `backup` 같은 최상위 영역 |
+| `application_type` | `application_type` | OS family, 제품 family, 장비 OS, 솔루션 family 등 area 하위의 1차 분류 |
 | `application` | `application` | 실제 OS, 제품, 장비 모델, 실행 환경 등 API 등록 대상 애플리케이션명 |
 | `case` | 파일명 또는 케이스 디렉터리명 | raw Markdown 파일명에서 `.md`를 제거한 값과 대응되는 inspection case 디렉터리명 |
 
@@ -44,7 +44,7 @@ api_data/os/network/nx_os/mds_c9148s/1_1_cpu.md
 위 경로의 metadata는 다음과 같습니다.
 
 ```text
-category_name: network
+area_name: network
 application_type: nx_os
 application: mds_c9148s
 ```
@@ -72,7 +72,7 @@ api_data/os/server/unix/solaris/solaris_cpu_usage_prstat_check.md
 위 경로의 metadata는 다음과 같습니다.
 
 ```text
-category_name: server
+area_name: server
 application_type: unix
 application: solaris
 ```
@@ -96,7 +96,7 @@ application: solaris
 다음 조건을 모두 만족하는 raw Markdown만 API 등록용 Markdown으로 생성합니다.
 
 1. `inspection_cases_bundle/raw_data` 아래의 `.md` 파일입니다.
-2. path가 `<category_name>/<application_type>/<application>/<case>.md` 구조를 만족합니다.
+2. path가 `<area_name>/<application_type>/<application>/<case>.md` 구조를 만족합니다.
 3. 대응되는 `inspection_cases/.../<case>/script.py`가 존재합니다.
 4. `참고` 디렉터리 아래 파일이 아닙니다.
 5. `AGENTS.md`가 아닙니다.
@@ -119,8 +119,8 @@ application: solaris
 raw Markdown과 replay script는 같은 relative path를 기준으로 우선 매칭합니다.
 
 ```text
-raw_data/<category_name>/<application_type>/<application>/<case>.md
-inspection_cases/<category_name>/<application_type>/<application>/<case>/script.py
+raw_data/<area_name>/<application_type>/<application>/<case>.md
+inspection_cases/<area_name>/<application_type>/<application>/<case>/script.py
 ```
 
 예시는 다음과 같습니다.
@@ -187,11 +187,11 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 
 # area_name
 
-상태점검
+<area_name>
 
 # category_name
 
-<category_name>
+상태점검
 
 # application_type
 
@@ -244,15 +244,15 @@ raw Markdown에서는 다음 heading을 우선 파싱합니다.
 
 `inspection_script`는 기준 예시와 같이 코드펜스로 감싸지 않고 `script.py` 전문을 그대로 붙입니다.
 
-`type_name`과 `area_name`은 항상 같은 값이라고 가정하지 않으며, 실행 시 `--type-name`, `--area-name`으로 조정할 수 있습니다.
+`type_name`과 `category_name`은 항상 같은 값이라고 가정하지 않으며, 실행 시 `--type-name`, `--category-name`으로 조정할 수 있습니다.
 
 ## metadata 매핑 규칙
 
 | 출력 section | 값 | Source |
 | --- | --- | --- |
 | `type_name` | `--type-name` 값, 기본 `일상점검` | 실행 옵션 |
-| `area_name` | `--area-name` 값, 기본 `상태점검` | 실행 옵션 |
-| `category_name` | path segment 1 | `<category_name>` |
+| `area_name` | path segment 1 | `<area_name>` |
+| `category_name` | `--category-name` 값, 기본 `상태점검` | 실행 옵션 |
 | `application_type` | path segment 2 | `<application_type>` |
 | `application` | path segment 3 | `<application>` |
 | `inspection_code` | `case.json` 우선 | 없으면 빈 값 또는 raw 후보 |
@@ -333,6 +333,14 @@ report에는 최소한 다음 항목을 포함합니다.
 
 ```bash
 python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py --dry-run
+```
+
+### category_name 지정 dry-run
+
+```bash
+python3 inspection_cases_bundle/api_data/inspection_register/generate_os_md_from_cases.py \
+  --category-name 상태점검 \
+  --dry-run
 ```
 
 ### 실제 생성
