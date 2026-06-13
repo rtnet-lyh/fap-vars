@@ -14,7 +14,7 @@ DEFAULT_CASE_ROOT = Path('inspection_cases_bundle/inspection_cases')
 DEFAULT_OUTPUT_ROOT = Path('inspection_cases_bundle/api_data/os')
 DEFAULT_REPORT_ROOT = Path('inspection_cases_bundle/api_data/_reports')
 DEFAULT_TYPE_NAME = '일상점검'
-DEFAULT_AREA_NAME = '상태점검'
+DEFAULT_CATEGORY_NAME = '상태점검'
 
 EXCLUDED_PATH_PARTS = {'참고'}
 RAW_HEADINGS = {
@@ -224,9 +224,9 @@ def render_markdown(
     script_text: str,
     *,
     type_name: str = DEFAULT_TYPE_NAME,
-    area_name: str = DEFAULT_AREA_NAME,
+    category_name: str = DEFAULT_CATEGORY_NAME,
 ) -> str:
-    category_name, application_type, application = rel_path.parts[:3]
+    area_name, application_type, application = rel_path.parts[:3]
     case_thresholds = extract_threshold_entries(case_data)
     threshold_entries = case_thresholds or raw_threshold_entries(sections.get('임계치', ''))
     description_parts = [sections.get('설명', '').strip(), sections.get('판단기준', '').strip()]
@@ -282,8 +282,8 @@ def case_parent_candidates(case_root: Path, rel_path: Path) -> list[tuple[str, P
     candidates = [('same_parent', case_root / rel_parent)]
 
     if len(rel_path.parts) >= 4:
-        category, _application_type, application = rel_path.parts[:3]
-        collapsed_parent = case_root / category / application
+        area_name, _application_type, application = rel_path.parts[:3]
+        collapsed_parent = case_root / area_name / application
         if collapsed_parent != candidates[0][1]:
             candidates.append(('collapsed_application_type_parent', collapsed_parent))
 
@@ -348,7 +348,7 @@ def convert_all(
     overwrite: bool,
     *,
     type_name: str = DEFAULT_TYPE_NAME,
-    area_name: str = DEFAULT_AREA_NAME,
+    category_name: str = DEFAULT_CATEGORY_NAME,
 ) -> ConversionSummary:
     summary = ConversionSummary(
         dry_run=dry_run,
@@ -373,7 +373,7 @@ def convert_all(
             summary.add_skip(SkipEntry(
                 raw_path=to_posix(raw_path),
                 reason='invalid_path_depth',
-                detail='expected <category>/<application_type>/<application>/<case>.md',
+                detail='expected <area_name>/<application_type>/<application>/<case>.md',
             ))
             continue
 
@@ -411,7 +411,7 @@ def convert_all(
 
         sections = parse_markdown_sections(read_text(raw_path))
         script_text = read_text(script_path)
-        rendered = render_markdown(rel_path, sections, case_data, script_text, type_name=type_name, area_name=area_name)
+        rendered = render_markdown(rel_path, sections, case_data, script_text, type_name=type_name, category_name=category_name)
 
         if not dry_run:
             write_text(output_path, rendered)
@@ -542,7 +542,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--dry-run', action='store_true', help='do not create api_data/os Markdown files')
     parser.add_argument('--overwrite', action='store_true', help='overwrite existing generated Markdown files')
     parser.add_argument('--type-name', default=DEFAULT_TYPE_NAME, help='type_name value for generated Markdown')
-    parser.add_argument('--area-name', default=DEFAULT_AREA_NAME, help='area_name value for generated Markdown')
+    parser.add_argument('--category-name', default=DEFAULT_CATEGORY_NAME, help='category_name value for generated Markdown')
+    parser.add_argument('--area-name', dest='legacy_area_name', help=argparse.SUPPRESS)
     return parser.parse_args()
 
 
@@ -553,6 +554,8 @@ def main() -> int:
     output_root = Path(args.output_root)
     report_root = Path(args.report_root)
 
+    category_name = args.legacy_area_name or args.category_name
+
     summary = convert_all(
         raw_root=raw_root,
         case_root=case_root,
@@ -561,7 +564,7 @@ def main() -> int:
         dry_run=bool(args.dry_run),
         overwrite=bool(args.overwrite),
         type_name=args.type_name,
-        area_name=args.area_name,
+        category_name=category_name,
     )
     write_reports(summary, report_root)
 
