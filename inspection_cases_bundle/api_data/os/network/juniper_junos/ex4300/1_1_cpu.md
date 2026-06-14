@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+network
 
 # category_name
 
-network
+상태점검
 
 # application_type
 

@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+dbms
 
 # category_name
 
-dbms
+상태점검
 
 # application_type
 

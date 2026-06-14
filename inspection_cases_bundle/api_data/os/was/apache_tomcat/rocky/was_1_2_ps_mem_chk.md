@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+was
 
 # category_name
 
-was
+상태점검
 
 # application_type
 

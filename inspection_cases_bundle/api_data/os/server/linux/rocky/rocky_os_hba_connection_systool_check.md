@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+server
 
 # category_name
 
-server
+상태점검
 
 # application_type
 

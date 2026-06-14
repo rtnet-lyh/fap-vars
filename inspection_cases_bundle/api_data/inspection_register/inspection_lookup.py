@@ -184,6 +184,17 @@ class InspectionLookupClient:
             raise RuntimeError(f"GET {path} HTTP {response.status_code}: {_compact_response(response)}") from exc
         return response.json()
 
+    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        response = self.session.post(f"{self.base_url}{path}", json=payload, timeout=30)
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            raise RuntimeError(f"POST {path} HTTP {response.status_code}: {_compact_response(response)}") from exc
+        data = response.json()
+        if data.get("status") != "success":
+            raise RuntimeError(f"POST {path} API 실패: {data}")
+        return data
+
     @staticmethod
     def _find_by_name(
         items: list[dict[str, Any]],
@@ -216,7 +227,23 @@ class InspectionLookupClient:
             f"/data/inspection/category/{area_id}",
             params={"categoryTypeId": type_id},
         )
-        return self._find_by_name(data["data"]["categories"], category)
+        try:
+            return self._find_by_name(data["data"]["categories"], category)
+        except ValueError:
+            return self.ensure_category_id(area_id, type_id, category)
+
+    def ensure_category_id(self, area_id: int, type_id: int, category: str) -> int:
+        payload = {
+            "name": category,
+            "typeId": type_id,
+            "type_id": type_id,
+            "areaId": area_id,
+            "area_id": area_id,
+        }
+        data = self._post("/data/inspection/category", payload).get("data")
+        if isinstance(data, dict) and data.get("id") is not None:
+            return int(data["id"])
+        raise ValueError(f"'{category}' 을(를) 찾거나 생성하지 못했습니다. 응답: {data}")
 
     def get_category_id_with_retry(self, area_id: int, type_id: int, category: str) -> tuple[int, str]:
         try:

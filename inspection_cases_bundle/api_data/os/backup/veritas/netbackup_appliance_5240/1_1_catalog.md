@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+backup
 
 # category_name
 
-backup
+상태점검
 
 # application_type
 

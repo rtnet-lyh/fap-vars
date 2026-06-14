@@ -4,11 +4,11 @@
 
 # area_name
 
-상태점검
+storage
 
 # category_name
 
-storage
+상태점검
 
 # application_type
 
