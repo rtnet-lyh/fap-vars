@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-5-POWER-LOG-CHK
+
+ST-DELL-DDOS-009
 
 # is_required
 

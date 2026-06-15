@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-FAN-01
+
+SV-LIN-RKY-005
 
 # is_required
 

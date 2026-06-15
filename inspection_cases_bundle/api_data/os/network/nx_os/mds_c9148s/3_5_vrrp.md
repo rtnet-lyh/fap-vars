@@ -20,7 +20,8 @@ mds_c9148s
 
 # inspection_code
 
-NETWORK-NXOS-MDS-C9148S-VRRP-01
+
+NW-NX-MDS9148-010
 
 # is_required
 

@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-CPU-01
+
+SV-LIN-RKY-004
 
 # is_required
 

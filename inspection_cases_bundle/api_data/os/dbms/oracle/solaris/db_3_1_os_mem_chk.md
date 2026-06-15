@@ -20,7 +20,8 @@ solaris
 
 # inspection_code
 
-DBMS-ORACLE-SOLARIS-REPLAY-007
+
+DB-OR-SOL-007
 
 # is_required
 

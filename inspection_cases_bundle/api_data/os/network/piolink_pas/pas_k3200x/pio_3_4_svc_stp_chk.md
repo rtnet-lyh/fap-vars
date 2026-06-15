@@ -20,7 +20,8 @@ pas_k3200x
 
 # inspection_code
 
-NETWORK-PIOLINK-PAS-K3200X-SERVICE-STP-01
+
+NW-PIO-K3200X-009
 
 # is_required
 

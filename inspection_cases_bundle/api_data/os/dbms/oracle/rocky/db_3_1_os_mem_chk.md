@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-3-1-OS-MEMORY
+
+DB-OR-RKY-005
 
 # is_required
 

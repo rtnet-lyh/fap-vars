@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-3-2-OS-CPU
+
+DB-OR-RKY-006
 
 # is_required
 

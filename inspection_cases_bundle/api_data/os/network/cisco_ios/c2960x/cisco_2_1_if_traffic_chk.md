@@ -20,7 +20,8 @@ c2960x
 
 # inspection_code
 
-NETWORK-CISCO-IOS-C2960X-INTERFACE-TRAFFIC-01
+
+NW-CIS-C2960X-003
 
 # is_required
 

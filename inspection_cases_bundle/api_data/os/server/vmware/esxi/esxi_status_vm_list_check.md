@@ -20,7 +20,8 @@ esxi
 
 # inspection_code
 
-ESXI-STATUS-VM-LIST-01
+
+SV-ESXI-005
 
 # is_required
 

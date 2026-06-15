@@ -70,9 +70,8 @@ sr0            11:0    1  1.3G  0 rom
 
 # thresholds
 
-[
-    {id: null, key: "본 항목은 수치 임계치 기반 점검이 아니며, 디스크/파티션/마운트 인식 상태를 기준으로 판단한다.", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

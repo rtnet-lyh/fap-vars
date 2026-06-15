@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-2-1-INTER-MODULE
+
+NW-JUN-EX4300-004
 
 # is_required
 

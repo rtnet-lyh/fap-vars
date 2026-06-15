@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-NIC-01
+
+SV-LIN-RKY-008
 
 # is_required
 

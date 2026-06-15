@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-7-BATTERY-LOG-CHK
+
+ST-DELL-DDOS-011
 
 # is_required
 

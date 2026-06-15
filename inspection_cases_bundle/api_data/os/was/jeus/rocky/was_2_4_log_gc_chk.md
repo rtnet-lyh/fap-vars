@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-JEUS-ROCKY-REPLAY-008
+
+WAS-JEUS-RKY-008
 
 # is_required
 
@@ -58,9 +59,8 @@ Full GC(Garbage Collection) 발생 빈도 점검(오래된 객체에 대한 삭�
 
 # thresholds
 
-[
-    {id: null, key: "max_frequency: 최대 \"Full GC\" 발생 빈도", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-4-1-DB-LOG
+
+DB-OR-RKY-007
 
 # is_required
 

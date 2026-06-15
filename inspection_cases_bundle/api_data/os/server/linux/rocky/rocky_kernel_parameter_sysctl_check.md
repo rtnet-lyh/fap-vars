@@ -66,11 +66,8 @@ net.ipv4.conf.all.forwarding = 1
 
 # thresholds
 
-[
-    {id: null, key: "vm.lowmem_reserve_ratio", value: "256 256 32 0 0", sortOrder: 0}
-,
-{id: null, key: "net.ipv4.ip_forward", value: "1", sortOrder: 1}
-]
+
+[]
 
 # inspection_script
 

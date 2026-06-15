@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-8-1-RMAN-BACKUP
+
+DB-OR-RKY-013
 
 # is_required
 

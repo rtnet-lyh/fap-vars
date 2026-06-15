@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-1-1-CPU
+
+NW-JUN-EX4300-001
 
 # is_required
 

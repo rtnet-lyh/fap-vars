@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-CLUSTER-LOG-01
+
+SV-WIN19-004
 
 # is_required
 

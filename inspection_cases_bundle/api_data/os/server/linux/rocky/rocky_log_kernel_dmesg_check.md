@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-PANIC-01
+
+SV-LIN-RKY-006
 
 # is_required
 

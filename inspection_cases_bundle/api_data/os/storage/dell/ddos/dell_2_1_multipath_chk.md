@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-2-1-MULTIPATH-CHK
+
+ST-DELL-DDOS-014
 
 # is_required
 

@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-CLUSTER-DAEMON-01
+
+SV-LIN-RKY-001
 
 # is_required
 
@@ -81,9 +82,8 @@ Daemon Status:
 
 # thresholds
 
-[
-    {id: null, key: "없음", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

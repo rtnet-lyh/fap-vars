@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-KERNEL-LOG-01
+
+SV-WIN19-005
 
 # is_required
 

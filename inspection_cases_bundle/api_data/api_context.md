@@ -1,19 +1,12 @@
 ## SESSION_ID
 
-B26EBA0EBE88AFF5D2504365BDB378FF
+CB338FE66E6E359AD0078C1545EF285D
 
 ## URL
 
-http://192.168.1.171:8090/
+http://192.168.1.112:8080/
 
 ## language
 
 ko-KR
 
-## application_name
-
-Solaris
-
-## type_name
-
-일상점검

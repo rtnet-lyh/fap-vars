@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-OS-PATH-HA-01
+
+SV-WIN19-010
 
 # is_required
 

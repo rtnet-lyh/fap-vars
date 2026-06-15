@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-SWAP-01
+
+SV-WIN19-007
 
 # is_required
 

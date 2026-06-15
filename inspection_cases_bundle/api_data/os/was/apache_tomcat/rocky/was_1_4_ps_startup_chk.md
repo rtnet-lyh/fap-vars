@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-APACHE-TOMCAT-ROCKY-REPLAY-004
+
+WAS-TOM-RKY-004
 
 # is_required
 
@@ -61,9 +62,8 @@ root      729184       1  4 10:40 pts/1    00:00:17 /usr/bin/java -Djava.util.lo
 
 # thresholds
 
-[
-    {id: null, key: "max_usage_percent: 최대 허용 자원 사용률", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

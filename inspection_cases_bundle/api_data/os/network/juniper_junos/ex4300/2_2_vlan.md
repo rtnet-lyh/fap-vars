@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-2-2-VLAN
+
+NW-JUN-EX4300-005
 
 # is_required
 

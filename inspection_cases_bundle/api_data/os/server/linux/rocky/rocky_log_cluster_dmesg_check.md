@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-CLUSTER-01
+
+SV-LIN-RKY-003
 
 # is_required
 

@@ -68,9 +68,8 @@ supported_speeds = "4 Gbit, 8 Gbit, 16 Gbit"
 
 # thresholds
 
-[
-    {id: null, key: "없음", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

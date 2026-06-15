@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-CLUSTER-MOUNT-01
+
+SV-WIN19-002
 
 # is_required
 

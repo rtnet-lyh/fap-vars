@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-1-EVENT-LOG-CHK
+
+ST-DELL-DDOS-005
 
 # is_required
 

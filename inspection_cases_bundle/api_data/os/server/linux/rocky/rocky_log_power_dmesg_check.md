@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-POWER-01
+
+SV-LIN-RKY-009
 
 # is_required
 

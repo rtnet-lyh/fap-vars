@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-MEM-STATUS-01
+
+SV-WIN19-008
 
 # is_required
 

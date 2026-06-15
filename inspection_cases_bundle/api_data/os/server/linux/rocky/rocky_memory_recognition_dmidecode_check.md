@@ -60,9 +60,8 @@ dmidecode -t memory
 
 # thresholds
 
-[
-    {id: null, key: "없음", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

@@ -20,7 +20,8 @@ netbackup_appliance_5240
 
 # inspection_code
 
-BACKUP-VERITAS-NBU5240-REPLAY-010
+
+BK-NBU5240-010
 
 # is_required
 

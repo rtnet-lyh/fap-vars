@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-3-5-VRRP
+
+NW-JUN-EX4300-010
 
 # is_required
 

@@ -20,7 +20,8 @@ c2960x
 
 # inspection_code
 
-NETWORK-CISCO-IOS-C2960X-INTERFACE-STATUS-01
+
+NW-CIS-C2960X-004
 
 # is_required
 
@@ -90,9 +91,8 @@ Fa0       ===MGMT_Fa0/4===   connected    routed     a-full  a-100 10/100BaseTX
 
 # thresholds
 
-[
-    {id: null, key: "주요 서비스 포트 connected 상태 유지", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

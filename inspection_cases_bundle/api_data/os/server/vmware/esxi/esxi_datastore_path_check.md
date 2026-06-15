@@ -20,7 +20,8 @@ esxi
 
 # inspection_code
 
-ESXI-DATASTORE-PATH-01
+
+SV-ESXI-001
 
 # is_required
 

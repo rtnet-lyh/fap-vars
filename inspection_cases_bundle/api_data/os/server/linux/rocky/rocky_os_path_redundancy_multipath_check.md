@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-MULTIPATH-01
+
+SV-LIN-RKY-012
 
 # is_required
 
@@ -67,9 +68,8 @@ size=100G features='1 queue_if_no_path' hwhandler='0' wp=rw
 
 # thresholds
 
-[
-    {id: null, key: "없음", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

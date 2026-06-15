@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-3-DISK-LOG-CHK
+
+ST-DELL-DDOS-007
 
 # is_required
 

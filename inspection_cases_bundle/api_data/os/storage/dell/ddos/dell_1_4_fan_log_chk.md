@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-4-FAN-LOG-CHK
+
+ST-DELL-DDOS-008
 
 # is_required
 

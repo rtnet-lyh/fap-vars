@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-9-1-REDO-LOG
+
+DB-OR-RKY-014
 
 # is_required
 

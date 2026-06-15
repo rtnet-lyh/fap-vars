@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-7-1-TABLESPACE
+
+DB-OR-RKY-012
 
 # is_required
 

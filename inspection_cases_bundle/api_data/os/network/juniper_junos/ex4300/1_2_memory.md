@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-1-2-MEMORY
+
+NW-JUN-EX4300-002
 
 # is_required
 

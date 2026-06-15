@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-1-3-FS-DB-SYSTEM-LOG
+
+DB-OR-RKY-003
 
 # is_required
 

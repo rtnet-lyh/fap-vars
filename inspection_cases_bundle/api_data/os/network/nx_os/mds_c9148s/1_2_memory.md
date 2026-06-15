@@ -20,7 +20,8 @@ mds_c9148s
 
 # inspection_code
 
-NETWORK-NXOS-MDS-C9148S-MEMORY-01
+
+NW-NX-MDS9148-002
 
 # is_required
 

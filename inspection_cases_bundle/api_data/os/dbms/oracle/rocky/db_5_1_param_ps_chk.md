@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-5-1-PROCESSES
+
+DB-OR-RKY-011
 
 # is_required
 

@@ -20,7 +20,8 @@ solaris
 
 # inspection_code
 
-SOL-REPLAY-CLUSTER-03
+
+SV-SOL-002
 
 # is_required
 

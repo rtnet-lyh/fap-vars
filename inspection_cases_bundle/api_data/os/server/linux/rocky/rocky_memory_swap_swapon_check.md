@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-SWAP-01
+
+SV-LIN-RKY-010
 
 # is_required
 

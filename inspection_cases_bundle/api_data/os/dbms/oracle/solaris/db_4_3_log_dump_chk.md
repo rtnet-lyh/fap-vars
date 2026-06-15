@@ -20,7 +20,8 @@ solaris
 
 # inspection_code
 
-DBMS-ORACLE-SOLARIS-REPLAY-011
+
+DB-OR-SOL-011
 
 # is_required
 

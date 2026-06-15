@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-POWER-LOG-01
+
+SV-WIN19-006
 
 # is_required
 

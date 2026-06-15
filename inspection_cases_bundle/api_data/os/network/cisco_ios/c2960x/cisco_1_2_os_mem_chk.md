@@ -20,7 +20,8 @@ c2960x
 
 # inspection_code
 
-NETWORK-CISCO-IOS-C2960X-MEMORY-01
+
+NW-CIS-C2960X-002
 
 # is_required
 

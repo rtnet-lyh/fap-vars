@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-1-2-FS-ARCHIVE-LOG
+
+DB-OR-RKY-002
 
 # is_required
 

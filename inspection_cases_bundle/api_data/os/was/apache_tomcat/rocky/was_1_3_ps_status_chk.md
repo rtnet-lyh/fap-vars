@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-APACHE-TOMCAT-ROCKY-REPLAY-003
+
+WAS-TOM-RKY-003
 
 # is_required
 
@@ -395,9 +396,8 @@ ps -eo pid,stat,comm
 
 # thresholds
 
-[
-    {id: null, key: "max_usage_percent: 최대 허용 자원 사용률", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

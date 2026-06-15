@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-JEUS-ROCKY-REPLAY-013
+
+WAS-JEUS-RKY-013
 
 # is_required
 
@@ -58,9 +59,8 @@ DB에 연결된 객체 저장공간인 DB Connection Pool 확인(기 설정된 M
 
 # thresholds
 
-[
-    {id: null, key: "max_message_count: 최대 \"Connection pool exhausted\" 메시지 개수", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

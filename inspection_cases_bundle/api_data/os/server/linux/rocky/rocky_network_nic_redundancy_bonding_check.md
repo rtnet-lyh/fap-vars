@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-NIC-BONDING-01
+
+SV-LIN-RKY-011
 
 # is_required
 
@@ -90,9 +91,8 @@ NIC BONDING NOT CONFIGURED
 
 # thresholds
 
-[
-    {id: null, key: "없음", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

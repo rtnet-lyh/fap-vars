@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-1-1-FS-ENGINE
+
+DB-OR-RKY-001
 
 # is_required
 

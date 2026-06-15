@@ -20,7 +20,8 @@ mds_c9148s
 
 # inspection_code
 
-NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01
+
+NW-NX-MDS9148-004
 
 # is_required
 

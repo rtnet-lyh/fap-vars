@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-CLUSTER-DAEMON-01
+
+SV-WIN19-001
 
 # is_required
 

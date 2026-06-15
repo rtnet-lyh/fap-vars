@@ -20,7 +20,8 @@ pas_k3200x
 
 # inspection_code
 
-NETWORK-PIOLINK-PAS-K3200X-HW-INTERFACE-01
+
+NW-PIO-K3200X-004
 
 # is_required
 

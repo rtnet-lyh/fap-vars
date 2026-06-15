@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-JEUS-ROCKY-REPLAY-006
+
+WAS-JEUS-RKY-006
 
 # is_required
 

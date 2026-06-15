@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-4-2-LISTENER-LOG
+
+DB-OR-RKY-008
 
 # is_required
 

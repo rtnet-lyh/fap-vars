@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-DMESG-MEMORY-01
+
+SV-LIN-RKY-007
 
 # is_required
 

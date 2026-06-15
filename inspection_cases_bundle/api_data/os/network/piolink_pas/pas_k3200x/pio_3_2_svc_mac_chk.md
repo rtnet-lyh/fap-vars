@@ -20,7 +20,8 @@ pas_k3200x
 
 # inspection_code
 
-NETWORK-PIOLINK-PAS-K3200X-SERVICE-MAC-ARP-01
+
+NW-PIO-K3200X-007
 
 # is_required
 

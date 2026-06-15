@@ -20,7 +20,8 @@ ex4300
 
 # inspection_code
 
-NETWORK-JUNIPER-JUNOS-EX4300-3-2-MAC
+
+NW-JUN-EX4300-007
 
 # is_required
 

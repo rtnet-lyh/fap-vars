@@ -20,7 +20,8 @@ ddos
 
 # inspection_code
 
-NETWORK-DELL-DDOS-DELL-1-2-MEMORY-LOG-CHK
+
+ST-DELL-DDOS-006
 
 # is_required
 

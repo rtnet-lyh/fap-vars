@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-4-3-DUMP-LOG
+
+DB-OR-RKY-009
 
 # is_required
 

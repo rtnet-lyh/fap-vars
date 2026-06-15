@@ -20,7 +20,8 @@ esxi
 
 # inspection_code
 
-ESXI-STATUS-HARDWARE-HEALTH-01
+
+SV-ESXI-003
 
 # is_required
 

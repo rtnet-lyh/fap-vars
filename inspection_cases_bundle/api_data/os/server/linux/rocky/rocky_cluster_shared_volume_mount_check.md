@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-U-REPLAY-CLUSTER-SHARED-VOLUME-01
+
+SV-LIN-RKY-002
 
 # is_required
 

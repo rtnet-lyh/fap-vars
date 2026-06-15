@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "total": 278,
+    "selected": 278,
+    "created_or_ready": 187,
+    "skipped_existing": 91,
+    "skipped_by_code": 0,
+    "failed": 0
+  },
+  "failed_items": []
+}

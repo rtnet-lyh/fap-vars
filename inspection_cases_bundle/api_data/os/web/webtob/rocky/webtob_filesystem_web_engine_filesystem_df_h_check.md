@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WEBTOB-ROCKY-REPLAY-001
+
+WEB-WTB-RKY-003
 
 # is_required
 

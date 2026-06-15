@@ -20,7 +20,8 @@ windows2019
 
 # inspection_code
 
-W-REPLAY-OS-HBA-LINK-01
+
+SV-WIN19-009
 
 # is_required
 

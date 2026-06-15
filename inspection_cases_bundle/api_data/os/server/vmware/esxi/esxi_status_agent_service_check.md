@@ -20,7 +20,8 @@ esxi
 
 # inspection_code
 
-ESXI-STATUS-AGENT-SERVICE-01
+
+SV-ESXI-002
 
 # is_required
 

@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-JEUS-ROCKY-REPLAY-003
+
+WAS-JEUS-RKY-003
 
 # is_required
 
@@ -71,9 +72,8 @@ WAS-JEUS-ROCKY-REPLAY-003
 
 # thresholds
 
-[
-    {id: null, key: "ps_status: JEUS 프로세스 상태(S)", value: "", sortOrder: 0}
-]
+
+[]
 
 # inspection_script
 

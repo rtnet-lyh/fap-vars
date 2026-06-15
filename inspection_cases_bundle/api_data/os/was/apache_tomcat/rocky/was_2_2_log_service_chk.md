@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-WAS-APACHE-TOMCAT-ROCKY-REPLAY-006
+
+WAS-TOM-RKY-006
 
 # is_required
 

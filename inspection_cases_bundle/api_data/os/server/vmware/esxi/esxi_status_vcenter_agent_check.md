@@ -20,7 +20,8 @@ esxi
 
 # inspection_code
 
-ESXI-STATUS-VCENTER-AGENT-01
+
+SV-ESXI-004
 
 # is_required
 

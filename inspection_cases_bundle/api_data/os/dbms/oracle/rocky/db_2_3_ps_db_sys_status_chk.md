@@ -20,7 +20,8 @@ rocky
 
 # inspection_code
 
-DBMS-ORACLE-ROCKY-DB-2-3-DB-ACCESS
+
+DB-OR-RKY-004
 
 # is_required
 
