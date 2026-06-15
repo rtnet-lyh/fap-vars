@@ -191,6 +191,153 @@ class ApiDataStandardsTest(unittest.TestCase):
         self.assertEqual(parsed["inspection_output"], "ok")
         self.assertEqual(parsed["thresholds"], [{"id": None, "key": "min_count", "value": "2", "sortOrder": 0}])
 
+    def test_parse_api_data_md_fills_missing_fields_from_matching_raw_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            md_path = root / "api_data" / "os" / "server" / "windows" / "windows2019" / "cluster.md"
+            raw_path = root / "raw_data" / "server" / "windows" / "windows2019" / "cluster.md"
+            md_path.parent.mkdir(parents=True)
+            raw_path.parent.mkdir(parents=True)
+            md_path.write_text(
+                """# type_name
+
+일상점검
+
+# area_name
+
+server
+
+# category_name
+
+상태점검
+
+# application_type
+
+windows
+
+# application
+
+windows2019
+
+# inspection_code
+
+W-1
+
+# is_required
+
+# inspection_name
+
+# inspection_content
+
+# inspection_command
+
+```bash
+
+```
+
+# inspection_output
+
+```text
+ok
+```
+
+# description
+
+# thresholds
+
+[]
+
+# inspection_script
+
+class Check:
+    pass
+""",
+                encoding="utf-8",
+            )
+            raw_path.write_text(
+                """# 영역
+
+CLUSTER
+
+# 세부 점검 항목
+
+WSFC 클러스터 상태
+
+# 점검 내용
+
+클러스터 노드와 리소스를 점검합니다.
+
+# 구분
+
+필수
+
+# 명령어 - cluster_name
+
+```powershell
+Get-Cluster
+```
+
+# 설명
+
+설명입니다.
+
+# 판단기준
+
+정상 기준입니다.
+""",
+                encoding="utf-8",
+            )
+
+            parsed = inspection_create.parse_api_data_md(md_path)
+
+        self.assertEqual(parsed["is_required"], 1)
+        self.assertEqual(parsed["inspection_name"], "WSFC 클러스터 상태")
+        self.assertEqual(parsed["inspection_content"], "클러스터 노드와 리소스를 점검합니다.")
+        self.assertEqual(parsed["inspection_command"], "Get-Cluster")
+        self.assertIn("정상 기준", parsed["description"])
+
+    def test_build_payload_retries_product_application_for_platform_nested_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            md_path = Path(tmp_dir) / "api_data" / "os" / "was" / "jeus" / "rocky" / "case.md"
+            md_path.parent.mkdir(parents=True)
+            md_path.write_text(
+                STANDARD_MD.replace("# application_type\n\nUNIX", "# application_type\n\njeus")
+                .replace("# application\n\nSolaris", "# application\n\nrocky")
+                .replace("SVR-7-2", "WAS-JEUS-1"),
+                encoding="utf-8",
+            )
+
+            client = inspection_create.InspectionCreateClient.__new__(inspection_create.InspectionCreateClient)
+            client.build_revision_num = lambda: 2026061501
+            calls: list[str] = []
+
+            class FakeLookup:
+                def resolve_ids(self, **kwargs: object) -> dict[str, object]:
+                    application = str(kwargs["application"])
+                    calls.append(application)
+                    if application == "rocky":
+                        raise ValueError("'rocky' 을(를) 찾지 못했습니다. 가능한 값: ['JEUS']")
+                    return {
+                        "type_id": 1,
+                        "type_name": kwargs["inspection_type"],
+                        "area_id": 2,
+                        "area_name": kwargs["area"],
+                        "category_id": 3,
+                        "category_name": kwargs["category"],
+                        "application_type_id": 4,
+                        "application_type_name": kwargs["application_type"],
+                        "application_id": 5,
+                        "application_name": application,
+                    }
+
+            client.lookup = FakeLookup()
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                payload = client.build_payload_from_md(md_path)
+
+        self.assertEqual(calls, ["rocky", "JEUS"])
+        self.assertEqual(payload["application_name"], "JEUS")
+
     def test_legacy_korean_parser_is_explicitly_separate_but_normalizes_to_same_keys(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             md_path = Path(tmp_dir) / "legacy.md"
@@ -558,8 +705,13 @@ legacy-session
         fake_path = Path("/tmp/fake.md")
 
         class FakeClient:
-            def build_payload_from_md(self, md_path: Path) -> dict[str, object]:
-                calls.append(f"build:{md_path}")
+            def build_payload_from_md(
+                self,
+                md_path: Path,
+                *,
+                seed_missing_metadata: bool = False,
+            ) -> dict[str, object]:
+                calls.append(f"build:{md_path}:{seed_missing_metadata}")
                 return {"inspection_code": "CODE-1"}
 
             def create_from_md(self, md_path: Path) -> dict[str, object]:
@@ -573,6 +725,8 @@ legacy-session
                 recursive=False,
                 execute=False,
                 code=None,
+                log_dir=None,
+                no_log=True,
             )
             inspection_create._iter_md_paths = lambda md_file, md_dir, *, recursive: [fake_path]
             inspection_create.parse_api_data_md = lambda md_path: {
@@ -590,7 +744,249 @@ legacy-session
             inspection_create.InspectionCreateClient.from_api_data_md = original_from_md
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(calls, ["build:/tmp/fake.md"])
+        self.assertEqual(calls, ["build:/tmp/fake.md:False"])
+
+    def test_inspection_create_main_writes_run_log_under_md_dir(self) -> None:
+        original_parse_args = inspection_create.parse_args
+        original_iter = inspection_create._iter_md_paths
+        original_parse_md = inspection_create.parse_api_data_md
+        original_from_md = inspection_create.InspectionCreateClient.from_api_data_md
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            md_root = Path(tmp_dir) / "os"
+            md_root.mkdir()
+            fake_path = md_root / "case.md"
+
+            class FakeClient:
+                def build_payload_from_md(
+                    self,
+                    md_path: Path,
+                    *,
+                    seed_missing_metadata: bool = False,
+                ) -> dict[str, object]:
+                    return {"inspection_code": "CODE-1"}
+
+            try:
+                inspection_create.parse_args = lambda: Namespace(
+                    md_file=None,
+                    md_dir=str(md_root),
+                    recursive=False,
+                    execute=False,
+                    code=None,
+                    log_dir=None,
+                    no_log=False,
+                    no_seed_missing_metadata=False,
+                    fail_fast=False,
+                    no_skip_existing=False,
+                )
+                inspection_create._iter_md_paths = lambda md_file, md_dir, *, recursive: [fake_path]
+                inspection_create.parse_api_data_md = lambda md_path: {
+                    "inspection_code": "CODE-1",
+                    "application": "app",
+                    "inspection_name": "점검",
+                }
+                inspection_create.InspectionCreateClient.from_api_data_md = classmethod(lambda cls, md_path: (FakeClient(), {}))
+
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = inspection_create.main()
+            finally:
+                inspection_create.parse_args = original_parse_args
+                inspection_create._iter_md_paths = original_iter
+                inspection_create.parse_api_data_md = original_parse_md
+                inspection_create.InspectionCreateClient.from_api_data_md = original_from_md
+
+            log_files = sorted((md_root / "_logs").glob("inspection_create_*.log"))
+            json_files = sorted((md_root / "_logs").glob("inspection_create_*.json"))
+            log_text = log_files[0].read_text(encoding="utf-8") if log_files else ""
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(len(log_files), 1)
+        self.assertEqual(len(json_files), 1)
+        self.assertIn("[SUMMARY]", log_text)
+
+    def test_inspection_create_main_skips_existing_items_before_post(self) -> None:
+        original_parse_args = inspection_create.parse_args
+        original_iter = inspection_create._iter_md_paths
+        original_parse_md = inspection_create.parse_api_data_md
+        original_from_md = inspection_create.InspectionCreateClient.from_api_data_md
+        calls: list[str] = []
+        paths = [Path("/tmp/existing.md"), Path("/tmp/missing.md")]
+
+        class FakeClient:
+            def search_existing_items(self) -> list[dict[str, object]]:
+                calls.append("search")
+                return [
+                    {
+                        "id": 9,
+                        "item_id": 10,
+                        "mapping_id": 11,
+                        "inspection_code": "CODE-1",
+                        "application_name": "app",
+                    }
+                ]
+
+            def build_payload_from_md(
+                self,
+                md_path: Path,
+                *,
+                seed_missing_metadata: bool = False,
+            ) -> dict[str, object]:
+                code = "CODE-1" if md_path.name == "existing.md" else "CODE-2"
+                calls.append(f"build:{code}:{seed_missing_metadata}")
+                return {"inspection_code": code}
+
+            def _post(self, path: str, payload: dict[str, object]) -> dict[str, object]:
+                calls.append(f"post:{payload['inspection_code']}")
+                return {"status": "success"}
+
+        try:
+            inspection_create.parse_args = lambda: Namespace(
+                md_file=None,
+                md_dir="unused",
+                recursive=True,
+                execute=True,
+                code=None,
+                log_dir=None,
+                no_log=True,
+                no_seed_missing_metadata=False,
+                fail_fast=False,
+                no_skip_existing=False,
+            )
+            inspection_create._iter_md_paths = lambda md_file, md_dir, *, recursive: paths
+
+            def fake_parse(md_path: Path) -> dict[str, object]:
+                return {
+                    "inspection_code": "CODE-1" if Path(md_path).name == "existing.md" else "CODE-2",
+                    "application": "app",
+                    "inspection_name": "점검",
+                }
+
+            inspection_create.parse_api_data_md = fake_parse
+            inspection_create.InspectionCreateClient.from_api_data_md = classmethod(lambda cls, md_path: (FakeClient(), {}))
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = inspection_create.main()
+        finally:
+            inspection_create.parse_args = original_parse_args
+            inspection_create._iter_md_paths = original_iter
+            inspection_create.parse_api_data_md = original_parse_md
+            inspection_create.InspectionCreateClient.from_api_data_md = original_from_md
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(calls, ["search", "build:CODE-2:True", "post:CODE-2"])
+        output = stdout.getvalue()
+        self.assertIn('"created_or_ready": 1', output)
+        self.assertIn('"skipped_existing": 1', output)
+
+    def test_inspection_create_main_continues_after_file_error(self) -> None:
+        original_parse_args = inspection_create.parse_args
+        original_iter = inspection_create._iter_md_paths
+        original_parse_md = inspection_create.parse_api_data_md
+        original_from_md = inspection_create.InspectionCreateClient.from_api_data_md
+        calls: list[str] = []
+        paths = [Path("/tmp/one.md"), Path("/tmp/two.md")]
+
+        class FakeClient:
+            def build_payload_from_md(
+                self,
+                md_path: Path,
+                *,
+                seed_missing_metadata: bool = False,
+            ) -> dict[str, object]:
+                code = "CODE-1" if md_path.name == "one.md" else "CODE-2"
+                calls.append(f"build:{code}:{seed_missing_metadata}")
+                return {"inspection_code": code}
+
+            def _post(self, path: str, payload: dict[str, object]) -> dict[str, object]:
+                code = str(payload["inspection_code"])
+                calls.append(f"post:{code}")
+                if code == "CODE-1":
+                    raise RuntimeError("POST failed")
+                return {"status": "success"}
+
+        try:
+            inspection_create.parse_args = lambda: Namespace(
+                md_file=None,
+                md_dir="unused",
+                recursive=True,
+                execute=True,
+                code=None,
+                log_dir=None,
+                no_log=True,
+                no_seed_missing_metadata=False,
+                fail_fast=False,
+                no_skip_existing=True,
+            )
+            inspection_create._iter_md_paths = lambda md_file, md_dir, *, recursive: paths
+            inspection_create.parse_api_data_md = lambda md_path: {
+                "inspection_code": "CODE-1" if Path(md_path).name == "one.md" else "CODE-2",
+                "inspection_name": "점검",
+            }
+            inspection_create.InspectionCreateClient.from_api_data_md = classmethod(lambda cls, md_path: (FakeClient(), {}))
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = inspection_create.main()
+        finally:
+            inspection_create.parse_args = original_parse_args
+            inspection_create._iter_md_paths = original_iter
+            inspection_create.parse_api_data_md = original_parse_md
+            inspection_create.InspectionCreateClient.from_api_data_md = original_from_md
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(calls, ["build:CODE-1:True", "post:CODE-1", "build:CODE-2:True", "post:CODE-2"])
+        output = stdout.getvalue()
+        self.assertIn('"created_or_ready": 1', output)
+        self.assertIn('"failed": 1', output)
+
+    def test_inspection_create_create_from_md_seeds_missing_metadata_once_then_posts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            md_path = Path(tmp_dir) / "case.md"
+            md_path.write_text(STANDARD_MD, encoding="utf-8")
+
+            client = inspection_create.InspectionCreateClient.__new__(
+                inspection_create.InspectionCreateClient
+            )
+
+            class FakeLookup:
+                def __init__(self) -> None:
+                    self.calls = 0
+
+                def resolve_ids(self, **kwargs: object) -> dict[str, object]:
+                    self.calls += 1
+                    if self.calls == 1:
+                        raise ValueError("'UNIX' 을(를) 찾지 못했습니다.")
+                    return {
+                        "type_id": 1,
+                        "type_name": kwargs["inspection_type"],
+                        "area_id": 2,
+                        "area_name": kwargs["area"],
+                        "category_id": 3,
+                        "category_name": kwargs["category"],
+                        "application_type_id": 4,
+                        "application_type_name": kwargs["application_type"],
+                        "application_id": 5,
+                        "application_name": kwargs["application"],
+                    }
+
+            lookup = FakeLookup()
+            seed_calls: list[Path] = []
+            post_calls: list[tuple[str, dict[str, object]]] = []
+            client.lookup = lookup
+            client.build_revision_num = lambda: 2026061501
+            client.seed_management_values_from_md = lambda path: seed_calls.append(Path(path))
+            client._post = lambda path, payload: post_calls.append((path, payload)) or {"status": "success"}
+
+            result = client.create_from_md(md_path)
+
+        self.assertEqual(result, {"status": "success"})
+        self.assertEqual(seed_calls, [md_path])
+        self.assertEqual(lookup.calls, 2)
+        self.assertEqual(post_calls[0][0], "/data/inspection/items")
+        self.assertEqual(post_calls[0][1]["type_id"], 1)
+        self.assertEqual(post_calls[0][1]["application_type_name"], "UNIX")
+        self.assertEqual(post_calls[0][1]["application_name"], "Solaris")
 
     def test_inspection_update_defaults_to_full_search_and_matches_code_and_application(self) -> None:
         updater = inspection_update.InspectionUpdateClient.__new__(inspection_update.InspectionUpdateClient)

@@ -224,9 +224,12 @@ def render_markdown(
     script_text: str,
     *,
     type_name: str = DEFAULT_TYPE_NAME,
+    area_name: str | None = None,
     category_name: str = DEFAULT_CATEGORY_NAME,
 ) -> str:
-    area_name, application_type, application = rel_path.parts[:3]
+    path_area_name, application_type, application = rel_path.parts[:3]
+    rendered_area_name = area_name or path_area_name
+    rendered_category_name = path_area_name if area_name else category_name
     case_thresholds = extract_threshold_entries(case_data)
     threshold_entries = case_thresholds or raw_threshold_entries(sections.get('임계치', ''))
     description_parts = [sections.get('설명', '').strip(), sections.get('판단기준', '').strip()]
@@ -234,8 +237,8 @@ def render_markdown(
 
     field_values = [
         ('type_name', type_name),
-        ('area_name', area_name),
-        ('category_name', category_name),
+        ('area_name', rendered_area_name),
+        ('category_name', rendered_category_name),
         ('application_type', application_type),
         ('application', application),
         ('inspection_code', extract_inspection_code(case_data)),
@@ -348,6 +351,7 @@ def convert_all(
     overwrite: bool,
     *,
     type_name: str = DEFAULT_TYPE_NAME,
+    area_name: str | None = None,
     category_name: str = DEFAULT_CATEGORY_NAME,
 ) -> ConversionSummary:
     summary = ConversionSummary(
@@ -411,7 +415,15 @@ def convert_all(
 
         sections = parse_markdown_sections(read_text(raw_path))
         script_text = read_text(script_path)
-        rendered = render_markdown(rel_path, sections, case_data, script_text, type_name=type_name, category_name=category_name)
+        rendered = render_markdown(
+            rel_path,
+            sections,
+            case_data,
+            script_text,
+            type_name=type_name,
+            area_name=area_name,
+            category_name=category_name,
+        )
 
         if not dry_run:
             write_text(output_path, rendered)
@@ -554,7 +566,7 @@ def main() -> int:
     output_root = Path(args.output_root)
     report_root = Path(args.report_root)
 
-    category_name = args.legacy_area_name or args.category_name
+    area_name = args.legacy_area_name
 
     summary = convert_all(
         raw_root=raw_root,
@@ -564,7 +576,8 @@ def main() -> int:
         dry_run=bool(args.dry_run),
         overwrite=bool(args.overwrite),
         type_name=args.type_name,
-        category_name=category_name,
+        area_name=area_name,
+        category_name=args.category_name,
     )
     write_reports(summary, report_root)
 

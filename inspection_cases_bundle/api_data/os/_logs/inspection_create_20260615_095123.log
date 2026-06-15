@@ -1,0 +1,408 @@
+[LOG] /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/_logs/inspection_create_20260615_095123.log
+[SEARCH] 기존 서버 항목 조회
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_1_catalog.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_1_catalog.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_1_catalog.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_2_swlog.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_2_swlog.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/1_2_swlog.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_1_tape_status.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_2_tape_active.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_3_tape_used.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_4_disk.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_4_disk.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_4_disk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_5_schedule.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_5_schedule.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_5_schedule.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_6_etc.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_6_etc.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/2_6_etc.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/3_1_disk_port.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] BACKUP-VERITAS-NBU5240-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md
+[POST] BACKUP-VERITAS-NBU5240-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md execute=True
+[ERROR] BACKUP-VERITAS-NBU5240-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/backup/veritas/netbackup_appliance_5240/4_1_swstatus.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-1-1-FS-ENGINE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_1_fs_engine_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-1-1-FS-ENGINE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_1_fs_engine_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-1-1-FS-ENGINE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_1_fs_engine_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-1-2-FS-ARCHIVE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-1-2-FS-ARCHIVE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-1-2-FS-ARCHIVE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_2_fs_archive_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-1-3-FS-DB-SYSTEM-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-1-3-FS-DB-SYSTEM-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-1-3-FS-DB-SYSTEM-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_1_3_fs_db_sys_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-2-3-DB-ACCESS /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-2-3-DB-ACCESS /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-2-3-DB-ACCESS /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_2_3_ps_db_sys_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-3-1-OS-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_1_os_mem_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-3-1-OS-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_1_os_mem_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-3-1-OS-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_1_os_mem_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-3-2-OS-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_2_os_cpu_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-3-2-OS-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_2_os_cpu_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-3-2-OS-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_3_2_os_cpu_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-4-1-DB-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_1_log_db_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-4-1-DB-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_1_log_db_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-4-1-DB-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_1_log_db_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-4-2-LISTENER-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_2_log_lsnr_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-4-2-LISTENER-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_2_log_lsnr_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-4-2-LISTENER-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_2_log_lsnr_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-4-3-DUMP-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_3_log_dump_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-4-3-DUMP-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_3_log_dump_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-4-3-DUMP-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_3_log_dump_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-4-4-ENGINE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_4_log_engine_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-4-4-ENGINE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_4_log_engine_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-4-4-ENGINE-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_4_4_log_engine_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-5-1-PROCESSES /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_5_1_param_ps_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-5-1-PROCESSES /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_5_1_param_ps_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-5-1-PROCESSES /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_5_1_param_ps_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-7-1-TABLESPACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_7_1_table_space_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-7-1-TABLESPACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_7_1_table_space_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-7-1-TABLESPACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_7_1_table_space_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-8-1-RMAN-BACKUP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_8_1_backup_status_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-8-1-RMAN-BACKUP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_8_1_backup_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-8-1-RMAN-BACKUP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_8_1_backup_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-ROCKY-DB-9-1-REDO-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_9_1_transaction_log_chk.md
+[POST] DBMS-ORACLE-ROCKY-DB-9-1-REDO-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_9_1_transaction_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-ROCKY-DB-9-1-REDO-LOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/rocky/db_9_1_transaction_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_1_fs_engine_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_1_fs_engine_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-001 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_1_fs_engine_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_2_fs_archive_log_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_2_fs_archive_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-002 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_2_fs_archive_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-003 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_1_3_fs_db_sys_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_1_ps_main_status_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_1_ps_main_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-004 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_1_ps_main_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-005 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_2_ps_lsnr_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-006 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_2_3_ps_db_sys_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_1_os_mem_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_1_os_mem_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-007 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_1_os_mem_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_2_os_cpu_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_2_os_cpu_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-008 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_3_2_os_cpu_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_1_log_db_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_1_log_db_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-009 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_1_log_db_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_2_log_lsnr_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_2_log_lsnr_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-010 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_2_log_lsnr_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-011 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_3_log_dump_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-011 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_3_log_dump_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-011 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_3_log_dump_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-012 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_4_log_engine_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-012 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_4_log_engine_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-012 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_4_4_log_engine_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-013 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_1_param_ps_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-013 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_1_param_ps_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-013 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_1_param_ps_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-014 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_2_param_sga_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-014 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_2_param_sga_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-014 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_5_2_param_sga_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-015 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_1_active_standby_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-015 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_1_active_standby_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-015 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_1_active_standby_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-016 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_2_ctrl_file_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-016 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_2_ctrl_file_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-016 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_2_ctrl_file_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-017 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_3_redo_file_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-017 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_3_redo_file_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-017 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_6_3_redo_file_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-018 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_7_1_table_space_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-018 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_7_1_table_space_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-018 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_7_1_table_space_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-019 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_1_backup_status_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-019 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_1_backup_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-019 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_1_backup_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-020 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_2_backup_archive_status_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-020 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_2_backup_archive_status_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-020 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_2_backup_archive_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-021 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_3_backup_config_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-021 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_3_backup_config_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-021 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_8_3_backup_config_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] DBMS-ORACLE-SOLARIS-REPLAY-022 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_9_1_transaction_log_chk.md
+[POST] DBMS-ORACLE-SOLARIS-REPLAY-022 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_9_1_transaction_log_chk.md execute=True
+[ERROR] DBMS-ORACLE-SOLARIS-REPLAY-022 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/dbms/oracle/solaris/db_9_1_transaction_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-CISCO-IOS-C2960X-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md
+[POST] NETWORK-CISCO-IOS-C2960X-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md execute=True
+[ERROR] NETWORK-CISCO-IOS-C2960X-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_1_os_cpu_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-CISCO-IOS-C2960X-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md
+[POST] NETWORK-CISCO-IOS-C2960X-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md execute=True
+[ERROR] NETWORK-CISCO-IOS-C2960X-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_1_2_os_mem_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-CISCO-IOS-C2960X-INTERFACE-TRAFFIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md
+[POST] NETWORK-CISCO-IOS-C2960X-INTERFACE-TRAFFIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md execute=True
+[ERROR] NETWORK-CISCO-IOS-C2960X-INTERFACE-TRAFFIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_1_if_traffic_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-CISCO-IOS-C2960X-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md
+[POST] NETWORK-CISCO-IOS-C2960X-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md execute=True
+[ERROR] NETWORK-CISCO-IOS-C2960X-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_2_2_if_status_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-CISCO-IOS-C2960X-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md
+[POST] NETWORK-CISCO-IOS-C2960X-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md execute=True
+[ERROR] NETWORK-CISCO-IOS-C2960X-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/cisco_ios/c2960x/cisco_3_1_sys_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-1-1-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_1_cpu.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-1-1-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_1_cpu.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-1-1-CPU /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_1_cpu.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-1-2-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_2_memory.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-1-2-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_2_memory.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-1-2-MEMORY /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_2_memory.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-1-3-INTERFACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_3_interface.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-1-3-INTERFACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_3_interface.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-1-3-INTERFACE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/1_3_interface.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-2-1-INTER-MODULE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_1_inter_module.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-2-1-INTER-MODULE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_1_inter_module.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-2-1-INTER-MODULE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_1_inter_module.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-2-2-VLAN /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_2_vlan.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-2-2-VLAN /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_2_vlan.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-2-2-VLAN /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/2_2_vlan.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-1-LB /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_1_lb.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-1-LB /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_1_lb.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-1-LB /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_1_lb.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-2-MAC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_2_mac.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-2-MAC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_2_mac.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-2-MAC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_2_mac.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-3-ROUTE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_3_route.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-3-ROUTE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_3_route.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-3-ROUTE /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_3_route.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-4-STP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_4_stp.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-4-STP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_4_stp.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-4-STP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_4_stp.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-5-VRRP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_5_vrrp.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-5-VRRP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_5_vrrp.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-5-VRRP /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_5_vrrp.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-3-6-PING /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_6_ping.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-3-6-PING /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_6_ping.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-3-6-PING /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/3_6_ping.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-4-1-SYSLOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/4_1_syslog.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-4-1-SYSLOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/4_1_syslog.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-4-1-SYSLOG /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/4_1_syslog.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-JUNIPER-JUNOS-EX4300-5-1-ETC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/5_1_etc.md
+[POST] NETWORK-JUNIPER-JUNOS-EX4300-5-1-ETC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/5_1_etc.md execute=True
+[ERROR] NETWORK-JUNIPER-JUNOS-EX4300-5-1-ETC /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/juniper_junos/ex4300/5_1_etc.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_1_cpu.md
+[POST] NETWORK-NXOS-MDS-C9148S-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_1_cpu.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_1_cpu.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_2_memory.md
+[POST] NETWORK-NXOS-MDS-C9148S-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_2_memory.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_2_memory.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_3_interface.md
+[POST] NETWORK-NXOS-MDS-C9148S-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_3_interface.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/1_3_interface.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_1_inter_module.md
+[POST] NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_1_inter_module.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-INTERFACE-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_1_inter_module.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_2_vlan.md
+[POST] NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_2_vlan.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-VSAN-STATUS-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/2_2_vlan.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_1_lb.md
+[POST] NETWORK-NXOS-MDS-C9148S-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_1_lb.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_1_lb.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_2_mac.md
+[POST] NETWORK-NXOS-MDS-C9148S-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_2_mac.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_2_mac.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_3_route.md
+[POST] NETWORK-NXOS-MDS-C9148S-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_3_route.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_3_route.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_4_stp.md
+[POST] NETWORK-NXOS-MDS-C9148S-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_4_stp.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_4_stp.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-VRRP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_5_vrrp.md
+[POST] NETWORK-NXOS-MDS-C9148S-VRRP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_5_vrrp.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-VRRP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_5_vrrp.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_6_ping.md
+[POST] NETWORK-NXOS-MDS-C9148S-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_6_ping.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/3_6_ping.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/4_1_syslog.md
+[POST] NETWORK-NXOS-MDS-C9148S-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/4_1_syslog.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-SYSLOG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/4_1_syslog.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-NXOS-MDS-C9148S-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/5_1_etc.md
+[POST] NETWORK-NXOS-MDS-C9148S-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/5_1_etc.md execute=True
+[ERROR] NETWORK-NXOS-MDS-C9148S-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/nx_os/mds_c9148s/5_1_etc.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-CPU-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-CPU-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-CPU-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_1_cpu_usage_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-MEMORY-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-MEMORY-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-MEMORY-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_2_mem_usage_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-INTERFACE-USAGE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_1_3_interface_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-HW-INTERFACE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-HW-INTERFACE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-HW-INTERFACE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_1_hw_interface_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-HW-VLAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-HW-VLAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-HW-VLAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_2_2_hw_vlan_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-LB-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_1_svc_lb_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-MAC-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-MAC-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-MAC-ARP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_2_svc_mac_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-ROUTE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_3_svc_route_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-STP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_4_svc_stp_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-FAILOVER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-FAILOVER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-FAILOVER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_5_svc_failover_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-SERVICE-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-SERVICE-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-SERVICE-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_3_6_svc_ping_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-LOG-SYSTEM-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_4_1_log_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-LOG-SYSTEM-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_4_1_log_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-LOG-SYSTEM-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_4_1_log_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] NETWORK-PIOLINK-PAS-K3200X-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_5_1_env_chk.md
+[POST] NETWORK-PIOLINK-PAS-K3200X-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_5_1_env_chk.md execute=True
+[ERROR] NETWORK-PIOLINK-PAS-K3200X-ENVIRONMENT-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/network/piolink_pas/pas_k3200x/pio_5_1_env_chk.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-CLUSTER-DAEMON-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_daemon_crm_mon_check.md
+[POST] U-REPLAY-CLUSTER-DAEMON-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_daemon_crm_mon_check.md execute=True
+[ERROR] U-REPLAY-CLUSTER-DAEMON-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_daemon_crm_mon_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-CLUSTER-SHARED-VOLUME-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_shared_volume_mount_check.md
+[POST] U-REPLAY-CLUSTER-SHARED-VOLUME-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_shared_volume_mount_check.md execute=True
+[ERROR] U-REPLAY-CLUSTER-SHARED-VOLUME-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cluster_shared_volume_mount_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] U-REPLAY-CPU-CORE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cpu_core_check.md 이미 등록됨 id=1 item_id=1 mapping_id=1
+[SKIP] U-REPLAY-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_cpu_usage_procstat_check.md 이미 등록됨 id=2 item_id=2 mapping_id=2
+[SKIP] U-REPLAY-INODE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_filesystem_inode_df_check.md 이미 등록됨 id=3 item_id=3 mapping_id=3
+[SKIP] U-REPLAY-DF-EX-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_filesystem_usage_df_check.md 이미 등록됨 id=4 item_id=4 mapping_id=4
+[SKIP] U-REPLAY-DISK-IO-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_io_diskstats_check.md 이미 등록됨 id=5 item_id=5 mapping_id=5
+[SKIP] U-REPLAY-MDADM-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_raid_mdadm_check.md 이미 등록됨 id=6 item_id=6 mapping_id=6
+[LOOKUP] U-REPLAY-LSBLK-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_recognition_lsblk_check.md
+[POST] U-REPLAY-LSBLK-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_recognition_lsblk_check.md execute=True
+[ERROR] U-REPLAY-LSBLK-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_recognition_lsblk_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] U-REPLAY-SWAP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_disk_swap_swapon_check.md 이미 등록됨 id=8 item_id=8 mapping_id=8
+[SKIP] U-REPLAY-SYSCTL-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_kernel_parameter_sysctl_check.md 이미 등록됨 id=9 item_id=9 mapping_id=9
+[LOOKUP] U-REPLAY-DMESG-CLUSTER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cluster_dmesg_check.md
+[POST] U-REPLAY-DMESG-CLUSTER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cluster_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-CLUSTER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cluster_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-DMESG-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cpu_dmesg_check.md
+[POST] U-REPLAY-DMESG-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cpu_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_cpu_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-DMESG-FAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_fan_dmesg_check.md
+[POST] U-REPLAY-DMESG-FAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_fan_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-FAN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_fan_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] U-REPLAY-DMESG-IO-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_hba_dmesg_check.md 이미 등록됨 id=10 item_id=10 mapping_id=10
+[SKIP] U-REPLAY-DMESG-IO-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_io_dmesg_check.md 이미 등록됨 id=11 item_id=11 mapping_id=11
+[LOOKUP] U-REPLAY-DMESG-PANIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_kernel_dmesg_check.md
+[POST] U-REPLAY-DMESG-PANIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_kernel_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-PANIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_kernel_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-DMESG-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_memory_dmesg_check.md
+[POST] U-REPLAY-DMESG-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_memory_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-MEMORY-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_memory_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-DMESG-NIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_nic_dmesg_check.md
+[POST] U-REPLAY-DMESG-NIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_nic_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-NIC-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_nic_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] U-REPLAY-DMESG-POWER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_power_dmesg_check.md
+[POST] U-REPLAY-DMESG-POWER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_power_dmesg_check.md execute=True
+[ERROR] U-REPLAY-DMESG-POWER-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_power_dmesg_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] U-REPLAY-DMESG-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_log_system_dmesg_check.md 이미 등록됨 id=12 item_id=12 mapping_id=12
+[SKIP] U-REPLAY-MEM-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_recognition_dmidecode_check.md 이미 등록됨 id=13 item_id=13 mapping_id=13
+[SKIP] U-REPLAY-SWAP-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_swap_swapon_check.md 이미 등록됨 id=8 item_id=8 mapping_id=8
+[SKIP] U-REPLAY-FREE-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_memory_usage_free_check.md 이미 등록됨 id=14 item_id=14 mapping_id=14
+[SKIP] U-REPLAY-IP-LINK-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_link_status_ip_link_check.md 이미 등록됨 id=15 item_id=15 mapping_id=15
+[LOOKUP] U-REPLAY-NIC-BONDING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_nic_redundancy_bonding_check.md
+[POST] U-REPLAY-NIC-BONDING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_nic_redundancy_bonding_check.md execute=True
+[ERROR] U-REPLAY-NIC-BONDING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_nic_redundancy_bonding_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] U-REPLAY-PING-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_network_ping_loss_check.md 이미 등록됨 id=16 item_id=16 mapping_id=16
+[SKIP] U-REPLAY-HBA-CONN-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_hba_connection_systool_check.md 이미 등록됨 id=17 item_id=17 mapping_id=17
+[LOOKUP] U-REPLAY-MULTIPATH-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_path_redundancy_multipath_check.md
+[POST] U-REPLAY-MULTIPATH-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_path_redundancy_multipath_check.md execute=True
+[ERROR] U-REPLAY-MULTIPATH-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/linux/rocky/rocky_os_path_redundancy_multipath_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[SKIP] HPUX-REPLAY-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cluster_daemon_cmviewcl_check.md 이미 등록됨 id=18 item_id=18 mapping_id=18
+[SKIP] HPUX-REPLAY-03 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cluster_shared_volume_mount_check.md 이미 등록됨 id=19 item_id=19 mapping_id=19
+[SKIP] HPUX-REPLAY-04 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cpu_core_ioscan_check.md 이미 등록됨 id=20 item_id=20 mapping_id=20
+[SKIP] HPUX-REPLAY-CPU-01 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_cpu_usage_sar_check.md 이미 등록됨 id=21 item_id=21 mapping_id=21
+[SKIP] HPUX-REPLAY-05 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_filesystem_inode_bdf_check.md 이미 등록됨 id=22 item_id=22 mapping_id=22
+[SKIP] HPUX-REPLAY-06 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_filesystem_usage_bdf_check.md 이미 등록됨 id=23 item_id=23 mapping_id=23
+[SKIP] HPUX-REPLAY-07 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_io_sar_check.md 이미 등록됨 id=24 item_id=24 mapping_id=24
+[SKIP] HPUX-REPLAY-08 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_raid_vgdisplay_check.md 이미 등록됨 id=25 item_id=25 mapping_id=25
+[SKIP] HPUX-REPLAY-09 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_recognition_ioscan_check.md 이미 등록됨 id=26 item_id=26 mapping_id=26
+[SKIP] HPUX-REPLAY-10 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_disk_swap_swapinfo_check.md 이미 등록됨 id=27 item_id=27 mapping_id=27
+[SKIP] HPUX-REPLAY-11 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_kernel_parameter_kctune_check.md 이미 등록됨 id=28 item_id=28 mapping_id=28
+[SKIP] HPUX-REPLAY-12 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_cluster_serviceguard_check.md 이미 등록됨 id=29 item_id=29 mapping_id=29
+[SKIP] HPUX-REPLAY-13 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_cpu_dmesg_check.md 이미 등록됨 id=30 item_id=30 mapping_id=30
+[SKIP] HPUX-REPLAY-14 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_fan_dmesg_check.md 이미 등록됨 id=31 item_id=31 mapping_id=31
+[SKIP] HPUX-REPLAY-15 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_hba_dmesg_check.md 이미 등록됨 id=32 item_id=32 mapping_id=32
+[SKIP] HPUX-REPLAY-16 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_io_dmesg_check.md 이미 등록됨 id=33 item_id=33 mapping_id=33
+[SKIP] HPUX-REPLAY-17 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_kernel_dmesg_check.md 이미 등록됨 id=34 item_id=34 mapping_id=34
+[SKIP] HPUX-REPLAY-18 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_memory_dmesg_check.md 이미 등록됨 id=35 item_id=35 mapping_id=35
+[SKIP] HPUX-REPLAY-19 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_nic_dmesg_check.md 이미 등록됨 id=36 item_id=36 mapping_id=36
+[SKIP] HPUX-REPLAY-20 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_power_dmesg_check.md 이미 등록됨 id=37 item_id=37 mapping_id=37
+[SKIP] HPUX-REPLAY-21 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_log_system_dmesg_check.md 이미 등록됨 id=38 item_id=38 mapping_id=38
+[SKIP] HPUX-REPLAY-22 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_recognition_machinfo_check.md 이미 등록됨 id=39 item_id=39 mapping_id=39
+[SKIP] HPUX-REPLAY-23 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_swap_swapinfo_check.md 이미 등록됨 id=40 item_id=40 mapping_id=40
+[SKIP] HPUX-REPLAY-24 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_memory_usage_swapinfo_check.md 이미 등록됨 id=41 item_id=41 mapping_id=41
+[SKIP] HPUX-REPLAY-25 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_link_status_lanscan_check.md 이미 등록됨 id=42 item_id=42 mapping_id=42
+[SKIP] HPUX-REPLAY-26 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_nic_redundancy_hpapa_check.md 이미 등록됨 id=43 item_id=43 mapping_id=43
+[SKIP] HPUX-REPLAY-27 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_network_ping_loss_check.md 이미 등록됨 id=44 item_id=44 mapping_id=44
+[SKIP] HPUX-REPLAY-28 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_os_hba_connection_ioscan_check.md 이미 등록됨 id=45 item_id=45 mapping_id=45
+[SKIP] HPUX-REPLAY-29 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/hpux/hpux_os_path_redundancy_scsimgr_check.md 이미 등록됨 id=46 item_id=46 mapping_id=46
+[LOOKUP] SOL-REPLAY-CLUSTER-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_daemon_scstat_check.md
+[SEED] 관리 값 확인/등록: /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_daemon_scstat_check.md
+[SKIP] type_name 이미 존재: 일상점검 (id=1)
+[SKIP] area_name 이미 존재: server (id=4)
+[CREATE] category_name 생성: 상태점검 (id=1)
+[SKIP] application_type 이미 존재: unix (id=8)
+[CREATE] application 생성: solaris (id=15)
+
+완료 결과
+{
+  "type_name": {
+    "id": 1,
+    "name": "일상점검",
+    "is_vulnerability": true,
+    "is_immutable": false,
+    "category_group_id": null,
+    "category_group_name": null,
+    "created_by": 1,
+    "created_at": 1781433109.509811,
+    "modified_by": 1,
+    "modified_at": 1781433109.509811
+  },
+  "area_name": {
+    "id": 4,
+    "name": "server"
+  },
+  "category_name": {
+    "id": 1,
+    "name": "상태점검",
+    "typeId": 1,
+    "type_id": 1,
+    "areaId": 4,
+    "area_id": 4
+  },
+  "application_type": {
+    "id": 8,
+    "name": "unix"
+  },
+  "application": {
+    "id": 15,
+    "name": "solaris",
+    "application_type_id": 8,
+    "applicationTypeId": 8,
+    "areaId": 4,
+    "area_id": 4
+  }
+}
+[POST] SOL-REPLAY-CLUSTER-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_daemon_scstat_check.md execute=True
+[ERROR] SOL-REPLAY-CLUSTER-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_daemon_scstat_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] SOL-REPLAY-CLUSTER-03 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_shared_volume_mount_check.md
+[POST] SOL-REPLAY-CLUSTER-03 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_shared_volume_mount_check.md execute=True
+[ERROR] SOL-REPLAY-CLUSTER-03 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cluster_shared_volume_mount_check.md: RuntimeError: POST /data/inspection/items HTTP 404: 
+[LOOKUP] SOL-REPLAY-CPU-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cpu_core_psrinfo_check.md
+[POST] SOL-REPLAY-CPU-02 /home/fap/git/fap-vars/inspection_cases_bundle/api_data/os/server/unix/solaris/solaris_cpu_core_psrinfo_check.md execute=True
