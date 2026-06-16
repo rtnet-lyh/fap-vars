@@ -28,13 +28,13 @@
   "host_id": 220,
   "job_id": 2200,
   "item": {
-    "inspection_code": "U-REPLAY-CLUSTER-DAEMON-01",
+    "inspection_code": "HANBIT-ROCKY-CLUSTER-DAEMON-CRM-MON-CHECK",
     "item_id": 90022,
     "application_id": 121,
     "application_type_id": 10,
     "application_type_name": "LINUX",
-    "application_name": "A",
-    "application_family_name": "A",
+    "application_name": "ROCKY",
+    "application_family_name": "ROCKY",
     "threshold_list": [
       {
         "name": "max_offline_node_count",

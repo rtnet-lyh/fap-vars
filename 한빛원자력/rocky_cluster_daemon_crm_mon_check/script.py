@@ -45,6 +45,7 @@ class Check(BaseCheck):
                 'cluster_configured': False,
                 'crm_mon_available': False,
                 'crm_mon_output_detected': bool(lines),
+                'command_error_detected': False,
                 'node_count_configured': None,
                 'resource_instance_count_configured': None,
                 'online_node_count': 0,
@@ -56,6 +57,8 @@ class Check(BaseCheck):
                 'command_error': lines[0].strip() if lines else 'crm_mon command not found',
             }
 
+        command_error_detected = False
+        command_error = ''
         online_nodes = []
         offline_nodes = []
         daemon_status = {}
@@ -68,13 +71,22 @@ class Check(BaseCheck):
             stripped = line.strip()
             lowered_line = stripped.lower()
             maintenance_detected = maintenance_detected or 'maintenance' in lowered_line
+            if not command_error_detected and (
+                re.match(r'^(?:bash|sh|ksh|zsh|su|sudo):', lowered_line)
+                or 'permission denied' in lowered_line
+                or 'cannot execute' in lowered_line
+                or 'cluster is not available' in lowered_line
+                or 'connection to cluster failed' in lowered_line
+            ):
+                command_error_detected = True
+                command_error = stripped
 
-            match = re.match(r'^(\d+)\s+nodes?\s+configured$', stripped, re.IGNORECASE)
+            match = re.match(r'^(?:\*\s*)?(\d+)\s+nodes?\s+configured$', stripped, re.IGNORECASE)
             if match:
                 node_count_configured = int(match.group(1))
                 continue
 
-            match = re.match(r'^(\d+)\s+resource\s+instances?\s+configured$', stripped, re.IGNORECASE)
+            match = re.match(r'^(?:\*\s*)?(\d+)\s+resource\s+instances?\s+configured$', stripped, re.IGNORECASE)
             if match:
                 resource_instance_count_configured = int(match.group(1))
                 continue
@@ -117,6 +129,8 @@ class Check(BaseCheck):
             'cluster_configured': True,
             'crm_mon_available': True,
             'crm_mon_output_detected': bool(lines),
+            'command_error_detected': command_error_detected,
+            'command_error': command_error,
             'node_count_configured': node_count_configured,
             'resource_instance_count_configured': resource_instance_count_configured,
             'online_node_count': len(online_nodes),
@@ -138,9 +152,7 @@ class Check(BaseCheck):
             return 'ok'
         if not metrics.get('command_result_received', True):
             return 'fail'
-        if metrics.get('connection_error'):
-            return 'fail'
-        if int(metrics.get('command_rc') or 0) != 0:
+        if metrics.get('command_error_detected'):
             return 'fail'
         if not metrics.get('crm_mon_output_detected', False):
             return 'fail'
@@ -190,14 +202,9 @@ class Check(BaseCheck):
             result['results'] = 'Paramiko 명령 실행 결과 없음'
             return result
 
-        if metrics.get('connection_error'):
-            result['message'] = 'Cluster 데몬 상태 점검 실패: 호스트 연결 또는 권한 상승 확인에 실패했습니다.'
-            result['results'] = metrics.get('command_stderr') or '호스트 연결 실패'
-            return result
-
-        if int(metrics.get('command_rc') or 0) != 0:
+        if metrics.get('command_error_detected'):
             result['message'] = 'Cluster 데몬 상태 점검 실패: crm_mon -1 명령 실행에 실패했습니다.'
-            result['results'] = metrics.get('command_stderr') or metrics.get('command_stdout') or '명령 실행 실패'
+            result['results'] = metrics.get('command_error') or metrics.get('command_stderr') or '명령 실행 실패'
             return result
 
         if not metrics.get('crm_mon_output_detected', False):
@@ -234,7 +241,7 @@ class Check(BaseCheck):
             'crm_mon -1',
             become=True,
             profile='linux',
-            timeout_sec=15,
+            timeout_sec=25,
         )
         command_result = results[-1] if results else {}
         stdout = (command_result.get('stdout') or '').strip()
@@ -243,13 +250,6 @@ class Check(BaseCheck):
         output = '\n'.join(part for part in (stdout, stderr) if part).strip()
         metrics = self.parse_output(output)
         metrics['command_result_received'] = bool(results)
-        metrics['command_rc'] = command_result.get('rc') if results else None
-        metrics['connection_error'] = self._is_connection_error(
-            command_result.get('rc'),
-            stderr,
-        )
-        if stdout and int(command_result.get('rc') or 0) != 0:
-            metrics['command_stdout'] = stdout
         if stderr:
             metrics['command_stderr'] = stderr
 
