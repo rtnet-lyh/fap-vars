@@ -1,5 +1,5 @@
 {
-  "host": "127.0.0.1",
+  "host": "192.168.1.123",
   "port": 22,
   "user": "fap",
   "password": "dummy_password",
@@ -12,11 +12,11 @@
         "credential_type_name": "SSH",
         "data": {
           "username": "fap",
-          "password": "dummy_password",
+          "password": "f3dtop0!",
           "become": true,
           "become_method": "su -",
           "become_user": "root",
-          "become_password": "dummy_become_password"
+          "become_password": "f3dtop0!"
         }
       }
     ]

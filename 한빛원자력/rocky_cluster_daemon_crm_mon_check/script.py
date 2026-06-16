@@ -8,9 +8,7 @@ from .common._base import BaseCheck
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
     CONNECTION_METHOD = 'paramiko'
-    PARAMIKO_PROFILE = 'linux'
-    PARAMIKO_REUSE_SESSION = False
-
+    
     def parse_output(self, output):
         text = str(output or '').replace('\r', '')
         lowered = text.lower()
