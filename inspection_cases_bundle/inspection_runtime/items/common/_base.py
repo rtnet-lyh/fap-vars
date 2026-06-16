@@ -139,7 +139,7 @@ def normalize_paramiko_text(text):
 class BaseCheck:
     """점검 항목 공통 베이스 클래스.
 
-    - 결과 포맷(`ok/warn/fail`)을 일관되게 생성한다.
+    - 결과 포맷(`ok/warn/fail/excluded`)을 일관되게 생성한다.
     - 항목 코드/입력 payload 등 실행 컨텍스트는 `ctx`에서 참조한다.
     """
 
@@ -1816,6 +1816,17 @@ class BaseCheck:
         copied['text'] = copied.get('text') if copied.get('text') is not None else ''
         self._terminal_history.append(copied)
 
+    def _resolve_executed_command(self):
+        if not self._command_history:
+            return None
+
+        return [item.get('cmd', '') for item in self._command_history]
+
+    def _add_executed_command(self, data):
+        executed_command = self._resolve_executed_command()
+        if executed_command is not None:
+            data['executed_command'] = executed_command
+
     def get_threshold_list_map(self):
         """item_payload.threshold_list를 {name: value1} 딕셔너리로 변환한다."""
         if self._threshold_list_map_cache is not None:
@@ -1973,49 +1984,29 @@ class BaseCheck:
         return self.get_host_vars().get(key, default)
 
 
-    def _describe_rc(self, rc):
-        # 쉘/SSH에서 자주 쓰이는 종료 코드를 한글 설명으로 매핑한다.
-        rc_map = {
-            0: '정상 종료',
-            1: '일반 오류 또는 결과 없음/미일치',
-            2: '잘못된 사용/실행 오류',
-            126: '권한 없음 또는 실행 불가',
-            127: '명령어를 찾을 수 없음',
-            124: '명령 시간 초과',
-            130: '사용자 인터럽트(Ctrl+C)',
-            255: 'SSH/원격 실행 오류',
-        }
-        if rc in rc_map:
-            return rc_map[rc]
-        if isinstance(rc, int) and rc < 0:
-            return '프로세스 비정상 종료'
-        return '비정상 종료'
+    def _indent_raw_output_text(self, text):
+        lines = str(text or '').splitlines()
+        if not lines:
+            return '  (출력 없음)'
+        return '\n'.join('  ' + line for line in lines)
 
     def _build_history_raw_output(self):
         if not self._command_history:
             return ""
         parts = []
         for idx, item in enumerate(self._command_history, 1):
-            rc = item.get('rc')
-            rc_desc = self._describe_rc(rc)
             stdout = (item.get('stdout') or "").rstrip()
             stderr = (item.get('stderr') or "").rstrip()
+            output_parts = [text for text in (stdout, stderr) if text]
+            output = '\n'.join(output_parts)
 
             section = [
                 f"[점검 단계 {idx}]",
-                f" - 실행 명령어: {item.get('cmd', '')}",
-                f" - 명령 종료코드: rc={rc} ({rc_desc})",
+                "실행 명령어:",
+                self._indent_raw_output_text(item.get('cmd', '')),
+                "실행 결과:",
+                self._indent_raw_output_text(output),
             ]
-            # stdout/stderr가 비어 있지 않을 때만 출력 내용을 기록한다.
-            if stdout and stderr:
-                section.extend([
-                    f" - 출력 내용(stdout): {stdout}",
-                    f" - 출력 내용(stderr): {stderr}",
-                ])
-            elif stdout:
-                section.append(f" - 출력 내용: {stdout}")
-            elif stderr:
-                section.append(f" - 출력 내용: {stderr}")
             parts.append("\n".join(section).rstrip())
         return "\n\n".join(parts).strip()
 
@@ -2029,22 +2020,14 @@ class BaseCheck:
         err = (stderr or "").rstrip()
         raw = (raw_output or "").rstrip()
 
+        output_parts = [text for text in (out, err, raw) if text]
         section = [
             "[점검 단계 1]",
-            " - 실행 명령어: (명령 이력 없음)",
-            " - 명령 종료코드: rc=unknown (명령 이력 없음)",
+            "실행 명령어:",
+            "  (명령 이력 없음)",
+            "실행 결과:",
+            self._indent_raw_output_text('\n'.join(output_parts)),
         ]
-        if out and err:
-            section.extend([
-                f" - 출력 내용(stdout): {out}",
-                f" - 출력 내용(stderr): {err}",
-            ])
-        elif out:
-            section.append(f" - 출력 내용: {out}")
-        elif err:
-            section.append(f" - 출력 내용: {err}")
-        elif raw:
-            section.append(f" - 출력 내용: {raw}")
 
         return "\n".join(section).rstrip()
 
@@ -2094,7 +2077,47 @@ class BaseCheck:
         # 3순위: 남길 데이터가 없어도 포맷은 통일한다.
         return self._build_virtual_raw_output()
 
-    def ok(self, metrics=None, thresholds=None, reasons=None, raw_output=None, message=None):
+    def result(
+        self,
+        status,
+        message=None,
+        metrics=None,
+        results=None,
+        criteria=None,
+    ):
+        normalized_status = str(status or '').strip().lower()
+        common_kwargs = {
+            'message': message,
+            'metrics': metrics,
+            'results': results,
+            'criteria': criteria,
+        }
+
+        if normalized_status == 'ok':
+            return self.ok(**common_kwargs)
+        if normalized_status == 'warn':
+            return self.warn(**common_kwargs)
+        if normalized_status == 'fail':
+            return self.fail(**common_kwargs)
+        if normalized_status == 'excluded':
+            return self.excluded(**common_kwargs)
+
+        raise ValueError(
+            'unsupported result status: {status}; expected one of ok, warn, fail, excluded'.format(
+                status=status,
+            )
+        )
+
+    def ok(
+        self,
+        metrics=None,
+        thresholds=None,
+        reasons=None,
+        raw_output=None,
+        message=None,
+        results=None,
+        criteria=None,
+    ):
         # 정상 결과 포맷
         if isinstance(reasons, list):
             reasons = ", ".join(reasons)
@@ -2105,13 +2128,27 @@ class BaseCheck:
             'thresholds': thresholds or {},
             'reasons': reasons or "",
             'raw_output': self._resolve_raw_output(raw_output=raw_output),
-            'message': message or "",
+            'message': message or '',
         }
         if self.ctx.get('item_id') is not None:
             data['item_id'] = self.ctx.get('item_id')
+        if results is not None:
+            data['results'] = results
+        if criteria is not None:
+            data['criteria'] = criteria
+        self._add_executed_command(data)
         return data
 
-    def warn(self, metrics=None, thresholds=None, reasons=None, raw_output=None, message=None):
+    def warn(
+        self,
+        metrics=None,
+        thresholds=None,
+        reasons=None,
+        raw_output=None,
+        message=None,
+        results=None,
+        criteria=None,
+    ):
         # 경고 결과 포맷
         if isinstance(reasons, list):
             reasons = ", ".join(reasons)
@@ -2128,6 +2165,34 @@ class BaseCheck:
         }
         if self.ctx.get('item_id') is not None:
             data['item_id'] = self.ctx.get('item_id')
+        if results is not None:
+            data['results'] = results
+        if criteria is not None:
+            data['criteria'] = criteria
+        self._add_executed_command(data)
+        return data
+
+    def excluded(
+        self,
+        message=None,
+        metrics=None,
+        results=None,
+        criteria=None,
+    ):
+        # 점검 제외 결과 포맷
+        data = {
+            'inspection_code': self.ctx.get('inspection_code'),
+            'status': 'excluded',
+            'message': message or '',
+            'metrics': metrics or {},
+        }
+        if self.ctx.get('item_id') is not None:
+            data['item_id'] = self.ctx.get('item_id')
+        if results is not None:
+            data['results'] = results
+        if criteria is not None:
+            data['criteria'] = criteria
+        self._add_executed_command(data)
         return data
 
     def not_applicable(self, message='대상미해당', raw_output=None):
@@ -2144,7 +2209,19 @@ class BaseCheck:
             raw_output=raw_output,
         )
 
-    def fail(self, error, message=None, stdout=None, stderr=None, raw_output=None, metrics=None, thresholds=None, reasons=None):
+    def fail(
+        self,
+        error=None,
+        message=None,
+        stdout=None,
+        stderr=None,
+        raw_output=None,
+        metrics=None,
+        thresholds=None,
+        reasons=None,
+        results=None,
+        criteria=None,
+    ):
         # 실패 결과 포맷
         data = {
             'inspection_code': self.ctx.get('inspection_code'),
@@ -2167,6 +2244,11 @@ class BaseCheck:
         data['raw_output'] = self._resolve_raw_output(raw_output=raw_output, stdout=stdout, stderr=stderr)
         if self.ctx.get('item_id') is not None:
             data['item_id'] = self.ctx.get('item_id')
+        if results is not None:
+            data['results'] = results
+        if criteria is not None:
+            data['criteria'] = criteria
+        self._add_executed_command(data)
         return data
 
     def get_elevate_for_aos(self, become_password=None):

@@ -415,6 +415,206 @@ class SolarisAccountCommandTest(unittest.TestCase):
         self.assertFalse(check._solaris_last_account_switch_verification['ok'])
 
 
+class BaseCheckResultTest(unittest.TestCase):
+    def build_results(self, **kwargs):
+        check = BaseCheck({'inspection_code': 'U-RESULT'})
+        return {
+            'ok': check.ok(**kwargs),
+            'warn': check.warn(**kwargs),
+            'fail': check.fail(**kwargs),
+            'excluded': check.excluded(**kwargs),
+        }
+
+    def build_remote_check(self, response=(0, 'command output', '')):
+        return BaseCheck({
+            'inspection_code': 'U-RESULT',
+            'ssh': lambda cmd, host, port, user, password, ssh_options: response,
+            'host': '10.0.0.1',
+            'port': 22,
+            'user': 'inspector',
+            'password': 'password',
+            'ssh_options': '',
+        })
+
+    def test_excluded_returns_standard_result(self):
+        check = BaseCheck({
+            'inspection_code': 'U-EXCLUDED',
+            'item_id': 10,
+        })
+
+        result = check.excluded(
+            message='점검 대상에서 제외됨',
+            metrics={'applicable': False},
+        )
+
+        self.assertEqual(result, {
+            'inspection_code': 'U-EXCLUDED',
+            'status': 'excluded',
+            'message': '점검 대상에서 제외됨',
+            'metrics': {'applicable': False},
+            'item_id': 10,
+        })
+
+    def test_excluded_uses_empty_defaults(self):
+        check = BaseCheck({'inspection_code': 'U-EXCLUDED'})
+
+        result = check.excluded()
+
+        self.assertEqual(result['message'], '')
+        self.assertEqual(result['metrics'], {})
+        self.assertNotIn('item_id', result)
+
+    def test_result_dispatches_to_each_status_method(self):
+        check = BaseCheck({'inspection_code': 'U-RESULT', 'item_id': 10})
+        metrics = {'usage': 42}
+        results = [{'name': 'cpu', 'value': 42}]
+        criteria = {'operator': '<=', 'value': 80}
+
+        for status in ('ok', 'warn', 'fail', 'excluded'):
+            with self.subTest(status=status):
+                result = check.result(
+                    status=status,
+                    message='점검 결과',
+                    metrics=metrics,
+                    results=results,
+                    criteria=criteria,
+                )
+
+                self.assertEqual(result['status'], status)
+                self.assertEqual(result['message'], '점검 결과')
+                self.assertIs(result['metrics'], metrics)
+                self.assertIs(result['results'], results)
+                self.assertIs(result['criteria'], criteria)
+                self.assertEqual(result['item_id'], 10)
+
+    def test_result_normalizes_status(self):
+        check = BaseCheck({'inspection_code': 'U-RESULT'})
+
+        result = check.result(' WARN ', message='경고')
+
+        self.assertEqual(result['status'], 'warn')
+        self.assertEqual(result['message'], '경고')
+
+    def test_result_rejects_unsupported_status(self):
+        check = BaseCheck({'inspection_code': 'U-RESULT'})
+
+        with self.assertRaisesRegex(ValueError, 'unsupported result status'):
+            check.result('unknown')
+
+    def test_result_extensions_are_preserved_for_all_statuses(self):
+        results = [{'name': 'disk', 'status': 'ok'}]
+        criteria = {'operator': '<=', 'value': 80}
+
+        status_results = self.build_results(
+            results=results,
+            criteria=criteria,
+        )
+
+        for status, result in status_results.items():
+            with self.subTest(status=status):
+                self.assertIs(result['results'], results)
+                self.assertIs(result['criteria'], criteria)
+
+    def test_result_extensions_are_omitted_when_not_provided(self):
+        for status, result in self.build_results().items():
+            with self.subTest(status=status):
+                self.assertNotIn('results', result)
+                self.assertNotIn('criteria', result)
+                self.assertNotIn('result_json', result)
+                self.assertNotIn('executed_command', result)
+
+    def test_empty_result_extensions_are_included(self):
+        results = []
+        criteria = {}
+
+        status_results = self.build_results(
+            results=results,
+            criteria=criteria,
+        )
+
+        for status, result in status_results.items():
+            with self.subTest(status=status):
+                self.assertIn('results', result)
+                self.assertIn('criteria', result)
+                self.assertEqual(result['results'], [])
+                self.assertEqual(result['criteria'], {})
+
+    def test_ssh_command_history_is_added_to_executed_command(self):
+        check = self.build_remote_check()
+
+        check._ssh('uname -a')
+        result = check.ok()
+
+        self.assertEqual(result['executed_command'], ['uname -a'])
+        self.assertNotIn('result_json', result)
+        self.assertEqual(result['raw_output'], (
+            '[점검 단계 1]\n'
+            '실행 명령어:\n'
+            '  uname -a\n'
+            '실행 결과:\n'
+            '  command output'
+        ))
+        self.assertNotIn('종료코드', result['raw_output'])
+
+    def test_raw_output_formats_multiple_commands_by_step(self):
+        check = self.build_remote_check()
+        check._ssh('hostname')
+        check._ssh('uname -a')
+
+        result = check.ok()
+
+        self.assertIn('[점검 단계 1]\n실행 명령어:\n  hostname', result['raw_output'])
+        self.assertIn('[점검 단계 2]\n실행 명령어:\n  uname -a', result['raw_output'])
+        self.assertNotIn('종료코드', result['raw_output'])
+
+    def test_run_ps_command_history_is_added_to_executed_command(self):
+        check = self.build_remote_check(response=(1, '', 'powershell error'))
+
+        check._run_ps('Get-Service')
+        result = check.fail(error='command failed')
+
+        self.assertEqual(result['executed_command'], ['Get-Service'])
+        self.assertNotIn('result_json', result)
+
+    def test_paramiko_command_history_is_added_to_executed_command(self):
+        check = self.build_remote_check()
+        session = {'channel': object(), 'prompt': '#'}
+
+        with mock.patch.object(check, '_get_paramiko_session', return_value=(None, session, False)), \
+                mock.patch.object(check, '_paramiko_sendline'), \
+                mock.patch.object(check, '_paramiko_expect', return_value={
+                    'matched': True,
+                    'timed_out': False,
+                    'text': 'show clock\n12:00:00\n#',
+                    'prompt': '#',
+                }):
+            check._run_paramiko_commands(['show clock'])
+
+        result = check.ok()
+
+        self.assertEqual(result['executed_command'], ['show clock'])
+        self.assertNotIn('result_json', result)
+
+    def test_result_adds_executed_command_for_all_statuses(self):
+        for status in ('ok', 'warn', 'fail', 'excluded'):
+            with self.subTest(status=status):
+                check = self.build_remote_check()
+                check._ssh('hostname')
+
+                result = check.result(status=status)
+
+                self.assertEqual(result['executed_command'], ['hostname'])
+
+    def test_executed_command_uses_list_for_multiple_commands(self):
+        check = self.build_remote_check()
+        check._ssh('hostname')
+        check._ssh('uname -a')
+
+        result = check.ok()
+
+        self.assertEqual(result['executed_command'], ['hostname', 'uname -a'])
+
+
 class BaseCheckSshBecomeTest(unittest.TestCase):
     def make_check(self, app_data=None, conn_data=None, response=(0, 'ok', '')):
         calls = []

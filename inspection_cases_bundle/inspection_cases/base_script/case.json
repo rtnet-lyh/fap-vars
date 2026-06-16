@@ -1,31 +1,20 @@
 {
-  "host": "192.168.1.163",
+  "host": "192.168.1.123",
   "port": 22,
   "user": "fap",
   "password": "f3dtop0!",
   "credentials": {
-    "LINUX": [
-      {
-        "application_id": 80100,
-        "application_type_id": 10,
-        "application_type_name": "LINUX",
-        "credential_type_name": "APPLICATION",
-        "data": {
-          "become": true,
-          "become_method": "su -",
-          "become_user": "test",
-          "become_password": "f3dtop0!"
-        }
-      },
+    "LINUX": [      
       {
         "application_id": 80100,
         "application_type_id": 10,
         "application_type_name": "LINUX",
         "credential_type_name": "SSH",
-        "data": {
-          "username": "test",
-          "password": "f3dtop0!",
-          "port": 22
+        "data": {          
+          "become": true,
+          "become_method": "su -",
+          "become_user": "root",
+          "become_password": "f3dtop0!"
         }
       }
     ]
