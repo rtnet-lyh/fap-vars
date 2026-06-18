@@ -1996,9 +1996,9 @@ class BaseCheck:
         parts = []
         for idx, item in enumerate(self._command_history, 1):
             stdout = (item.get('stdout') or "").rstrip()
-            stderr = (item.get('stderr') or "").rstrip()
-            output_parts = [text for text in (stdout, stderr) if text]
-            output = '\n'.join(output_parts)
+            # stderr = (item.get('stderr') or "").rstrip()
+            # output_parts = [text for text in (stdout, stderr) if text]
+            output = stdout
 
             section = [
                 f"[점검 단계 {idx}]",
