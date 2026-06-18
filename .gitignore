@@ -32,3 +32,6 @@ dist/
 .ipynb_checkpoints/
 *.tmp
 *.temp
+
+# Windows alternate data stream metadata
+*:Zone.Identifier
