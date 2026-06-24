@@ -1127,11 +1127,45 @@ def resolve_item_ssh_options(mod, ssh_options):
     return item_ssh_options
 
 
-def build_host_precheck_key(method, ssh_options):
+def get_item_host_vars(item_payload):
+    if not isinstance(item_payload, dict):
+        return {}
+    host_vars = item_payload.get('host_vars') or {}
+    return host_vars if isinstance(host_vars, dict) else {}
+
+
+def resolve_winrm_shell(mod):
+    shell = getattr(mod, 'WINRM_SHELL', None)
+    if shell is None and hasattr(mod, 'CHECK_CLASS'):
+        shell = getattr(mod.CHECK_CLASS, 'WINRM_SHELL', None)
+    return shell
+
+
+def resolve_item_winrm_options(winrm_options, item_payload, shell=None):
+    opts = dict(winrm_options or {})
+    winrm_transport = get_item_host_vars(item_payload).get('winrm_transport')
+    if winrm_transport not in (None, ''):
+        opts['transport'] = str(winrm_transport).strip().lower()
+    if shell:
+        opts['shell'] = shell
+    return opts
+
+def build_winrm_precheck_key(winrm_options):
+    opts = winrm_options or {}
+    return (
+        str(opts.get('transport', 'ntlm')).strip().lower(),
+        str(opts.get('server_cert_validation', 'ignore')),
+        str(opts.get('operation_timeout_sec', 30)),
+        str(opts.get('read_timeout_sec', 60)),
+        str(opts.get('shell') or 'powershell').strip().lower(),
+    )
+
+def build_host_precheck_key(method, ssh_options, winrm_options=None):
     if method == 'ssh':
         return method, str(ssh_options or '')
+    if method == 'winrm':
+        return method, build_winrm_precheck_key(winrm_options)
     return method
-
 
 def build_become_precheck_key(become_request, method, ssh_options):
     key = become_request['key']
@@ -1488,19 +1522,20 @@ def execute_runner(
                 continue
             method = get_connection_method(mod, lookup_payload)
             item_ssh_options = resolve_item_ssh_options(mod, ssh_options)
-            precheck_key = build_host_precheck_key(method, item_ssh_options)
+            item_winrm_options = None
+            if method == 'winrm':
+                item_winrm_options = resolve_item_winrm_options(
+                    winrm_options,
+                    lookup_payload,
+                    resolve_winrm_shell(mod),
+                )
+            precheck_key = build_host_precheck_key(method, item_ssh_options, item_winrm_options)
             if precheck_key in checked_methods or precheck_key in precheck_errors:
                 continue
             connection_credential = select_connection_credential(credentials, method, lookup_payload)
             connection_values = resolve_connection_values(port, method, connection_credential, user, password)
             
-            if method == 'winrm':
-                shell = getattr(mod, 'WINRM_SHELL', None)
-                if shell is None and hasattr(mod, 'CHECK_CLASS'):
-                    shell = getattr(mod.CHECK_CLASS, 'WINRM_SHELL', None)
-                wr_opts = dict(winrm_options)
-                if shell:
-                    wr_opts['shell'] = shell
+            if method == 'winrm':                
                 rc, out, err = winrm_executor(
                     'Write-Output FAP_CONNECTION_OK',
                     host,
@@ -1508,7 +1543,7 @@ def execute_runner(
                     connection_values.get('user'),
                     connection_values.get('password'),
                     ssh_options,
-                    wr_opts,
+                    item_winrm_options,
                 )
             elif method == 'paramiko':
                 rc, out, err = run_paramiko_precheck(
@@ -1559,6 +1594,13 @@ def execute_runner(
                 continue
             method = get_connection_method(mod, lookup_payload)
             item_ssh_options = resolve_item_ssh_options(mod, ssh_options)
+            item_winrm_options = None
+            if mod and method == 'winrm':
+                item_winrm_options = resolve_item_winrm_options(
+                    winrm_options,
+                    lookup_payload,
+                    resolve_winrm_shell(mod),
+                )
             precheck_key = build_host_precheck_key(method, item_ssh_options)
             if precheck_key in precheck_errors:
                 continue
@@ -1757,15 +1799,9 @@ def execute_runner(
         logger.info("created ctx:\n%s", json.dumps(ctx, ensure_ascii=False, indent=2, default=str))
         if needs_host_connection(mod):
             ctx['connection_method'] = method
-            if method == 'winrm':
-                shell = getattr(mod, 'WINRM_SHELL', None)
-                if shell is None and hasattr(mod, 'CHECK_CLASS'):
-                    shell = getattr(mod.CHECK_CLASS, 'WINRM_SHELL', None)
-                wr_opts = dict(winrm_options)
-                if shell:
-                    wr_opts['shell'] = shell
+            if method == 'winrm':                
                 ctx['ssh'] = lambda _cmd, _host, _port, _user, _password, _ssh_options: winrm_executor(
-                    _cmd, _host, _port, _user, _password, _ssh_options, wr_opts
+                    _cmd, _host, _port, _user, _password, _ssh_options, item_winrm_options
                 )
             elif method == 'paramiko':
                 ctx['ssh'] = lambda _cmd, _host, _port, _user, _password, _ssh_options: (

@@ -8,6 +8,7 @@
       "application_type_name": "WINDOWS",
       "application_name": "A",
       "application_family_name": "A",
+      "host_vars": {},
       "threshold_list": [
         {
           "name": "max_usr_sys_percent",
@@ -260,6 +261,7 @@
       "application_type_name": "WINDOWS",
       "application_name": "A",
       "application_family_name": "A",
+      "host_vars": {},
       "threshold_list": [
         {
           "name": "max_usr_sys_percent",
@@ -279,16 +281,19 @@
         }
       ],
       "status": "fail",
-      "error": "점검 명령 실행 실패",
-      "message": "Windows CPU 사용률 점검 명령 실행에 실패했습니다.",
-      "stdout": "",
-      "stderr": "REPLAY_MISS: expected exact:typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
-      "raw_output": "[점검 단계 1]\n - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1\n - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)\n - 출력 내용: REPLAY_MISS: expected exact:typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
+      "error": "호스트 연결 실패",
+      "message": "WINRM_EXEC_ERROR: the specified credentials were rejected by the server",
+      "stderr": "WINRM_EXEC_ERROR: the specified credentials were rejected by the server",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1\n실행 결과:\n  (출력 없음)",
       "raw_output_lines": [
         "[점검 단계 1]",
-        " - 실행 명령어: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
-        " - 명령 종료코드: rc=1 (일반 오류 또는 결과 없음/미일치)",
-        " - 출력 내용: REPLAY_MISS: expected exact:typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1 but got winrm command: $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1"
+        "실행 명령어:",
+        "  $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
+        "실행 결과:",
+        "  (출력 없음)"
+      ],
+      "executed_command": [
+        "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1"
       ]
     }
   ],

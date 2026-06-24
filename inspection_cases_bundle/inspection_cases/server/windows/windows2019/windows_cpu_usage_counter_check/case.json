@@ -1,8 +1,8 @@
 {
-  "host": "127.0.0.1",
-  "port": 5985,
-  "user": "Administrator",
-  "password": "",
+  "host": "172.20.2.100",
+  "port": 5986,
+  "user": "lyh",
+  "password": "f3dtop0!",
   "credentials": {
     "WINDOWS": [
       {
@@ -11,9 +11,9 @@
         "application_type_name": "WINDOWS",
         "credential_type_name": "WINRM",
         "data": {
-          "username": "Administrator",
-          "password": "",
-          "port": 5985
+          "username": "lyh",
+          "password": "f3dtop0!",
+          "port": 5986
         }
       }
     ]
@@ -21,7 +21,7 @@
   "thresholds": {},
   "item_sleep_sec": 0,
   "winrm_options": {
-    "transport": "ntlm",
+    "transport": "basic",
     "server_cert_validation": "ignore",
     "operation_timeout_sec": 30,
     "read_timeout_sec": 60
@@ -37,6 +37,9 @@
     "application_type_name": "WINDOWS",
     "application_name": "A",
     "application_family_name": "A",
+    "host_vars": {
+      "winrm_transport": "ntlm"
+    },
     "threshold_list": [
       {
         "name": "max_usr_sys_percent",
