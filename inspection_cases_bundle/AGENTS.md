@@ -80,15 +80,16 @@ inspection_cases/<domain>/<application_type>/<application>/<case_name>/
 ### Linux, Rocky, Unix 계열
 
 - `script.py`에서 `USE_HOST_CONNECTION = True`를 사용한다.
-- 일반 SSH 명령은 `CONNECTION_METHOD = 'ssh'`와 `_ssh("...")` 패턴을 사용한다.
+- 연결 방식은 `script.py`의 `CONNECTION_METHOD`가 최우선이고, 없으면 실행 계정 형식(`connection_method`, `credential_type_name` 등)을 따른다. 둘 다 없으면 기본값은 `paramiko`이다.
+- 신규 스크립트는 `_ssh("...")`를 사용하지 말고 `_run_paramiko_commands(...)`를 우선 사용한다. 기존 `_ssh("...")` 스크립트는 호환성을 위해 유지한다.
 - 연결 실패는 `self._is_connection_error(rc, err)`로 먼저 처리한다.
 - 일반 명령 실패는 `rc != 0` 분기에서 별도 메시지로 처리한다.
 
 ### Network 장비
 
-- SSH exec 채널로 충분한 장비는 `_ssh("...")` 패턴을 사용한다.
-- 대화형 세션, enable mode, pager 제어가 필요한 장비는 `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands([...])` 패턴을 우선 검토한다.
-- Paramiko 옵션은 credential `data`에 넣지 말고 `PARAMIKO_*` 클래스 속성으로 조정한다.
+- 신규 장비 스크립트는 `paramiko`와 `_run_paramiko_commands([...])` 패턴을 우선 사용한다. 기존 `_ssh("...")` 장비 스크립트는 호환성을 위해 유지한다.
+- 대화형 세션, enable mode, pager 제어가 필요한 장비는 반드시 Paramiko 경로를 우선 검토한다.
+- Paramiko 옵션은 credential `data`에 넣지 말고 `host_vars`의 `PARAMIKO_*` 값을 우선 사용한다. 케이스 공통 기본값이 필요할 때만 `script.py`의 `PARAMIKO_*` 클래스 속성으로 둔다.
 - `hide_command`가 필요한 입력은 dict 항목으로 넘겨 raw output과 command history에 실제 명령이 남지 않게 한다.
 
 ### Windows

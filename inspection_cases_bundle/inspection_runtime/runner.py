@@ -590,6 +590,19 @@ def is_truthy(value):
     return str(value or '').strip().lower() in TRUTHY_VALUES
 
 
+def normalize_bool_option(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in ('1', 'true', 'yes', 'y', 'on'):
+        return True
+    if text in ('0', 'false', 'no', 'n', 'off'):
+        return False
+    return default
+
+
 def normalize_become_method(value):
     return ' '.join(str(value or '').strip().lower().split())
 
@@ -731,17 +744,97 @@ def get_check_attr(mod, name, default=None):
     return default if value is None else value
 
 
-def resolve_paramiko_options(mod):
+def get_explicit_check_class_attr(mod, name):
+    check_class = getattr(mod, 'CHECK_CLASS', None)
+    if check_class is None:
+        return None
+    for cls in getattr(check_class, '__mro__', (check_class,)):
+        if getattr(cls, '__name__', '') == 'BaseCheck':
+            break
+        class_dict = getattr(cls, '__dict__', {})
+        if name in class_dict:
+            return class_dict.get(name)
+    return None
+
+
+def get_payload_host_vars(item_payload):
+    host_vars = (item_payload or {}).get('host_vars') or {}
+    return host_vars if isinstance(host_vars, dict) else {}
+
+
+def get_host_check_attr(mod, item_payload, name, default=None):
+    host_vars = get_payload_host_vars(item_payload)
+    if name in host_vars:
+        value = host_vars.get(name)
+        if value not in (None, ''):
+            return value
+    return get_check_attr(mod, name, default)
+
+
+def normalize_connection_method_value(value, allow_unknown=False):
+    text = str(value or '').strip()
+    if not text:
+        return None
+    normalized = re.sub(r'[^A-Za-z0-9]+', '_', text).strip('_').upper()
+    if normalized == 'SSH':
+        return 'ssh'
+    if normalized == 'WINRM':
+        return 'winrm'
+    if normalized == 'PARAMIKO':
+        return 'paramiko'
+    if normalized == 'NETWORK_DEVICE':
+        return 'paramiko'
+    if allow_unknown:
+        return text.lower()
+    return None
+
+
+def get_payload_connection_method(item_payload):
+    payload = item_payload or {}
+    method = normalize_connection_method_value(payload.get('connection_method'), allow_unknown=True)
+    if method:
+        return method
+    for key in ('execution_account_type', 'credential_type_name', 'credential_type'):
+        method = normalize_connection_method_value(payload.get(key))
+        if method:
+            return method
+    return None
+
+
+def resolve_paramiko_options(mod, item_payload=None):
+    from items.common._base import BaseCheck
+
     return {
-        'auth_method': get_check_attr(mod, 'PARAMIKO_AUTH_METHOD', 'auto'),
-        'key_filename': get_check_attr(mod, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
-        'private_key': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY', None),
-        'private_key_passphrase': get_check_attr(mod, 'PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
-        'allow_agent': get_check_attr(mod, 'PARAMIKO_ALLOW_AGENT', False),
-        'look_for_keys': get_check_attr(mod, 'PARAMIKO_LOOK_FOR_KEYS', False),
-        'timeout_sec': get_check_attr(mod, 'PARAMIKO_TIMEOUT_SEC', 10),
-        'banner_timeout_sec': get_check_attr(mod, 'PARAMIKO_BANNER_TIMEOUT_SEC', 10),
-        'auth_timeout_sec': get_check_attr(mod, 'PARAMIKO_AUTH_TIMEOUT_SEC', 10),
+        'auth_method': get_host_check_attr(mod, item_payload, 'PARAMIKO_AUTH_METHOD', BaseCheck.PARAMIKO_AUTH_METHOD),
+        'key_filename': get_host_check_attr(mod, item_payload, 'PARAMIKO_KEY_FILENAME', BaseCheck.PARAMIKO_KEY_FILENAME),
+        'private_key': get_host_check_attr(mod, item_payload, 'PARAMIKO_PRIVATE_KEY', BaseCheck.PARAMIKO_PRIVATE_KEY),
+        'private_key_passphrase': get_host_check_attr(
+            mod,
+            item_payload,
+            'PARAMIKO_PRIVATE_KEY_PASSPHRASE',
+            BaseCheck.PARAMIKO_PRIVATE_KEY_PASSPHRASE,
+        ),
+        'allow_agent': normalize_bool_option(
+            get_host_check_attr(mod, item_payload, 'PARAMIKO_ALLOW_AGENT', BaseCheck.PARAMIKO_ALLOW_AGENT),
+            BaseCheck.PARAMIKO_ALLOW_AGENT,
+        ),
+        'look_for_keys': normalize_bool_option(
+            get_host_check_attr(mod, item_payload, 'PARAMIKO_LOOK_FOR_KEYS', BaseCheck.PARAMIKO_LOOK_FOR_KEYS),
+            BaseCheck.PARAMIKO_LOOK_FOR_KEYS,
+        ),
+        'timeout_sec': get_host_check_attr(mod, item_payload, 'PARAMIKO_TIMEOUT_SEC', BaseCheck.PARAMIKO_TIMEOUT_SEC),
+        'banner_timeout_sec': get_host_check_attr(
+            mod,
+            item_payload,
+            'PARAMIKO_BANNER_TIMEOUT_SEC',
+            BaseCheck.PARAMIKO_BANNER_TIMEOUT_SEC,
+        ),
+        'auth_timeout_sec': get_host_check_attr(
+            mod,
+            item_payload,
+            'PARAMIKO_AUTH_TIMEOUT_SEC',
+            BaseCheck.PARAMIKO_AUTH_TIMEOUT_SEC,
+        ),
     }
 
 
@@ -776,8 +869,8 @@ def build_paramiko_connect_kwargs(host, port, user, password, options, auth_atte
         'timeout': float(options.get('timeout_sec', 10)),
         'banner_timeout': float(options.get('banner_timeout_sec', 10)),
         'auth_timeout': float(options.get('auth_timeout_sec', 10)),
-        'allow_agent': bool(options.get('allow_agent', False)),
-        'look_for_keys': bool(options.get('look_for_keys', False)),
+        'allow_agent': normalize_bool_option(options.get('allow_agent'), False),
+        'look_for_keys': normalize_bool_option(options.get('look_for_keys'), False),
     }
     if auth_attempt == 'password':
         kwargs['password'] = password or None
@@ -1120,23 +1213,18 @@ def get_connection_method(mod, item_payload):
 
     우선순위:
     1) 항목 모듈의 CONNECTION_METHOD
-    2) CHECK_CLASS.CONNECTION_METHOD
-    3) item payload의 connection_method
-    4) inspection_code prefix(W-*, PC-*)는 winrm
-    5) 기본 ssh
+    2) CHECK_CLASS에 직접 정의한 CONNECTION_METHOD
+    3) item payload의 실행 계정 형식(connection_method/credential_type_name 등)
+    4) 기본 paramiko
     """
     val = getattr(mod, 'CONNECTION_METHOD', None)
-    if val is None and hasattr(mod, 'CHECK_CLASS'):
-        val = getattr(mod.CHECK_CLASS, 'CONNECTION_METHOD', None)
     if val is None:
-        val = (item_payload or {}).get('connection_method')
+        val = get_explicit_check_class_attr(mod, 'CONNECTION_METHOD')
+    if val is None:
+        val = get_payload_connection_method(item_payload)
     if isinstance(val, str) and val.strip():
         return val.strip().lower()
-
-    code = (item_payload or {}).get('inspection_code') or ''
-    if isinstance(code, str) and (code.upper().startswith('W-') or code.upper().startswith('PC-')):
-        return 'winrm'
-    return 'ssh'
+    return 'paramiko'
 
 
 def run_shell_item(mod, ctx):
@@ -1428,7 +1516,7 @@ def execute_runner(
                     connection_values.get('port'),
                     connection_values.get('user'),
                     connection_values.get('password'),
-                    resolve_paramiko_options(mod),
+                    resolve_paramiko_options(mod, lookup_payload),
                     client_factory=paramiko_client_factory,
                 )
             else:
@@ -1497,7 +1585,7 @@ def execute_runner(
                     connection_values.get('port'),
                     connection_values.get('user'),
                     connection_values.get('password'),
-                    resolve_paramiko_options(mod),
+                    resolve_paramiko_options(mod, lookup_payload),
                     become_request.get('become_method'),
                     become_request.get('become_user'),
                     become_request.get('become_password'),
@@ -1509,7 +1597,7 @@ def execute_runner(
                     connection_values.get('port'),
                     connection_values.get('user'),
                     connection_values.get('password'),
-                    resolve_paramiko_options(mod),
+                    resolve_paramiko_options(mod, lookup_payload),
                     become_request['command'],
                     client_factory=paramiko_client_factory,
                 )

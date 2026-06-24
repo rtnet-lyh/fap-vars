@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1120" height="490" viewBox="0 0 1120 490" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .head { font-family: "Noto Sans CJK KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 14px; font-weight: 700; fill: #111827; }
+      .label { font-family: "Noto Sans CJK KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 14px; font-weight: 700; fill: #111827; }
+      .small { font-family: "Noto Sans CJK KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 12px; fill: #374151; }
+      .badge-text { font-family: "Noto Sans CJK KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 10px; font-weight: 700; fill: #ffffff; }
+      .connector { fill: none; stroke: #94a3b8; stroke-width: 1.4; }
+      .connector-strong { fill: none; stroke: #64748b; stroke-width: 1.7; }
+      .header-box { stroke-width: 1.2; rx: 8; }
+      .field { fill: #dbeafe; stroke: #2563eb; }
+      .platform { fill: #dcfce7; stroke: #16a34a; }
+      .target { fill: #fef3c7; stroke: #d97706; }
+      .product { fill: #ede9fe; stroke: #7c3aed; stroke-dasharray: 7 4; }
+      .version { fill: #fce7f3; stroke: #db2777; stroke-dasharray: 7 4; }
+      .required-badge { fill: #dc2626; stroke: none; }
+      .optional-badge { fill: #64748b; stroke: none; }
+      .icon { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-field { color: #2563eb; }
+      .icon-platform { color: #16a34a; }
+      .icon-target { color: #d97706; }
+      .icon-product { color: #7c3aed; }
+      .icon-version { color: #db2777; }
+    </style>
+    <symbol id="icon-field" viewBox="0 0 24 24">
+      <circle cx="12" cy="5" r="2.5"/>
+      <circle cx="6" cy="18" r="2.5"/>
+      <circle cx="18" cy="18" r="2.5"/>
+      <path d="M12 8v4"/>
+      <path d="M12 12H6v3.5"/>
+      <path d="M12 12h6v3.5"/>
+    </symbol>
+    <symbol id="icon-platform" viewBox="0 0 24 24">
+      <rect x="4" y="5" width="16" height="11" rx="2"/>
+      <path d="M8 20h8"/>
+      <path d="M12 16v4"/>
+    </symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="7"/>
+      <circle cx="12" cy="12" r="2"/>
+      <path d="M12 3v3"/>
+      <path d="M12 18v3"/>
+      <path d="M3 12h3"/>
+      <path d="M18 12h3"/>
+    </symbol>
+    <symbol id="icon-product" viewBox="0 0 24 24">
+      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+      <path d="M12 12l8-4.5"/>
+      <path d="M12 12L4 7.5"/>
+      <path d="M12 12v9"/>
+    </symbol>
+    <symbol id="icon-version" viewBox="0 0 24 24">
+      <path d="M4 5h9l7 7-8 8-8-8V5z"/>
+      <circle cx="9" cy="10" r="1.5"/>
+      <path d="M13 15l3-3"/>
+    </symbol>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1120" height="490"/>
+
+  <rect class="header-box field" x="30" y="22" width="130" height="38"/>
+  <use href="#icon-field" class="icon icon-field" x="48" y="32" width="18" height="18"/>
+  <text class="head" x="96" y="46" text-anchor="middle">분야</text>
+  <rect class="required-badge" x="121" y="31" width="31" height="17" rx="8.5"/>
+  <text class="badge-text" x="136.5" y="43" text-anchor="middle">필수</text>
+
+  <rect class="header-box platform" x="190" y="22" width="130" height="38"/>
+  <use href="#icon-platform" class="icon icon-platform" x="207" y="32" width="18" height="18"/>
+  <text class="head" x="260" y="46" text-anchor="middle">플랫폼</text>
+  <rect class="required-badge" x="281" y="31" width="31" height="17" rx="8.5"/>
+  <text class="badge-text" x="296.5" y="43" text-anchor="middle">필수</text>
+
+  <rect class="header-box target" x="350" y="22" width="160" height="38"/>
+  <use href="#icon-target" class="icon icon-target" x="368" y="32" width="18" height="18"/>
+  <text class="head" x="430" y="46" text-anchor="middle">대상</text>
+  <rect class="required-badge" x="471" y="31" width="31" height="17" rx="8.5"/>
+  <text class="badge-text" x="486.5" y="43" text-anchor="middle">필수</text>
+
+  <rect class="header-box product" x="550" y="22" width="230" height="38"/>
+  <use href="#icon-product" class="icon icon-product" x="652" y="32" width="18" height="18"/>
+  <text class="head" x="690" y="46" text-anchor="middle">제품</text>
+  <rect class="optional-badge" x="741" y="31" width="31" height="17" rx="8.5"/>
+  <text class="badge-text" x="756.5" y="43" text-anchor="middle">선택</text>
+
+  <rect class="header-box version" x="820" y="22" width="220" height="38"/>
+  <use href="#icon-version" class="icon icon-version" x="912" y="32" width="18" height="18"/>
+  <text class="head" x="952" y="46" text-anchor="middle">버전</text>
+  <rect class="optional-badge" x="1001" y="31" width="31" height="17" rx="8.5"/>
+  <text class="badge-text" x="1016.5" y="43" text-anchor="middle">선택</text>
+
+  <!-- Server -->
+  <path class="connector-strong" d="M160 115 H190"/>
+  <path class="connector" d="M320 115 H350"/>
+  <path class="connector" d="M510 115 H550"/>
+  <path class="connector" d="M780 115 H820"/>
+  <rect class="field" x="30" y="88" width="130" height="54" rx="8"/>
+  <use href="#icon-field" class="icon icon-field" x="46" y="105" width="20" height="20"/>
+  <text class="label" x="102" y="120" text-anchor="middle">서버</text>
+  <rect class="platform" x="190" y="88" width="130" height="54" rx="8"/>
+  <use href="#icon-platform" class="icon icon-platform" x="206" y="105" width="20" height="20"/>
+  <text class="label" x="258" y="120" text-anchor="middle">LINUX</text>
+  <rect class="target" x="350" y="88" width="160" height="54" rx="8"/>
+  <use href="#icon-target" class="icon icon-target" x="366" y="105" width="20" height="20"/>
+  <text class="label" x="435" y="120" text-anchor="middle">RHEL 계열</text>
+  <rect class="product" x="550" y="82" width="230" height="66" rx="8"/>
+  <use href="#icon-product" class="icon icon-product" x="746" y="105" width="20" height="20"/>
+  <text class="small" x="568" y="107">Rocky Linux</text>
+  <text class="small" x="568" y="127">CentOS</text>
+  <rect class="version" x="820" y="82" width="220" height="66" rx="8"/>
+  <use href="#icon-version" class="icon icon-version" x="1007" y="105" width="20" height="20"/>
+  <text class="small" x="838" y="107">8.9</text>
+  <text class="small" x="838" y="127">release 9.0</text>
+
+  <!-- Network -->
+  <path class="connector-strong" d="M160 220 H190"/>
+  <path class="connector" d="M320 220 C335 220 335 190 350 190"/>
+  <path class="connector" d="M320 220 C335 220 335 250 350 250"/>
+  <path class="connector" d="M510 190 H550"/>
+  <path class="connector" d="M510 250 H550"/>
+  <path class="connector" d="M780 190 H820"/>
+  <path class="connector" d="M780 250 H820"/>
+  <rect class="field" x="30" y="181" width="130" height="78" rx="8"/>
+  <use href="#icon-field" class="icon icon-field" x="46" y="210" width="20" height="20"/>
+  <text class="label" x="102" y="225" text-anchor="middle">네트워크</text>
+  <rect class="platform" x="190" y="181" width="130" height="78" rx="8"/>
+  <use href="#icon-platform" class="icon icon-platform" x="206" y="210" width="20" height="20"/>
+  <text class="label" x="258" y="225" text-anchor="middle">CISCO</text>
+  <rect class="target" x="350" y="163" width="160" height="54" rx="8"/>
+  <use href="#icon-target" class="icon icon-target" x="366" y="180" width="20" height="20"/>
+  <text class="label" x="435" y="195" text-anchor="middle">IOS</text>
+  <rect class="product" x="550" y="157" width="230" height="66" rx="8"/>
+  <use href="#icon-product" class="icon icon-product" x="746" y="180" width="20" height="20"/>
+  <text class="small" x="568" y="182">Catalyst 9300</text>
+  <text class="small" x="568" y="202">ISR 4331</text>
+  <rect class="version" x="820" y="157" width="220" height="66" rx="8"/>
+  <use href="#icon-version" class="icon icon-version" x="1007" y="180" width="20" height="20"/>
+  <text class="small" x="838" y="182">16.12</text>
+  <text class="small" x="838" y="202">17.x</text>
+  <rect class="target" x="350" y="223" width="160" height="54" rx="8"/>
+  <use href="#icon-target" class="icon icon-target" x="366" y="240" width="20" height="20"/>
+  <text class="label" x="435" y="255" text-anchor="middle">NX-OS</text>
+  <rect class="product" x="550" y="217" width="230" height="66" rx="8"/>
+  <use href="#icon-product" class="icon icon-product" x="746" y="240" width="20" height="20"/>
+  <text class="small" x="568" y="242">Nexus 9000</text>
+  <text class="small" x="568" y="262">MDS 9148S</text>
+  <rect class="version" x="820" y="217" width="220" height="66" rx="8"/>
+  <use href="#icon-version" class="icon icon-version" x="1007" y="240" width="20" height="20"/>
+  <text class="small" x="838" y="242">9.3</text>
+  <text class="small" x="838" y="262">10.2</text>
+
+  <!-- DBMS -->
+  <path class="connector-strong" d="M160 335 H190"/>
+  <path class="connector" d="M320 335 H350"/>
+  <path class="connector" d="M510 335 H550"/>
+  <path class="connector" d="M780 335 H820"/>
+  <rect class="field" x="30" y="308" width="130" height="54" rx="8"/>
+  <use href="#icon-field" class="icon icon-field" x="46" y="325" width="20" height="20"/>
+  <text class="label" x="102" y="340" text-anchor="middle">DBMS</text>
+  <rect class="platform" x="190" y="308" width="130" height="54" rx="8"/>
+  <use href="#icon-platform" class="icon icon-platform" x="206" y="325" width="20" height="20"/>
+  <text class="label" x="258" y="340" text-anchor="middle">ORACLE</text>
+  <rect class="target" x="350" y="308" width="160" height="54" rx="8"/>
+  <use href="#icon-target" class="icon icon-target" x="366" y="325" width="20" height="20"/>
+  <text class="label" x="435" y="340" text-anchor="middle">Oracle DB 계열</text>
+  <rect class="product" x="550" y="302" width="230" height="66" rx="8"/>
+  <use href="#icon-product" class="icon icon-product" x="746" y="325" width="20" height="20"/>
+  <text class="small" x="568" y="327">Oracle Database</text>
+  <text class="small" x="568" y="347">Single Instance</text>
+  <rect class="version" x="820" y="302" width="220" height="66" rx="8"/>
+  <use href="#icon-version" class="icon icon-version" x="1007" y="325" width="20" height="20"/>
+  <text class="small" x="838" y="327">19c</text>
+  <text class="small" x="838" y="347">21c</text>
+
+  <!-- WEB/WAS -->
+  <path class="connector-strong" d="M160 430 H190"/>
+  <path class="connector" d="M320 430 H350"/>
+  <path class="connector" d="M510 430 H550"/>
+  <path class="connector" d="M780 430 H820"/>
+  <rect class="field" x="30" y="403" width="130" height="54" rx="8"/>
+  <use href="#icon-field" class="icon icon-field" x="46" y="420" width="20" height="20"/>
+  <text class="label" x="102" y="435" text-anchor="middle">WEB/WAS</text>
+  <rect class="platform" x="190" y="403" width="130" height="54" rx="8"/>
+  <use href="#icon-platform" class="icon icon-platform" x="206" y="420" width="20" height="20"/>
+  <text class="label" x="258" y="435" text-anchor="middle">WAS</text>
+  <rect class="target" x="350" y="403" width="160" height="54" rx="8"/>
+  <use href="#icon-target" class="icon icon-target" x="366" y="420" width="20" height="20"/>
+  <text class="label" x="435" y="435" text-anchor="middle">Java WAS 계열</text>
+  <rect class="product" x="550" y="397" width="230" height="66" rx="8"/>
+  <use href="#icon-product" class="icon icon-product" x="746" y="420" width="20" height="20"/>
+  <text class="small" x="568" y="422">JEUS</text>
+  <text class="small" x="568" y="442">Tomcat</text>
+  <rect class="version" x="820" y="397" width="220" height="66" rx="8"/>
+  <use href="#icon-version" class="icon icon-version" x="1007" y="420" width="20" height="20"/>
+  <text class="small" x="838" y="422">8.5</text>
+  <text class="small" x="838" y="442">9.0</text>
+</svg>

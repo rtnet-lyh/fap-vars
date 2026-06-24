@@ -157,6 +157,22 @@ CHECK_CLASS = Check
 """
 
 
+SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
+from .common._base import BaseCheck
+
+
+class Check(BaseCheck):
+    USE_HOST_CONNECTION = True
+    PARAMIKO_AUTH_METHOD = 'password'
+
+    def run(self):
+        return self.ok(message=self.ctx.get('connection_method'))
+
+
+CHECK_CLASS = Check
+"""
+
+
 NETWORK_PARAMIKO_SCRIPT_TEXT = """# -*- coding: utf-8 -*-
 from .common._base import BaseCheck
 
@@ -435,6 +451,31 @@ class BaseCheckResultTest(unittest.TestCase):
             'password': 'password',
             'ssh_options': '',
         })
+
+    def test_paramiko_options_prefer_host_vars_over_check_class(self):
+        class Check(BaseCheck):
+            PARAMIKO_PROFILE = 'cisco_ios'
+            PARAMIKO_BANNER_TIMEOUT_SEC = 20
+            PARAMIKO_ALLOW_AGENT = True
+
+        check = Check({
+            'inspection_code': 'U-PARAMIKO-OPTIONS',
+            'item_payload': {
+                'host_vars': {
+                    'PARAMIKO_PROFILE': 'linux',
+                    'PARAMIKO_BANNER_TIMEOUT_SEC': '30',
+                    'PARAMIKO_ALLOW_AGENT': 'false',
+                }
+            },
+        })
+
+        options = check._paramiko_options()
+        profile = check._resolve_paramiko_profile(profile=check.PARAMIKO_PROFILE)
+
+        self.assertEqual(options['profile'], 'linux')
+        self.assertEqual(options['banner_timeout_sec'], '30')
+        self.assertFalse(options['allow_agent'])
+        self.assertEqual(profile['pager_patterns'], [])
 
     def test_excluded_returns_standard_result(self):
         check = BaseCheck({
@@ -880,6 +921,129 @@ class RunnerBecomePrecheckTest(unittest.TestCase):
         self.assertIn('-o ConnectTimeout=3', isolated_checks[0]['ssh_options'])
         self.assertNotIn('ControlPersist', isolated_checks[0]['ssh_options'])
         self.assertNotIn('ControlPath', isolated_checks[0]['ssh_options'])
+
+    def test_missing_connection_method_uses_payload_connection_method(self):
+        calls = []
+        def ssh_executor(cmd, host, port, user, password, ssh_options, timeout_sec=None):
+            del host, port, user, password, ssh_options, timeout_sec
+            calls.append(cmd)
+            return 0, 'ok', ''
+
+        item = self.server_item(
+            'U-TEST-PAYLOAD-SSH',
+            1,
+            SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT,
+        )
+        item['connection_method'] = 'ssh'
+        payload = self.server_payload([item], {'become': False})
+
+        output = self.run_payload(
+            payload,
+            ssh_executor=ssh_executor,
+        )
+
+        self.assertEqual(calls, ['true'])
+        self.assertEqual(output['results'][0]['status'], 'ok')
+        self.assertEqual(output['results'][0]['message'], 'ssh')
+
+    def test_missing_connection_method_uses_payload_credential_type_winrm(self):
+        calls = []
+
+        def winrm_executor(cmd, host, port, user, password, ssh_options, options):
+            del host, port, user, password, ssh_options, options
+            calls.append(cmd)
+            return 0, 'ok', ''
+
+        item = self.server_item(
+            'U-TEST-PAYLOAD-WINRM',
+            1,
+            SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT,
+        )
+        item['credential_type_name'] = 'WINRM'
+        payload = self.server_payload([item], {'become': False})
+
+        output = self.run_payload(payload, winrm_executor=winrm_executor)
+
+        self.assertEqual(calls, ['Write-Output FAP_CONNECTION_OK'])
+        self.assertEqual(output['results'][0]['status'], 'ok')
+        self.assertEqual(output['results'][0]['message'], 'winrm')
+
+    def test_missing_connection_method_defaults_to_paramiko_without_payload_method(self):
+        clients = []
+
+        def factory():
+            client = FakeParamikoClient()
+            clients.append(client)
+            return client
+
+        item = self.server_item(
+            'U-TEST-DEFAULT-PARAMIKO',
+            1,
+            SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT,
+        )
+        payload = self.server_payload([item], {'become': False})
+
+        output = self.run_payload(payload, paramiko_client_factory=factory)
+
+        self.assertEqual(sum(client.invoke_shell_calls for client in clients), 1)
+        self.assertEqual(output['results'][0]['status'], 'ok')
+        self.assertEqual(output['results'][0]['message'], 'paramiko')
+
+    def test_missing_connection_method_ignores_inspection_code_prefix(self):
+        clients = []
+
+        def factory():
+            client = FakeParamikoClient()
+            clients.append(client)
+            return client
+
+        item = self.server_item(
+            'W-TEST-DEFAULT-PARAMIKO',
+            1,
+            SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT,
+        )
+        payload = self.server_payload([item], {'become': False})
+
+        output = self.run_payload(payload, paramiko_client_factory=factory)
+
+        self.assertEqual(sum(client.invoke_shell_calls for client in clients), 1)
+        self.assertEqual(output['results'][0]['status'], 'ok')
+        self.assertEqual(output['results'][0]['message'], 'paramiko')
+
+    def test_paramiko_precheck_options_prefer_host_vars(self):
+        clients = []
+
+        def factory():
+            client = FakeParamikoClient()
+            clients.append(client)
+            return client
+
+        item = self.server_item(
+            'U-TEST-PARAMIKO-HOST-VARS',
+            1,
+            SERVER_DEFAULT_PARAMIKO_SCRIPT_TEXT,
+        )
+        item['host_vars'] = {
+            'PARAMIKO_AUTH_METHOD': 'key',
+            'PARAMIKO_TIMEOUT_SEC': '22',
+            'PARAMIKO_BANNER_TIMEOUT_SEC': '33',
+            'PARAMIKO_AUTH_TIMEOUT_SEC': '44',
+            'PARAMIKO_ALLOW_AGENT': 'true',
+            'PARAMIKO_LOOK_FOR_KEYS': 'false',
+        }
+        payload = self.server_payload([item], {'become': False})
+
+        output = self.run_payload(payload, paramiko_client_factory=factory)
+
+        self.assertEqual(output['results'][0]['status'], 'ok')
+        connect_kwargs = clients[0].connect_kwargs
+        self.assertEqual(connect_kwargs['timeout'], 22.0)
+        self.assertEqual(connect_kwargs['banner_timeout'], 33.0)
+        self.assertEqual(connect_kwargs['auth_timeout'], 44.0)
+        self.assertTrue(connect_kwargs['allow_agent'])
+        self.assertFalse(connect_kwargs['look_for_keys'])
+        self.assertIn('key_filename', connect_kwargs)
+        self.assertNotIn('password', connect_kwargs)
 
     def test_paramiko_sudo_precheck_failure_blocks_paramiko_commands_once(self):
         clients = []

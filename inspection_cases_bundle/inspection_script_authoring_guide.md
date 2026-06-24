@@ -2,6 +2,8 @@
 
 `inspection_cases_bundle`에서 작성한 점검 케이스를 실제 테스트 대상에 붙여 `--mode live`로 검증하기 위한 가이드입니다. 이 문서는 운영 반영용 절차가 아니라, 테스트 호스트 또는 테스트 장비에서 단일 케이스가 정상 동작하는지 확인하는 절차에 초점을 둡니다.
 
+연결 방식 결정 규칙, `_ssh(...)` legacy 정책, Paramiko `host_vars` 우선순위는 `connection_method_paramiko_host_vars_guide.md`를 함께 참고합니다.
+
 ## 1. Live Mode 테스트의 목적
 
 Live mode 테스트는 `replay.json` fixture가 아니라 실제 대상 장비, 서버, API에 접속해 `script.py`가 동작하는지 확인합니다.
@@ -45,7 +47,7 @@ Live mode는 실제 대상에 명령을 실행하므로 반드시 테스트 대�
    - 테스트 서버, 테스트 Windows 호스트, 테스트 네트워크 장비, 테스트 ESXi 등
 
 2. 접속 방식이 맞는가?
-   - Linux, Rocky, Unix: `ssh`
+   - Linux, Rocky, Unix: `paramiko`
    - Windows: `winrm`
    - Network 대화형 장비: `paramiko`
    - ESXi/API 기반: `USE_HOST_CONNECTION = False`와 helper/API payload
@@ -110,7 +112,7 @@ python3 inspection_runtime/replay_cli.py --mode live inspection_cases
 
 ## 6. Live 테스트용 `script.py` 작성 패턴
 
-### 6.1 Linux, Rocky, Unix SSH 테스트 패턴
+### 6.1 Linux, Rocky, Unix Paramiko 테스트 패턴
 
 ```python
 # -*- coding: utf-8 -*-
@@ -123,17 +125,12 @@ COMMAND = 'hostnamectl'
 
 class Check(BaseCheck):
     USE_HOST_CONNECTION = True
-    CONNECTION_METHOD = 'ssh'
 
     def run(self):
-        rc, out, err = self._ssh(COMMAND)
-
-        if self._is_connection_error(rc, err):
-            return self.fail(
-                '호스트 연결 실패',
-                message=(err or 'SSH 연결에 실패했습니다.').strip(),
-                stderr=(err or '').strip(),
-            )
+        result = self._run_paramiko_commands(COMMAND, become=True)[-1]
+        rc = result.get('rc')
+        out = result.get('stdout', '')
+        err = result.get('stderr', '')
 
         if rc != 0:
             return self.fail(
@@ -159,7 +156,7 @@ class Check(BaseCheck):
             },
             thresholds={},
             reasons='테스트 명령이 정상 실행되고 stdout이 수집되었습니다.',
-            message='Live mode SSH 테스트가 정상입니다.',
+            message='Live mode Paramiko 테스트가 정상입니다.',
             raw_output=output,
         )
 
@@ -420,4 +417,3 @@ live 실행 후 `result.json`에서 아래 항목을 확인합니다.
 - `metrics`, `thresholds`, `reasons`, `message`가 충분한가?
 - `result.json`에 secret이 남지 않았는가?
 - 전체 `inspection_cases`에 live mode를 실행하지 않았는가?
-

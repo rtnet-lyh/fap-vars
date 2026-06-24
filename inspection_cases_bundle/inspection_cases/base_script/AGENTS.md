@@ -42,9 +42,9 @@ threshold를 추가할 때는 `case.json`의 threshold 이름과 `script.py`의 
 
 ## `script.py` 작성 규칙
 
-모든 점검 스크립트는 이 디렉터리의 `script.py` 패턴을 표준으로 따른다. 기본 골격은 `BaseCheck` 상속, `USE_HOST_CONNECTION`, `CONNECTION_METHOD`, `CHECK_CLASS = Check` 선언을 유지한다.
+모든 점검 스크립트는 이 디렉터리의 `script.py` 패턴을 표준으로 따른다. 기본 골격은 `BaseCheck` 상속, `USE_HOST_CONNECTION`, `CHECK_CLASS = Check` 선언을 유지한다. 연결 방식은 `CONNECTION_METHOD`가 최우선이고, 없으면 실행 계정 형식(`connection_method`, `credential_type_name` 등)을 따른다. 둘 다 없으면 기본값은 `paramiko`이다.
 
-- 명령 수행은 `run()`에서만 한다. threshold를 먼저 읽고, 연결 방식에 맞게 `_run_paramiko_commands(...)`, `_ssh(...)`, `_run_ps(...)` 같은 실행 helper를 호출한다.
+- 명령 수행은 `run()`에서만 한다. threshold를 먼저 읽고, 신규 서버/장비 스크립트는 `_run_paramiko_commands(...)`, Windows 스크립트는 `_run_ps(...)`를 호출한다. `_ssh(...)`는 기존 스크립트 호환용으로만 유지한다.
 - `replay.json`의 `matcher_value`는 `run()`에서 실제 실행하는 명령 문자열과 동일해야 한다.
 - 파싱은 `parse_output(output)`에서만 처리한다. 이 함수는 raw output을 받아 측정값 dict인 `metrics`만 반환하고, 판정이나 메시지 문구를 만들지 않는다.
 - 판정은 `evaluate(metrics, threshold...)`에서만 처리한다. 반환값은 `ok`, `warn`, `fail`, `excluded` 중 하나로 통일한다.

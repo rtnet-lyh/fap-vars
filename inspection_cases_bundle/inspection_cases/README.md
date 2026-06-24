@@ -49,15 +49,15 @@ Windows 케이스는 `server/windows/windows_<domain>_<detail>_<command>_check/`
 
 새 케이스는 가장 가까운 기존 케이스를 기준으로 시작한다.
 
-- Linux/Rocky 계열은 `CONNECTION_METHOD = 'ssh'`와 `_ssh("...")` 패턴을 사용한다.
-- 네트워크 장비 중 SSH exec 채널이나 `sshpass` 방식이 맞지 않는 장비는 `CONNECTION_METHOD = 'paramiko'`와 `_run_paramiko_commands([...])` 패턴을 사용한다.
-- Paramiko 옵션은 API credential `data`에 넣지 말고 `script.py`의 `PARAMIKO_*` 클래스 속성으로 조정한다.
+- 연결 방식은 `script.py`의 `CONNECTION_METHOD`가 최우선이고, 없으면 실행 계정 형식(`connection_method`, `credential_type_name` 등)을 따른다. 둘 다 없으면 기본값은 `paramiko`이다.
+- 신규 스크립트는 `_ssh("...")`를 사용하지 말고 `_run_paramiko_commands(...)`를 우선 사용한다. 기존 `_ssh("...")` 스크립트는 호환성을 위해 유지한다.
+- Windows 계열은 `CONNECTION_METHOD = 'winrm'` 또는 실행 계정 형식 `winrm`와 `_run_ps("...")` 패턴을 사용한다.
+- Paramiko 옵션은 API credential `data`에 넣지 말고 `host_vars`의 `PARAMIKO_*` 값을 우선 사용한다. 케이스 공통 기본값이 필요할 때만 `script.py`의 `PARAMIKO_*` 클래스 속성으로 조정한다.
 - Paramiko 프롬프트는 `PARAMIKO_PROBE_PROMPT`로 엔터를 보낸 뒤 세션 응답에서 동적으로 학습한다. `PARAMIKO_PROFILE`은 pager 설정만 담당하고, `PARAMIKO_ENABLE_MODE`는 내장된 `enable` + 기본 비밀번호 프롬프트 처리로 동작한다.
 - `_run_paramiko_commands()`는 기존처럼 문자열 배열을 그대로 받을 수 있다. 각 항목을 dict로 넘기면 `command`, `timeout`, `ignore_prompt`, `hide_command`를 항목별로 조정할 수 있다.
 - `PARAMIKO_CONTINUE_ON_TIMEOUT = True`를 켜면 prompt를 못 받은 입력도 timeout으로 기록한 뒤 다음 입력을 계속 보낼 수 있다. live 세션에서는 다음 입력이 이전 프롬프트 응답으로 소비될 수 있으므로 필요한 케이스에만 제한적으로 사용한다.
 - dict 항목의 `ignore_prompt`가 지정되면 해당 값이 우선이고, 미지정이면 `PARAMIKO_CONTINUE_ON_TIMEOUT` 기본 동작을 따른다.
 - dict 항목의 `hide_command`가 `true`면 raw output과 command history에는 실제 명령 대신 `*******`가 기록된다.
-- Windows 계열은 `CONNECTION_METHOD = 'winrm'`와 `_run_ps("...")` 패턴을 사용한다.
 - 연결 실패는 `_is_connection_error(...)`로 먼저 분기한다.
 - 명령 실행 실패와 출력 파싱 실패는 별도 실패 메시지로 구분한다.
 - 정상 결과는 `metrics`, `thresholds`, `reasons`, `message`를 가능한 한 채운다.
@@ -127,7 +127,7 @@ Windows 케이스는 `server/windows/windows_<domain>_<detail>_<command>_check/`
 
 작성 시 확인할 값:
 
-- `matcher_value`는 `script.py`의 실제 `_ssh(...)` 또는 `_run_ps(...)` 명령과 완전히 같아야 한다.
+- `matcher_value`는 `script.py`의 실제 `_run_paramiko_commands(...)`, 기존 `_ssh(...)`, `_run_ps(...)` 명령과 완전히 같아야 한다.
 - 짧은 출력은 `stdout`, 긴 출력은 `stdout_file`을 사용한다.
 - 실패 시나리오는 의도에 맞게 `rc`, `stdout`, `stderr`를 조정한다.
 - 여러 명령을 실행하는 스크립트는 실행 순서대로 replay 엔트리를 나열한다.

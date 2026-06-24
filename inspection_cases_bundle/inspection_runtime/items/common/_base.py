@@ -147,7 +147,7 @@ class BaseCheck:
     # 기본은 호스트 접속 사용
     USE_HOST_CONNECTION = True
     # 기본 원격 연결 방식
-    CONNECTION_METHOD = 'ssh'
+    CONNECTION_METHOD = 'paramiko'
     # SSH 명령 최대 대기 시간(초), None이면 runner 기본값 사용
     SSH_COMMAND_TIMEOUT_SEC = None
     # False면 runner 기본 SSH multiplexing(ControlMaster) 옵션을 끈다.
@@ -262,25 +262,49 @@ class BaseCheck:
 
         return prefix + suffix, display_prefix + suffix
 
+    def _get_paramiko_option(self, name, default=None):
+        host_vars = self.get_host_vars()
+        if isinstance(host_vars, dict) and name in host_vars:
+            value = host_vars.get(name)
+            if value not in (None, ''):
+                return value
+        return getattr(self, name, default)
+
     def _paramiko_options(self):
         return {
-            'profile': getattr(self, 'PARAMIKO_PROFILE', 'generic_network'),
-            'auth_method': getattr(self, 'PARAMIKO_AUTH_METHOD', 'auto'),
-            'key_filename': getattr(self, 'PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
-            'private_key': getattr(self, 'PARAMIKO_PRIVATE_KEY', None),
-            'private_key_passphrase': getattr(self, 'PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
-            'allow_agent': getattr(self, 'PARAMIKO_ALLOW_AGENT', False),
-            'look_for_keys': getattr(self, 'PARAMIKO_LOOK_FOR_KEYS', False),
-            'timeout_sec': getattr(self, 'PARAMIKO_TIMEOUT_SEC', 10),
-            'banner_timeout_sec': getattr(self, 'PARAMIKO_BANNER_TIMEOUT_SEC', 10),
-            'auth_timeout_sec': getattr(self, 'PARAMIKO_AUTH_TIMEOUT_SEC', 10),
-            'read_timeout_sec': getattr(self, 'PARAMIKO_READ_TIMEOUT_SEC', 0.5),
-            'probe_prompt': getattr(self, 'PARAMIKO_PROBE_PROMPT', True),
-            'continue_on_timeout': getattr(self, 'PARAMIKO_CONTINUE_ON_TIMEOUT', False),
+            'profile': self._get_paramiko_option('PARAMIKO_PROFILE', 'generic_network'),
+            'auth_method': self._get_paramiko_option('PARAMIKO_AUTH_METHOD', 'auto'),
+            'key_filename': self._get_paramiko_option('PARAMIKO_KEY_FILENAME', '~/.ssh/id_rsa.pub'),
+            'private_key': self._get_paramiko_option('PARAMIKO_PRIVATE_KEY', None),
+            'private_key_passphrase': self._get_paramiko_option('PARAMIKO_PRIVATE_KEY_PASSPHRASE', None),
+            'allow_agent': self._paramiko_bool_option(
+                self._get_paramiko_option('PARAMIKO_ALLOW_AGENT', False),
+                False,
+            ),
+            'look_for_keys': self._paramiko_bool_option(
+                self._get_paramiko_option('PARAMIKO_LOOK_FOR_KEYS', False),
+                False,
+            ),
+            'timeout_sec': self._get_paramiko_option('PARAMIKO_TIMEOUT_SEC', 10),
+            'banner_timeout_sec': self._get_paramiko_option('PARAMIKO_BANNER_TIMEOUT_SEC', 10),
+            'auth_timeout_sec': self._get_paramiko_option('PARAMIKO_AUTH_TIMEOUT_SEC', 10),
+            'read_timeout_sec': self._get_paramiko_option('PARAMIKO_READ_TIMEOUT_SEC', 0.5),
+            'probe_prompt': self._paramiko_bool_option(
+                self._get_paramiko_option('PARAMIKO_PROBE_PROMPT', True),
+                True,
+            ),
+            'continue_on_timeout': self._paramiko_bool_option(
+                self._get_paramiko_option('PARAMIKO_CONTINUE_ON_TIMEOUT', False),
+                False,
+            ),
         }
 
     def _resolve_paramiko_profile(self, profile=None):
-        raw_profile = profile if profile is not None else getattr(self, 'PARAMIKO_PROFILE', 'generic_network')
+        host_profile = self.get_host_var('PARAMIKO_PROFILE')
+        if host_profile not in (None, ''):
+            raw_profile = host_profile
+        else:
+            raw_profile = profile if profile is not None else self._get_paramiko_option('PARAMIKO_PROFILE', 'generic_network')
         if isinstance(raw_profile, dict):
             resolved = dict(raw_profile)
         else:
@@ -436,8 +460,8 @@ class BaseCheck:
             'timeout': float(options.get('timeout_sec', 10)),
             'banner_timeout': float(options.get('banner_timeout_sec', 10)),
             'auth_timeout': float(options.get('auth_timeout_sec', 10)),
-            'allow_agent': bool(options.get('allow_agent', False)),
-            'look_for_keys': bool(options.get('look_for_keys', False)),
+            'allow_agent': self._paramiko_bool_option(options.get('allow_agent'), False),
+            'look_for_keys': self._paramiko_bool_option(options.get('look_for_keys'), False),
         }
         if auth_attempt == 'password':
             kwargs['password'] = self.ctx.get('password') or None
@@ -699,35 +723,35 @@ class BaseCheck:
             enabled = self._paramiko_bool_option(become.get('become', become.get('enabled', True)), True)
             method_default = self._get_preferred_credential_value(
                 'become_method',
-                getattr(self, 'PARAMIKO_BECOME_METHOD', '') or 'su -',
+                self._get_paramiko_option('PARAMIKO_BECOME_METHOD', '') or 'su -',
             )
             user_default = self._get_preferred_credential_value(
                 'become_user',
-                getattr(self, 'PARAMIKO_BECOME_USER', '') or 'root',
+                self._get_paramiko_option('PARAMIKO_BECOME_USER', '') or 'root',
             )
             password_default = self._get_preferred_credential_value(
                 'become_password',
-                getattr(self, 'PARAMIKO_BECOME_PASSWORD', None),
+                self._get_paramiko_option('PARAMIKO_BECOME_PASSWORD', None),
             )
             raw_method = become.get('method', become.get('become_method', method_default))
             raw_user = become.get('user', become.get('become_user', user_default))
             raw_password = become.get('password', become.get('become_password', password_default))
         else:
             enabled = self._paramiko_bool_option(
-                become if become is not None else getattr(self, 'PARAMIKO_BECOME', False),
+                become if become is not None else self._get_paramiko_option('PARAMIKO_BECOME', False),
                 False,
             )
             raw_method = self._get_preferred_credential_value(
                 'become_method',
-                getattr(self, 'PARAMIKO_BECOME_METHOD', '') or 'su -',
+                self._get_paramiko_option('PARAMIKO_BECOME_METHOD', '') or 'su -',
             )
             raw_user = self._get_preferred_credential_value(
                 'become_user',
-                getattr(self, 'PARAMIKO_BECOME_USER', '') or 'root',
+                self._get_paramiko_option('PARAMIKO_BECOME_USER', '') or 'root',
             )
             raw_password = self._get_preferred_credential_value(
                 'become_password',
-                getattr(self, 'PARAMIKO_BECOME_PASSWORD', None),
+                self._get_paramiko_option('PARAMIKO_BECOME_PASSWORD', None),
             )
 
         if not enabled:
@@ -1224,13 +1248,18 @@ class BaseCheck:
     def _paramiko_reuse_session_enabled(self):
         # 우선순위:
         # 1) runner ctx의 paramiko_reuse_session
-        # 2) item_payload의 paramiko_reuse_session
-        # 3) 환경변수 FAP_PARAMIKO_REUSE_SESSION
-        # 4) 점검 클래스의 PARAMIKO_REUSE_SESSION
+        # 2) host_vars의 PARAMIKO_REUSE_SESSION
+        # 3) item_payload의 paramiko_reuse_session
+        # 4) 환경변수 FAP_PARAMIKO_REUSE_SESSION
+        # 5) 점검 클래스의 PARAMIKO_REUSE_SESSION
         # 기본값은 False라서 설정하지 않으면 기존 동작처럼 매번 close한다.
         ctx_value = self.ctx.get('paramiko_reuse_session')
         if ctx_value is not None:
             return self._paramiko_bool_option(ctx_value, False)
+
+        host_value = self.get_host_var('PARAMIKO_REUSE_SESSION')
+        if host_value is not None:
+            return self._paramiko_bool_option(host_value, False)
 
         payload = self.ctx.get('item_payload') or {}
         if isinstance(payload, dict) and payload.get('paramiko_reuse_session') is not None:
@@ -1240,7 +1269,10 @@ class BaseCheck:
         if env_value is not None:
             return self._paramiko_bool_option(env_value, False)
 
-        return self._paramiko_bool_option(getattr(self, 'PARAMIKO_REUSE_SESSION', False), False)
+        return self._paramiko_bool_option(
+            self._get_paramiko_option('PARAMIKO_REUSE_SESSION', False),
+            False,
+        )
 
     def _paramiko_profile_key(self, resolved_profile):
         if isinstance(resolved_profile, dict):
@@ -1259,8 +1291,8 @@ class BaseCheck:
             str(options.get('key_filename') or ''),
             _paramiko_secret_hash(options.get('private_key') or ''),
             _paramiko_secret_hash(options.get('private_key_passphrase') or ''),
-            bool(options.get('allow_agent', False)),
-            bool(options.get('look_for_keys', False)),
+            self._paramiko_bool_option(options.get('allow_agent'), False),
+            self._paramiko_bool_option(options.get('look_for_keys'), False),
             self._paramiko_profile_key(resolved_profile),
             bool(enable_required),
             self._paramiko_become_key(become_config),
@@ -1309,7 +1341,7 @@ class BaseCheck:
         channel = client.invoke_shell(term='vt100', width=200, height=1000)
 
         try:
-            if options.get('probe_prompt', True):
+            if self._paramiko_bool_option(options.get('probe_prompt'), True):
                 channel.send('\n')
 
 
@@ -1435,11 +1467,27 @@ class BaseCheck:
 
         options = self._paramiko_options()
         resolved_profile = self._resolve_paramiko_profile(profile)
-        command_timeout = float(timeout_sec if timeout_sec is not None else options.get('timeout_sec', 10))
+        host_command_timeout = self.get_host_var('PARAMIKO_COMMAND_TIMEOUT_SEC')
+        if host_command_timeout in (None, ''):
+            host_command_timeout = self.get_host_var('PARAMIKO_COMMAND_TIMEOUT')
+        class_command_timeout = self._get_paramiko_option('PARAMIKO_COMMAND_TIMEOUT_SEC', None)
+        if class_command_timeout in (None, ''):
+            class_command_timeout = self._get_paramiko_option('PARAMIKO_COMMAND_TIMEOUT', None)
+        if host_command_timeout not in (None, ''):
+            command_timeout = float(host_command_timeout)
+        elif timeout_sec is not None:
+            command_timeout = float(timeout_sec)
+        elif class_command_timeout not in (None, ''):
+            command_timeout = float(class_command_timeout)
+        else:
+            command_timeout = float(options.get('timeout_sec', 10))
         read_timeout = float(options.get('read_timeout_sec', 0.5))
-        continue_on_timeout = bool(options.get('continue_on_timeout', False))
+        continue_on_timeout = self._paramiko_bool_option(options.get('continue_on_timeout'), False)
         enable_required = (
-            bool(getattr(self, 'PARAMIKO_ENABLE_MODE', False))
+            self._paramiko_bool_option(
+                self._get_paramiko_option('PARAMIKO_ENABLE_MODE', False),
+                False,
+            )
             if enable_mode is None
             else bool(enable_mode)
         )
@@ -1475,7 +1523,10 @@ class BaseCheck:
                 command = command_item['command']
                 display_command = command_item.get('display_command', command)
                 hide_command = bool(command_item.get('hide_command'))
-                item_timeout = command_item.get('timeout', command_timeout)
+                if host_command_timeout not in (None, ''):
+                    item_timeout = command_timeout
+                else:
+                    item_timeout = command_item.get('timeout', command_timeout)
                 ignore_prompt = command_item.get('ignore_prompt')
                 if ignore_prompt is None:
                     ignore_prompt = continue_on_timeout
