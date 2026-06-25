@@ -25,8 +25,12 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 DEFAULT_FAP_CONFIG_FILE = Path("/fap/ansible/conf/fap.conf")
 DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parent / "output"
 DEFAULT_PREVENTIVE_HWPX_TEMPLATE = (
+    Path(__file__).resolve().parent / "templates" / "PREVENTIVE_CHECK_TEMPLATE.hwpx"
+)
+DEFAULT_LEGACY_PREVENTIVE_HWPX_TEMPLATE = (
     Path(__file__).resolve().parent / "templates" / "PREVENTIVE_CHECK_TEMPLATE .hwpx"
 )
+DEFAULT_ANSIBLE_LOG_ROOT = Path("/fap/logs/ansible")
 INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
 INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 MAX_SHEETS_PER_WORKBOOK = 250
@@ -41,6 +45,8 @@ PREVENTIVE_HWPX_TABLE_PARAGRAPH_HEIGHT_PADDING = 566
 PREVENTIVE_HWPX_CELL_LINE_TEXT_HEIGHT = 1200
 PREVENTIVE_HWPX_CELL_LINE_SPACING = 720
 PREVENTIVE_HWPX_NUMBER_PLACEHOLDERS = ("{{N}}", "{{NUMBER}}", "{{NUM}}")
+PREVENTIVE_HWPX_CATEGORY_PLACEHOLDERS = ("{{C}}", "{{CATEGORY}}", "{{CATEGORY_NAME}}", "{{CLASSIFICATION}}")
+PREVENTIVE_HWPX_ITEM_PLACEHOLDERS = ("{{ITEM}}", "{{CHECK_ITEM}}", "{{INSPECTION_ITEM}}")
 PREVENTIVE_HWPX_PASS_PLACEHOLDERS = ("{{OK}}", "{{IS_PASS}}")
 PREVENTIVE_HWPX_FAIL_PLACEHOLDERS = ("{{NOK}}", "{{IS_FAILED}}")
 PREVENTIVE_HWPX_PASS_COUNT_PLACEHOLDERS = ("{{OK}}", "{{IS_PASS_CNT}}")
@@ -74,6 +80,7 @@ class SummaryRow(object):
         self,
         job_id,
         category_type_name,
+        category_group_name,
         run_status,
         started_time,
         finished_time,
@@ -92,6 +99,7 @@ class SummaryRow(object):
     ):
         self.job_id = job_id
         self.category_type_name = category_type_name
+        self.category_group_name = category_group_name
         self.run_status = run_status
         self.started_time = started_time
         self.finished_time = finished_time
@@ -130,6 +138,7 @@ class SummaryRow(object):
         return cls(
             job_id=_to_int(row.get("job_id")),
             category_type_name=str(row.get("category_type_name") or ""),
+            category_group_name=str(row.get("category_group_name") or ""),
             run_status=str(row.get("run_status") or ""),
             started_time=row.get("started_time"),
             finished_time=row.get("finished_time"),
@@ -173,6 +182,7 @@ class DetailRow(object):
         is_service_affect,
         action_content,
         checked_time,
+        application_product_name="",
     ):
         self.job_id = job_id
         self.host_id = host_id
@@ -196,6 +206,7 @@ class DetailRow(object):
         self.is_service_affect = is_service_affect
         self.action_content = action_content
         self.checked_time = checked_time
+        self.application_product_name = application_product_name
 
     @property
     def host_key(self):
@@ -223,9 +234,15 @@ class DetailRow(object):
             raw_output=str(row.get("raw_output") or ""),
             description=str(row.get("description") or ""),
             inspection_command=str(row.get("inspection_command") or ""),
-            is_service_affect=str(row.get("is_service_affect") or ""),
+            is_service_affect=_to_optional_bool(row.get("is_service_affect")),
             action_content=str(row.get("action_content") or ""),
             checked_time=row.get("checked_time"),
+            application_product_name=str(
+                row.get("application_product_name")
+                or row.get("host_product_name")
+                or row.get("product_name")
+                or ""
+            ),
         )
 
 
@@ -529,6 +546,34 @@ def api_get_json(api_url: str, api_token: str, endpoint: str, params: Optional[M
         raise RuntimeError("invalid JSON response from API: url=%s error=%s" % (request_url, exc))
 
 
+def api_post_json(api_url: str, api_token: str, endpoint: str, payload: Optional[Mapping[str, Any]] = None) -> Any:
+    request_url = "%s%s" % (api_url, endpoint)
+    body = json.dumps(dict(payload or {}), ensure_ascii=False).encode("utf-8")
+    request = urllib.request.Request(
+        request_url,
+        data=body,
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache",
+            "x-auth-token": "Bearer " + api_token,
+            "Authorization": "Bearer " + api_token,
+        },
+        method="POST",
+    )
+    ssl_context = ssl._create_unverified_context()
+    try:
+        with urllib.request.urlopen(request, context=ssl_context, timeout=30) as response:
+            payload_text = response.read().decode("utf-8")
+            return json.loads(payload_text or "{}")
+    except urllib.error.HTTPError as exc:
+        body_text = exc.read().decode("utf-8", "ignore")
+        raise RuntimeError("API request failed: status=%s url=%s body=%s" % (exc.code, request_url, body_text))
+    except urllib.error.URLError as exc:
+        raise RuntimeError("API request failed: url=%s error=%s" % (request_url, exc))
+    except ValueError as exc:
+        raise RuntimeError("invalid JSON response from API: url=%s error=%s" % (request_url, exc))
+
+
 def extract_row_list(payload: Any, label: str) -> List[Mapping[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, Mapping)]
@@ -595,6 +640,7 @@ def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3
             SummaryRow(
                 job_id=job_id,
                 category_type_name="Mock Linux",
+                category_group_name="Mock 분야",
                 run_status="completed",
                 started_time=datetime(2026, 3, 17, 9, 0, 0),
                 finished_time=datetime(2026, 3, 17, 9, 30, 0),
@@ -650,6 +696,13 @@ def compute_overview_metrics(
 ) -> OverviewMetrics:
     first_row = summary_rows[0]
     unique_hosts = unique_summary_rows(summary_rows)
+    details_by_host = defaultdict(list)
+    for detail_row in detail_rows or []:
+        details_by_host[detail_row.host_key].append(detail_row)
+    summary_result_counts = [
+        compute_summary_result_counts(summary_row, details_by_host.get(summary_row.host_key, []))
+        for summary_row in summary_rows
+    ]
     distinct_type_names = {
         detail_row.type_name.strip()
         for detail_row in (detail_rows or [])
@@ -660,30 +713,555 @@ def compute_overview_metrics(
         category_type_name=first_row.category_type_name,
         average_score=average_or_zero(row.score or 0 for row in summary_rows),
         average_total_items=average_or_zero(row.total_items for row in summary_rows),
-        average_good_items=average_or_zero(row.good_items for row in summary_rows),
-        average_vuln_items=average_or_zero(row.vulnerable_items for row in summary_rows),
-        average_not_run_items=average_or_zero(row.not_run_items for row in summary_rows),
+        average_good_items=average_or_zero(counts[0] for counts in summary_result_counts),
+        average_vuln_items=average_or_zero(counts[1] for counts in summary_result_counts),
+        average_not_run_items=average_or_zero(counts[2] for counts in summary_result_counts),
         target_count=len(unique_hosts),
         type_count=len(distinct_type_names),
     )
 
 
+def format_summary_type_with_area(summary_row: SummaryRow, details_for_host: Optional[Sequence[DetailRow]]) -> str:
+    type_name = (summary_row.category_type_name or "").strip()
+    area_names = sorted(
+        {
+            detail_row.area_name.strip()
+            for detail_row in details_for_host or []
+            if detail_row.area_name and detail_row.area_name.strip()
+        }
+    )
+    area_text = ", ".join(area_names)
+    if type_name and area_text:
+        return f"{type_name}({area_text})"
+    return type_name or area_text or "-"
+
+
+def normalize_detail_results_by_summary(
+    summary_rows: Sequence[SummaryRow],
+    detail_rows: Sequence[DetailRow],
+) -> List[DetailRow]:
+    summary_by_host = {
+        summary_row.host_key: summary_row
+        for summary_row in unique_summary_rows(summary_rows)
+    }
+    normalized_rows = []
+
+    for detail_row in detail_rows:
+        summary_status = derive_summary_detail_result_status(summary_by_host.get(detail_row.host_key))
+        if (
+            summary_status
+            and classify_detail_result_status(detail_row.result_status)
+            != classify_detail_result_status(summary_status)
+        ):
+            normalized_detail = copy.copy(detail_row)
+            normalized_detail.result_status = summary_status
+            normalized_rows.append(normalized_detail)
+        else:
+            normalized_rows.append(detail_row)
+
+    return normalized_rows
+
+
+def enrich_detail_application_versions(
+    api_url: str,
+    api_token: str,
+    job_id: int,
+    summary_rows: Sequence[SummaryRow],
+    detail_rows: Sequence[DetailRow],
+) -> List[DetailRow]:
+    if not detail_rows:
+        return list(detail_rows)
+
+    needs_application_version = any(
+        not (detail_row.application_version or "").strip()
+        for detail_row in detail_rows
+    )
+    needs_application_product_name = any(
+        not (getattr(detail_row, "application_product_name", "") or "").strip()
+        for detail_row in detail_rows
+    )
+    needs_inspection_code = any(
+        not (detail_row.inspection_code or "").strip()
+        for detail_row in detail_rows
+    )
+    if not needs_application_version and not needs_application_product_name and not needs_inspection_code:
+        return list(detail_rows)
+
+    version_lookup: Dict[Tuple[Any, ...], str] = {}
+    product_lookup: Dict[Tuple[Any, ...], str] = {}
+    inspection_code_lookup: Dict[Tuple[Any, ...], str] = {}
+    for summary_row in unique_summary_rows(summary_rows):
+        execution_id = find_execution_id_for_report_host(job_id, summary_row)
+        if execution_id is None:
+            continue
+        try:
+            payload = api_post_json(
+                api_url,
+                api_token,
+                "/api/vars/inspection/execution/items",
+                {"execution_id": execution_id, "host_id": summary_row.host_id},
+            )
+        except Exception:
+            continue
+        app_items = extract_execution_app_items(payload)
+        add_execution_item_versions(version_lookup, app_items)
+        add_execution_item_products(product_lookup, app_items)
+        add_execution_item_inspection_codes(inspection_code_lookup, app_items)
+
+    if not version_lookup and not product_lookup and not inspection_code_lookup:
+        return list(detail_rows)
+
+    enriched_rows = []
+    for detail_row in detail_rows:
+        enriched_detail = None
+
+        if not (detail_row.application_version or "").strip():
+            application_version = resolve_detail_application_version(detail_row, version_lookup)
+            if application_version:
+                enriched_detail = copy.copy(detail_row)
+                enriched_detail.application_version = application_version
+
+        if not (getattr(detail_row, "application_product_name", "") or "").strip():
+            application_product_name = resolve_detail_application_product_name(detail_row, product_lookup)
+            if application_product_name:
+                if enriched_detail is None:
+                    enriched_detail = copy.copy(detail_row)
+                enriched_detail.application_product_name = application_product_name
+
+        if not (detail_row.inspection_code or "").strip():
+            inspection_code = resolve_detail_inspection_code(detail_row, inspection_code_lookup)
+            if inspection_code:
+                if enriched_detail is None:
+                    enriched_detail = copy.copy(detail_row)
+                enriched_detail.inspection_code = inspection_code
+
+        if enriched_detail is not None:
+            enriched_rows.append(enriched_detail)
+        else:
+            enriched_rows.append(detail_row)
+
+    return enriched_rows
+
+
+def add_execution_item_inspection_codes(
+    inspection_code_lookup: Dict[Tuple[Any, ...], str],
+    app_items: Sequence[Mapping[str, Any]],
+) -> None:
+    for app_item in app_items:
+        base_values = {
+            "host_id": _to_int(app_item.get("host_id")),
+            "application_type_name": app_item.get("application_type_name"),
+            "application_name": app_item.get("application_name"),
+        }
+
+        for group in app_item.get("itemList") or []:
+            if not isinstance(group, Mapping):
+                continue
+            for item in group.get("items") or []:
+                if not isinstance(item, Mapping):
+                    continue
+
+                inspection_code = str(item.get("inspection_code") or "").strip()
+                if not inspection_code:
+                    continue
+
+                item_values = dict(
+                    base_values,
+                    type_name=item.get("type_name") or group.get("category_type_name"),
+                    area_name=item.get("area_name"),
+                    category_name=item.get("category_name"),
+                    inspection_item_name=item.get("inspection_name") or item.get("inspection_item_name"),
+                    inspection_command=item.get("inspection_command"),
+                )
+                put_version_lookup(
+                    inspection_code_lookup,
+                    build_inspection_code_key(**item_values),
+                    inspection_code,
+                )
+                item_values["inspection_command"] = ""
+                put_version_lookup(
+                    inspection_code_lookup,
+                    build_inspection_code_key(**item_values),
+                    inspection_code,
+                )
+
+
+def resolve_detail_inspection_code(
+    detail_row: DetailRow,
+    inspection_code_lookup: Mapping[Tuple[Any, ...], str],
+) -> str:
+    candidates = [
+        build_inspection_code_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            detail_row.inspection_item_name,
+            detail_row.inspection_command,
+        ),
+        build_inspection_code_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            detail_row.inspection_item_name,
+            "",
+        ),
+    ]
+    for key in candidates:
+        inspection_code = inspection_code_lookup.get(key)
+        if inspection_code:
+            return inspection_code
+    return ""
+
+
+def build_inspection_code_key(
+    host_id: Any,
+    application_type_name: Any = "",
+    application_name: Any = "",
+    type_name: Any = "",
+    area_name: Any = "",
+    category_name: Any = "",
+    inspection_item_name: Any = "",
+    inspection_command: Any = "",
+) -> Tuple[Any, ...]:
+    return (
+        _to_int(host_id),
+        normalize_lookup_text(application_type_name),
+        normalize_lookup_text(application_name),
+        normalize_lookup_text(type_name),
+        normalize_lookup_text(area_name),
+        normalize_lookup_text(category_name),
+        normalize_lookup_text(inspection_item_name),
+        normalize_lookup_text(inspection_command),
+    )
+
+
+def find_execution_id_for_report_host(job_id: int, summary_row: SummaryRow) -> Optional[int]:
+    if not DEFAULT_ANSIBLE_LOG_ROOT.exists():
+        return None
+
+    candidates = sorted(DEFAULT_ANSIBLE_LOG_ROOT.glob(f"*/job-{job_id}_exec-*_host-*.log"))
+    for log_path in candidates:
+        execution_id = parse_execution_id_from_log_path(log_path)
+        if execution_id is not None and log_path_matches_summary_host(log_path, summary_row):
+            return execution_id
+
+    for log_path in candidates:
+        execution_id = parse_execution_id_from_log_path(log_path)
+        if execution_id is not None and log_file_matches_summary_host(log_path, summary_row):
+            return execution_id
+
+    return None
+
+
+def parse_execution_id_from_log_path(log_path: Path) -> Optional[int]:
+    match = re.search(r"_exec-(\d+)_host-", log_path.name)
+    return int(match.group(1)) if match else None
+
+
+def log_path_matches_summary_host(log_path: Path, summary_row: SummaryRow) -> bool:
+    match = re.search(r"_host-(.+)\.log$", log_path.name)
+    if not match:
+        return False
+    return normalize_lookup_text(match.group(1)) in {
+        normalize_lookup_text(summary_row.host_name),
+        normalize_lookup_text(summary_row.host_ip),
+        normalize_lookup_text(strip_cidr_suffix(summary_row.host_ip)),
+    }
+
+
+def log_file_matches_summary_host(log_path: Path, summary_row: SummaryRow) -> bool:
+    try:
+        with log_path.open("r", encoding="utf-8", errors="ignore") as handle:
+            head = "".join(handle.readline() for _line_number in range(8))
+    except OSError:
+        return False
+
+    return (
+        f"host_id={summary_row.host_id}" in head
+        or f'"host_id": {summary_row.host_id}' in head
+        or f'"host_id":{summary_row.host_id}' in head
+    )
+
+
+def strip_cidr_suffix(value: Any) -> str:
+    return str(value or "").split("/", 1)[0]
+
+
+def extract_execution_app_items(payload: Any) -> List[Mapping[str, Any]]:
+    if not isinstance(payload, Mapping):
+        return []
+    data = payload.get("data")
+    if isinstance(data, Mapping) and isinstance(data.get("app_item_list"), list):
+        return [row for row in data["app_item_list"] if isinstance(row, Mapping)]
+    if isinstance(payload.get("app_item_list"), list):
+        return [row for row in payload["app_item_list"] if isinstance(row, Mapping)]
+    return []
+
+
+def add_execution_item_versions(
+    version_lookup: Dict[Tuple[Any, ...], str],
+    app_items: Sequence[Mapping[str, Any]],
+) -> None:
+    for app_item in app_items:
+        application_version = str(app_item.get("application_version") or "").strip()
+        if not application_version:
+            continue
+
+        base_values = {
+            "host_id": _to_int(app_item.get("host_id")),
+            "application_type_name": app_item.get("application_type_name"),
+            "application_name": app_item.get("application_name"),
+        }
+        put_version_lookup(
+            version_lookup,
+            build_application_version_key(**base_values),
+            application_version,
+        )
+
+        for group in app_item.get("itemList") or []:
+            if not isinstance(group, Mapping):
+                continue
+            for item in group.get("items") or []:
+                if not isinstance(item, Mapping):
+                    continue
+                item_values = dict(
+                    base_values,
+                    type_name=item.get("type_name") or group.get("category_type_name"),
+                    area_name=item.get("area_name"),
+                    category_name=item.get("category_name"),
+                    inspection_code=item.get("inspection_code"),
+                    inspection_item_name=item.get("inspection_name") or item.get("inspection_item_name"),
+                )
+                put_version_lookup(
+                    version_lookup,
+                    build_application_version_key(**item_values),
+                    application_version,
+                )
+                item_values["inspection_code"] = ""
+                put_version_lookup(
+                    version_lookup,
+                    build_application_version_key(**item_values),
+                    application_version,
+                )
+
+
+def add_execution_item_products(
+    product_lookup: Dict[Tuple[Any, ...], str],
+    app_items: Sequence[Mapping[str, Any]],
+) -> None:
+    for app_item in app_items:
+        application_product_name = str(app_item.get("application_product_name") or "").strip()
+        if not application_product_name:
+            continue
+
+        base_values = {
+            "host_id": _to_int(app_item.get("host_id")),
+            "application_type_name": app_item.get("application_type_name"),
+            "application_name": app_item.get("application_name"),
+        }
+        put_version_lookup(
+            product_lookup,
+            build_application_version_key(**base_values),
+            application_product_name,
+        )
+
+        for group in app_item.get("itemList") or []:
+            if not isinstance(group, Mapping):
+                continue
+            for item in group.get("items") or []:
+                if not isinstance(item, Mapping):
+                    continue
+                item_product_name = str(
+                    item.get("application_product_name") or application_product_name
+                ).strip()
+                if not item_product_name:
+                    continue
+                item_values = dict(
+                    base_values,
+                    type_name=item.get("type_name") or group.get("category_type_name"),
+                    area_name=item.get("area_name"),
+                    category_name=item.get("category_name"),
+                    inspection_code=item.get("inspection_code"),
+                    inspection_item_name=item.get("inspection_name") or item.get("inspection_item_name"),
+                )
+                put_version_lookup(
+                    product_lookup,
+                    build_application_version_key(**item_values),
+                    item_product_name,
+                )
+                item_values["inspection_code"] = ""
+                put_version_lookup(
+                    product_lookup,
+                    build_application_version_key(**item_values),
+                    item_product_name,
+                )
+
+
+def put_version_lookup(
+    version_lookup: Dict[Tuple[Any, ...], str],
+    key: Tuple[Any, ...],
+    application_version: str,
+) -> None:
+    existing_version = version_lookup.get(key)
+    if existing_version is None:
+        version_lookup[key] = application_version
+    elif existing_version != application_version:
+        version_lookup[key] = ""
+
+
+def resolve_detail_application_version(
+    detail_row: DetailRow,
+    version_lookup: Mapping[Tuple[Any, ...], str],
+) -> str:
+    candidates = [
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            detail_row.inspection_code,
+            detail_row.inspection_item_name,
+        ),
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            "",
+            detail_row.inspection_item_name,
+        ),
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+        ),
+    ]
+    for key in candidates:
+        application_version = version_lookup.get(key)
+        if application_version:
+            return application_version
+    return ""
+
+
+def resolve_detail_application_product_name(
+    detail_row: DetailRow,
+    product_lookup: Mapping[Tuple[Any, ...], str],
+) -> str:
+    candidates = [
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            detail_row.inspection_code,
+            detail_row.inspection_item_name,
+        ),
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+            detail_row.type_name,
+            detail_row.area_name,
+            detail_row.category_name,
+            "",
+            detail_row.inspection_item_name,
+        ),
+        build_application_version_key(
+            detail_row.host_id,
+            detail_row.application_type_name,
+            detail_row.application_name,
+        ),
+    ]
+    for key in candidates:
+        application_product_name = product_lookup.get(key)
+        if application_product_name:
+            return application_product_name
+    return ""
+
+
+def build_application_version_key(
+    host_id: Any,
+    application_type_name: Any = "",
+    application_name: Any = "",
+    type_name: Any = "",
+    area_name: Any = "",
+    category_name: Any = "",
+    inspection_code: Any = "",
+    inspection_item_name: Any = "",
+) -> Tuple[Any, ...]:
+    return (
+        _to_int(host_id),
+        normalize_lookup_text(application_type_name),
+        normalize_lookup_text(application_name),
+        normalize_lookup_text(type_name),
+        normalize_lookup_text(area_name),
+        normalize_lookup_text(category_name),
+        normalize_lookup_text(inspection_code),
+        normalize_lookup_text(inspection_item_name),
+    )
+
+
+def normalize_lookup_text(value: Any) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip()).lower()
+
+
+def derive_summary_detail_result_status(summary_row: Optional[SummaryRow]) -> Optional[str]:
+    if summary_row is None or summary_row.total_items < 1:
+        return None
+    if (
+        summary_row.good_items >= summary_row.total_items
+        and summary_row.vulnerable_items == 0
+        and summary_row.not_run_items == 0
+    ):
+        return "PASS"
+    if (
+        summary_row.vulnerable_items >= summary_row.total_items
+        and summary_row.good_items == 0
+        and summary_row.not_run_items == 0
+    ):
+        return "FAIL"
+    return None
+
+
+def compute_summary_result_counts(
+    summary_row: SummaryRow,
+    details_for_host: Optional[Sequence[DetailRow]] = None,
+) -> Tuple[int, int, int]:
+    details = list(details_for_host or [])
+    if details and len(details) == summary_row.total_items:
+        pass_count, fail_count = count_detail_result_statuses(details)
+        not_run_count = summary_row.total_items - pass_count - fail_count
+        return pass_count, fail_count, not_run_count if not_run_count > 0 else 0
+    return summary_row.good_items, summary_row.vulnerable_items, summary_row.not_run_items
+
+
 def build_detail_title_text(summary_row: SummaryRow, detail_rows: Sequence[DetailRow]) -> str:
     inspected_count = len(detail_rows)
-    pass_statuses = {"pass", "양호", "success", "ok"}
-    importance_totals = {"상": 0, "중": 0, "하": 0}
-    importance_passes = {"상": 0, "중": 0, "하": 0}
+    required_totals = {"필수": 0, "권고": 0}
+    required_passes = {"필수": 0, "권고": 0}
     pass_count = 0
 
     for detail_row in detail_rows:
-        normalized_result = (detail_row.result_status or "").strip().lower()
-        importance_label = format_importance(detail_row.importance)
-        if importance_label in importance_totals:
-            importance_totals[importance_label] += 1
-        if normalized_result in pass_statuses:
+        status_type = classify_detail_result_status(detail_row.result_status)
+        required_label = format_required(detail_row.is_required)
+        if required_label in required_totals:
+            required_totals[required_label] += 1
+        if status_type == "pass":
             pass_count += 1
-            if importance_label in importance_passes:
-                importance_passes[importance_label] += 1
+            if required_label in required_passes:
+                required_passes[required_label] += 1
 
     def rate_text(passed: int, total: int) -> str:
         if total < 1:
@@ -695,40 +1273,39 @@ def build_detail_title_text(summary_row: SummaryRow, detail_rows: Sequence[Detai
         f"{host_label} 상세 점검    "
         f"점검 항목 개수: {inspected_count}    "
         f"전체 성공률: {rate_text(pass_count, inspected_count)}    "
-        f"상/중/하 성공률: {rate_text(importance_passes['상'], importance_totals['상'])}/"
-        f"{rate_text(importance_passes['중'], importance_totals['중'])}/"
-        f"{rate_text(importance_passes['하'], importance_totals['하'])}"
+        f"필수/권고 성공률: {rate_text(required_passes['필수'], required_totals['필수'])}/"
+        f"{rate_text(required_passes['권고'], required_totals['권고'])}"
     )
 
 
 def build_detail_overview_text(detail_rows: Sequence[DetailRow]) -> str:
     if not detail_rows:
-        return "유형 목록: -    영역 목록: -    중요도(상/중/하): 0/0/0    PASS: 0    FAIL: 0"
+        return "유형 목록: -    분야 목록: -    필수/권고: 0/0    PASS: 0    FAIL: 0"
 
     type_names = sorted({detail_row.type_name.strip() for detail_row in detail_rows if detail_row.type_name.strip()})
     area_names = sorted({detail_row.area_name.strip() for detail_row in detail_rows if detail_row.area_name.strip()})
 
-    importance_counts = {"상": 0, "중": 0, "하": 0}
+    required_counts = {"필수": 0, "권고": 0}
     pass_count = 0
     fail_count = 0
 
     for detail_row in detail_rows:
-        importance_label = format_importance(detail_row.importance)
-        if importance_label in importance_counts:
-            importance_counts[importance_label] += 1
+        required_label = format_required(detail_row.is_required)
+        if required_label in required_counts:
+            required_counts[required_label] += 1
 
-        normalized_result = (detail_row.result_status or "").strip().lower()
-        if normalized_result in {"pass", "양호", "success", "ok"}:
+        status_type = classify_detail_result_status(detail_row.result_status)
+        if status_type == "pass":
             pass_count += 1
-        elif normalized_result in {"fail", "취약", "error", "failed"}:
+        elif status_type == "fail":
             fail_count += 1
 
     type_text = ", ".join(type_names) if type_names else "-"
     area_text = ", ".join(area_names) if area_names else "-"
     return (
         f"유형 목록: {type_text}    "
-        f"영역 목록: {area_text}    "
-        f"중요도(상/중/하): {importance_counts['상']}/{importance_counts['중']}/{importance_counts['하']}    "
+        f"분야 목록: {area_text}    "
+        f"필수/권고: {required_counts['필수']}/{required_counts['권고']}    "
         f"PASS: {pass_count}    FAIL: {fail_count}"
     )
 
@@ -776,11 +1353,16 @@ def build_report_styles() -> Dict[str, Any]:
 
 def resolve_state_fill(status_text: str, styles: Mapping[str, Any]) -> Any:
     normalized = (status_text or "").strip().lower()
+    status_type = classify_detail_result_status(status_text)
+    if status_type == "pass":
+        return styles["success_fill"]
+    if status_type == "fail":
+        return styles["danger_fill"]
     if normalized in {"success", "completed", "done", "ok", "pass", "양호"}:
         return styles["success_fill"]
     if normalized in {"fail", "failed", "error", "취약", "danger"}:
         return styles["danger_fill"]
-    if normalized in {"running", "progress", "pending", "warning", "미실행"}:
+    if normalized in {"running", "progress", "pending", "미실행"}:
         return styles["warning_fill"]
     return styles["neutral_fill"]
 
@@ -906,7 +1488,7 @@ def build_summary_sheet(
         "번호",
         "관리명",
         "IP",
-        "유형",
+        "유형(분야)",
         "점수",
         "작업상태",
         "항목",
@@ -928,6 +1510,11 @@ def build_summary_sheet(
     for row_index, summary_row in enumerate(summary_rows, start=header_row + 1):
         number = row_index - header_row
         row_fill = styles["even_row_fill"] if number % 2 == 0 else styles["odd_row_fill"]
+        details_for_host = (grouped_details or {}).get(summary_row.host_key, [])
+        good_items, vulnerable_items, not_run_items = compute_summary_result_counts(
+            summary_row,
+            details_for_host,
+        )
 
         link_cell = summary_sheet.cell(row=row_index, column=1, value=number)
         link_cell.hyperlink = f"#'{sheet_names[summary_row.host_key]}'!A1"
@@ -940,13 +1527,13 @@ def build_summary_sheet(
         values = [
             summary_row.host_name,
             summary_row.host_ip,
-            summary_row.category_type_name,
+            format_summary_type_with_area(summary_row, details_for_host),
             round(float(summary_row.score or 0), 2),
             summary_row.host_status,
             summary_row.total_items,
-            summary_row.good_items,
-            summary_row.vulnerable_items,
-            summary_row.not_run_items,
+            good_items,
+            vulnerable_items,
+            not_run_items,
             format_datetime(summary_row.host_started),
             format_datetime(summary_row.host_finished),
             format_duration(summary_row.duration_sec),
@@ -975,7 +1562,7 @@ def build_summary_sheet(
             "A": 6.88,
             "B": 18,
             "C": 16,
-            "D": 14,
+            "D": 22,
             "E": 8,
             "F": 12,
             "G": 8,
@@ -1384,9 +1971,18 @@ def classify_detail_result_status(result_status: Any) -> str:
     normalized = ("" if result_status is None else str(result_status)).strip().lower()
     if normalized in {"pass", "양호", "success", "ok"}:
         return "pass"
-    if normalized in {"fail", "취약", "error", "failed", "warn", "warning"}:
+    if normalized in {"fail", "취약", "error", "failed", "warn", "warning", "경고"}:
         return "fail"
     return "unknown"
+
+
+def format_detail_result_status(result_status: Any) -> str:
+    status_type = classify_detail_result_status(result_status)
+    if status_type == "pass":
+        return "PASS"
+    if status_type == "fail":
+        return "FAIL"
+    return "" if result_status is None else str(result_status)
 
 
 def build_government_checklist_note(detail_row: DetailRow, status_type: str) -> str:
@@ -1477,7 +2073,7 @@ def render_default_detail_sheet(
 ) -> None:
     write_detail_sheet_intro(detail_sheet, summary_row, details_for_host, styles, merge_end_column="I")
 
-    detail_headers = ["유형", "영역", "구분", "중요도", "점검 코드", "항목", "결과", "메세지", "상세"]
+    detail_headers = ["유형", "분야", "분류", "필수", "점검 코드", "항목", "결과", "메세지", "상세"]
     detail_header_row = 5
     for index, header in enumerate(detail_headers, start=1):
         cell = detail_sheet.cell(row=detail_header_row, column=index, value=header)
@@ -1499,10 +2095,10 @@ def render_default_detail_sheet(
                 detail_row.type_name,
                 detail_row.area_name,
                 detail_row.category_name,
-                format_importance(detail_row.importance),
+                format_required(detail_row.is_required),
                 detail_row.inspection_code,
                 detail_row.inspection_item_name,
-                detail_row.result_status,
+                format_detail_result_status(detail_row.result_status),
                 detail_row.message,
                 detail_row.raw_output,
             ]
@@ -1511,9 +2107,7 @@ def render_default_detail_sheet(
                 cell.font = styles["body_font"]
                 cell.alignment = styles["detail_row_alignment"]
                 cell.border = styles["section_border"]
-                if column_index == 4:
-                    cell.fill = resolve_importance_fill(str(value), styles)
-                elif column_index == 7:
+                if column_index == 7:
                     cell.fill = resolve_state_fill(str(value), styles)
                 else:
                     cell.fill = row_fill
@@ -1560,15 +2154,16 @@ def render_preventive_detail_sheet(
         for detail_index, detail_row in enumerate(details_for_host):
             start_row = detail_start_row + (detail_index * 12)
             row_fill = styles["even_row_fill"] if detail_index % 2 else styles["odd_row_fill"]
-            importance_text = format_importance(detail_row.importance)
+            required_text = format_required(detail_row.is_required)
+            result_status_text = format_detail_result_status(detail_row.result_status)
 
             write_label_value_pairs_row(
                 detail_sheet,
                 row=start_row,
                 pairs=[
                     (1, 2, 3, "유형", detail_row.type_name),
-                    (4, 5, 6, "영역", detail_row.area_name),
-                    (7, 8, 8, "구분", detail_row.category_name),
+                    (4, 5, 6, "분야", detail_row.area_name),
+                    (7, 8, 8, "분류", detail_row.category_name),
                 ],
                 label_font=styles["section_label_font"],
                 value_font=styles["body_font"],
@@ -1584,9 +2179,9 @@ def render_preventive_detail_sheet(
                 detail_sheet,
                 row=start_row + 1,
                 pairs=[
-                    (1, 2, 3, "애플리케이션유형", detail_row.application_type_name),
-                    (4, 5, 6, "애플리케이션명", detail_row.application_name),
-                    (7, 8, 8, "버전", detail_row.application_version),
+                    (1, 2, 3, "플랫폼", detail_row.application_type_name),
+                    (4, 5, 6, "대상", detail_row.application_name),
+                    (7, 8, 8, "제품/버전", format_product_version(detail_row)),
                 ],
                 label_font=styles["section_label_font"],
                 value_font=styles["body_font"],
@@ -1594,16 +2189,16 @@ def render_preventive_detail_sheet(
                 value_fill=row_fill,
                 border=styles["section_border"],
                 label_alignment=styles["center_alignment"],
-                value_alignment=styles["left_alignment"],
+                value_alignment=styles["detail_top_alignment"],
             )
-            detail_sheet.row_dimensions[start_row + 1].height = 24
+            detail_sheet.row_dimensions[start_row + 1].height = 42
 
             write_label_value_pairs_row(
                 detail_sheet,
                 row=start_row + 2,
                 pairs=[
-                    (1, 2, 3, "점검결과", detail_row.result_status),
-                    (4, 5, 6, "중요도", importance_text),
+                    (1, 2, 3, "점검결과", result_status_text),
+                    (4, 5, 6, "필수", required_text),
                     (7, 8, 8, "점검코드", detail_row.inspection_code),
                 ],
                 label_font=styles["section_label_font"],
@@ -1614,8 +2209,7 @@ def render_preventive_detail_sheet(
                 label_alignment=styles["center_alignment"],
                 value_alignment=styles["center_alignment"],
             )
-            detail_sheet.cell(row=start_row + 2, column=2).fill = resolve_state_fill(detail_row.result_status, styles)
-            detail_sheet.cell(row=start_row + 2, column=5).fill = resolve_importance_fill(importance_text, styles)
+            detail_sheet.cell(row=start_row + 2, column=2).fill = resolve_state_fill(result_status_text, styles)
             detail_sheet.row_dimensions[start_row + 2].height = 24
 
             for row_offset, label, value, dynamic_height in (
@@ -1624,7 +2218,7 @@ def render_preventive_detail_sheet(
                 (5, "상세", detail_row.raw_output, True),
                 (6, "메세지", detail_row.message, True),
                 (7, "설명", detail_row.description, True),
-                (8, "서비스 영향 유/무", detail_row.is_service_affect, False),
+                (8, "서비스 영향 유/무", format_service_affect(detail_row.is_service_affect), False),
                 (9, "조치내역", detail_row.action_content, True),
             ):
                 row_number = start_row + row_offset
@@ -1911,6 +2505,7 @@ def build_preventive_hwpx(
     host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
     template_path: Path = DEFAULT_PREVENTIVE_HWPX_TEMPLATE,
 ) -> bytes:
+    template_path = resolve_preventive_hwpx_template_path(template_path)
     if not template_path.exists():
         raise FileNotFoundError("preventive HWPX template not found: %s" % template_path)
 
@@ -1932,7 +2527,15 @@ def build_preventive_hwpx(
                     data = template_zip.read(info.filename)
                 output_zip.writestr(info, data)
 
-    return buffer.getvalue()
+        return buffer.getvalue()
+
+
+def resolve_preventive_hwpx_template_path(template_path: Path) -> Path:
+    if template_path.exists():
+        return template_path
+    if template_path == DEFAULT_PREVENTIVE_HWPX_TEMPLATE and DEFAULT_LEGACY_PREVENTIVE_HWPX_TEMPLATE.exists():
+        return DEFAULT_LEGACY_PREVENTIVE_HWPX_TEMPLATE
+    return template_path
 
 
 def build_preventive_hwpx_section_xml(
@@ -1941,18 +2544,22 @@ def build_preventive_hwpx_section_xml(
     host_entries: Sequence[Tuple[SummaryRow, Sequence[DetailRow]]],
 ) -> bytes:
     root = ET.fromstring(template_section_xml)
+    namespace_declarations = extract_xml_namespace_declarations(template_section_xml)
     template_children = list(root)
     for child in template_children:
         root.remove(child)
 
     entries = list(host_entries)
     if not entries:
-        return serialize_hwpx_section(root)
+        return serialize_hwpx_section(root, namespace_declarations)
 
     detail_slot_limit = calculate_preventive_hwpx_detail_slot_limit(template_children)
+    sort_details_by_category = preventive_hwpx_template_has_category_column(template_children)
     rendered_page_count = 0
     for summary_row, details_for_host in entries:
         all_details_for_host = list(details_for_host)
+        if sort_details_by_category:
+            all_details_for_host = sort_preventive_hwpx_details_by_category(all_details_for_host)
         detail_pages = split_preventive_hwpx_details_by_slots(all_details_for_host, detail_slot_limit)
         host_page_count = len(detail_pages)
         detail_number_start = 1
@@ -1979,7 +2586,7 @@ def build_preventive_hwpx_section_xml(
             rendered_page_count += 1
             detail_number_start += len(details_for_page)
 
-    return serialize_hwpx_section(root)
+    return serialize_hwpx_section(root, namespace_declarations)
 
 
 def build_preventive_hwpx_preview_text(section_xml: bytes) -> bytes:
@@ -2054,6 +2661,62 @@ def calculate_preventive_hwpx_detail_slot_count(detail_row: DetailRow) -> int:
     )
 
 
+def preventive_hwpx_template_has_category_column(section_children: Sequence[ET.Element]) -> bool:
+    table = find_preventive_hwpx_detail_table(section_children)
+    if table is None:
+        return False
+
+    for row in table.findall(HP_TAG + "tr"):
+        if hwpx_element_contains_any_text(row, PREVENTIVE_HWPX_NUMBER_PLACEHOLDERS):
+            return find_hwpx_table_cell_index_containing_any_text(
+                row,
+                PREVENTIVE_HWPX_CATEGORY_PLACEHOLDERS,
+            ) is not None
+    return False
+
+
+def sort_preventive_hwpx_details_by_category(details_for_host: Sequence[DetailRow]) -> List[DetailRow]:
+    indexed_details = list(enumerate(details_for_host))
+    return [
+        detail_row
+        for _original_index, detail_row in sorted(
+            indexed_details,
+            key=lambda item: build_preventive_hwpx_detail_category_sort_key(item[1], item[0]),
+        )
+    ]
+
+
+def build_preventive_hwpx_detail_category_sort_key(
+    detail_row: DetailRow,
+    original_index: int,
+) -> Tuple[Any, ...]:
+    return (
+        build_optional_natural_sort_key(detail_row.category_name),
+        build_optional_natural_sort_key(detail_row.inspection_code),
+        build_optional_natural_sort_key(detail_row.inspection_item_name),
+        original_index,
+    )
+
+
+def build_optional_natural_sort_key(value: Any) -> Tuple[Any, ...]:
+    text = " ".join(str(value or "").split())
+    if not text:
+        return (1, ())
+    return (0, build_natural_sort_key(text))
+
+
+def build_natural_sort_key(value: str) -> Tuple[Tuple[int, Any], ...]:
+    parts = []
+    for part in re.split(r"(\d+)", value.lower()):
+        if not part:
+            continue
+        if part.isdigit():
+            parts.append((0, int(part)))
+        else:
+            parts.append((1, part))
+    return tuple(parts)
+
+
 def build_preventive_hwpx_host_page_label(
     summary_row: SummaryRow,
     page_index: int,
@@ -2065,9 +2728,43 @@ def build_preventive_hwpx_host_page_label(
     return f"{host_label} ({page_index}/{page_count})"
 
 
-def serialize_hwpx_section(root: ET.Element) -> bytes:
+def serialize_hwpx_section(
+    root: ET.Element,
+    namespace_declarations: Optional[Sequence[Tuple[bytes, bytes]]] = None,
+) -> bytes:
     body = ET.tostring(root, encoding="utf-8", short_empty_elements=True)
+    body = restore_xml_namespace_declarations(body, namespace_declarations or [])
     return b'<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>' + body
+
+
+def extract_xml_namespace_declarations(xml_bytes: bytes) -> List[Tuple[bytes, bytes]]:
+    root_start_match = re.search(br"<[^!?][^>]*>", xml_bytes)
+    if not root_start_match:
+        return []
+    return re.findall(br"\s(xmlns:[A-Za-z0-9_:-]+)=\"([^\"]+)\"", root_start_match.group(0))
+
+
+def restore_xml_namespace_declarations(
+    xml_bytes: bytes,
+    namespace_declarations: Sequence[Tuple[bytes, bytes]],
+) -> bytes:
+    if not namespace_declarations:
+        return xml_bytes
+
+    root_start_match = re.search(br"<[^!?][^>]*>", xml_bytes)
+    if not root_start_match:
+        return xml_bytes
+
+    root_start = root_start_match.group(0)
+    missing_declarations = []
+    for namespace_name, namespace_value in namespace_declarations:
+        if namespace_name + b"=" not in root_start:
+            missing_declarations.append(namespace_name + b'="' + namespace_value + b'"')
+    if not missing_declarations:
+        return xml_bytes
+
+    restored_root_start = root_start[:-1] + b" " + b" ".join(missing_declarations) + root_start[-1:]
+    return xml_bytes[:root_start_match.start()] + restored_root_start + xml_bytes[root_start_match.end():]
 
 
 def mark_hwpx_section_page_break(section_children: Sequence[ET.Element]) -> None:
@@ -2169,6 +2866,18 @@ def render_preventive_hwpx_detail_rows(
         return 0
 
     table.remove(data_row)
+    category_column_index = find_hwpx_table_cell_index_containing_any_text(
+        data_row,
+        PREVENTIVE_HWPX_CATEGORY_PLACEHOLDERS,
+    )
+    item_column_index = find_hwpx_table_cell_index_containing_any_text(
+        data_row,
+        PREVENTIVE_HWPX_ITEM_PLACEHOLDERS,
+    )
+    if item_column_index is None:
+        item_column_index = 2 if category_column_index is not None else 1
+    note_column_index = max(len(data_row.findall(HP_TAG + "tc")) - 1, 0)
+
     render_details = list(details_for_host) or [None]
     spacer_remove_count = max(len(render_details) - 1, 0)
     for detail_index, detail_row in enumerate(render_details, start=1):
@@ -2179,12 +2888,15 @@ def render_preventive_hwpx_detail_rows(
                 [row],
                 build_preventive_hwpx_result_replacements("", " ", " "),
             )
-            set_hwpx_table_cell_wrapped_text(row, 1, "상세 데이터가 없습니다.")
+            if category_column_index is not None:
+                set_hwpx_table_cell_text(row, category_column_index, "")
+            set_hwpx_table_cell_wrapped_text(row, item_column_index, "상세 데이터가 없습니다.")
             set_preventive_hwpx_table_row_height(row, 1)
-            set_hwpx_table_cell_text(row, 4, "")
+            set_hwpx_table_cell_text(row, note_column_index, "")
         else:
             detail_number = detail_number_start + detail_index - 1
             status_type = classify_detail_result_status(detail_row.result_status)
+            category_lines = wrap_preventive_hwpx_check_item(detail_row.category_name)
             check_item_lines = wrap_preventive_hwpx_check_item(
                 build_government_checklist_item_label(detail_row)
             )
@@ -2196,10 +2908,16 @@ def render_preventive_hwpx_detail_rows(
                     "✔" if status_type == "fail" else " ",
                 ),
             )
-            set_hwpx_table_cell_wrapped_text(row, 1, check_item_lines)
-            set_preventive_hwpx_table_row_height(row, len(check_item_lines))
-            spacer_remove_count += max(len(check_item_lines) - 1, 0)
-            set_hwpx_table_cell_text(row, 4, "")
+            if category_column_index is not None:
+                set_hwpx_table_cell_wrapped_text(row, category_column_index, category_lines)
+            set_hwpx_table_cell_wrapped_text(row, item_column_index, check_item_lines)
+            row_line_count = max(
+                len(check_item_lines),
+                len(category_lines) if category_column_index is not None else 1,
+            )
+            set_preventive_hwpx_table_row_height(row, row_line_count)
+            spacer_remove_count += max(row_line_count - 1, 0)
+            set_hwpx_table_cell_text(row, note_column_index, "")
         table.insert(data_row_index + detail_index - 1, row)
 
     table.set("rowCnt", str(max(len(rows) - 1, 0) + len(render_details)))
@@ -2272,6 +2990,16 @@ def set_hwpx_table_cell_wrapped_text(row: ET.Element, column_index: int, value: 
             set_preventive_hwpx_cell_paragraph_spacing(paragraph)
         sub_list.insert(insert_index, paragraph)
         insert_index += 1
+
+
+def find_hwpx_table_cell_index_containing_any_text(
+    row: ET.Element,
+    needles: Sequence[str],
+) -> Optional[int]:
+    for cell_index, cell in enumerate(row.findall(HP_TAG + "tc")):
+        if hwpx_element_contains_any_text(cell, needles):
+            return cell_index
+    return None
 
 
 def set_preventive_hwpx_cell_paragraph_spacing(paragraph: ET.Element) -> None:
@@ -2947,6 +3675,48 @@ def format_importance(value: Any) -> str:
     return {1: "하", 2: "중", 3: "상"}.get(numeric_value, str(numeric_value))
 
 
+def format_required(value: Any) -> str:
+    if value in (None, ""):
+        return "-"
+    if isinstance(value, bool):
+        return "필수" if value else "권고"
+    if isinstance(value, (int, float)):
+        return "필수" if int(value) else "권고"
+
+    text = str(value).strip()
+    lowered = text.lower()
+    if lowered in {"true", "t", "1", "y", "yes", "required", "mandatory"} or text == "필수":
+        return "필수"
+    if lowered in {"false", "f", "0", "n", "no", "recommended", "optional"} or text == "권고":
+        return "권고"
+    return text or "-"
+
+
+def format_product_version(detail_row: DetailRow) -> str:
+    product_name = (getattr(detail_row, "application_product_name", "") or "").strip()
+    product_version = (detail_row.application_version or "").strip()
+    if not product_name and not product_version:
+        return "-"
+    return "%s\n%s" % (product_name or "-", product_version or "-")
+
+
+def format_service_affect(value: Any) -> str:
+    if value in (None, ""):
+        return "무"
+    if isinstance(value, bool):
+        return "유" if value else "무"
+    if isinstance(value, (int, float)):
+        return "유" if int(value) else "무"
+
+    text = str(value).strip()
+    lowered = text.lower()
+    if lowered in {"true", "t", "1", "y", "yes", "affected"} or text in {"유", "있음"}:
+        return "유"
+    if lowered in {"false", "f", "0", "n", "no", "none", "unaffected"} or text in {"무", "없음"}:
+        return "무"
+    return text or "-"
+
+
 def normalize_output_name(output_name: str) -> str:
     candidate = Path(output_name).name.strip()
     if not candidate:
@@ -2984,17 +3754,24 @@ def _to_optional_bool(value: Any) -> Optional[bool]:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        lowered = value.lower()
-        if lowered in {"true", "t", "1", "y", "yes"}:
+        text = value.strip()
+        lowered = text.lower()
+        if lowered in {"true", "t", "1", "y", "yes", "required", "mandatory"} or text in {"필수", "유", "있음"}:
             return True
-        if lowered in {"false", "f", "0", "n", "no"}:
+        if (
+            lowered in {"false", "f", "0", "n", "no", "recommended", "optional", "none", "unaffected"}
+            or text in {"권고", "무", "없음"}
+        ):
             return False
+        return None
     return bool(value)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     resolved_user_id = resolve_user_id(args.user_id)
+    api_url = None
+    api_token = None
 
     try:
         if args.mock_host_count > 0:
@@ -3017,6 +3794,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             )
             print(json.dumps(payload, ensure_ascii=False))
             return 1
+        detail_rows = normalize_detail_results_by_summary(summary_rows, detail_rows)
+        if api_url and api_token:
+            detail_rows = enrich_detail_application_versions(
+                api_url,
+                api_token,
+                args.job_id,
+                summary_rows,
+                detail_rows,
+            )
 
         if args.report_type == "preventive":
             output_suffix = ".zip"

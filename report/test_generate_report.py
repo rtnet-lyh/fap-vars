@@ -1,4 +1,6 @@
-from io import BytesIO
+from contextlib import redirect_stdout
+from io import BytesIO, StringIO
+import json
 import tempfile
 import unittest
 import zipfile
@@ -21,6 +23,7 @@ from report.generate_report import (
     get_report_generator,
     classify_detail_result_status,
     load_api_config,
+    main,
     normalize_output_name,
     normalize_sheet_name,
     parse_args,
@@ -406,6 +409,49 @@ class GenerateReportHelpersTest(unittest.TestCase):
     def test_classify_detail_result_status_treats_warn_as_failed(self) -> None:
         self.assertEqual(classify_detail_result_status("WARN"), "fail")
         self.assertEqual(classify_detail_result_status("warning"), "fail")
+        self.assertEqual(classify_detail_result_status("경고"), "fail")
+
+    def test_default_summary_counts_warning_detail_as_vulnerable(self) -> None:
+        summary_row = make_summary_row(1, "host-a")
+        summary_row.error_items = 0
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "SSH 설정", "PASS", "ok"),
+            make_detail_row(1, "host-a", "시스템", "LIN-002", "로그 설정", "경고", "warn"),
+            make_detail_row(1, "host-a", "시스템", "LIN-003", "백업 설정", "미실행", "skip"),
+        ]
+
+        workbook = DefaultInspectionReportGenerator().build_workbook([summary_row], detail_rows)
+        summary_sheet = workbook["요약"]
+        detail_sheet = workbook["host-a"]
+
+        self.assertEqual(summary_sheet["G5"].value, 1.0)
+        self.assertEqual(summary_sheet["I5"].value, 1.0)
+        self.assertEqual(summary_sheet["K5"].value, 1.0)
+        self.assertEqual(summary_sheet["H8"].value, 1)
+        self.assertEqual(summary_sheet["I8"].value, 1)
+        self.assertEqual(summary_sheet["J8"].value, 1)
+        self.assertEqual(detail_sheet["A3"].value, "유형 목록: 계정관리    영역 목록: 시스템    중요도(상/중/하): 0/0/3    PASS: 1    FAIL: 1")
+        self.assertEqual(detail_sheet["G7"].fill.fgColor.rgb, "00FDE9E7")
+
+    def test_default_summary_uses_complete_detail_counts_when_summary_overstates_passes(self) -> None:
+        summary_row = make_summary_row(1, "host-a")
+        summary_row.total_items = 2
+        summary_row.vuln_items = 2
+        summary_row.error_items = 0
+        detail_rows = [
+            make_detail_row(1, "host-a", "시스템", "LIN-001", "CPU 코어", "FAIL", "fail"),
+            make_detail_row(1, "host-a", "시스템", "LIN-002", "CPU 사용률", "PASS", "ok"),
+        ]
+
+        workbook = DefaultInspectionReportGenerator().build_workbook([summary_row], detail_rows)
+        summary_sheet = workbook["요약"]
+
+        self.assertEqual(summary_sheet["G5"].value, 1.0)
+        self.assertEqual(summary_sheet["I5"].value, 1.0)
+        self.assertEqual(summary_sheet["K5"].value, 0.0)
+        self.assertEqual(summary_sheet["H8"].value, 1)
+        self.assertEqual(summary_sheet["I8"].value, 1)
+        self.assertEqual(summary_sheet["J8"].value, 0)
 
     def test_get_report_generator_does_not_route_preventive_to_excel(self) -> None:
         with self.assertRaisesRegex(ValueError, "unsupported report type: preventive"):
@@ -429,6 +475,39 @@ class GenerateReportHelpersTest(unittest.TestCase):
         args = parse_args(["--job-id", "10", "--output-format", "docx"])
 
         self.assertEqual(args.output_format, "docx")
+
+    def test_preventive_report_type_with_xlsx_filename_writes_requested_excel_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            stdout = StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--job-id",
+                        "218",
+                        "--report-type",
+                        "preventive",
+                        "--user-id",
+                        "rnd3",
+                        "--output-path",
+                        tmp_dir,
+                        "--file-name",
+                        "점검보고서_20260625111226.xlsx",
+                        "--mock-host-count",
+                        "1",
+                        "--mock-items-per-host",
+                        "2",
+                    ]
+                )
+            payload = json.loads(stdout.getvalue())
+            report_path = Path(payload["report_path"])
+            with zipfile.ZipFile(report_path) as zip_handle:
+                archive_names = set(zip_handle.namelist())
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["result"], "success")
+        self.assertEqual(report_path.name, "점검보고서_20260625111226.xlsx")
+        self.assertEqual(report_path.parent, Path(tmp_dir).resolve())
+        self.assertIn("xl/workbook.xml", archive_names)
 
     def test_normalize_output_name_uses_filename_stem(self) -> None:
         self.assertEqual(normalize_output_name("custom.xlsx"), "custom")

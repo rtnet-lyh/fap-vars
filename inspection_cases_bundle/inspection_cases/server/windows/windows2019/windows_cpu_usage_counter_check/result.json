@@ -8,7 +8,9 @@
       "application_type_name": "WINDOWS",
       "application_name": "A",
       "application_family_name": "A",
-      "host_vars": {},
+      "host_vars": {
+        "winrm_transport": "ntlm"
+      },
       "threshold_list": [
         {
           "name": "max_usr_sys_percent",
@@ -261,7 +263,9 @@
       "application_type_name": "WINDOWS",
       "application_name": "A",
       "application_family_name": "A",
-      "host_vars": {},
+      "host_vars": {
+        "winrm_transport": "ntlm"
+      },
       "threshold_list": [
         {
           "name": "max_usr_sys_percent",
@@ -280,24 +284,47 @@
           "value1": ""
         }
       ],
-      "status": "fail",
-      "error": "호스트 연결 실패",
-      "message": "WINRM_EXEC_ERROR: the specified credentials were rejected by the server",
-      "stderr": "WINRM_EXEC_ERROR: the specified credentials were rejected by the server",
-      "raw_output": "[점검 단계 1]\n실행 명령어:\n  $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1\n실행 결과:\n  (출력 없음)",
+      "status": "ok",
+      "metrics": {
+        "sample_count": 3,
+        "host_name": "DESKTOP-8JGKUIT",
+        "avg_user_percent": 4.94,
+        "avg_privileged_percent": 10.53,
+        "avg_usr_sys_percent": 15.47,
+        "avg_idle_percent": 81.42,
+        "avg_interrupt_percent": 0.39,
+        "max_usr_sys_percent": 15.97,
+        "max_usr_sys_timestamp": "06/24/2026 19:15:36.194",
+        "max_interrupt_percent": 0.78,
+        "max_interrupt_timestamp": "06/24/2026 19:15:37.196",
+        "matched_failure_keywords": []
+      },
+      "thresholds": {
+        "max_usr_sys_percent": 80.0,
+        "min_idle_percent": 20.0,
+        "max_interrupt_percent": 5.0,
+        "failure_keywords": []
+      },
+      "reasons": "Windows CPU 사용률 평균, 유휴율 평균, 인터럽트 처리 시간 평균이 모두 기준 범위 내입니다.",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1\n실행 결과:\n  \n  \"(PDH-CSV 4.0)\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% User Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Privileged Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Idle Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Interrupt Time\"\n  \"06/24/2026 19:15:36.194\",\"6.622413\",\"9.349296\",\"79.880335\",\"0.000000\"\n  \"06/24/2026 19:15:37.196\",\"3.116651\",\"11.687442\",\"82.643046\",\"0.779163\"\n  \"06/24/2026 19:15:38.197\",\"5.078125\",\"10.546859\",\"81.725098\",\"0.390620\"\n  Exiting, please wait...                         \n  The command completed successfully.",
       "raw_output_lines": [
         "[점검 단계 1]",
         "실행 명령어:",
         "  $OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
         "실행 결과:",
-        "  (출력 없음)"
+        "  ",
+        "  \"(PDH-CSV 4.0)\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% User Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Privileged Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Idle Time\",\"\\\\DESKTOP-8JGKUIT\\Processor(_Total)\\% Interrupt Time\"",
+        "  \"06/24/2026 19:15:36.194\",\"6.622413\",\"9.349296\",\"79.880335\",\"0.000000\"",
+        "  \"06/24/2026 19:15:37.196\",\"3.116651\",\"11.687442\",\"82.643046\",\"0.779163\"",
+        "  \"06/24/2026 19:15:38.197\",\"5.078125\",\"10.546859\",\"81.725098\",\"0.390620\"",
+        "  Exiting, please wait...                         ",
+        "  The command completed successfully."
       ],
+      "message": "Windows CPU 사용률 점검이 정상입니다. 현재 상태: host=DESKTOP-8JGKUIT, User 4.94%, Privileged 10.53%, User+System 15.47% (기준 80.00% 이하), Idle 81.42% (기준 20.00% 이상), Interrupt 0.39% (기준 5.00% 이하).",
       "executed_command": [
         "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1"
       ]
     }
   ],
-  "failed_items": [
-    "W-REPLAY-CPU-01"
-  ]
+  "failed_items": []
 }
