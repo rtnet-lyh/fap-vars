@@ -723,10 +723,11 @@ def compute_overview_metrics(
 
 def format_summary_type_with_area(summary_row: SummaryRow, details_for_host: Optional[Sequence[DetailRow]]) -> str:
     type_name = (summary_row.category_type_name or "").strip()
+    details_for_summary = select_details_for_summary_row(summary_row, details_for_host)
     area_names = sorted(
         {
             detail_row.area_name.strip()
-            for detail_row in details_for_host or []
+            for detail_row in details_for_summary
             if detail_row.area_name and detail_row.area_name.strip()
         }
     )
@@ -736,18 +737,99 @@ def format_summary_type_with_area(summary_row: SummaryRow, details_for_host: Opt
     return type_name or area_text or "-"
 
 
+def select_details_for_summary_row(
+    summary_row: SummaryRow,
+    details_for_host: Optional[Sequence[DetailRow]],
+) -> List[DetailRow]:
+    details = list(details_for_host or [])
+    if not details:
+        return []
+
+    candidates = select_details_matching_summary_type(summary_row, details) or details
+    area_matches = select_details_matching_summary_area(summary_row, candidates)
+    if area_matches:
+        return area_matches
+
+    if summary_row.total_items > 0 and len(candidates) != summary_row.total_items:
+        exact_area_groups = [
+            area_details
+            for area_details in group_details_by_normalized_area(candidates).values()
+            if len(area_details) == summary_row.total_items
+        ]
+        if len(exact_area_groups) == 1:
+            return exact_area_groups[0]
+
+    return candidates
+
+
+def select_details_matching_summary_type(
+    summary_row: SummaryRow,
+    details: Sequence[DetailRow],
+) -> List[DetailRow]:
+    summary_type = normalize_lookup_text(summary_row.category_type_name)
+    if not summary_type:
+        return []
+    return [
+        detail_row
+        for detail_row in details
+        if normalize_lookup_text(detail_row.type_name) == summary_type
+    ]
+
+
+def select_details_matching_summary_area(
+    summary_row: SummaryRow,
+    details: Sequence[DetailRow],
+) -> List[DetailRow]:
+    summary_area = normalize_lookup_text(summary_row.category_group_name)
+    if not summary_area:
+        return []
+    return [
+        detail_row
+        for detail_row in details
+        if normalize_lookup_text(detail_row.area_name) == summary_area
+    ]
+
+
+def group_details_by_normalized_area(details: Sequence[DetailRow]) -> Dict[str, List[DetailRow]]:
+    grouped = defaultdict(list)
+    for detail_row in details:
+        grouped[normalize_lookup_text(detail_row.area_name) or "점검 영역"].append(detail_row)
+    return grouped
+
+
 def normalize_detail_results_by_summary(
     summary_rows: Sequence[SummaryRow],
     detail_rows: Sequence[DetailRow],
 ) -> List[DetailRow]:
-    summary_by_host = {
-        summary_row.host_key: summary_row
-        for summary_row in unique_summary_rows(summary_rows)
-    }
+    details_by_host = defaultdict(list)
+    for detail_row in detail_rows:
+        details_by_host[detail_row.host_key].append(detail_row)
+
+    status_by_detail_id: Dict[int, str] = {}
+    for summary_row in summary_rows:
+        summary_status = derive_summary_detail_result_status(summary_row)
+        if not summary_status:
+            continue
+
+        details_for_summary = select_details_for_summary_row(
+            summary_row,
+            details_by_host.get(summary_row.host_key, []),
+        )
+        if len(details_for_summary) != summary_row.total_items:
+            continue
+
+        for detail_row in details_for_summary:
+            detail_id = id(detail_row)
+            existing_status = status_by_detail_id.get(detail_id)
+            if existing_status is None:
+                status_by_detail_id[detail_id] = summary_status
+            elif existing_status != summary_status:
+                status_by_detail_id[detail_id] = ""
+
     normalized_rows = []
 
     for detail_row in detail_rows:
-        summary_status = derive_summary_detail_result_status(summary_by_host.get(detail_row.host_key))
+        summary_status = status_by_detail_id.get(id(detail_row))
         if (
             summary_status
             and classify_detail_result_status(detail_row.result_status)
@@ -1239,7 +1321,7 @@ def compute_summary_result_counts(
     summary_row: SummaryRow,
     details_for_host: Optional[Sequence[DetailRow]] = None,
 ) -> Tuple[int, int, int]:
-    details = list(details_for_host or [])
+    details = select_details_for_summary_row(summary_row, details_for_host)
     if details and len(details) == summary_row.total_items:
         pass_count, fail_count = count_detail_result_statuses(details)
         not_run_count = summary_row.total_items - pass_count - fail_count
