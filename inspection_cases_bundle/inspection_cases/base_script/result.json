@@ -8,8 +8,11 @@
       "application_type_name": "LINUX",
       "application_name": "ROCKY",
       "application_family_name": "ROCKY",
+      "host_vars": {
+        "PARAMIKO_TIMEOUT": 2
+      },
       "threshold_list": [],
-      "check_script": "# -*- coding: utf-8 -*-\nfrom .common._base import BaseCheck\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    \n    def parse_output(self, output):\n        # TO DO: CPU_사용률 추출\n        return {\n            \"CPU_사용률\": 90\n        }\n\n    def evaluate(self, metrics, threshold):\n        CPU_사용률 = metrics[\"CPU_사용률\"]\n        # support return value: ok(정상), warn(경고), fail(불량), excluded(제외)\n        if CPU_사용률 >= threshold:\n            return \"fail\"\n        elif CPU_사용률 >= threshold-10:\n            return \"warn\"\n        elif CPU_사용률 < threshold-10:\n            return \"ok\"\n        else:\n            return \"fail\"\n        \n    def build_result(self, metrics, threshold, status):\n        CPU_사용률 = metrics[\"CPU_사용률\"]\n\n        result = {}\n        result[\"message\"] = None \n        result[\"results\"] = f\"CPU 사용률 {CPU_사용률}\"                    \n        result[\"criteria\"] = f\"정상: {threshold-10}% 미만 / 불량: {threshold}% 이상 / 경고: {threshold-10}% 이상\"\n        \n        if status == \"ok\":\n            result[\"message\"] = \"CPU 사용률 정상\"\n        elif status == \"warn\":\n            result[\"message\"] = \"CPU 사용률 경고\"            \n        elif status == \"fail\":\n            result[\"message\"] = \"CPU 사용률 불량\"\n        \n        return result\n\n    def run(self):     \n        최대_CPU_사용률 = self.get_threshold_var(\"최대_CPU_사용률\", default=80, value_type='int')   \n\n        results = self._run_paramiko_commands('whoami', become=True)\n        output = results[-1]['stdout']\n\n        metrics = self.parse_output(output)\n        status = self.evaluate(metrics, 최대_CPU_사용률)\n        result = self.build_result(metrics, 최대_CPU_사용률, status)\n\n        return self.result(\n            status=status,\n            message=result[\"message\"],\n            metrics=metrics,\n            results=result[\"results\"],\n            criteria=result[\"criteria\"],\n        )\n\nCHECK_CLASS = Check\n",
+      "check_script": "# -*- coding: utf-8 -*-\nfrom .common._base import BaseCheck\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'paramiko'\n    \n    def parse_output(self, output):\n        # TO DO: CPU_사용률 추출\n        return {\n            \"CPU_사용률\": 20\n        }\n\n    def evaluate(self, metrics, threshold):\n        CPU_사용률 = metrics[\"CPU_사용률\"]\n        # support return value: ok(정상), warn(경고), fail(불량), excluded(제외)\n        if CPU_사용률 >= threshold:\n            return \"fail\"\n        elif CPU_사용률 >= threshold-10:\n            return \"warn\"\n        elif CPU_사용률 < threshold-10:\n            return \"ok\"\n        else:\n            return \"fail\"\n        \n    def build_result(self, metrics, threshold, status):\n        CPU_사용률 = metrics[\"CPU_사용률\"]\n\n        result = {}\n        result[\"message\"] = None \n        result[\"results\"] = f\"CPU 사용률 {CPU_사용률}\"                    \n        result[\"criteria\"] = f\"정상: {threshold-10}% 미만 / 불량: {threshold}% 이상 / 경고: {threshold-10}% 이상\"\n        \n        if status == \"ok\":\n            result[\"message\"] = \"CPU 사용률 정상\"\n        elif status == \"warn\":\n            result[\"message\"] = \"CPU 사용률 경고\"            \n        elif status == \"fail\":\n            result[\"message\"] = \"CPU 사용률 불량\"\n        \n        return result\n\n    def run(self):     \n        최대_CPU_사용률 = self.get_threshold_var(\"최대_CPU_사용률\", default=80, value_type='int')   \n\n        results = self._run_paramiko_commands('whoami', become=True)\n        output = results[-1]['stdout']\n\n        metrics = self.parse_output(output)\n        status = self.evaluate(metrics, 최대_CPU_사용률)\n        result = self.build_result(metrics, 최대_CPU_사용률, status)\n\n        return self.result(\n            status=status,\n            message=result[\"message\"],\n            metrics=metrics,\n            results=result[\"results\"],\n            criteria=result[\"criteria\"],\n        )\n\nCHECK_CLASS = Check\n",
       "check_script_lines": [
         "# -*- coding: utf-8 -*-",
         "from .common._base import BaseCheck",
@@ -21,7 +24,7 @@
         "    def parse_output(self, output):",
         "        # TO DO: CPU_사용률 추출",
         "        return {",
-        "            \"CPU_사용률\": 90",
+        "            \"CPU_사용률\": 20",
         "        }",
         "",
         "    def evaluate(self, metrics, threshold):",
@@ -84,13 +87,16 @@
       "application_type_name": "LINUX",
       "application_name": "ROCKY",
       "application_family_name": "ROCKY",
-      "threshold_list": [],
-      "status": "fail",
-      "error": null,
-      "message": "CPU 사용률 불량",
-      "metrics": {
-        "CPU_사용률": 90
+      "host_vars": {
+        "PARAMIKO_TIMEOUT": 2
       },
+      "threshold_list": [],
+      "status": "ok",
+      "metrics": {
+        "CPU_사용률": 20
+      },
+      "thresholds": {},
+      "reasons": "",
       "raw_output": "[점검 단계 1]\n실행 명령어:\n  whoami\n실행 결과:\n  root",
       "raw_output_lines": [
         "[점검 단계 1]",
@@ -99,14 +105,13 @@
         "실행 결과:",
         "  root"
       ],
-      "results": "CPU 사용률 90",
+      "message": "CPU 사용률 정상",
+      "results": "CPU 사용률 20",
       "criteria": "정상: 70% 미만 / 불량: 80% 이상 / 경고: 70% 이상",
       "executed_command": [
         "whoami"
       ]
     }
   ],
-  "failed_items": [
-    "TUTORIAL-ROCKY-PARAMIKO-07"
-  ]
+  "failed_items": []
 }

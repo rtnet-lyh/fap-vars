@@ -477,6 +477,78 @@ class BaseCheckResultTest(unittest.TestCase):
         self.assertFalse(options['allow_agent'])
         self.assertEqual(profile['pager_patterns'], [])
 
+    def test_paramiko_timeout_alias_applies_to_whitelisted_options(self):
+        class Check(BaseCheck):
+            PARAMIKO_TIMEOUT_SEC = 5
+            PARAMIKO_BANNER_TIMEOUT_SEC = 6
+            PARAMIKO_AUTH_TIMEOUT_SEC = 7
+            PARAMIKO_READ_TIMEOUT_SEC = 1
+            PARAMIKO_CONTINUE_ON_TIMEOUT = True
+
+        check = Check({
+            'inspection_code': 'U-PARAMIKO-TIMEOUT-ALIAS',
+            'item_payload': {
+                'host_vars': {
+                    'PARAMIKO_TIMEOUT': 20,
+                }
+            },
+        })
+
+        options = check._paramiko_options()
+
+        self.assertEqual(options['timeout_sec'], 20)
+        self.assertEqual(options['banner_timeout_sec'], 20)
+        self.assertEqual(options['auth_timeout_sec'], 20)
+        self.assertEqual(options['read_timeout_sec'], 20)
+        self.assertTrue(options['continue_on_timeout'])
+
+    def test_paramiko_timeout_alias_keeps_individual_host_var_priority(self):
+        class Check(BaseCheck):
+            PARAMIKO_TIMEOUT_SEC = 5
+            PARAMIKO_BANNER_TIMEOUT_SEC = 6
+            PARAMIKO_AUTH_TIMEOUT_SEC = 7
+            PARAMIKO_READ_TIMEOUT_SEC = 1
+
+        check = Check({
+            'inspection_code': 'U-PARAMIKO-TIMEOUT-PRIORITY',
+            'item_payload': {
+                'host_vars': {
+                    'PARAMIKO_TIMEOUT': 20,
+                    'PARAMIKO_READ_TIMEOUT_SEC': '2',
+                }
+            },
+        })
+
+        options = check._paramiko_options()
+
+        self.assertEqual(options['timeout_sec'], 20)
+        self.assertEqual(options['banner_timeout_sec'], 20)
+        self.assertEqual(options['auth_timeout_sec'], 20)
+        self.assertEqual(options['read_timeout_sec'], '2')
+
+    def test_runner_paramiko_options_use_timeout_alias(self):
+        class Check(BaseCheck):
+            PARAMIKO_TIMEOUT_SEC = 5
+            PARAMIKO_BANNER_TIMEOUT_SEC = 6
+            PARAMIKO_AUTH_TIMEOUT_SEC = 7
+            PARAMIKO_READ_TIMEOUT_SEC = 1
+
+        mod = type('Mod', (), {'CHECK_CLASS': Check})
+        options = runner.resolve_paramiko_options(
+            mod,
+            {
+                'host_vars': {
+                    'PARAMIKO_TIMEOUT': 20,
+                    'PARAMIKO_AUTH_TIMEOUT_SEC': '9',
+                },
+            },
+        )
+
+        self.assertEqual(options['timeout_sec'], 20)
+        self.assertEqual(options['banner_timeout_sec'], 20)
+        self.assertEqual(options['auth_timeout_sec'], '9')
+        self.assertEqual(options['read_timeout_sec'], 20)
+
     def test_excluded_returns_standard_result(self):
         check = BaseCheck({
             'inspection_code': 'U-EXCLUDED',

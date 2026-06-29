@@ -8,7 +8,7 @@ class Check(BaseCheck):
     def parse_output(self, output):
         # TO DO: CPU_사용률 추출
         return {
-            "CPU_사용률": 90
+            "CPU_사용률": 20
         }
 
     def evaluate(self, metrics, threshold):

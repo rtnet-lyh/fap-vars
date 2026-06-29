@@ -33,6 +33,9 @@
     "application_type_name": "LINUX",
     "application_name": "ROCKY",
     "application_family_name": "ROCKY",
+    "host_vars": {
+      "PARAMIKO_TIMEOUT": 2
+    },
     "threshold_list": []
   }
 }

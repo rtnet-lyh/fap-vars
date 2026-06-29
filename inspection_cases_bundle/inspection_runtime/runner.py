@@ -763,11 +763,12 @@ def get_payload_host_vars(item_payload):
 
 
 def get_host_check_attr(mod, item_payload, name, default=None):
+    from items.common._base import get_paramiko_host_var
+
     host_vars = get_payload_host_vars(item_payload)
-    if name in host_vars:
-        value = host_vars.get(name)
-        if value not in (None, ''):
-            return value
+    value = get_paramiko_host_var(host_vars, name)
+    if value is not None:
+        return value
     return get_check_attr(mod, name, default)
 
 
@@ -834,6 +835,12 @@ def resolve_paramiko_options(mod, item_payload=None):
             item_payload,
             'PARAMIKO_AUTH_TIMEOUT_SEC',
             BaseCheck.PARAMIKO_AUTH_TIMEOUT_SEC,
+        ),
+        'read_timeout_sec': get_host_check_attr(
+            mod,
+            item_payload,
+            'PARAMIKO_READ_TIMEOUT_SEC',
+            BaseCheck.PARAMIKO_READ_TIMEOUT_SEC,
         ),
     }
 
@@ -1036,6 +1043,10 @@ def run_paramiko_su_precheck(
     check.PARAMIKO_TIMEOUT_SEC = float((options or {}).get('timeout_sec', 10))
     check.PARAMIKO_BANNER_TIMEOUT_SEC = float((options or {}).get('banner_timeout_sec', 10))
     check.PARAMIKO_AUTH_TIMEOUT_SEC = float((options or {}).get('auth_timeout_sec', 10))
+    check.PARAMIKO_READ_TIMEOUT_SEC = float((options or {}).get(
+        'read_timeout_sec',
+        BaseCheck.PARAMIKO_READ_TIMEOUT_SEC,
+    ))
 
     verify_command = 'id'    
     results = check._run_paramiko_commands([

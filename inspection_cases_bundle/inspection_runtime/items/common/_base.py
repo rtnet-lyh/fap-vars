@@ -48,6 +48,29 @@ PARAMIKO_PROFILES = {
         'pager_response': ' ',
     },
 }
+PARAMIKO_TIMEOUT_ALIAS = 'PARAMIKO_TIMEOUT'
+PARAMIKO_TIMEOUT_WHITELIST = frozenset((
+    'PARAMIKO_AUTH_TIMEOUT_SEC',  # 인증 단계에서 서버 응답과 인증 완료를 기다리는 최대 시간(초)
+    'PARAMIKO_BANNER_TIMEOUT_SEC',  # SSH 접속 직후 서버 banner 수신을 기다리는 최대 시간(초)
+    'PARAMIKO_TIMEOUT_SEC',  # TCP/SSH 연결 생성과 Paramiko exec_command 기본 대기 시간(초)
+))
+
+
+def get_paramiko_host_var(host_vars, name, default=None):
+    if not isinstance(host_vars, dict):
+        return default
+
+    if name in host_vars:
+        value = host_vars.get(name)
+        if value not in (None, ''):
+            return value
+
+    if name in PARAMIKO_TIMEOUT_WHITELIST:
+        value = host_vars.get(PARAMIKO_TIMEOUT_ALIAS)
+        if value not in (None, ''):
+            return value
+
+    return default
 
 
 # 2026-05-07 생성 [조정희]
@@ -263,11 +286,9 @@ class BaseCheck:
         return prefix + suffix, display_prefix + suffix
 
     def _get_paramiko_option(self, name, default=None):
-        host_vars = self.get_host_vars()
-        if isinstance(host_vars, dict) and name in host_vars:
-            value = host_vars.get(name)
-            if value not in (None, ''):
-                return value
+        value = get_paramiko_host_var(self.get_host_vars(), name)
+        if value is not None:
+            return value
         return getattr(self, name, default)
 
     def _paramiko_options(self):
