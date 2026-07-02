@@ -1,0 +1,160 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-LOG-POWER-01",
+      "item_id": 93020,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "fail_keywords",
+          "value1": "ps failed|power fail|power error|psu fail|power supply failed"
+        },
+        {
+          "name": "except_keywords",
+          "value1": ""
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = \"dmesg | grep -Ei 'power|psu|PS Failed' || true\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        lines = [line.strip() for line in (output or '').splitlines() if line.strip()]\n        return {'log_lines': lines, 'log_line_count': len(lines)}\n\n    def evaluate(self, metrics, fail_keywords, except_keywords):\n        if metrics.get('failure_type'):\n            return 'fail'\n        fail_items = [item.strip().lower() for item in re.split(r'[|,\\n]+', fail_keywords or '') if item.strip()]\n        except_items = [item.strip().lower() for item in re.split(r'[|,\\n]+', except_keywords or '') if item.strip()]\n        matched = []\n        for line in metrics['log_lines']:\n            lowered = line.lower()\n            if any(keyword in lowered for keyword in except_items):\n                continue\n            for keyword in fail_items:\n                if keyword in lowered:\n                    matched.append({'keyword': keyword, 'line': line})\n                    break\n        metrics['matched_fail_count'] = len(matched)\n        metrics['matched_fail_logs'] = matched\n        return 'fail' if matched else 'ok'\n\n    def build_result(self, metrics, fail_keywords, except_keywords, status):\n        criteria = 'ok: no log line contains fail_keywords after except_keywords filtering'\n        if metrics.get('failure_type'):\n            return {'message': 'log keyword check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'log_line_count=%d, matched_fail_count=%d' % (metrics['log_line_count'], metrics.get('matched_fail_count', 0))\n        message = 'log keyword check passed.' if status == 'ok' else 'log keyword check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        fail_keywords = self.get_threshold_var('fail_keywords', default='', value_type='str')\n        except_keywords = self.get_threshold_var('except_keywords', default='', value_type='str')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, fail_keywords, except_keywords)\n        result = self.build_result(metrics, fail_keywords, except_keywords, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = \"dmesg | grep -Ei 'power|psu|PS Failed' || true\"",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        lines = [line.strip() for line in (output or '').splitlines() if line.strip()]",
+        "        return {'log_lines': lines, 'log_line_count': len(lines)}",
+        "",
+        "    def evaluate(self, metrics, fail_keywords, except_keywords):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        fail_items = [item.strip().lower() for item in re.split(r'[|,\\n]+', fail_keywords or '') if item.strip()]",
+        "        except_items = [item.strip().lower() for item in re.split(r'[|,\\n]+', except_keywords or '') if item.strip()]",
+        "        matched = []",
+        "        for line in metrics['log_lines']:",
+        "            lowered = line.lower()",
+        "            if any(keyword in lowered for keyword in except_items):",
+        "                continue",
+        "            for keyword in fail_items:",
+        "                if keyword in lowered:",
+        "                    matched.append({'keyword': keyword, 'line': line})",
+        "                    break",
+        "        metrics['matched_fail_count'] = len(matched)",
+        "        metrics['matched_fail_logs'] = matched",
+        "        return 'fail' if matched else 'ok'",
+        "",
+        "    def build_result(self, metrics, fail_keywords, except_keywords, status):",
+        "        criteria = 'ok: no log line contains fail_keywords after except_keywords filtering'",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'log keyword check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'log_line_count=%d, matched_fail_count=%d' % (metrics['log_line_count'], metrics.get('matched_fail_count', 0))",
+        "        message = 'log keyword check passed.' if status == 'ok' else 'log keyword check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        fail_keywords = self.get_threshold_var('fail_keywords', default='', value_type='str')",
+        "        except_keywords = self.get_threshold_var('except_keywords', default='', value_type='str')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, fail_keywords, except_keywords)",
+        "        result = self.build_result(metrics, fail_keywords, except_keywords, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-LOG-POWER-01",
+      "item_id": 93020,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "fail_keywords",
+          "value1": "ps failed|power fail|power error|psu fail|power supply failed"
+        },
+        {
+          "name": "except_keywords",
+          "value1": ""
+        }
+      ],
+      "status": "fail",
+      "error": null,
+      "message": "log keyword check failed policy.",
+      "metrics": {
+        "log_lines": [
+          "[   18.123456] ipmi_si dmi-ipmi-si.0: Power supply PSU1 failure detected",
+          "[   18.124102] ipmi_si dmi-ipmi-si.0: PSU2 status changed: predictive failure",
+          "[   18.124889] platform power_mon: PS Failed alarm asserted",
+          "[   18.125401] hwmon hwmon3: power unit input lost",
+          "[   18.126033] systemd[1]: Warning: redundant power supply degraded"
+        ],
+        "log_line_count": 5,
+        "matched_fail_count": 1,
+        "matched_fail_logs": [
+          {
+            "keyword": "ps failed",
+            "line": "[   18.124889] platform power_mon: PS Failed alarm asserted"
+          }
+        ]
+      },
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  dmesg | grep -Ei 'power|psu|PS Failed' || true\n실행 결과:\n  [   18.123456] ipmi_si dmi-ipmi-si.0: Power supply PSU1 failure detected\n  [   18.124102] ipmi_si dmi-ipmi-si.0: PSU2 status changed: predictive failure\n  [   18.124889] platform power_mon: PS Failed alarm asserted\n  [   18.125401] hwmon hwmon3: power unit input lost\n  [   18.126033] systemd[1]: Warning: redundant power supply degraded",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  dmesg | grep -Ei 'power|psu|PS Failed' || true",
+        "실행 결과:",
+        "  [   18.123456] ipmi_si dmi-ipmi-si.0: Power supply PSU1 failure detected",
+        "  [   18.124102] ipmi_si dmi-ipmi-si.0: PSU2 status changed: predictive failure",
+        "  [   18.124889] platform power_mon: PS Failed alarm asserted",
+        "  [   18.125401] hwmon hwmon3: power unit input lost",
+        "  [   18.126033] systemd[1]: Warning: redundant power supply degraded"
+      ],
+      "results": "log_line_count=5, matched_fail_count=1",
+      "criteria": "ok: no log line contains fail_keywords after except_keywords filtering",
+      "executed_command": [
+        "dmesg | grep -Ei 'power|psu|PS Failed' || true"
+      ]
+    }
+  ],
+  "failed_items": [
+    "U-REPLAY-CENTOS7-LOG-POWER-01"
+  ]
+}

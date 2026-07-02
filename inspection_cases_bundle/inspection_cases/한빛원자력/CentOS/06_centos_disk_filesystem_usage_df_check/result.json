@@ -1,0 +1,204 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-FS-USAGE-01",
+      "item_id": 93008,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_use_percent",
+          "value1": "80"
+        },
+        {
+          "name": "critical_use_percent",
+          "value1": "90"
+        },
+        {
+          "name": "min_avail_percent",
+          "value1": "20"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'df -h'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        entries = []\n        for line in (output or '').splitlines():\n            parts = line.split()\n            if len(parts) < 6 or not parts[4].endswith('%') or parts[0].lower() == 'filesystem':\n                continue\n            try:\n                use_percent = int(parts[4].rstrip('%'))\n            except Exception:\n                return {'failure_type': 'parse_failure', 'reason': 'Use% value is not numeric.'}\n            entries.append({'filesystem': parts[0], 'use_percent': use_percent, 'avail_percent': 100 - use_percent, 'mount_point': parts[5]})\n        if not entries:\n            return {'failure_type': 'parse_failure', 'reason': 'df -h output has no filesystem rows.'}\n        return {'filesystems': entries, 'max_use_percent': max(item['use_percent'] for item in entries), 'min_avail_percent': min(item['avail_percent'] for item in entries)}\n\n    def evaluate(self, metrics, max_use_percent, min_avail_percent):\n        if metrics.get('failure_type'):\n            return 'fail'\n        if metrics['max_use_percent'] > max_use_percent:\n            return 'fail'\n        if metrics['min_avail_percent'] < min_avail_percent:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, max_use_percent, critical_use_percent, min_avail_percent, status):\n        criteria = 'ok: Use%% <= %.1f%% and available >= %.1f%%; critical reference %.1f%%' % (max_use_percent, min_avail_percent, critical_use_percent)\n        if metrics.get('failure_type'):\n            return {'message': 'df -h check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'filesystems=%d, max_use_percent=%.1f%%, min_avail_percent=%.1f%%' % (len(metrics['filesystems']), metrics['max_use_percent'], metrics['min_avail_percent'])\n        message = 'filesystem usage check passed.' if status == 'ok' else 'filesystem usage check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        max_use_percent = self.get_threshold_var('max_use_percent', default=80.0, value_type='float')\n        critical_use_percent = self.get_threshold_var('critical_use_percent', default=90.0, value_type='float')\n        min_avail_percent = self.get_threshold_var('min_avail_percent', default=20.0, value_type='float')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, max_use_percent, min_avail_percent)\n        result = self.build_result(metrics, max_use_percent, critical_use_percent, min_avail_percent, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'df -h'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        entries = []",
+        "        for line in (output or '').splitlines():",
+        "            parts = line.split()",
+        "            if len(parts) < 6 or not parts[4].endswith('%') or parts[0].lower() == 'filesystem':",
+        "                continue",
+        "            try:",
+        "                use_percent = int(parts[4].rstrip('%'))",
+        "            except Exception:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'Use% value is not numeric.'}",
+        "            entries.append({'filesystem': parts[0], 'use_percent': use_percent, 'avail_percent': 100 - use_percent, 'mount_point': parts[5]})",
+        "        if not entries:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'df -h output has no filesystem rows.'}",
+        "        return {'filesystems': entries, 'max_use_percent': max(item['use_percent'] for item in entries), 'min_avail_percent': min(item['avail_percent'] for item in entries)}",
+        "",
+        "    def evaluate(self, metrics, max_use_percent, min_avail_percent):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if metrics['max_use_percent'] > max_use_percent:",
+        "            return 'fail'",
+        "        if metrics['min_avail_percent'] < min_avail_percent:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, max_use_percent, critical_use_percent, min_avail_percent, status):",
+        "        criteria = 'ok: Use%% <= %.1f%% and available >= %.1f%%; critical reference %.1f%%' % (max_use_percent, min_avail_percent, critical_use_percent)",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'df -h check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'filesystems=%d, max_use_percent=%.1f%%, min_avail_percent=%.1f%%' % (len(metrics['filesystems']), metrics['max_use_percent'], metrics['min_avail_percent'])",
+        "        message = 'filesystem usage check passed.' if status == 'ok' else 'filesystem usage check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        max_use_percent = self.get_threshold_var('max_use_percent', default=80.0, value_type='float')",
+        "        critical_use_percent = self.get_threshold_var('critical_use_percent', default=90.0, value_type='float')",
+        "        min_avail_percent = self.get_threshold_var('min_avail_percent', default=20.0, value_type='float')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, max_use_percent, min_avail_percent)",
+        "        result = self.build_result(metrics, max_use_percent, critical_use_percent, min_avail_percent, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-FS-USAGE-01",
+      "item_id": 93008,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_use_percent",
+          "value1": "80"
+        },
+        {
+          "name": "critical_use_percent",
+          "value1": "90"
+        },
+        {
+          "name": "min_avail_percent",
+          "value1": "20"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "filesystems": [
+          {
+            "filesystem": "devtmpfs",
+            "use_percent": 0,
+            "avail_percent": 100,
+            "mount_point": "/dev"
+          },
+          {
+            "filesystem": "tmpfs",
+            "use_percent": 0,
+            "avail_percent": 100,
+            "mount_point": "/dev/shm"
+          },
+          {
+            "filesystem": "tmpfs",
+            "use_percent": 1,
+            "avail_percent": 99,
+            "mount_point": "/run"
+          },
+          {
+            "filesystem": "tmpfs",
+            "use_percent": 0,
+            "avail_percent": 100,
+            "mount_point": "/sys/fs/cgroup"
+          },
+          {
+            "filesystem": "/dev/mapper/centos-root",
+            "use_percent": 8,
+            "avail_percent": 92,
+            "mount_point": "/"
+          },
+          {
+            "filesystem": "/dev/sda1",
+            "use_percent": 15,
+            "avail_percent": 85,
+            "mount_point": "/boot"
+          },
+          {
+            "filesystem": "tmpfs",
+            "use_percent": 0,
+            "avail_percent": 100,
+            "mount_point": "/run/user/0"
+          }
+        ],
+        "max_use_percent": 15,
+        "min_avail_percent": 85
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  df -h\n실행 결과:\n  Filesystem               Size  Used Avail Use% Mounted on\n  devtmpfs                 908M     0  908M   0% /dev\n  tmpfs                    919M     0  919M   0% /dev/shm\n  tmpfs                    919M  8.5M  911M   1% /run\n  tmpfs                    919M     0  919M   0% /sys/fs/cgroup\n  /dev/mapper/centos-root   17G  1.3G   16G   8% /\n  /dev/sda1               1014M  150M  865M  15% /boot\n  tmpfs                    184M     0  184M   0% /run/user/0",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  df -h",
+        "실행 결과:",
+        "  Filesystem               Size  Used Avail Use% Mounted on",
+        "  devtmpfs                 908M     0  908M   0% /dev",
+        "  tmpfs                    919M     0  919M   0% /dev/shm",
+        "  tmpfs                    919M  8.5M  911M   1% /run",
+        "  tmpfs                    919M     0  919M   0% /sys/fs/cgroup",
+        "  /dev/mapper/centos-root   17G  1.3G   16G   8% /",
+        "  /dev/sda1               1014M  150M  865M  15% /boot",
+        "  tmpfs                    184M     0  184M   0% /run/user/0"
+      ],
+      "message": "filesystem usage check passed.",
+      "results": "filesystems=7, max_use_percent=15.0%, min_avail_percent=85.0%",
+      "criteria": "ok: Use% <= 80.0% and available >= 20.0%; critical reference 90.0%",
+      "executed_command": [
+        "df -h"
+      ]
+    }
+  ],
+  "failed_items": []
+}

@@ -1,0 +1,38 @@
+{
+  "Summary": {
+    "Cluster": "WSFC01",
+    "NodesConfigured": 2,
+    "NodesOnline": 2,
+    "ResourceInstancesConfigured": 5,
+    "ResourcesOnline": 5
+  },
+  "Nodes": [
+    {
+      "Name": "NODE01",
+      "Id": 1,
+      "State": "Up"
+    },
+    {
+      "Name": "NODE02",
+      "Id": 2,
+      "State": "Up"
+    }
+  ],
+  "Resources": [
+    {
+      "Name": "Cluster IP Address",
+      "State": "Online",
+      "ResourceType": "IP Address",
+      "OwnerGroup": "Cluster Group",
+      "OwnerNode": "NODE01"
+    },
+    {
+      "Name": "Cluster Name",
+      "State": "Online",
+      "ResourceType": "Network Name",
+      "OwnerGroup": "Cluster Group",
+      "OwnerNode": "NODE01"
+    }
+  ],
+  "FenceHistory": "N/A (no direct crm_mon-style fencing history field in WSFC PowerShell)"
+}

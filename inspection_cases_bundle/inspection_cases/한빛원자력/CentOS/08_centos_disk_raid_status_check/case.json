@@ -1,0 +1,65 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 305,
+  "host_id": 3005,
+  "job_id": 30005,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-DISK-RAID-01",
+    "item_id": 93005,
+    "application_id": 301,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "raid_device_match_type",
+        "value1": "prefix"
+      },
+      {
+        "name": "raid_device_values",
+        "value1": "/dev/md"
+      },
+      {
+        "name": "raid_state",
+        "value1": "clean|active"
+      },
+      {
+        "name": "active_devices",
+        "value1": "raid_devices"
+      },
+      {
+        "name": "working_devices",
+        "value1": "raid_devices"
+      },
+      {
+        "name": "failed_devices",
+        "value1": "0"
+      },
+      {
+        "name": "member_state",
+        "value1": "active sync"
+      }
+    ]
+  }
+}

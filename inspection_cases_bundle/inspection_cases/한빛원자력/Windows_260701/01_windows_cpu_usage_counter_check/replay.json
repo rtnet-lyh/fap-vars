@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "typeperf \"\\Processor(_Total)\\% User Time\" \"\\Processor(_Total)\\% Privileged Time\" \"\\Processor(_Total)\\% Idle Time\" \"\\Processor(_Total)\\% Interrupt Time\" -sc 3 -si 1",
+    "rc": 0,
+    "stdout_file": "outputs/typeperf.stdout",
+    "stderr": ""
+  }
+]

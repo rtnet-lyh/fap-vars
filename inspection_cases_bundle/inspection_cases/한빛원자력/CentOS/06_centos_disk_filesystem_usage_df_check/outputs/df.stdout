@@ -1,0 +1,8 @@
+Filesystem               Size  Used Avail Use% Mounted on
+devtmpfs                 908M     0  908M   0% /dev
+tmpfs                    919M     0  919M   0% /dev/shm
+tmpfs                    919M  8.5M  911M   1% /run
+tmpfs                    919M     0  919M   0% /sys/fs/cgroup
+/dev/mapper/centos-root   17G  1.3G   16G   8% /
+/dev/sda1               1014M  150M  865M  15% /boot
+tmpfs                    184M     0  184M   0% /run/user/0

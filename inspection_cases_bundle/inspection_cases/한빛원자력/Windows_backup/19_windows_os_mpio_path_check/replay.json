@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "if (Get-Command Get-MPIOSetting -ErrorAction SilentlyContinue) { Get-MPIOSetting | Select-Object PathVerificationState,PathVerificationPeriod,RetryCount,RetryInterval,DiskTimeoutValue,@{N='LoadBalancePolicy';E={Get-MSDSMGlobalDefaultLoadBalancePolicy 2>$null}} | Format-List; mpclaim.exe -s -d } else { 'MPIO 미설치 또는 미지원' }",
+    "rc": 0,
+    "stdout_file": "outputs/os_path_ha.stdout",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 201,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 101,
+  "host_id": 1010,
+  "job_id": 10100,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-CPU-USAGE-01",
+    "item_id": 91001,
+    "application_id": 201,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "max_cpu_percent",
+        "value1": "70"
+      },
+      {
+        "name": "max_io_wait_percent",
+        "value1": "10"
+      }
+    ]
+  }
+}

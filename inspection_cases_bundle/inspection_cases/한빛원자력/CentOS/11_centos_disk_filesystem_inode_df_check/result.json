@@ -1,0 +1,174 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-INODE-01",
+      "item_id": 93003,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_inode_percent",
+          "value1": "80"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'df -i'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        entries = []\n        for line in (output or '').splitlines():\n            parts = line.split()\n            if len(parts) < 6 or not parts[4].endswith('%') or parts[0].lower() == 'filesystem':\n                continue\n            try:\n                entries.append({'filesystem': parts[0], 'inode_use_percent': int(parts[4].rstrip('%')), 'mount_point': parts[5]})\n            except Exception:\n                return {'failure_type': 'parse_failure', 'reason': 'IUse% value is not numeric.'}\n        if not entries:\n            return {'failure_type': 'parse_failure', 'reason': 'df -i output has no filesystem rows.'}\n        return {'filesystems': entries, 'max_inode_percent': max(item['inode_use_percent'] for item in entries)}\n\n    def evaluate(self, metrics, max_inode_percent):\n        if metrics.get('failure_type'):\n            return 'fail'\n        return 'fail' if metrics['max_inode_percent'] > max_inode_percent else 'ok'\n\n    def build_result(self, metrics, max_inode_percent, status):\n        criteria = 'ok: every filesystem IUse%% <= %.1f%%; fail: command failure, parsing failure, or threshold exceeded' % max_inode_percent\n        if metrics.get('failure_type'):\n            return {'message': 'df -i check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        offenders = [item for item in metrics['filesystems'] if item['inode_use_percent'] > max_inode_percent]\n        results = 'filesystems=%d, max_inode_percent=%.1f%%' % (len(metrics['filesystems']), metrics['max_inode_percent'])\n        message = 'inode usage check passed.' if status == 'ok' else 'inode usage check failed policy: ' + ', '.join('%s=%s%%' % (item['mount_point'], item['inode_use_percent']) for item in offenders)\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        max_inode_percent = self.get_threshold_var('max_inode_percent', default=80.0, value_type='float')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, max_inode_percent)\n        result = self.build_result(metrics, max_inode_percent, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'df -i'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        entries = []",
+        "        for line in (output or '').splitlines():",
+        "            parts = line.split()",
+        "            if len(parts) < 6 or not parts[4].endswith('%') or parts[0].lower() == 'filesystem':",
+        "                continue",
+        "            try:",
+        "                entries.append({'filesystem': parts[0], 'inode_use_percent': int(parts[4].rstrip('%')), 'mount_point': parts[5]})",
+        "            except Exception:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'IUse% value is not numeric.'}",
+        "        if not entries:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'df -i output has no filesystem rows.'}",
+        "        return {'filesystems': entries, 'max_inode_percent': max(item['inode_use_percent'] for item in entries)}",
+        "",
+        "    def evaluate(self, metrics, max_inode_percent):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        return 'fail' if metrics['max_inode_percent'] > max_inode_percent else 'ok'",
+        "",
+        "    def build_result(self, metrics, max_inode_percent, status):",
+        "        criteria = 'ok: every filesystem IUse%% <= %.1f%%; fail: command failure, parsing failure, or threshold exceeded' % max_inode_percent",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'df -i check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        offenders = [item for item in metrics['filesystems'] if item['inode_use_percent'] > max_inode_percent]",
+        "        results = 'filesystems=%d, max_inode_percent=%.1f%%' % (len(metrics['filesystems']), metrics['max_inode_percent'])",
+        "        message = 'inode usage check passed.' if status == 'ok' else 'inode usage check failed policy: ' + ', '.join('%s=%s%%' % (item['mount_point'], item['inode_use_percent']) for item in offenders)",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        max_inode_percent = self.get_threshold_var('max_inode_percent', default=80.0, value_type='float')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, max_inode_percent)",
+        "        result = self.build_result(metrics, max_inode_percent, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-INODE-01",
+      "item_id": 93003,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_inode_percent",
+          "value1": "80"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "filesystems": [
+          {
+            "filesystem": "devtmpfs",
+            "inode_use_percent": 1,
+            "mount_point": "/dev"
+          },
+          {
+            "filesystem": "tmpfs",
+            "inode_use_percent": 1,
+            "mount_point": "/dev/shm"
+          },
+          {
+            "filesystem": "tmpfs",
+            "inode_use_percent": 1,
+            "mount_point": "/run"
+          },
+          {
+            "filesystem": "tmpfs",
+            "inode_use_percent": 1,
+            "mount_point": "/sys/fs/cgroup"
+          },
+          {
+            "filesystem": "/dev/mapper/centos-root",
+            "inode_use_percent": 1,
+            "mount_point": "/"
+          },
+          {
+            "filesystem": "/dev/sda1",
+            "inode_use_percent": 1,
+            "mount_point": "/boot"
+          },
+          {
+            "filesystem": "tmpfs",
+            "inode_use_percent": 1,
+            "mount_point": "/run/user/0"
+          }
+        ],
+        "max_inode_percent": 1
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  df -i\n실행 결과:\n  Filesystem               Inodes IUsed   IFree IUse% Mounted on\n  devtmpfs                 232265   357  231908    1% /dev\n  tmpfs                    235249     1  235248    1% /dev/shm\n  tmpfs                    235249   455  234794    1% /run\n  tmpfs                    235249    16  235233    1% /sys/fs/cgroup\n  /dev/mapper/centos-root 8910848 27225 8883623    1% /\n  /dev/sda1                524288   327  523961    1% /boot\n  tmpfs                    235249     1  235248    1% /run/user/0",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  df -i",
+        "실행 결과:",
+        "  Filesystem               Inodes IUsed   IFree IUse% Mounted on",
+        "  devtmpfs                 232265   357  231908    1% /dev",
+        "  tmpfs                    235249     1  235248    1% /dev/shm",
+        "  tmpfs                    235249   455  234794    1% /run",
+        "  tmpfs                    235249    16  235233    1% /sys/fs/cgroup",
+        "  /dev/mapper/centos-root 8910848 27225 8883623    1% /",
+        "  /dev/sda1                524288   327  523961    1% /boot",
+        "  tmpfs                    235249     1  235248    1% /run/user/0"
+      ],
+      "message": "inode usage check passed.",
+      "results": "filesystems=7, max_inode_percent=1.0%",
+      "criteria": "ok: every filesystem IUse% <= 80.0%; fail: command failure, parsing failure, or threshold exceeded",
+      "executed_command": [
+        "df -i"
+      ]
+    }
+  ],
+  "failed_items": []
+}

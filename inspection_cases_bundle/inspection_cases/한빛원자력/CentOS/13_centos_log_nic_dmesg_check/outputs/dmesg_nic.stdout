@@ -1,0 +1,27 @@
+[    0.000000] microcode: microcode updated early to revision 0x49, date = 2021-08-11
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    0.000739] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
+[    0.010605] Initmem setup node 0 [mem 0x0000000000001000-0x000000027fffffff]
+[    0.010609] Initmem setup node 1 [mem 0x0000000280000000-0x000000047fffffff]
+[    0.023419] setup_percpu: NR_CPUS:8192 nr_cpumask_bits:24 nr_cpu_ids:24 nr_node_ids:2
+[    0.025302] Built 2 zonelists, mobility grouping on.  Total pages: 4027176
+[    0.081062] ftrace: allocated 169 pages with 4 groups
+[    0.092743] APIC: Switch to symmetric I/O mode setup
+[    0.093641] x2apic: IRQ remapping doesn't support X2APIC mode
+[    0.098886] LSM support for eBPF active
+[    0.110954] smp: Bringing up secondary CPUs ...
+[    0.225473] smp: Brought up 2 nodes, 24 CPUs
+[    0.256204] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.256374] audit: initializing netlink subsys (disabled)
+[    0.256383] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+[    0.291832] ACPI: PM: (supports S0 S4 S5)
+[    0.291834] ACPI: Using IOAPIC for interrupt routing
+[    0.315308] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI EDR HPX-Type3]
+[    0.315883] acpi PNP0A08:00: FADT indicates ASPM is unsupported, using BIOS configuration
+[    0.316911] pci 0000:00:01.0: PME# supported from D0 D3hot D3cold
+[    0.317177] pci 0000:00:02.0: PME# supported from D0 D3hot D3cold
+[    0.317427] pci 0000:00:02.2: PME# supported from D0 D3hot D3cold
+[    0.317675] pci 0000:00:03.0: PME# supported from D0 D3hot D3cold
+[    0.317922] pci 0000:00:03.2: PME# supported from D0 D3hot D3cold

@@ -1,0 +1,148 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-CLUSTER-DAEMON-01",
+      "item_id": 93001,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "cluster_required",
+          "value1": "false"
+        },
+        {
+          "name": "cluster_node_status",
+          "value1": "Online"
+        },
+        {
+          "name": "cluster_resource_status",
+          "value1": "Started"
+        },
+        {
+          "name": "cluster_failed_resource",
+          "value1": "0"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = \"type crm_mon >/dev/null 2>&1 || echo 'crm_mon unavailable'; type crm_mon >/dev/null 2>&1 && crm_mon -1; true\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        text = output or ''\n        if 'crm_mon unavailable' in text.lower() or not text.strip():\n            return {'not_applicable': True, 'reason': 'crm_mon is unavailable or cluster output is empty.'}\n        online_nodes = re.findall(r'Online:\\s*\\[([^\\]]*)\\]', text, re.I)\n        offline_nodes = re.findall(r'OFFLINE:\\s*\\[([^\\]]*)\\]', text, re.I)\n        failed = len(re.findall(r'Failed Actions|FAILED|fail(ed)? resource', text, re.I))\n        return {'online_node_groups': online_nodes, 'offline_node_groups': offline_nodes, 'failed_resource_count': failed}\n\n    def evaluate(self, metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource):\n        if metrics.get('not_applicable'):\n            return 'fail' if cluster_required else 'excluded'\n        if metrics.get('failure_type'):\n            return 'fail'\n        if metrics['offline_node_groups']:\n            return 'fail'\n        if metrics['failed_resource_count'] > cluster_failed_resource:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource, status):\n        criteria = 'ok: no offline nodes and failed resources <= %d; unavailable cluster is excluded when cluster_required=false' % cluster_failed_resource\n        if metrics.get('not_applicable'):\n            return {'message': 'cluster daemon check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'online_groups=%d, offline_groups=%d, failed_resource_count=%d' % (len(metrics.get('online_node_groups', [])), len(metrics.get('offline_node_groups', [])), metrics.get('failed_resource_count', 0))\n        message = 'cluster daemon check passed.' if status == 'ok' else 'cluster daemon check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        cluster_required = self.get_threshold_var('cluster_required', default=False, value_type='bool')\n        cluster_node_status = self.get_threshold_var('cluster_node_status', default='Online', value_type='str')\n        cluster_resource_status = self.get_threshold_var('cluster_resource_status', default='Started', value_type='str')\n        cluster_failed_resource = self.get_threshold_var('cluster_failed_resource', default=0, value_type='int')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource)\n        result = self.build_result(metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = \"type crm_mon >/dev/null 2>&1 || echo 'crm_mon unavailable'; type crm_mon >/dev/null 2>&1 && crm_mon -1; true\"",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        text = output or ''",
+        "        if 'crm_mon unavailable' in text.lower() or not text.strip():",
+        "            return {'not_applicable': True, 'reason': 'crm_mon is unavailable or cluster output is empty.'}",
+        "        online_nodes = re.findall(r'Online:\\s*\\[([^\\]]*)\\]', text, re.I)",
+        "        offline_nodes = re.findall(r'OFFLINE:\\s*\\[([^\\]]*)\\]', text, re.I)",
+        "        failed = len(re.findall(r'Failed Actions|FAILED|fail(ed)? resource', text, re.I))",
+        "        return {'online_node_groups': online_nodes, 'offline_node_groups': offline_nodes, 'failed_resource_count': failed}",
+        "",
+        "    def evaluate(self, metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource):",
+        "        if metrics.get('not_applicable'):",
+        "            return 'fail' if cluster_required else 'excluded'",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if metrics['offline_node_groups']:",
+        "            return 'fail'",
+        "        if metrics['failed_resource_count'] > cluster_failed_resource:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource, status):",
+        "        criteria = 'ok: no offline nodes and failed resources <= %d; unavailable cluster is excluded when cluster_required=false' % cluster_failed_resource",
+        "        if metrics.get('not_applicable'):",
+        "            return {'message': 'cluster daemon check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'online_groups=%d, offline_groups=%d, failed_resource_count=%d' % (len(metrics.get('online_node_groups', [])), len(metrics.get('offline_node_groups', [])), metrics.get('failed_resource_count', 0))",
+        "        message = 'cluster daemon check passed.' if status == 'ok' else 'cluster daemon check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        cluster_required = self.get_threshold_var('cluster_required', default=False, value_type='bool')",
+        "        cluster_node_status = self.get_threshold_var('cluster_node_status', default='Online', value_type='str')",
+        "        cluster_resource_status = self.get_threshold_var('cluster_resource_status', default='Started', value_type='str')",
+        "        cluster_failed_resource = self.get_threshold_var('cluster_failed_resource', default=0, value_type='int')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource)",
+        "        result = self.build_result(metrics, cluster_required, cluster_node_status, cluster_resource_status, cluster_failed_resource, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-CLUSTER-DAEMON-01",
+      "item_id": 93001,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "cluster_required",
+          "value1": "false"
+        },
+        {
+          "name": "cluster_node_status",
+          "value1": "Online"
+        },
+        {
+          "name": "cluster_resource_status",
+          "value1": "Started"
+        },
+        {
+          "name": "cluster_failed_resource",
+          "value1": "0"
+        }
+      ],
+      "status": "excluded",
+      "message": "cluster daemon check not applicable.",
+      "metrics": {
+        "not_applicable": true,
+        "reason": "crm_mon is unavailable or cluster output is empty."
+      },
+      "results": "crm_mon is unavailable or cluster output is empty.",
+      "criteria": "ok: no offline nodes and failed resources <= 0; unavailable cluster is excluded when cluster_required=false",
+      "executed_command": [
+        "type crm_mon >/dev/null 2>&1 || echo 'crm_mon unavailable'; type crm_mon >/dev/null 2>&1 && crm_mon -1; true"
+      ]
+    }
+  ],
+  "failed_items": []
+}

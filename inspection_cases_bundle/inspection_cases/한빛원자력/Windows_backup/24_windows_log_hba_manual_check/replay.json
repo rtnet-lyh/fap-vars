@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "$ip=Get-InitiatorPort -ErrorAction SilentlyContinue; $fc=Get-CimInstance -Namespace root\\wmi -Class MSFC_FibrePortHBAAttributes -ErrorAction SilentlyContinue; $ev=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue|Where-Object{$_.Message -match '(?i)\\bhba\\b|fibre channel|fiber channel|\\bfc\\b|loopback|link down|port.+offline|port.+online'}; $result=[ordered]@{InitiatorPortsExposed=[bool]$ip; FcPortStateExposed=[bool]$fc; EventDataExposed=[bool]$ev; InitiatorPorts=@($ip|Select-Object InstanceName,ConnectionType,NodeAddress,PortAddress); FcPorts=@($fc|Select-Object InstanceName,@{N='PortState';E={switch($_.Attributes.PortState){1{'Unknown'}2{'Operational'}3{'User Offline'}4{'Bypassed'}5{'Diagnostics'}6{'Link Down'}7{'Port Error'}8{'Loopback'}default{$_.Attributes.PortState}}}},HBAStatus); Events=@($ev|Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}})}; $result|ConvertTo-Json -Depth 4",
+    "rc": 0,
+    "stdout_file": "outputs/log_hba.stdout",
+    "stderr": ""
+  }
+]

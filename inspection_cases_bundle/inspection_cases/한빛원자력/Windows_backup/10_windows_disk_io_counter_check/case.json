@@ -1,0 +1,63 @@
+{
+  "host": "192.168.1.9",
+  "port": 5985,
+  "user": "Administrator",
+  "password": "f3dtop0!",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 210,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "Administrator",
+          "password": "f3dtop0!",
+          "port": 5985
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 14,
+  "host_id": 140,
+  "job_id": 1400,
+  "item": {
+    "inspection_code": "W-REPLAY-DISK-IO-01",
+    "item_id": 90014,
+    "application_id": 210,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_busy_percent",
+        "value1": "80.0"
+      },
+      {
+        "name": "min_idle_percent",
+        "value1": "20.0"
+      },
+      {
+        "name": "max_wait_ms",
+        "value1": "10.0"
+      },
+      {
+        "name": "max_queue_length",
+        "value1": "1.0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

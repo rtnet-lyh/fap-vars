@@ -1,0 +1,529 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-SHARED-VOLUME-01",
+      "item_id": 93028,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "shared_volume_required",
+          "value1": "false"
+        },
+        {
+          "name": "shared_volume_types",
+          "value1": "nfs|nfs4|cifs|gfs2|ocfs2"
+        },
+        {
+          "name": "mount_option_required",
+          "value1": "rw"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'mount'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        mounts = []\n        for line in (output or '').splitlines():\n            match = re.match(r'^(\\S+)\\s+on\\s+(\\S+)\\s+type\\s+(\\S+)\\s+\\(([^)]*)\\)', line.strip())\n            if match:\n                mounts.append({'source': match.group(1), 'mount_point': match.group(2), 'type': match.group(3), 'options': match.group(4).split(',')})\n        if not mounts:\n            return {'failure_type': 'parse_failure', 'reason': 'mount output has no parsable rows.'}\n        return {'mounts': mounts, 'mount_count': len(mounts)}\n\n    def evaluate(self, metrics, shared_volume_required, shared_volume_types, mount_option_required):\n        if metrics.get('failure_type'):\n            return 'fail'\n        types = [item.strip() for item in re.split(r'[|,\\n]+', shared_volume_types or '') if item.strip()]\n        shared = [item for item in metrics['mounts'] if item['type'] in types]\n        metrics['shared_mounts'] = shared\n        if not shared:\n            return 'fail' if shared_volume_required else 'excluded'\n        bad = [item for item in shared if mount_option_required and mount_option_required not in item['options']]\n        metrics['policy_violations'] = bad\n        return 'fail' if bad else 'ok'\n\n    def build_result(self, metrics, shared_volume_required, shared_volume_types, mount_option_required, status):\n        criteria = 'ok: shared volume type in %s and mount option contains %s' % (shared_volume_types, mount_option_required)\n        if metrics.get('failure_type'):\n            return {'message': 'shared volume check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'mount_count=%d, shared_mount_count=%d' % (metrics['mount_count'], len(metrics.get('shared_mounts', [])))\n        if status == 'excluded':\n            message = 'shared volume check not applicable.'\n        else:\n            message = 'shared volume check passed.' if status == 'ok' else 'shared volume check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        shared_volume_required = self.get_threshold_var('shared_volume_required', default=False, value_type='bool')\n        shared_volume_types = self.get_threshold_var('shared_volume_types', default='nfs|nfs4|cifs|gfs2|ocfs2', value_type='str')\n        mount_option_required = self.get_threshold_var('mount_option_required', default='rw', value_type='str')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, shared_volume_required, shared_volume_types, mount_option_required)\n        result = self.build_result(metrics, shared_volume_required, shared_volume_types, mount_option_required, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'mount'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        mounts = []",
+        "        for line in (output or '').splitlines():",
+        "            match = re.match(r'^(\\S+)\\s+on\\s+(\\S+)\\s+type\\s+(\\S+)\\s+\\(([^)]*)\\)', line.strip())",
+        "            if match:",
+        "                mounts.append({'source': match.group(1), 'mount_point': match.group(2), 'type': match.group(3), 'options': match.group(4).split(',')})",
+        "        if not mounts:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'mount output has no parsable rows.'}",
+        "        return {'mounts': mounts, 'mount_count': len(mounts)}",
+        "",
+        "    def evaluate(self, metrics, shared_volume_required, shared_volume_types, mount_option_required):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        types = [item.strip() for item in re.split(r'[|,\\n]+', shared_volume_types or '') if item.strip()]",
+        "        shared = [item for item in metrics['mounts'] if item['type'] in types]",
+        "        metrics['shared_mounts'] = shared",
+        "        if not shared:",
+        "            return 'fail' if shared_volume_required else 'excluded'",
+        "        bad = [item for item in shared if mount_option_required and mount_option_required not in item['options']]",
+        "        metrics['policy_violations'] = bad",
+        "        return 'fail' if bad else 'ok'",
+        "",
+        "    def build_result(self, metrics, shared_volume_required, shared_volume_types, mount_option_required, status):",
+        "        criteria = 'ok: shared volume type in %s and mount option contains %s' % (shared_volume_types, mount_option_required)",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'shared volume check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'mount_count=%d, shared_mount_count=%d' % (metrics['mount_count'], len(metrics.get('shared_mounts', [])))",
+        "        if status == 'excluded':",
+        "            message = 'shared volume check not applicable.'",
+        "        else:",
+        "            message = 'shared volume check passed.' if status == 'ok' else 'shared volume check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        shared_volume_required = self.get_threshold_var('shared_volume_required', default=False, value_type='bool')",
+        "        shared_volume_types = self.get_threshold_var('shared_volume_types', default='nfs|nfs4|cifs|gfs2|ocfs2', value_type='str')",
+        "        mount_option_required = self.get_threshold_var('mount_option_required', default='rw', value_type='str')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, shared_volume_required, shared_volume_types, mount_option_required)",
+        "        result = self.build_result(metrics, shared_volume_required, shared_volume_types, mount_option_required, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-SHARED-VOLUME-01",
+      "item_id": 93028,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "shared_volume_required",
+          "value1": "false"
+        },
+        {
+          "name": "shared_volume_types",
+          "value1": "nfs|nfs4|cifs|gfs2|ocfs2"
+        },
+        {
+          "name": "mount_option_required",
+          "value1": "rw"
+        }
+      ],
+      "status": "excluded",
+      "message": "shared volume check not applicable.",
+      "metrics": {
+        "mounts": [
+          {
+            "source": "sysfs",
+            "mount_point": "/sys",
+            "type": "sysfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel"
+            ]
+          },
+          {
+            "source": "proc",
+            "mount_point": "/proc",
+            "type": "proc",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime"
+            ]
+          },
+          {
+            "source": "devtmpfs",
+            "mount_point": "/dev",
+            "type": "devtmpfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "seclabel",
+              "size=929060k",
+              "nr_inodes=232265",
+              "mode=755"
+            ]
+          },
+          {
+            "source": "securityfs",
+            "mount_point": "/sys/kernel/security",
+            "type": "securityfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime"
+            ]
+          },
+          {
+            "source": "tmpfs",
+            "mount_point": "/dev/shm",
+            "type": "tmpfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "seclabel"
+            ]
+          },
+          {
+            "source": "devpts",
+            "mount_point": "/dev/pts",
+            "type": "devpts",
+            "options": [
+              "rw",
+              "nosuid",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "gid=5",
+              "mode=620",
+              "ptmxmode=000"
+            ]
+          },
+          {
+            "source": "tmpfs",
+            "mount_point": "/run",
+            "type": "tmpfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "seclabel",
+              "mode=755"
+            ]
+          },
+          {
+            "source": "tmpfs",
+            "mount_point": "/sys/fs/cgroup",
+            "type": "tmpfs",
+            "options": [
+              "ro",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "seclabel",
+              "mode=755"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/systemd",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "xattr",
+              "release_agent=/usr/lib/systemd/systemd-cgroups-agent",
+              "name=systemd"
+            ]
+          },
+          {
+            "source": "pstore",
+            "mount_point": "/sys/fs/pstore",
+            "type": "pstore",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/memory",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "memory"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/net_cls,net_prio",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "net_prio",
+              "net_cls"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/cpuset",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "cpuset"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/pids",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "pids"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/freezer",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "freezer"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/blkio",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "blkio"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/devices",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "devices"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/hugetlb",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "hugetlb"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/perf_event",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "perf_event"
+            ]
+          },
+          {
+            "source": "cgroup",
+            "mount_point": "/sys/fs/cgroup/cpu,cpuacct",
+            "type": "cgroup",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "noexec",
+              "relatime",
+              "seclabel",
+              "cpuacct",
+              "cpu"
+            ]
+          },
+          {
+            "source": "configfs",
+            "mount_point": "/sys/kernel/config",
+            "type": "configfs",
+            "options": [
+              "rw",
+              "relatime"
+            ]
+          },
+          {
+            "source": "/dev/mapper/centos-root",
+            "mount_point": "/",
+            "type": "xfs",
+            "options": [
+              "rw",
+              "relatime",
+              "seclabel",
+              "attr2",
+              "inode64",
+              "noquota"
+            ]
+          },
+          {
+            "source": "selinuxfs",
+            "mount_point": "/sys/fs/selinux",
+            "type": "selinuxfs",
+            "options": [
+              "rw",
+              "relatime"
+            ]
+          },
+          {
+            "source": "systemd-1",
+            "mount_point": "/proc/sys/fs/binfmt_misc",
+            "type": "autofs",
+            "options": [
+              "rw",
+              "relatime",
+              "fd=25",
+              "pgrp=1",
+              "timeout=0",
+              "minproto=5",
+              "maxproto=5",
+              "direct",
+              "pipe_ino=12098"
+            ]
+          },
+          {
+            "source": "hugetlbfs",
+            "mount_point": "/dev/hugepages",
+            "type": "hugetlbfs",
+            "options": [
+              "rw",
+              "relatime",
+              "seclabel"
+            ]
+          },
+          {
+            "source": "debugfs",
+            "mount_point": "/sys/kernel/debug",
+            "type": "debugfs",
+            "options": [
+              "rw",
+              "relatime"
+            ]
+          },
+          {
+            "source": "mqueue",
+            "mount_point": "/dev/mqueue",
+            "type": "mqueue",
+            "options": [
+              "rw",
+              "relatime",
+              "seclabel"
+            ]
+          },
+          {
+            "source": "/dev/sda1",
+            "mount_point": "/boot",
+            "type": "xfs",
+            "options": [
+              "rw",
+              "relatime",
+              "seclabel",
+              "attr2",
+              "inode64",
+              "noquota"
+            ]
+          },
+          {
+            "source": "tmpfs",
+            "mount_point": "/run/user/0",
+            "type": "tmpfs",
+            "options": [
+              "rw",
+              "nosuid",
+              "nodev",
+              "relatime",
+              "seclabel",
+              "size=188200k",
+              "mode=700"
+            ]
+          },
+          {
+            "source": "binfmt_misc",
+            "mount_point": "/proc/sys/fs/binfmt_misc",
+            "type": "binfmt_misc",
+            "options": [
+              "rw",
+              "relatime"
+            ]
+          }
+        ],
+        "mount_count": 30,
+        "shared_mounts": []
+      },
+      "results": "mount_count=30, shared_mount_count=0",
+      "criteria": "ok: shared volume type in nfs|nfs4|cifs|gfs2|ocfs2 and mount option contains rw",
+      "executed_command": [
+        "mount"
+      ]
+    }
+  ],
+  "failed_items": []
+}

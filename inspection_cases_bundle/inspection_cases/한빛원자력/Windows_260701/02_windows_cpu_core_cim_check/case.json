@@ -1,0 +1,59 @@
+{
+  "host": "192.168.1.9",
+  "port": 5985,
+  "user": "Administrator",
+  "password": "f3dtop0!",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 203,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "Administrator",
+          "password": "f3dtop0!",
+          "port": 5985
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 7,
+  "host_id": 70,
+  "job_id": 700,
+  "item": {
+    "inspection_code": "W-REPLAY-CPU-CORE-01",
+    "item_id": 90007,
+    "application_id": 203,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "min_socket_count",
+        "value1": "1"
+      },
+      {
+        "name": "min_total_core_count",
+        "value1": "4"
+      },
+      {
+        "name": "min_total_logical_processor_count",
+        "value1": "8"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-SWAP-01",
+      "item_id": 93007,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_disk_swap_percent",
+          "value1": "50"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'cat /proc/swaps'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        entries = []\n        for line in (output or '').splitlines():\n            parts = line.split()\n            if len(parts) < 5 or parts[0].lower() == 'filename':\n                continue\n            try:\n                size = float(parts[2])\n                used = float(parts[3])\n            except Exception:\n                return {'failure_type': 'parse_failure', 'reason': 'swap size/used value is not numeric.'}\n            usage = 0.0 if size <= 0 else round(used / size * 100.0, 1)\n            entries.append({'device': parts[0], 'usage_percent': usage})\n        if not entries:\n            return {'failure_type': 'parse_failure', 'reason': '/proc/swaps has no swap device rows.'}\n        return {'swap_devices': entries, 'max_disk_swap_percent': max(item['usage_percent'] for item in entries)}\n\n    def evaluate(self, metrics, max_disk_swap_percent):\n        if metrics.get('failure_type'):\n            return 'fail'\n        return 'fail' if metrics['max_disk_swap_percent'] > max_disk_swap_percent else 'ok'\n\n    def build_result(self, metrics, max_disk_swap_percent, status):\n        criteria = 'ok: every swap device usage <= %.1f%%' % max_disk_swap_percent\n        if metrics.get('failure_type'):\n            return {'message': 'swap device usage check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'swap_devices=%d, max_disk_swap_percent=%.1f%%' % (len(metrics['swap_devices']), metrics['max_disk_swap_percent'])\n        message = 'swap device usage check passed.' if status == 'ok' else 'swap device usage check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        max_disk_swap_percent = self.get_threshold_var('max_disk_swap_percent', default=50.0, value_type='float')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, max_disk_swap_percent)\n        result = self.build_result(metrics, max_disk_swap_percent, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'cat /proc/swaps'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        entries = []",
+        "        for line in (output or '').splitlines():",
+        "            parts = line.split()",
+        "            if len(parts) < 5 or parts[0].lower() == 'filename':",
+        "                continue",
+        "            try:",
+        "                size = float(parts[2])",
+        "                used = float(parts[3])",
+        "            except Exception:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'swap size/used value is not numeric.'}",
+        "            usage = 0.0 if size <= 0 else round(used / size * 100.0, 1)",
+        "            entries.append({'device': parts[0], 'usage_percent': usage})",
+        "        if not entries:",
+        "            return {'failure_type': 'parse_failure', 'reason': '/proc/swaps has no swap device rows.'}",
+        "        return {'swap_devices': entries, 'max_disk_swap_percent': max(item['usage_percent'] for item in entries)}",
+        "",
+        "    def evaluate(self, metrics, max_disk_swap_percent):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        return 'fail' if metrics['max_disk_swap_percent'] > max_disk_swap_percent else 'ok'",
+        "",
+        "    def build_result(self, metrics, max_disk_swap_percent, status):",
+        "        criteria = 'ok: every swap device usage <= %.1f%%' % max_disk_swap_percent",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'swap device usage check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'swap_devices=%d, max_disk_swap_percent=%.1f%%' % (len(metrics['swap_devices']), metrics['max_disk_swap_percent'])",
+        "        message = 'swap device usage check passed.' if status == 'ok' else 'swap device usage check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        max_disk_swap_percent = self.get_threshold_var('max_disk_swap_percent', default=50.0, value_type='float')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, max_disk_swap_percent)",
+        "        result = self.build_result(metrics, max_disk_swap_percent, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-SWAP-01",
+      "item_id": 93007,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_disk_swap_percent",
+          "value1": "50"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "swap_devices": [
+          {
+            "device": "/dev/dm-1",
+            "usage_percent": 0.0
+          }
+        ],
+        "max_disk_swap_percent": 0.0
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  cat /proc/swaps\n실행 결과:\n  Filename                                Type            Size    Used    Priority\n  /dev/dm-1                               partition       2097148 0       -2",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  cat /proc/swaps",
+        "실행 결과:",
+        "  Filename                                Type            Size    Used    Priority",
+        "  /dev/dm-1                               partition       2097148 0       -2"
+      ],
+      "message": "swap device usage check passed.",
+      "results": "swap_devices=1, max_disk_swap_percent=0.0%",
+      "criteria": "ok: every swap device usage <= 50.0%",
+      "executed_command": [
+        "cat /proc/swaps"
+      ]
+    }
+  ],
+  "failed_items": []
+}

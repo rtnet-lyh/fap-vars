@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmidecode -t memory",
+    "rc": 0,
+    "stdout_file": "outputs/dmidecode_memory.stdout",
+    "stderr": ""
+  }
+]

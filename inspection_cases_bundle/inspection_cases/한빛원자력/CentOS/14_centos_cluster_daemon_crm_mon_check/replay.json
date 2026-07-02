@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "type crm_mon >/dev/null 2>&1 || echo 'crm_mon unavailable'; type crm_mon >/dev/null 2>&1 && crm_mon -1; true",
+    "rc": 0,
+    "stdout_file": "outputs/crm_mon.stdout",
+    "stderr": ""
+  }
+]

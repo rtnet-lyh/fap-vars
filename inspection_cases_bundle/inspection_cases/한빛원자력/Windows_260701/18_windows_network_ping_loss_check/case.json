@@ -1,0 +1,55 @@
+{
+  "host": "192.168.1.9",
+  "port": 5985,
+  "user": "Administrator",
+  "password": "f3dtop0!",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 227,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "Administrator",
+          "password": "f3dtop0!",
+          "port": 5985
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 31,
+  "host_id": 310,
+  "job_id": 3100,
+  "item": {
+    "inspection_code": "W-REPLAY-GW-PING-01",
+    "item_id": 90031,
+    "application_id": 227,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_loss_percent",
+        "value1": "0"
+      },
+      {
+        "name": "max_average_time_ms",
+        "value1": "50"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "host": "192.168.1.9",
+  "port": 5985,
+  "user": "Administrator",
+  "password": "f3dtop0!",
+  "credentials": {
+    "WINDOWS": [
+      {
+        "application_id": 226,
+        "application_type_id": 20,
+        "application_type_name": "WINDOWS",
+        "credential_type_name": "WINRM",
+        "data": {
+          "username": "Administrator",
+          "password": "f3dtop0!",
+          "port": 5985
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "item_sleep_sec": 0,
+  "winrm_options": {
+    "transport": "ntlm",
+    "server_cert_validation": "ignore",
+    "operation_timeout_sec": 30,
+    "read_timeout_sec": 60
+  },
+  "execution_id": 30,
+  "host_id": 300,
+  "job_id": 3000,
+  "item": {
+    "inspection_code": "W-REPLAY-NIC-HA-01",
+    "item_id": 90030,
+    "application_id": 226,
+    "application_type_id": 20,
+    "application_type_name": "WINDOWS",
+    "application_name": "A",
+    "application_family_name": "A",
+    "threshold_list": [
+      {
+        "name": "max_down_or_degraded_team_count",
+        "value1": "0"
+      },
+      {
+        "name": "max_failed_member_count",
+        "value1": "0"
+      },
+      {
+        "name": "failure_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

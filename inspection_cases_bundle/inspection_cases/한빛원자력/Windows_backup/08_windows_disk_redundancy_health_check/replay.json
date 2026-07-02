@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "Get-Disk | ForEach-Object { $d=$_; $vd=Get-VirtualDisk -Disk $d -ErrorAction SilentlyContinue; if($vd){ $pd=$vd | Get-PhysicalDisk -ErrorAction SilentlyContinue; \"Disk $($d.Number) [$($d.FriendlyName)] : Storage Spaces RAID device / State=$((@($vd.OperationalStatus) | Sort-Object -Unique) -join ',') / Health=$($vd.HealthStatus) / RaidDevices=$($pd.Count) / ActiveDevices=$(($pd | Where-Object {$_.OperationalStatus -eq 'OK'} | Measure-Object).Count) / WorkingDevices=$(($pd | Where-Object {$_.HealthStatus -eq 'Healthy'} | Measure-Object).Count) / FailedDevices=$(($pd | Where-Object {$_.OperationalStatus -ne 'OK' -or $_.HealthStatus -ne 'Healthy'} | Measure-Object).Count) / SpareDevices=$(try{(($vd | Get-StoragePool | Get-PhysicalDisk | Where-Object {$_.Usage -eq 'HotSpare'} | Measure-Object).Count)}catch{0})\" } else { \"Disk $($d.Number) [$($d.FriendlyName)] : does not appear to be a Storage Spaces RAID device\" } }",
+    "rc": 0,
+    "stdout_file": "outputs/disk_ha.stdout",
+    "stderr": ""
+  }
+]

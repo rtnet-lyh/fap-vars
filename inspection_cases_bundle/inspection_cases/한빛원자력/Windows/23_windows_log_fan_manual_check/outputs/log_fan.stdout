@@ -1,0 +1,15 @@
+{
+  "FanDataExposed": true,
+  "EventDataExposed": false,
+  "Fans": [
+    {
+      "Name": "냉각 장치",
+      "Status": "OK",
+      "DesiredSpeed": null,
+      "VariableSpeed": null,
+      "Availability": 3,
+      "ConfigManagerErrorCode": 0
+    }
+  ],
+  "Events": []
+}

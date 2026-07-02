@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "cat /proc/partitions",
+    "rc": 0,
+    "stdout_file": "outputs/partitions.stdout",
+    "stderr": ""
+  }
+]

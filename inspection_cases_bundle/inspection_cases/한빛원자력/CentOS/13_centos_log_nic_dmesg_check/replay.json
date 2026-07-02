@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'nic\\|link\\|ipmp\\|failover\\|status\\|up\\|down' || true",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_nic.stdout",
+    "stderr": ""
+  }
+]

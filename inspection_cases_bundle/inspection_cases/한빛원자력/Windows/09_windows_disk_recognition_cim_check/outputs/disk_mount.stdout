@@ -1,0 +1,20 @@
+[
+  {
+    "NAME": "Disk0",
+    "RM": 0,
+    "SIZE(GB)": 476.94,
+    "RO": 0,
+    "TYPE": "disk",
+    "MOUNTPOINT": "",
+    "STATUS": "Online"
+  },
+  {
+    "NAME": "Disk0-Part1",
+    "RM": 0,
+    "SIZE(GB)": 476.34,
+    "RO": 0,
+    "TYPE": "part",
+    "MOUNTPOINT": "C:",
+    "STATUS": "Online"
+  }
+]

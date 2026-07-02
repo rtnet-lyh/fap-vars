@@ -1,0 +1,6 @@
+[    0.025423] Unknown kernel command line parameters "rhgb BOOT_IMAGE=(hd0,msdos1)/vmlinuz-5.14.0-70.13.1.el9_0.x86_64", will be passed to user space.
+[    0.341199] pci_bus 0000:ff: Unknown NUMA node; performance will be reduced
+[    0.346354] pci_bus 0000:7f: Unknown NUMA node; performance will be reduced
+[    0.439458] ERST: Error Record Serialization Table (ERST) support is initialized.
+[    2.166432] megaraid_sas 0000:01:00.0: current msix/online cpus      : (25/24)
+[    2.215766] megaraid_sas 0000:01:00.0: Online Controller Reset(OCR)  : Enabled

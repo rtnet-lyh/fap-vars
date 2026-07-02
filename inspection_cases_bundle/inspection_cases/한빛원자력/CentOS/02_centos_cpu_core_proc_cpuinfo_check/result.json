@@ -1,0 +1,152 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-CPU-CORE-01",
+      "item_id": 93002,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "expected_online_cpu",
+          "value1": "0"
+        },
+        {
+          "name": "offline_cpu_allowed",
+          "value1": "false"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = \"printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0\"\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        text = output or ''\n        total_match = re.search(r'CPU\\(s\\):\\s*(\\d+)', text)\n        online_match = re.search(r'On-line CPU\\(s\\) list:\\s*([^\\n]+)', text)\n        if not total_match or not online_match:\n            return {'failure_type': 'parse_failure', 'reason': 'CPU(s) or On-line CPU(s) list was not found.'}\n        total = int(total_match.group(1))\n        online = []\n        for token in online_match.group(1).replace(',', ' ').split():\n            if '-' in token:\n                start, end = [int(item) for item in token.split('-', 1)]\n                online.extend(range(start, end + 1))\n            else:\n                online.append(int(token))\n        online = sorted(set(online))\n        return {'cpu_count': total, 'online_cpu_count': len(online), 'offline_cpu_count': max(total - len(online), 0), 'online_cpus': online}\n\n    def evaluate(self, metrics, expected_online_cpu, offline_cpu_allowed):\n        if metrics.get('failure_type'):\n            return 'fail'\n        expected = expected_online_cpu or metrics['cpu_count']\n        if metrics['online_cpu_count'] < expected:\n            return 'fail'\n        if metrics['offline_cpu_count'] and not offline_cpu_allowed:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, expected_online_cpu, offline_cpu_allowed, status):\n        criteria = 'ok: online CPU count >= expected and offline_cpu_allowed=%s' % offline_cpu_allowed\n        if metrics.get('failure_type'):\n            return {'message': 'CPU core check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'cpu_count=%d, online_cpu_count=%d, offline_cpu_count=%d' % (metrics['cpu_count'], metrics['online_cpu_count'], metrics['offline_cpu_count'])\n        message = 'CPU core check passed.' if status == 'ok' else 'CPU core check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        expected_online_cpu = self.get_threshold_var('expected_online_cpu', default=0, value_type='int')\n        offline_cpu_allowed = self.get_threshold_var('offline_cpu_allowed', default=False, value_type='bool')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, expected_online_cpu, offline_cpu_allowed)\n        result = self.build_result(metrics, expected_online_cpu, offline_cpu_allowed, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = \"printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0\"",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        text = output or ''",
+        "        total_match = re.search(r'CPU\\(s\\):\\s*(\\d+)', text)",
+        "        online_match = re.search(r'On-line CPU\\(s\\) list:\\s*([^\\n]+)', text)",
+        "        if not total_match or not online_match:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'CPU(s) or On-line CPU(s) list was not found.'}",
+        "        total = int(total_match.group(1))",
+        "        online = []",
+        "        for token in online_match.group(1).replace(',', ' ').split():",
+        "            if '-' in token:",
+        "                start, end = [int(item) for item in token.split('-', 1)]",
+        "                online.extend(range(start, end + 1))",
+        "            else:",
+        "                online.append(int(token))",
+        "        online = sorted(set(online))",
+        "        return {'cpu_count': total, 'online_cpu_count': len(online), 'offline_cpu_count': max(total - len(online), 0), 'online_cpus': online}",
+        "",
+        "    def evaluate(self, metrics, expected_online_cpu, offline_cpu_allowed):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        expected = expected_online_cpu or metrics['cpu_count']",
+        "        if metrics['online_cpu_count'] < expected:",
+        "            return 'fail'",
+        "        if metrics['offline_cpu_count'] and not offline_cpu_allowed:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, expected_online_cpu, offline_cpu_allowed, status):",
+        "        criteria = 'ok: online CPU count >= expected and offline_cpu_allowed=%s' % offline_cpu_allowed",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'CPU core check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'cpu_count=%d, online_cpu_count=%d, offline_cpu_count=%d' % (metrics['cpu_count'], metrics['online_cpu_count'], metrics['offline_cpu_count'])",
+        "        message = 'CPU core check passed.' if status == 'ok' else 'CPU core check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        expected_online_cpu = self.get_threshold_var('expected_online_cpu', default=0, value_type='int')",
+        "        offline_cpu_allowed = self.get_threshold_var('offline_cpu_allowed', default=False, value_type='bool')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, expected_online_cpu, offline_cpu_allowed)",
+        "        result = self.build_result(metrics, expected_online_cpu, offline_cpu_allowed, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-CPU-CORE-01",
+      "item_id": 93002,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "expected_online_cpu",
+          "value1": "0"
+        },
+        {
+          "name": "offline_cpu_allowed",
+          "value1": "false"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "cpu_count": 1,
+        "online_cpu_count": 1,
+        "offline_cpu_count": 0,
+        "online_cpus": [
+          0
+        ]
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0\n실행 결과:\n  CPU(s): 1\n  On-line CPU(s) list: 0",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0",
+        "실행 결과:",
+        "  CPU(s): 1",
+        "  On-line CPU(s) list: 0"
+      ],
+      "message": "CPU core check passed.",
+      "results": "cpu_count=1, online_cpu_count=1, offline_cpu_count=0",
+      "criteria": "ok: online CPU count >= expected and offline_cpu_allowed=False",
+      "executed_command": [
+        "printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0"
+      ]
+    }
+  ],
+  "failed_items": []
+}

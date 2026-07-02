@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "cat /proc/net/bonding/bond0 2>/dev/null",
+    "rc": 0,
+    "stdout_file": "outputs/bonding_bond0.stdout",
+    "stderr": ""
+  }
+]

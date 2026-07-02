@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg | grep -i 'cluster\\|resource status\\|unknown\\|offline\\|online\\|error' || true",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_cluster.stdout",
+    "stderr": ""
+  }
+]

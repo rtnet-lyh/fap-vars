@@ -1,0 +1,166 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-MULTIPATH-01",
+      "item_id": 93026,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "required_multipath_device",
+          "value1": ""
+        },
+        {
+          "name": "min_path_count",
+          "value1": "2"
+        },
+        {
+          "name": "multipath_path_state",
+          "value1": "active ready running"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'multipath -ll'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        text = output or ''\n        if not text.strip():\n            return {'not_applicable': True, 'reason': 'multipath devices were not found.'}\n        devices = len(re.findall(r'\\bdm-\\d+\\b', text))\n        path_lines = []\n        for line in text.splitlines():\n            if re.search(r'\\b(active|enabled)\\b\\s+\\bready\\b\\s+\\brunning\\b', line):\n                path_lines.append(line.strip())\n        if not devices:\n            return {'failure_type': 'parse_failure', 'reason': 'multipath device header was not found.'}\n        return {'multipath_device_count': devices, 'path_count': len(path_lines), 'path_lines': path_lines}\n\n    def evaluate(self, metrics, required_multipath_device, min_path_count, multipath_path_state):\n        if metrics.get('not_applicable'):\n            return 'excluded'\n        if metrics.get('failure_type'):\n            return 'fail'\n        if metrics['path_count'] < min_path_count:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, required_multipath_device, min_path_count, multipath_path_state, status):\n        criteria = 'ok: multipath path count >= %d and path state matches %s' % (min_path_count, multipath_path_state)\n        if metrics.get('not_applicable'):\n            return {'message': 'multipath check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        if metrics.get('failure_type'):\n            return {'message': 'multipath check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'multipath_device_count=%d, path_count=%d' % (metrics['multipath_device_count'], metrics['path_count'])\n        message = 'multipath check passed.' if status == 'ok' else 'multipath check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        required_multipath_device = self.get_threshold_var('required_multipath_device', default='', value_type='str')\n        min_path_count = self.get_threshold_var('min_path_count', default=2, value_type='int')\n        multipath_path_state = self.get_threshold_var('multipath_path_state', default='active ready running', value_type='str')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, required_multipath_device, min_path_count, multipath_path_state)\n        result = self.build_result(metrics, required_multipath_device, min_path_count, multipath_path_state, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'multipath -ll'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        text = output or ''",
+        "        if not text.strip():",
+        "            return {'not_applicable': True, 'reason': 'multipath devices were not found.'}",
+        "        devices = len(re.findall(r'\\bdm-\\d+\\b', text))",
+        "        path_lines = []",
+        "        for line in text.splitlines():",
+        "            if re.search(r'\\b(active|enabled)\\b\\s+\\bready\\b\\s+\\brunning\\b', line):",
+        "                path_lines.append(line.strip())",
+        "        if not devices:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'multipath device header was not found.'}",
+        "        return {'multipath_device_count': devices, 'path_count': len(path_lines), 'path_lines': path_lines}",
+        "",
+        "    def evaluate(self, metrics, required_multipath_device, min_path_count, multipath_path_state):",
+        "        if metrics.get('not_applicable'):",
+        "            return 'excluded'",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if metrics['path_count'] < min_path_count:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, required_multipath_device, min_path_count, multipath_path_state, status):",
+        "        criteria = 'ok: multipath path count >= %d and path state matches %s' % (min_path_count, multipath_path_state)",
+        "        if metrics.get('not_applicable'):",
+        "            return {'message': 'multipath check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'multipath check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'multipath_device_count=%d, path_count=%d' % (metrics['multipath_device_count'], metrics['path_count'])",
+        "        message = 'multipath check passed.' if status == 'ok' else 'multipath check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        required_multipath_device = self.get_threshold_var('required_multipath_device', default='', value_type='str')",
+        "        min_path_count = self.get_threshold_var('min_path_count', default=2, value_type='int')",
+        "        multipath_path_state = self.get_threshold_var('multipath_path_state', default='active ready running', value_type='str')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, required_multipath_device, min_path_count, multipath_path_state)",
+        "        result = self.build_result(metrics, required_multipath_device, min_path_count, multipath_path_state, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-MULTIPATH-01",
+      "item_id": 93026,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "required_multipath_device",
+          "value1": ""
+        },
+        {
+          "name": "min_path_count",
+          "value1": "2"
+        },
+        {
+          "name": "multipath_path_state",
+          "value1": "active ready running"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "multipath_device_count": 1,
+        "path_count": 4,
+        "path_lines": [
+          "| |- 3:0:0:1 sda 8:0  active ready running",
+          "| `- 4:0:0:1 sdb 8:16 active ready running",
+          "|- 5:0:0:1 sdc 8:32 active ready running",
+          "`- 6:0:0:1 sdd 8:48 active ready running"
+        ]
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  multipath -ll\n실행 결과:\n  mpatha (3600508b400105e210000900000490000) dm-2 IBM,2145\n  size=100G features='1 queue_if_no_path' hwhandler='0' wp=rw\n  |-+- policy='service-time 0' prio=50 status=active\n  | |- 3:0:0:1 sda 8:0  active ready running\n  | `- 4:0:0:1 sdb 8:16 active ready running\n  `-+- policy='service-time 0' prio=10 status=enabled\n    |- 5:0:0:1 sdc 8:32 active ready running\n    `- 6:0:0:1 sdd 8:48 active ready running",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  multipath -ll",
+        "실행 결과:",
+        "  mpatha (3600508b400105e210000900000490000) dm-2 IBM,2145",
+        "  size=100G features='1 queue_if_no_path' hwhandler='0' wp=rw",
+        "  |-+- policy='service-time 0' prio=50 status=active",
+        "  | |- 3:0:0:1 sda 8:0  active ready running",
+        "  | `- 4:0:0:1 sdb 8:16 active ready running",
+        "  `-+- policy='service-time 0' prio=10 status=enabled",
+        "    |- 5:0:0:1 sdc 8:32 active ready running",
+        "    `- 6:0:0:1 sdd 8:48 active ready running"
+      ],
+      "message": "multipath check passed.",
+      "results": "multipath_device_count=1, path_count=4",
+      "criteria": "ok: multipath path count >= 2 and path state matches active ready running",
+      "executed_command": [
+        "multipath -ll"
+      ]
+    }
+  ],
+  "failed_items": []
+}

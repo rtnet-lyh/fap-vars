@@ -1,0 +1,45 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 313,
+  "host_id": 3013,
+  "job_id": 30013,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-LOG-ERROR-01",
+    "item_id": 93013,
+    "application_id": 301,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "fail_keywords",
+        "value1": "error|fail|failed|timeout|i/o|reset|segfault|call trace|EXT4-fs error|XFS corruption|Buffer I/O error"
+      },
+      {
+        "name": "except_keywords",
+        "value1": ""
+      }
+    ]
+  }
+}

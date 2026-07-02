@@ -1,0 +1,195 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-NETWORK-LINK-01",
+      "item_id": 93024,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "target_interface",
+          "value1": ""
+        },
+        {
+          "name": "nic_link_state",
+          "value1": "UP"
+        },
+        {
+          "name": "nic_required_flags",
+          "value1": "UP|LOWER_UP"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'ip link'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        interfaces = []\n        for line in (output or '').splitlines():\n            match = re.match(r'^\\d+:\\s+([^:]+):\\s+<([^>]*)>.*\\sstate\\s+(\\S+)', line.strip())\n            if match:\n                interfaces.append({'name': match.group(1).split('@')[0], 'flags': [item.strip() for item in match.group(2).split(',')], 'state': match.group(3)})\n        if not interfaces:\n            return {'failure_type': 'parse_failure', 'reason': 'ip link output has no interface rows.'}\n        return {'interfaces': interfaces, 'interface_count': len(interfaces)}\n\n    def evaluate(self, metrics, target_interface, nic_link_state, nic_required_flags):\n        if metrics.get('failure_type'):\n            return 'fail'\n        targets = [item.strip() for item in re.split(r'[|,\\n]+', target_interface or '') if item.strip()]\n        required_flags = [item.strip() for item in re.split(r'[|,\\n]+', nic_required_flags or '') if item.strip()]\n        selected = [item for item in metrics['interfaces'] if item['name'] != 'lo' and (not targets or item['name'] in targets)]\n        if not selected:\n            metrics['policy_violations'] = ['target interface not found']\n            return 'fail'\n        bad = []\n        for iface in selected:\n            if iface['state'].upper() != nic_link_state.upper():\n                bad.append(iface['name'] + ':state')\n            missing_flags = [flag for flag in required_flags if flag not in iface['flags']]\n            if missing_flags:\n                bad.append(iface['name'] + ':flags')\n        metrics['checked_interfaces'] = selected\n        metrics['policy_violations'] = bad\n        return 'fail' if bad else 'ok'\n\n    def build_result(self, metrics, target_interface, nic_link_state, nic_required_flags, status):\n        criteria = 'ok: selected NIC state=%s and flags contain %s' % (nic_link_state, nic_required_flags)\n        if metrics.get('failure_type'):\n            return {'message': 'network link check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'interface_count=%d, checked_count=%d' % (metrics['interface_count'], len(metrics.get('checked_interfaces', [])))\n        message = 'network link check passed.' if status == 'ok' else 'network link check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        target_interface = self.get_threshold_var('target_interface', default='', value_type='str')\n        nic_link_state = self.get_threshold_var('nic_link_state', default='UP', value_type='str')\n        nic_required_flags = self.get_threshold_var('nic_required_flags', default='UP|LOWER_UP', value_type='str')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, target_interface, nic_link_state, nic_required_flags)\n        result = self.build_result(metrics, target_interface, nic_link_state, nic_required_flags, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'ip link'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        interfaces = []",
+        "        for line in (output or '').splitlines():",
+        "            match = re.match(r'^\\d+:\\s+([^:]+):\\s+<([^>]*)>.*\\sstate\\s+(\\S+)', line.strip())",
+        "            if match:",
+        "                interfaces.append({'name': match.group(1).split('@')[0], 'flags': [item.strip() for item in match.group(2).split(',')], 'state': match.group(3)})",
+        "        if not interfaces:",
+        "            return {'failure_type': 'parse_failure', 'reason': 'ip link output has no interface rows.'}",
+        "        return {'interfaces': interfaces, 'interface_count': len(interfaces)}",
+        "",
+        "    def evaluate(self, metrics, target_interface, nic_link_state, nic_required_flags):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        targets = [item.strip() for item in re.split(r'[|,\\n]+', target_interface or '') if item.strip()]",
+        "        required_flags = [item.strip() for item in re.split(r'[|,\\n]+', nic_required_flags or '') if item.strip()]",
+        "        selected = [item for item in metrics['interfaces'] if item['name'] != 'lo' and (not targets or item['name'] in targets)]",
+        "        if not selected:",
+        "            metrics['policy_violations'] = ['target interface not found']",
+        "            return 'fail'",
+        "        bad = []",
+        "        for iface in selected:",
+        "            if iface['state'].upper() != nic_link_state.upper():",
+        "                bad.append(iface['name'] + ':state')",
+        "            missing_flags = [flag for flag in required_flags if flag not in iface['flags']]",
+        "            if missing_flags:",
+        "                bad.append(iface['name'] + ':flags')",
+        "        metrics['checked_interfaces'] = selected",
+        "        metrics['policy_violations'] = bad",
+        "        return 'fail' if bad else 'ok'",
+        "",
+        "    def build_result(self, metrics, target_interface, nic_link_state, nic_required_flags, status):",
+        "        criteria = 'ok: selected NIC state=%s and flags contain %s' % (nic_link_state, nic_required_flags)",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'network link check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'interface_count=%d, checked_count=%d' % (metrics['interface_count'], len(metrics.get('checked_interfaces', [])))",
+        "        message = 'network link check passed.' if status == 'ok' else 'network link check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        target_interface = self.get_threshold_var('target_interface', default='', value_type='str')",
+        "        nic_link_state = self.get_threshold_var('nic_link_state', default='UP', value_type='str')",
+        "        nic_required_flags = self.get_threshold_var('nic_required_flags', default='UP|LOWER_UP', value_type='str')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, target_interface, nic_link_state, nic_required_flags)",
+        "        result = self.build_result(metrics, target_interface, nic_link_state, nic_required_flags, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-NETWORK-LINK-01",
+      "item_id": 93024,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "target_interface",
+          "value1": ""
+        },
+        {
+          "name": "nic_link_state",
+          "value1": "UP"
+        },
+        {
+          "name": "nic_required_flags",
+          "value1": "UP|LOWER_UP"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "interfaces": [
+          {
+            "name": "lo",
+            "flags": [
+              "LOOPBACK",
+              "UP",
+              "LOWER_UP"
+            ],
+            "state": "UNKNOWN"
+          },
+          {
+            "name": "eth0",
+            "flags": [
+              "BROADCAST",
+              "MULTICAST",
+              "UP",
+              "LOWER_UP"
+            ],
+            "state": "UP"
+          }
+        ],
+        "interface_count": 2,
+        "checked_interfaces": [
+          {
+            "name": "eth0",
+            "flags": [
+              "BROADCAST",
+              "MULTICAST",
+              "UP",
+              "LOWER_UP"
+            ],
+            "state": "UP"
+          }
+        ],
+        "policy_violations": []
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  ip link\n실행 결과:\n  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000\n      link/ether bc:24:11:63:4e:b2 brd ff:ff:ff:ff:ff:ff",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  ip link",
+        "실행 결과:",
+        "  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000",
+        "      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00",
+        "  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000",
+        "      link/ether bc:24:11:63:4e:b2 brd ff:ff:ff:ff:ff:ff"
+      ],
+      "message": "network link check passed.",
+      "results": "interface_count=2, checked_count=1",
+      "criteria": "ok: selected NIC state=UP and flags contain UP|LOWER_UP",
+      "executed_command": [
+        "ip link"
+      ]
+    }
+  ],
+  "failed_items": []
+}

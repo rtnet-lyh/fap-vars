@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done",
+    "rc": 0,
+    "stdout_file": "outputs/fc_host.stdout",
+    "stderr": ""
+  }
+]

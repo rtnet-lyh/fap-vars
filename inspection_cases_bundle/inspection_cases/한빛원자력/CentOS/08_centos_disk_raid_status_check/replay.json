@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "for md in $(ls /dev/md* 2>/dev/null | grep -v mdp); do mdadm --detail $md; done",
+    "rc": 0,
+    "stdout_file": "outputs/mdadm.stdout",
+    "stderr": ""
+  }
+]

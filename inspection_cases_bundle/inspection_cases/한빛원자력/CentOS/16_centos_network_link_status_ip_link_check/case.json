@@ -1,0 +1,49 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 324,
+  "host_id": 3024,
+  "job_id": 30024,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-NETWORK-LINK-01",
+    "item_id": 93024,
+    "application_id": 301,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "target_interface",
+        "value1": ""
+      },
+      {
+        "name": "nic_link_state",
+        "value1": "UP"
+      },
+      {
+        "name": "nic_required_flags",
+        "value1": "UP|LOWER_UP"
+      }
+    ]
+  }
+}

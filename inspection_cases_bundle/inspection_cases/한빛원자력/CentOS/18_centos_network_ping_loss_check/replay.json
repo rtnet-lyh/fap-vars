@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "ping -c 5 $(ip route | awk '/default/ {print $3; exit}')",
+    "rc": 0,
+    "stdout_file": "outputs/ping.stdout",
+    "stderr": ""
+  }
+]

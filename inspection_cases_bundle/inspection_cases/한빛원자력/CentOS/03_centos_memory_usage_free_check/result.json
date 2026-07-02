@@ -1,0 +1,149 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-MEMORY-USAGE-01",
+      "item_id": 93022,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_memory_percent",
+          "value1": "80"
+        },
+        {
+          "name": "min_available_percent",
+          "value1": "20"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'free -m'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        for line in (output or '').splitlines():\n            parts = line.split()\n            if not parts or parts[0].rstrip(':').lower() != 'mem':\n                continue\n            if len(parts) < 7:\n                return {'failure_type': 'parse_failure', 'reason': 'free -m Mem row has fewer than 7 columns.'}\n            try:\n                total = float(parts[1])\n                used = float(parts[2])\n                available = float(parts[6])\n            except Exception:\n                return {'failure_type': 'parse_failure', 'reason': 'free -m memory value is not numeric.'}\n            if total <= 0:\n                return {'failure_type': 'parse_failure', 'reason': 'free -m total memory is zero.'}\n            return {'memory_usage_percent': round(used / total * 100.0, 1), 'available_percent': round(available / total * 100.0, 1)}\n        return {'failure_type': 'parse_failure', 'reason': 'free -m Mem row was not found.'}\n\n    def evaluate(self, metrics, max_memory_percent, min_available_percent):\n        if metrics.get('failure_type'):\n            return 'fail'\n        if metrics['memory_usage_percent'] > max_memory_percent:\n            return 'fail'\n        if metrics['available_percent'] < min_available_percent:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, max_memory_percent, min_available_percent, status):\n        criteria = 'ok: memory usage <= %.1f%% and available >= %.1f%%' % (max_memory_percent, min_available_percent)\n        if metrics.get('failure_type'):\n            return {'message': 'memory usage check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'memory_usage_percent=%.1f%%, available_percent=%.1f%%' % (metrics['memory_usage_percent'], metrics['available_percent'])\n        message = 'memory usage check passed.' if status == 'ok' else 'memory usage check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        max_memory_percent = self.get_threshold_var('max_memory_percent', default=80.0, value_type='float')\n        min_available_percent = self.get_threshold_var('min_available_percent', default=20.0, value_type='float')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, max_memory_percent, min_available_percent)\n        result = self.build_result(metrics, max_memory_percent, min_available_percent, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'free -m'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        for line in (output or '').splitlines():",
+        "            parts = line.split()",
+        "            if not parts or parts[0].rstrip(':').lower() != 'mem':",
+        "                continue",
+        "            if len(parts) < 7:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'free -m Mem row has fewer than 7 columns.'}",
+        "            try:",
+        "                total = float(parts[1])",
+        "                used = float(parts[2])",
+        "                available = float(parts[6])",
+        "            except Exception:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'free -m memory value is not numeric.'}",
+        "            if total <= 0:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'free -m total memory is zero.'}",
+        "            return {'memory_usage_percent': round(used / total * 100.0, 1), 'available_percent': round(available / total * 100.0, 1)}",
+        "        return {'failure_type': 'parse_failure', 'reason': 'free -m Mem row was not found.'}",
+        "",
+        "    def evaluate(self, metrics, max_memory_percent, min_available_percent):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if metrics['memory_usage_percent'] > max_memory_percent:",
+        "            return 'fail'",
+        "        if metrics['available_percent'] < min_available_percent:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, max_memory_percent, min_available_percent, status):",
+        "        criteria = 'ok: memory usage <= %.1f%% and available >= %.1f%%' % (max_memory_percent, min_available_percent)",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'memory usage check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'memory_usage_percent=%.1f%%, available_percent=%.1f%%' % (metrics['memory_usage_percent'], metrics['available_percent'])",
+        "        message = 'memory usage check passed.' if status == 'ok' else 'memory usage check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        max_memory_percent = self.get_threshold_var('max_memory_percent', default=80.0, value_type='float')",
+        "        min_available_percent = self.get_threshold_var('min_available_percent', default=20.0, value_type='float')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, max_memory_percent, min_available_percent)",
+        "        result = self.build_result(metrics, max_memory_percent, min_available_percent, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-MEMORY-USAGE-01",
+      "item_id": 93022,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_memory_percent",
+          "value1": "80"
+        },
+        {
+          "name": "min_available_percent",
+          "value1": "20"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "memory_usage_percent": 9.7,
+        "available_percent": 82.2
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  free -m\n실행 결과:\n  total        used        free      shared  buff/cache   available\n  Mem:           1837         178        1455           8         203        1510\n  Swap:          2047           0        2047",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  free -m",
+        "실행 결과:",
+        "  total        used        free      shared  buff/cache   available",
+        "  Mem:           1837         178        1455           8         203        1510",
+        "  Swap:          2047           0        2047"
+      ],
+      "message": "memory usage check passed.",
+      "results": "memory_usage_percent=9.7%, available_percent=82.2%",
+      "criteria": "ok: memory usage <= 80.0% and available >= 20.0%",
+      "executed_command": [
+        "free -m"
+      ]
+    }
+  ],
+  "failed_items": []
+}

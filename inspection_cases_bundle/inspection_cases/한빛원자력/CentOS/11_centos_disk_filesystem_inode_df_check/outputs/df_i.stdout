@@ -1,0 +1,8 @@
+Filesystem               Inodes IUsed   IFree IUse% Mounted on
+devtmpfs                 232265   357  231908    1% /dev
+tmpfs                    235249     1  235248    1% /dev/shm
+tmpfs                    235249   455  234794    1% /run
+tmpfs                    235249    16  235233    1% /sys/fs/cgroup
+/dev/mapper/centos-root 8910848 27225 8883623    1% /
+/dev/sda1                524288   327  523961    1% /boot
+tmpfs                    235249     1  235248    1% /run/user/0

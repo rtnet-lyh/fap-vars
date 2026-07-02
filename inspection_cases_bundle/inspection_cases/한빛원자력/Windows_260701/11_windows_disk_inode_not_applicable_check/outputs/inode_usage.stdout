@@ -1,0 +1,10 @@
+[
+  {
+    "Filesystem": "NTFS",
+    "Inodes(approx)": 1048576,
+    "IUsed(approx)": 262144,
+    "IFree(approx)": 786432,
+    "IUse%(approx)": 25.0,
+    "Mounted on": "C:"
+  }
+]

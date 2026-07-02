@@ -1,0 +1,45 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 309,
+  "host_id": 3009,
+  "job_id": 30009,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-HBA-01",
+    "item_id": 93009,
+    "application_id": 301,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "hba_port_state",
+        "value1": "Online"
+      },
+      {
+        "name": "expected_hba_ports",
+        "value1": "0"
+      }
+    ]
+  }
+}

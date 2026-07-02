@@ -1,0 +1,2 @@
+[    1.007622] BERT: Boot Error Record Table support is disabled. Enable it by using bert_enable as kernel parameter.
+[    2.018395] sd 2:0:0:0: Power-on or device reset occurred

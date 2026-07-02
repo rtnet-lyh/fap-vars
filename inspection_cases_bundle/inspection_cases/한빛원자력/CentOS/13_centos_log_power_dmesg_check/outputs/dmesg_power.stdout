@@ -1,0 +1,5 @@
+[   18.123456] ipmi_si dmi-ipmi-si.0: Power supply PSU1 failure detected
+[   18.124102] ipmi_si dmi-ipmi-si.0: PSU2 status changed: predictive failure
+[   18.124889] platform power_mon: PS Failed alarm asserted
+[   18.125401] hwmon hwmon3: power unit input lost
+[   18.126033] systemd[1]: Warning: redundant power supply degraded

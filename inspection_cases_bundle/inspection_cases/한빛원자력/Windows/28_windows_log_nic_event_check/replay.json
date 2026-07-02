@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "'==NIC Status=='; Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | Select-Object Name,InterfaceDescription,Status,LinkSpeed,MacAddress,ifIndex | Format-Table -Auto; '==Recent NIC Events=='; $e=Get-WinEvent -FilterHashtable @{LogName='System';StartTime=(Get-Date).AddDays(-30);Level=@(1,2,3)} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '(?i)\\bnic\\b|network adapter|link down|link up|media disconnected|media connected|status down|status up|failover' }; if($e){$e | Select-Object -First 50 TimeCreated,ProviderName,Id,LevelDisplayName,@{N='Message';E={($_.Message -replace '\\r?\\n',' ')}} | Format-Table -Wrap -Auto}else{'No NIC link/failover-like warning or error events found in the last 30 days.'}",
+    "rc": 0,
+    "stdout_file": "outputs/log_nic.stdout",
+    "stderr": ""
+  }
+]

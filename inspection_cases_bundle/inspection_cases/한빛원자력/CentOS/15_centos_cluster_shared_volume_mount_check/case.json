@@ -1,0 +1,49 @@
+{
+  "host": "192.168.1.184",
+  "port": 22,
+  "user": "root",
+  "password": "",
+  "credentials": {
+    "LINUX": [
+      {
+        "application_id": 301,
+        "application_type_id": 10,
+        "application_type_name": "LINUX",
+        "credential_type_name": "SSH",
+        "data": {
+          "username": "root",
+          "password": ""
+        }
+      }
+    ]
+  },
+  "thresholds": {},
+  "ssh_options": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+  "item_sleep_sec": 0,
+  "execution_id": 328,
+  "host_id": 3028,
+  "job_id": 30028,
+  "item": {
+    "inspection_code": "U-REPLAY-CENTOS7-SHARED-VOLUME-01",
+    "item_id": 93028,
+    "application_id": 301,
+    "application_type_id": 10,
+    "application_type_name": "LINUX",
+    "application_name": "CentOS7",
+    "application_family_name": "Server",
+    "threshold_list": [
+      {
+        "name": "shared_volume_required",
+        "value1": "false"
+      },
+      {
+        "name": "shared_volume_types",
+        "value1": "nfs|nfs4|cifs|gfs2|ocfs2"
+      },
+      {
+        "name": "mount_option_required",
+        "value1": "rw"
+      }
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-IO-01",
+      "item_id": 93004,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_blocked_processes",
+          "value1": "1"
+        },
+        {
+          "name": "max_io_wait_percent",
+          "value1": "1"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'vmstat'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        lines = [line.strip() for line in (output or '').splitlines() if line.strip()]\n        for index, line in enumerate(lines):\n            headers = line.split()\n            if not all(name in headers for name in ('b', 'wa')):\n                continue\n            if index + 1 >= len(lines):\n                return {'failure_type': 'parse_failure', 'reason': 'vmstat data row was not found.'}\n            values = lines[index + 1].split()\n            if len(values) != len(headers):\n                return {'failure_type': 'parse_failure', 'reason': 'vmstat header/data column count mismatch.'}\n            try:\n                return {'blocked_processes': int(values[headers.index('b')]), 'io_wait_percent': float(values[headers.index('wa')])}\n            except Exception:\n                return {'failure_type': 'parse_failure', 'reason': 'vmstat b/wa value is not numeric.'}\n        return {'failure_type': 'parse_failure', 'reason': 'vmstat b/wa header was not found.'}\n\n    def evaluate(self, metrics, max_blocked_processes, max_io_wait_percent):\n        if metrics.get('failure_type'):\n            return 'fail'\n        if metrics['blocked_processes'] > max_blocked_processes:\n            return 'fail'\n        if metrics['io_wait_percent'] > max_io_wait_percent:\n            return 'fail'\n        return 'ok'\n\n    def build_result(self, metrics, max_blocked_processes, max_io_wait_percent, status):\n        criteria = 'ok: blocked processes <= %d and I/O wait <= %.1f%%' % (max_blocked_processes, max_io_wait_percent)\n        if metrics.get('failure_type'):\n            return {'message': 'vmstat disk I/O check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'blocked_processes=%d, io_wait_percent=%.1f%%' % (metrics['blocked_processes'], metrics['io_wait_percent'])\n        message = 'disk I/O check passed.' if status == 'ok' else 'disk I/O check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        max_blocked_processes = self.get_threshold_var('max_blocked_processes', default=1, value_type='int')\n        max_io_wait_percent = self.get_threshold_var('max_io_wait_percent', default=1.0, value_type='float')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, max_blocked_processes, max_io_wait_percent)\n        result = self.build_result(metrics, max_blocked_processes, max_io_wait_percent, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'vmstat'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        lines = [line.strip() for line in (output or '').splitlines() if line.strip()]",
+        "        for index, line in enumerate(lines):",
+        "            headers = line.split()",
+        "            if not all(name in headers for name in ('b', 'wa')):",
+        "                continue",
+        "            if index + 1 >= len(lines):",
+        "                return {'failure_type': 'parse_failure', 'reason': 'vmstat data row was not found.'}",
+        "            values = lines[index + 1].split()",
+        "            if len(values) != len(headers):",
+        "                return {'failure_type': 'parse_failure', 'reason': 'vmstat header/data column count mismatch.'}",
+        "            try:",
+        "                return {'blocked_processes': int(values[headers.index('b')]), 'io_wait_percent': float(values[headers.index('wa')])}",
+        "            except Exception:",
+        "                return {'failure_type': 'parse_failure', 'reason': 'vmstat b/wa value is not numeric.'}",
+        "        return {'failure_type': 'parse_failure', 'reason': 'vmstat b/wa header was not found.'}",
+        "",
+        "    def evaluate(self, metrics, max_blocked_processes, max_io_wait_percent):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if metrics['blocked_processes'] > max_blocked_processes:",
+        "            return 'fail'",
+        "        if metrics['io_wait_percent'] > max_io_wait_percent:",
+        "            return 'fail'",
+        "        return 'ok'",
+        "",
+        "    def build_result(self, metrics, max_blocked_processes, max_io_wait_percent, status):",
+        "        criteria = 'ok: blocked processes <= %d and I/O wait <= %.1f%%' % (max_blocked_processes, max_io_wait_percent)",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'vmstat disk I/O check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'blocked_processes=%d, io_wait_percent=%.1f%%' % (metrics['blocked_processes'], metrics['io_wait_percent'])",
+        "        message = 'disk I/O check passed.' if status == 'ok' else 'disk I/O check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        max_blocked_processes = self.get_threshold_var('max_blocked_processes', default=1, value_type='int')",
+        "        max_io_wait_percent = self.get_threshold_var('max_io_wait_percent', default=1.0, value_type='float')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, max_blocked_processes, max_io_wait_percent)",
+        "        result = self.build_result(metrics, max_blocked_processes, max_io_wait_percent, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-IO-01",
+      "item_id": 93004,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "max_blocked_processes",
+          "value1": "1"
+        },
+        {
+          "name": "max_io_wait_percent",
+          "value1": "1"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "blocked_processes": 0,
+        "io_wait_percent": 0.0
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  vmstat\n실행 결과:\n  procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----\n   r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st\n   2  0      0 1490560   2108 206672    0    0     7     3   75  102  0  0 99  0  0",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  vmstat",
+        "실행 결과:",
+        "  procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----",
+        "   r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st",
+        "   2  0      0 1490560   2108 206672    0    0     7     3   75  102  0  0 99  0  0"
+      ],
+      "message": "disk I/O check passed.",
+      "results": "blocked_processes=0, io_wait_percent=0.0%",
+      "criteria": "ok: blocked processes <= 1 and I/O wait <= 1.0%",
+      "executed_command": [
+        "vmstat"
+      ]
+    }
+  ],
+  "failed_items": []
+}

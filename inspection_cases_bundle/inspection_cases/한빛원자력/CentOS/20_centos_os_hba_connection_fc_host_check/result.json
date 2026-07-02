@@ -1,0 +1,154 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-HBA-01",
+      "item_id": 93009,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "hba_port_state",
+          "value1": "Online"
+        },
+        {
+          "name": "expected_hba_ports",
+          "value1": "0"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        ports = []\n        for line in (output or '').splitlines():\n            match = re.match(r'\\[(?P<host>[^\\]]+)\\]\\s+(?P<state>\\S+)(?:\\s+(?P<speed>.*))?$', line.strip())\n            if match:\n                ports.append({'host': match.group('host'), 'state': match.group('state'), 'speed': (match.group('speed') or '').strip()})\n        if not ports:\n            return {'not_applicable': True, 'reason': 'fc_host ports were not found.'}\n        return {'hba_port_count': len(ports), 'ports': ports}\n\n    def evaluate(self, metrics, hba_port_state, expected_hba_ports):\n        if metrics.get('not_applicable'):\n            return 'excluded'\n        if metrics.get('failure_type'):\n            return 'fail'\n        if expected_hba_ports and metrics['hba_port_count'] < expected_hba_ports:\n            return 'fail'\n        bad = [port for port in metrics['ports'] if port['state'].lower() != hba_port_state.lower()]\n        metrics['bad_ports'] = bad\n        return 'fail' if bad else 'ok'\n\n    def build_result(self, metrics, hba_port_state, expected_hba_ports, status):\n        criteria = 'ok: HBA port state is %s and port count >= %d' % (hba_port_state, expected_hba_ports)\n        if metrics.get('not_applicable'):\n            return {'message': 'HBA connection check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'hba_port_count=%d' % metrics.get('hba_port_count', 0)\n        message = 'HBA connection check passed.' if status == 'ok' else 'HBA connection check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        hba_port_state = self.get_threshold_var('hba_port_state', default='Online', value_type='str')\n        expected_hba_ports = self.get_threshold_var('expected_hba_ports', default=0, value_type='int')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, hba_port_state, expected_hba_ports)\n        result = self.build_result(metrics, hba_port_state, expected_hba_ports, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        ports = []",
+        "        for line in (output or '').splitlines():",
+        "            match = re.match(r'\\[(?P<host>[^\\]]+)\\]\\s+(?P<state>\\S+)(?:\\s+(?P<speed>.*))?$', line.strip())",
+        "            if match:",
+        "                ports.append({'host': match.group('host'), 'state': match.group('state'), 'speed': (match.group('speed') or '').strip()})",
+        "        if not ports:",
+        "            return {'not_applicable': True, 'reason': 'fc_host ports were not found.'}",
+        "        return {'hba_port_count': len(ports), 'ports': ports}",
+        "",
+        "    def evaluate(self, metrics, hba_port_state, expected_hba_ports):",
+        "        if metrics.get('not_applicable'):",
+        "            return 'excluded'",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        if expected_hba_ports and metrics['hba_port_count'] < expected_hba_ports:",
+        "            return 'fail'",
+        "        bad = [port for port in metrics['ports'] if port['state'].lower() != hba_port_state.lower()]",
+        "        metrics['bad_ports'] = bad",
+        "        return 'fail' if bad else 'ok'",
+        "",
+        "    def build_result(self, metrics, hba_port_state, expected_hba_ports, status):",
+        "        criteria = 'ok: HBA port state is %s and port count >= %d' % (hba_port_state, expected_hba_ports)",
+        "        if metrics.get('not_applicable'):",
+        "            return {'message': 'HBA connection check not applicable.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'hba_port_count=%d' % metrics.get('hba_port_count', 0)",
+        "        message = 'HBA connection check passed.' if status == 'ok' else 'HBA connection check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        hba_port_state = self.get_threshold_var('hba_port_state', default='Online', value_type='str')",
+        "        expected_hba_ports = self.get_threshold_var('expected_hba_ports', default=0, value_type='int')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, hba_port_state, expected_hba_ports)",
+        "        result = self.build_result(metrics, hba_port_state, expected_hba_ports, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-HBA-01",
+      "item_id": 93009,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "hba_port_state",
+          "value1": "Online"
+        },
+        {
+          "name": "expected_hba_ports",
+          "value1": "0"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "hba_port_count": 2,
+        "ports": [
+          {
+            "host": "host0",
+            "state": "Online",
+            "speed": "16 Gbit"
+          },
+          {
+            "host": "host1",
+            "state": "Online",
+            "speed": "16 Gbit"
+          }
+        ],
+        "bad_ports": []
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done\n실행 결과:\n  [host0] Online 16 Gbit\n  [host1] Online 16 Gbit",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done",
+        "실행 결과:",
+        "  [host0] Online 16 Gbit",
+        "  [host1] Online 16 Gbit"
+      ],
+      "message": "HBA connection check passed.",
+      "results": "hba_port_count=2",
+      "criteria": "ok: HBA port state is Online and port count >= 0",
+      "executed_command": [
+        "for h in /sys/class/fc_host/host*; do [ -d \"$h\" ] && echo \"[$(basename \"$h\")] $(cat \"$h\"/port_state 2>/dev/null) $(cat \"$h\"/speed 2>/dev/null)\"; done"
+      ]
+    }
+  ],
+  "failed_items": []
+}

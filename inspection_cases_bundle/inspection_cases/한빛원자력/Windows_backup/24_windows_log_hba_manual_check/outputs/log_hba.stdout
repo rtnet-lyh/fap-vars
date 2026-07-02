@@ -1,0 +1,21 @@
+{
+  "InitiatorPortsExposed": true,
+  "FcPortStateExposed": true,
+  "EventDataExposed": false,
+  "InitiatorPorts": [
+    {
+      "InstanceName": "PORT0",
+      "ConnectionType": "Fibre Channel",
+      "NodeAddress": "20000090FA5376EC",
+      "PortAddress": "10000090FA5376EC"
+    }
+  ],
+  "FcPorts": [
+    {
+      "InstanceName": "PORT0",
+      "PortState": "Operational",
+      "HBAStatus": "OK"
+    }
+  ],
+  "Events": []
+}

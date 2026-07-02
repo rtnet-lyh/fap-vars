@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "printf 'CPU(s): '; grep -c '^processor' /proc/cpuinfo; printf 'On-line CPU(s) list: '; cat /sys/devices/system/cpu/online 2>/dev/null || echo 0",
+    "rc": 0,
+    "stdout_file": "outputs/cpuinfo_online.stdout",
+    "stderr": ""
+  }
+]

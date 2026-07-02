@@ -1,0 +1,153 @@
+{
+  "items": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-RECOGNITION-01",
+      "item_id": 93006,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "expected_disk_inventory",
+          "value1": ""
+        },
+        {
+          "name": "unexpected_missing_device_allowed",
+          "value1": "false"
+        }
+      ],
+      "check_script": "# -*- coding: utf-8 -*-\n\nimport re\n\nfrom items.common._base import BaseCheck\n\n\nCHECK_COMMAND = 'cat /proc/partitions'\n\n\nclass Check(BaseCheck):\n    USE_HOST_CONNECTION = True\n    CONNECTION_METHOD = 'ssh'\n\n\n    def parse_output(self, output):\n        devices = []\n        for line in (output or '').splitlines():\n            parts = line.split()\n            if len(parts) == 4 and parts[0].isdigit() and parts[1].isdigit() and parts[2].isdigit():\n                devices.append(parts[3])\n        if not devices:\n            return {'failure_type': 'parse_failure', 'reason': '/proc/partitions has no device rows.'}\n        return {'device_count': len(devices), 'devices': devices}\n\n    def evaluate(self, metrics, expected_disk_inventory, unexpected_missing_device_allowed):\n        if metrics.get('failure_type'):\n            return 'fail'\n        expected = [item.strip() for item in re.split(r'[|,\\n]+', expected_disk_inventory or '') if item.strip()]\n        if not expected:\n            return 'ok'\n        missing = [item for item in expected if item not in metrics['devices']]\n        metrics['missing_devices'] = missing\n        return 'ok' if not missing or unexpected_missing_device_allowed else 'fail'\n\n    def build_result(self, metrics, expected_disk_inventory, unexpected_missing_device_allowed, status):\n        criteria = 'ok: disk inventory is readable and configured expected devices are present'\n        if metrics.get('failure_type'):\n            return {'message': 'disk recognition check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}\n        results = 'device_count=%d' % metrics['device_count']\n        message = 'disk recognition check passed.' if status == 'ok' else 'disk recognition check failed policy.'\n        return {'message': message, 'results': results, 'criteria': criteria}\n\n    def run(self):\n        expected_disk_inventory = self.get_threshold_var('expected_disk_inventory', default='', value_type='str')\n        unexpected_missing_device_allowed = self.get_threshold_var('unexpected_missing_device_allowed', default=False, value_type='bool')\n\n        rc, output, error = self._ssh(CHECK_COMMAND)\n\n        if rc != 0:\n            metrics = {\n                'failure_type': 'command_failure',\n                'rc': rc,\n                'reason': (error or output or 'command failed').strip(),\n            }\n        else:\n            metrics = self.parse_output(output)\n\n        status = self.evaluate(metrics, expected_disk_inventory, unexpected_missing_device_allowed)\n        result = self.build_result(metrics, expected_disk_inventory, unexpected_missing_device_allowed, status)\n\n        return self.result(\n            status=status,\n            message=result['message'],\n            metrics=metrics,\n            results=result['results'],\n            criteria=result['criteria'],\n        )\n\n\nCHECK_CLASS = Check\n",
+      "check_script_lines": [
+        "# -*- coding: utf-8 -*-",
+        "",
+        "import re",
+        "",
+        "from items.common._base import BaseCheck",
+        "",
+        "",
+        "CHECK_COMMAND = 'cat /proc/partitions'",
+        "",
+        "",
+        "class Check(BaseCheck):",
+        "    USE_HOST_CONNECTION = True",
+        "    CONNECTION_METHOD = 'ssh'",
+        "",
+        "",
+        "    def parse_output(self, output):",
+        "        devices = []",
+        "        for line in (output or '').splitlines():",
+        "            parts = line.split()",
+        "            if len(parts) == 4 and parts[0].isdigit() and parts[1].isdigit() and parts[2].isdigit():",
+        "                devices.append(parts[3])",
+        "        if not devices:",
+        "            return {'failure_type': 'parse_failure', 'reason': '/proc/partitions has no device rows.'}",
+        "        return {'device_count': len(devices), 'devices': devices}",
+        "",
+        "    def evaluate(self, metrics, expected_disk_inventory, unexpected_missing_device_allowed):",
+        "        if metrics.get('failure_type'):",
+        "            return 'fail'",
+        "        expected = [item.strip() for item in re.split(r'[|,\\n]+', expected_disk_inventory or '') if item.strip()]",
+        "        if not expected:",
+        "            return 'ok'",
+        "        missing = [item for item in expected if item not in metrics['devices']]",
+        "        metrics['missing_devices'] = missing",
+        "        return 'ok' if not missing or unexpected_missing_device_allowed else 'fail'",
+        "",
+        "    def build_result(self, metrics, expected_disk_inventory, unexpected_missing_device_allowed, status):",
+        "        criteria = 'ok: disk inventory is readable and configured expected devices are present'",
+        "        if metrics.get('failure_type'):",
+        "            return {'message': 'disk recognition check failed.', 'results': metrics.get('reason', ''), 'criteria': criteria}",
+        "        results = 'device_count=%d' % metrics['device_count']",
+        "        message = 'disk recognition check passed.' if status == 'ok' else 'disk recognition check failed policy.'",
+        "        return {'message': message, 'results': results, 'criteria': criteria}",
+        "",
+        "    def run(self):",
+        "        expected_disk_inventory = self.get_threshold_var('expected_disk_inventory', default='', value_type='str')",
+        "        unexpected_missing_device_allowed = self.get_threshold_var('unexpected_missing_device_allowed', default=False, value_type='bool')",
+        "",
+        "        rc, output, error = self._ssh(CHECK_COMMAND)",
+        "",
+        "        if rc != 0:",
+        "            metrics = {",
+        "                'failure_type': 'command_failure',",
+        "                'rc': rc,",
+        "                'reason': (error or output or 'command failed').strip(),",
+        "            }",
+        "        else:",
+        "            metrics = self.parse_output(output)",
+        "",
+        "        status = self.evaluate(metrics, expected_disk_inventory, unexpected_missing_device_allowed)",
+        "        result = self.build_result(metrics, expected_disk_inventory, unexpected_missing_device_allowed, status)",
+        "",
+        "        return self.result(",
+        "            status=status,",
+        "            message=result['message'],",
+        "            metrics=metrics,",
+        "            results=result['results'],",
+        "            criteria=result['criteria'],",
+        "        )",
+        "",
+        "",
+        "CHECK_CLASS = Check"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "inspection_code": "U-REPLAY-CENTOS7-DISK-RECOGNITION-01",
+      "item_id": 93006,
+      "application_id": 301,
+      "application_type_id": 10,
+      "application_type_name": "LINUX",
+      "application_name": "CentOS7",
+      "application_family_name": "Server",
+      "threshold_list": [
+        {
+          "name": "expected_disk_inventory",
+          "value1": ""
+        },
+        {
+          "name": "unexpected_missing_device_allowed",
+          "value1": "false"
+        }
+      ],
+      "status": "ok",
+      "metrics": {
+        "device_count": 6,
+        "devices": [
+          "sr0",
+          "sda",
+          "sda1",
+          "sda2",
+          "dm-0",
+          "dm-1"
+        ]
+      },
+      "thresholds": {},
+      "reasons": "",
+      "raw_output": "[점검 단계 1]\n실행 명령어:\n  cat /proc/partitions\n실행 결과:\n  major minor  #blocks  name\n    11        0     996352 sr0\n     8        0   20971520 sda\n     8        1    1048576 sda1\n     8        2   19921920 sda2\n   253        0   17821696 dm-0\n   253        1    2097152 dm-1",
+      "raw_output_lines": [
+        "[점검 단계 1]",
+        "실행 명령어:",
+        "  cat /proc/partitions",
+        "실행 결과:",
+        "  major minor  #blocks  name",
+        "    11        0     996352 sr0",
+        "     8        0   20971520 sda",
+        "     8        1    1048576 sda1",
+        "     8        2   19921920 sda2",
+        "   253        0   17821696 dm-0",
+        "   253        1    2097152 dm-1"
+      ],
+      "message": "disk recognition check passed.",
+      "results": "device_count=6",
+      "criteria": "ok: disk inventory is readable and configured expected devices are present",
+      "executed_command": [
+        "cat /proc/partitions"
+      ]
+    }
+  ],
+  "failed_items": []
+}

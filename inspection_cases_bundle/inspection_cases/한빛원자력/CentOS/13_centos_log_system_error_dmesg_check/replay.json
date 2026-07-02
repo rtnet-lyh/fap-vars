@@ -1,0 +1,9 @@
+[
+  {
+    "matcher_type": "exact",
+    "matcher_value": "dmesg 2>/dev/null | tail -300 | egrep -i 'error|fail|timeout|reset|i/o' || true",
+    "rc": 0,
+    "stdout_file": "outputs/dmesg_error.stdout",
+    "stderr": ""
+  }
+]
