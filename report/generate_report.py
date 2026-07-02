@@ -34,6 +34,19 @@ DEFAULT_ANSIBLE_LOG_ROOT = Path("/fap/logs/ansible")
 INVALID_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
 INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 MAX_SHEETS_PER_WORKBOOK = 250
+SUMMARY_RESULT_GOOD = "good"
+SUMMARY_RESULT_WARNING = "warning"
+SUMMARY_RESULT_BAD = "bad"
+SUMMARY_RESULT_EXCLUDED = "excluded"
+SUMMARY_RESULT_NOT_RUN = "not_run"
+SUMMARY_RESULT_UNKNOWN = "unknown"
+SUMMARY_RESULT_KEYS = (
+    SUMMARY_RESULT_GOOD,
+    SUMMARY_RESULT_WARNING,
+    SUMMARY_RESULT_BAD,
+    SUMMARY_RESULT_EXCLUDED,
+    SUMMARY_RESULT_NOT_RUN,
+)
 HWPX_SECTION_PATH = "Contents/section0.xml"
 HWPX_PREVIEW_TEXT_PATH = "Preview/PrvText.txt"
 PREVENTIVE_HWPX_CHECK_ITEM_WRAP_CHARS = 30
@@ -96,6 +109,11 @@ class SummaryRow(object):
         host_finished,
         duration_sec,
         error_message,
+        good_items=None,
+        warning_items=None,
+        bad_items=None,
+        excluded_items=None,
+        not_run_items=None,
     ):
         self.job_id = job_id
         self.category_type_name = category_type_name
@@ -115,6 +133,11 @@ class SummaryRow(object):
         self.host_finished = host_finished
         self.duration_sec = duration_sec
         self.error_message = error_message
+        self._good_items = None if good_items in (None, "") else int(good_items)
+        self._warning_items = None if warning_items in (None, "") else int(warning_items)
+        self._bad_items = None if bad_items in (None, "") else int(bad_items)
+        self._excluded_items = None if excluded_items in (None, "") else int(excluded_items)
+        self._not_run_items = None if not_run_items in (None, "") else int(not_run_items)
 
     @property
     def host_key(self):
@@ -122,15 +145,39 @@ class SummaryRow(object):
 
     @property
     def good_items(self) -> int:
+        if self._good_items is not None:
+            return self._good_items
         return self.vuln_items
 
     @property
-    def vulnerable_items(self) -> int:
+    def warning_items(self) -> int:
+        return self._warning_items if self._warning_items is not None else 0
+
+    @property
+    def bad_items(self) -> int:
+        if self._bad_items is not None:
+            return self._bad_items
         return self.error_items
 
     @property
+    def vulnerable_items(self) -> int:
+        return self.bad_items
+
+    @property
+    def excluded_items(self) -> int:
+        return self._excluded_items if self._excluded_items is not None else 0
+
+    @property
     def not_run_items(self) -> int:
-        computed = self.total_items - self.vuln_items - self.error_items
+        if self._not_run_items is not None:
+            return self._not_run_items
+        computed = (
+            self.total_items
+            - self.good_items
+            - self.warning_items
+            - self.bad_items
+            - self.excluded_items
+        )
         return computed if computed > 0 else 0
 
     @classmethod
@@ -154,6 +201,67 @@ class SummaryRow(object):
             host_finished=row.get("host_finished"),
             duration_sec=_to_optional_int(row.get("duration_sec")),
             error_message=str(row.get("error_message") or ""),
+            good_items=_first_optional_int(
+                row,
+                "good_items",
+                "good_count",
+                "ok_items",
+                "ok_count",
+                "pass_items",
+                "pass_count",
+                "success_items",
+                "success_count",
+                "normal_items",
+                "normal_count",
+            ),
+            warning_items=_first_optional_int(
+                row,
+                "warning_items",
+                "warning_count",
+                "warn_items",
+                "warn_count",
+                "caution_items",
+                "caution_count",
+            ),
+            bad_items=_first_optional_int(
+                row,
+                "bad_items",
+                "bad_count",
+                "fail_items",
+                "fail_count",
+                "failed_items",
+                "failed_count",
+                "defect_items",
+                "defect_count",
+            ),
+            excluded_items=_first_optional_int(
+                row,
+                "excluded_items",
+                "excluded_count",
+                "exclude_items",
+                "exclude_count",
+                "except_items",
+                "except_count",
+                "skip_items",
+                "skip_count",
+                "skipped_items",
+                "skipped_count",
+            ),
+            not_run_items=_first_optional_int(
+                row,
+                "not_run_items",
+                "not_run_count",
+                "notrun_items",
+                "notrun_count",
+                "not_executed_items",
+                "not_executed_count",
+                "not_checked_items",
+                "not_checked_count",
+                "unchecked_items",
+                "unchecked_count",
+                "pending_items",
+                "pending_count",
+            ),
         )
 
 
@@ -258,13 +366,20 @@ class OverviewMetrics(object):
         average_not_run_items,
         target_count,
         type_count,
+        average_warning_items=0,
+        average_bad_items=None,
+        average_excluded_items=0,
     ):
+        resolved_bad_items = average_vuln_items if average_bad_items is None else average_bad_items
         self.job_id = job_id
         self.category_type_name = category_type_name
         self.average_score = average_score
         self.average_total_items = average_total_items
         self.average_good_items = average_good_items
-        self.average_vuln_items = average_vuln_items
+        self.average_warning_items = average_warning_items
+        self.average_bad_items = resolved_bad_items
+        self.average_vuln_items = resolved_bad_items
+        self.average_excluded_items = average_excluded_items
         self.average_not_run_items = average_not_run_items
         self.target_count = target_count
         self.type_count = type_count
@@ -631,11 +746,16 @@ def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3
     summary_rows = []
     detail_rows = []
     importance_cycle = ["1", "2", "3"]
-    result_cycle = ["양호", "취약", "미실행"]
+    result_cycle = ["양호", "경고", "불량", "제외", "미실행"]
 
     for host_index in range(1, host_count + 1):
         host_name = f"MOCK-HOST-{host_index:03d}"
         host_ip = f"10.10.{(host_index - 1) // 250}.{(host_index - 1) % 250 + 1}"
+        mock_results = [
+            result_cycle[(item_index - 1) % len(result_cycle)]
+            for item_index in range(1, items_per_host + 1)
+        ]
+        mock_counts = count_summary_result_status_values(mock_results)
         summary_rows.append(
             SummaryRow(
                 job_id=job_id,
@@ -649,13 +769,18 @@ def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3
                 host_ip=host_ip,
                 host_status="success",
                 total_items=items_per_host,
-                vuln_items=max(items_per_host - 2, 0),
-                error_items=1 if items_per_host > 1 else 0,
+                vuln_items=mock_counts[SUMMARY_RESULT_GOOD],
+                error_items=mock_counts[SUMMARY_RESULT_BAD],
                 score=max(100 - host_index % 17, 70),
                 host_started=datetime(2026, 3, 17, 9, 0, 0),
                 host_finished=datetime(2026, 3, 17, 9, 5, 0),
                 duration_sec=300,
                 error_message="",
+                good_items=mock_counts[SUMMARY_RESULT_GOOD],
+                warning_items=mock_counts[SUMMARY_RESULT_WARNING],
+                bad_items=mock_counts[SUMMARY_RESULT_BAD],
+                excluded_items=mock_counts[SUMMARY_RESULT_EXCLUDED],
+                not_run_items=mock_counts[SUMMARY_RESULT_NOT_RUN],
             )
         )
 
@@ -676,7 +801,7 @@ def build_mock_report_rows(job_id: int, host_count: int, items_per_host: int = 3
                     application_type_name="mock-app-type",
                     application_name="mock-app",
                     application_version="1.0",
-                    result_status=result_cycle[(item_index - 1) % len(result_cycle)],
+                    result_status=mock_results[item_index - 1],
                     message=f"Mock message for host {host_index}, item {item_index}",
                     raw_output=f"Mock raw output for host {host_index}, item {item_index}",
                     description=f"Mock description for host {host_index}, item {item_index}",
@@ -713,11 +838,14 @@ def compute_overview_metrics(
         category_type_name=first_row.category_type_name,
         average_score=average_or_zero(row.score or 0 for row in summary_rows),
         average_total_items=average_or_zero(row.total_items for row in summary_rows),
-        average_good_items=average_or_zero(counts[0] for counts in summary_result_counts),
-        average_vuln_items=average_or_zero(counts[1] for counts in summary_result_counts),
-        average_not_run_items=average_or_zero(counts[2] for counts in summary_result_counts),
+        average_good_items=average_or_zero(counts[SUMMARY_RESULT_GOOD] for counts in summary_result_counts),
+        average_vuln_items=average_or_zero(counts[SUMMARY_RESULT_BAD] for counts in summary_result_counts),
+        average_not_run_items=average_or_zero(counts[SUMMARY_RESULT_NOT_RUN] for counts in summary_result_counts),
         target_count=len(unique_hosts),
         type_count=len(distinct_type_names),
+        average_warning_items=average_or_zero(counts[SUMMARY_RESULT_WARNING] for counts in summary_result_counts),
+        average_bad_items=average_or_zero(counts[SUMMARY_RESULT_BAD] for counts in summary_result_counts),
+        average_excluded_items=average_or_zero(counts[SUMMARY_RESULT_EXCLUDED] for counts in summary_result_counts),
     )
 
 
@@ -1304,13 +1432,17 @@ def derive_summary_detail_result_status(summary_row: Optional[SummaryRow]) -> Op
         return None
     if (
         summary_row.good_items >= summary_row.total_items
-        and summary_row.vulnerable_items == 0
+        and summary_row.warning_items == 0
+        and summary_row.bad_items == 0
+        and summary_row.excluded_items == 0
         and summary_row.not_run_items == 0
     ):
         return "PASS"
     if (
-        summary_row.vulnerable_items >= summary_row.total_items
+        summary_row.bad_items >= summary_row.total_items
         and summary_row.good_items == 0
+        and summary_row.warning_items == 0
+        and summary_row.excluded_items == 0
         and summary_row.not_run_items == 0
     ):
         return "FAIL"
@@ -1320,13 +1452,116 @@ def derive_summary_detail_result_status(summary_row: Optional[SummaryRow]) -> Op
 def compute_summary_result_counts(
     summary_row: SummaryRow,
     details_for_host: Optional[Sequence[DetailRow]] = None,
-) -> Tuple[int, int, int]:
+) -> Dict[str, int]:
     details = select_details_for_summary_row(summary_row, details_for_host)
     if details and len(details) == summary_row.total_items:
-        pass_count, fail_count = count_detail_result_statuses(details)
-        not_run_count = summary_row.total_items - pass_count - fail_count
-        return pass_count, fail_count, not_run_count if not_run_count > 0 else 0
-    return summary_row.good_items, summary_row.vulnerable_items, summary_row.not_run_items
+        return reconcile_summary_result_counts(
+            summary_row,
+            count_summary_detail_result_statuses(details),
+        )
+    return build_summary_result_counts_from_summary_row(summary_row)
+
+
+def build_summary_result_counts_from_summary_row(summary_row: SummaryRow) -> Dict[str, int]:
+    return {
+        SUMMARY_RESULT_GOOD: summary_row.good_items,
+        SUMMARY_RESULT_WARNING: summary_row.warning_items,
+        SUMMARY_RESULT_BAD: summary_row.bad_items,
+        SUMMARY_RESULT_EXCLUDED: summary_row.excluded_items,
+        SUMMARY_RESULT_NOT_RUN: summary_row.not_run_items,
+    }
+
+
+def count_summary_detail_result_statuses(details_for_host: Sequence[DetailRow]) -> Dict[str, int]:
+    return count_summary_result_status_values(detail_row.result_status for detail_row in details_for_host)
+
+
+def reconcile_summary_result_counts(summary_row: SummaryRow, detail_counts: Mapping[str, int]) -> Dict[str, int]:
+    counts = {key: int(detail_counts.get(key, 0)) for key in SUMMARY_RESULT_KEYS}
+
+    if summary_row.excluded_items > 0 and counts[SUMMARY_RESULT_EXCLUDED] == 0:
+        move_count = min(summary_row.excluded_items, counts[SUMMARY_RESULT_GOOD])
+        counts[SUMMARY_RESULT_GOOD] -= move_count
+        counts[SUMMARY_RESULT_EXCLUDED] += move_count
+
+    pass_surplus = counts[SUMMARY_RESULT_GOOD] - summary_row.good_items
+    if (
+        pass_surplus > 0
+        and summary_row.not_run_items >= pass_surplus
+        and summary_row.excluded_items == 0
+        and counts[SUMMARY_RESULT_EXCLUDED] == 0
+    ):
+        counts[SUMMARY_RESULT_GOOD] -= pass_surplus
+        counts[SUMMARY_RESULT_EXCLUDED] += pass_surplus
+
+    return counts
+
+
+def count_summary_result_status_values(result_statuses: Iterable[Any]) -> Dict[str, int]:
+    counts = {key: 0 for key in SUMMARY_RESULT_KEYS}
+    for result_status in result_statuses:
+        status_type = classify_summary_result_status(result_status)
+        if status_type not in counts:
+            status_type = SUMMARY_RESULT_NOT_RUN
+        counts[status_type] += 1
+    return counts
+
+
+def classify_summary_result_status(result_status: Any) -> str:
+    normalized = ("" if result_status is None else str(result_status)).strip().lower()
+    compact = re.sub(r"[\s_-]+", "", normalized)
+    if normalized in {"pass", "양호", "success", "ok", "good", "normal"} or compact in {
+        "pass",
+        "success",
+        "ok",
+        "good",
+        "normal",
+    }:
+        return SUMMARY_RESULT_GOOD
+    if normalized in {"warn", "warning", "caution", "경고"} or compact in {"warn", "warning", "caution"}:
+        return SUMMARY_RESULT_WARNING
+    if normalized in {
+        "fail",
+        "failed",
+        "failure",
+        "error",
+        "bad",
+        "danger",
+        "vulnerable",
+        "vuln",
+        "취약",
+        "불량",
+    } or compact in {"fail", "failed", "failure", "error", "bad", "danger", "vulnerable", "vuln"}:
+        return SUMMARY_RESULT_BAD
+    if normalized in {
+        "exclude",
+        "excluded",
+        "exclusion",
+        "exclustion",
+        "skip",
+        "skipped",
+        "n/a",
+        "na",
+        "not applicable",
+        "제외",
+        "해당없음",
+    } or compact in {"exclude", "excluded", "exclusion", "exclustion", "skip", "skipped", "na", "notapplicable"}:
+        return SUMMARY_RESULT_EXCLUDED
+    if normalized in {
+        "",
+        "not run",
+        "not-run",
+        "not_run",
+        "not executed",
+        "not checked",
+        "running",
+        "progress",
+        "pending",
+        "미실행",
+        "미수행",
+    } or compact in {"notrun", "notexecuted", "notchecked", "running", "progress", "pending"}:
+        return SUMMARY_RESULT_NOT_RUN
+    return SUMMARY_RESULT_UNKNOWN
 
 
 def build_detail_title_text(summary_row: SummaryRow, detail_rows: Sequence[DetailRow]) -> str:
@@ -1435,6 +1670,15 @@ def build_report_styles() -> Dict[str, Any]:
 
 def resolve_state_fill(status_text: str, styles: Mapping[str, Any]) -> Any:
     normalized = (status_text or "").strip().lower()
+    summary_status_type = classify_summary_result_status(status_text)
+    if summary_status_type == SUMMARY_RESULT_GOOD:
+        return styles["success_fill"]
+    if summary_status_type == SUMMARY_RESULT_BAD:
+        return styles["danger_fill"]
+    if summary_status_type in {SUMMARY_RESULT_WARNING, SUMMARY_RESULT_NOT_RUN}:
+        return styles["warning_fill"]
+    if summary_status_type == SUMMARY_RESULT_EXCLUDED:
+        return styles["neutral_fill"]
     status_type = classify_detail_result_status(status_text)
     if status_type == "pass":
         return styles["success_fill"]
@@ -1505,14 +1749,14 @@ def build_summary_sheet(
 
     summary_sheet.sheet_view.showGridLines = False
 
-    summary_sheet.merge_cells("A1:M1")
+    summary_sheet.merge_cells("A1:O1")
     summary_sheet["A1"] = "점검 보고서"
     summary_sheet["A1"].font = styles["title_font"]
     summary_sheet["A1"].fill = styles["title_fill"]
     summary_sheet["A1"].alignment = styles["center_alignment"]
     summary_sheet.row_dimensions[1].height = 26
 
-    summary_sheet.merge_cells("A2:M2")
+    summary_sheet.merge_cells("A2:O2")
     summary_sheet["A2"] = "작업 정보"
     summary_sheet["A2"].font = styles["subtitle_font"]
     summary_sheet["A2"].fill = styles["subtitle_fill"]
@@ -1537,7 +1781,7 @@ def build_summary_sheet(
     )
     summary_sheet.row_dimensions[3].height = 24
 
-    summary_sheet.merge_cells("A4:M4")
+    summary_sheet.merge_cells("A4:O4")
     summary_sheet["A4"] = "평균 지표"
     summary_sheet["A4"].font = styles["subtitle_font"]
     summary_sheet["A4"].fill = styles["subtitle_fill"]
@@ -1551,8 +1795,10 @@ def build_summary_sheet(
             (2, 3, 3, "점수", round(float(overview.average_score), 1)),
             (4, 5, 5, "항목", overview.average_total_items),
             (6, 7, 7, "양호", overview.average_good_items),
-            (8, 9, 9, "취약", overview.average_vuln_items),
-            (10, 11, 11, "미실행", overview.average_not_run_items),
+            (8, 9, 9, "경고", overview.average_warning_items),
+            (10, 11, 11, "불량", overview.average_bad_items),
+            (12, 13, 13, "제외", overview.average_excluded_items),
+            (14, 15, 15, "미실행", overview.average_not_run_items),
         ],
         label_font=styles["section_label_font"],
         value_font=styles["section_value_font"],
@@ -1562,7 +1808,7 @@ def build_summary_sheet(
         label_alignment=styles["center_alignment"],
         value_alignment=styles["center_alignment"],
     )
-    for coordinate in ("C5", "E5", "G5", "I5", "K5"):
+    for coordinate in ("C5", "E5", "G5", "I5", "K5", "M5", "O5"):
         summary_sheet[coordinate].number_format = "0.0"
     summary_sheet.row_dimensions[5].height = 24
 
@@ -1575,7 +1821,9 @@ def build_summary_sheet(
         "작업상태",
         "항목",
         "양호",
-        "취약",
+        "경고",
+        "불량",
+        "제외",
         "미실행",
         "시작시간",
         "종료시간",
@@ -1593,7 +1841,7 @@ def build_summary_sheet(
         number = row_index - header_row
         row_fill = styles["even_row_fill"] if number % 2 == 0 else styles["odd_row_fill"]
         details_for_host = (grouped_details or {}).get(summary_row.host_key, [])
-        good_items, vulnerable_items, not_run_items = compute_summary_result_counts(
+        result_counts = compute_summary_result_counts(
             summary_row,
             details_for_host,
         )
@@ -1613,9 +1861,11 @@ def build_summary_sheet(
             round(float(summary_row.score or 0), 2),
             summary_row.host_status,
             summary_row.total_items,
-            good_items,
-            vulnerable_items,
-            not_run_items,
+            result_counts[SUMMARY_RESULT_GOOD],
+            result_counts[SUMMARY_RESULT_WARNING],
+            result_counts[SUMMARY_RESULT_BAD],
+            result_counts[SUMMARY_RESULT_EXCLUDED],
+            result_counts[SUMMARY_RESULT_NOT_RUN],
             format_datetime(summary_row.host_started),
             format_datetime(summary_row.host_finished),
             format_duration(summary_row.duration_sec),
@@ -1624,7 +1874,9 @@ def build_summary_sheet(
             cell = summary_sheet.cell(row=row_index, column=column_offset, value=value)
             cell.font = styles["body_font"]
             cell.alignment = (
-                styles["center_alignment"] if column_offset in {5, 6, 7, 8, 9, 10, 13} else styles["left_alignment"]
+                styles["center_alignment"]
+                if column_offset in {5, 6, 7, 8, 9, 10, 11, 12, 15}
+                else styles["left_alignment"]
             )
             if column_offset == 5:
                 cell.number_format = "0.00"
@@ -1636,7 +1888,7 @@ def build_summary_sheet(
         summary_sheet.row_dimensions[row_index].height = 21
 
     summary_sheet.freeze_panes = "A8"
-    summary_sheet.auto_filter.ref = f"A7:M{max(len(summary_rows) + 7, 7)}"
+    summary_sheet.auto_filter.ref = f"A7:O{max(len(summary_rows) + 7, 7)}"
     autosize_sheet(
         summary_sheet,
         get_column_letter,
@@ -1650,10 +1902,12 @@ def build_summary_sheet(
             "G": 8,
             "H": 8,
             "I": 8,
-            "J": 12.13,
-            "K": 20,
-            "L": 20,
-            "M": 12,
+            "J": 8,
+            "K": 8,
+            "L": 12.13,
+            "M": 20,
+            "N": 20,
+            "O": 12,
         },
     )
 
@@ -2053,7 +2307,7 @@ def classify_detail_result_status(result_status: Any) -> str:
     normalized = ("" if result_status is None else str(result_status)).strip().lower()
     if normalized in {"pass", "양호", "success", "ok"}:
         return "pass"
-    if normalized in {"fail", "취약", "error", "failed", "warn", "warning", "경고"}:
+    if normalized in {"fail", "취약", "불량", "error", "failed", "bad", "vuln", "warn", "warning", "경고"}:
         return "fail"
     return "unknown"
 
@@ -2999,12 +3253,18 @@ def render_preventive_hwpx_detail_rows(
             )
             set_preventive_hwpx_table_row_height(row, row_line_count)
             spacer_remove_count += max(row_line_count - 1, 0)
-            set_hwpx_table_cell_text(row, note_column_index, "")
+            set_hwpx_table_cell_text(row, note_column_index, build_preventive_hwpx_detail_note(detail_row))
         table.insert(data_row_index + detail_index - 1, row)
 
     table.set("rowCnt", str(max(len(rows) - 1, 0) + len(render_details)))
     resize_preventive_hwpx_table_height(table)
     return spacer_remove_count
+
+
+def build_preventive_hwpx_detail_note(detail_row: DetailRow) -> str:
+    if classify_summary_result_status(detail_row.result_status) == SUMMARY_RESULT_EXCLUDED:
+        return "제외"
+    return ""
 
 
 def build_preventive_hwpx_result_replacements(
@@ -3822,6 +4082,14 @@ def _to_optional_int(value: Any) -> Optional[int]:
     if value in (None, ""):
         return None
     return int(value)
+
+
+def _first_optional_int(row: Mapping[str, Any], *keys: str) -> Optional[int]:
+    for key in keys:
+        value = row.get(key)
+        if value not in (None, ""):
+            return _to_optional_int(value)
+    return None
 
 
 def _to_float(value: Any) -> Optional[float]:
