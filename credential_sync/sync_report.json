@@ -1,79 +1,218 @@
 {
-  "generated_at": "2026-04-27T11:44:45.293173+00:00",
+  "generated_at": "2026-08-12T03:33:04.377254+00:00",
   "mode": "apply",
   "blocked": false,
   "settings": {
-    "exclude_credential_type_ids": [
-      3
-    ],
+    "exclude_credential_type_ids": [],
     "require_same_credential_type": true,
     "allowed_area_names": [
-      "서버",
-      "클라우드"
+      "테스트분야",
+      "테스트분야2"
     ]
   },
   "host_ip_summary": {
-    "source_enabled_hosts": 1,
-    "target_enabled_hosts": 1,
-    "intersection_count": 1,
+    "source_enabled_hosts": 133,
+    "target_enabled_hosts": 12,
+    "intersection_count": 6,
     "intersections": [
       {
-        "ip": "192.168.1.123",
-        "fap_host_id": 1,
+        "ip": "1.1.1.1",
+        "fap_host_id": 6,
         "fap_host_name": "test",
         "vars_hosts": [
           {
-            "vars_host_id": 1,
+            "vars_host_id": 11,
+            "vars_host_name": "test"
+          }
+        ]
+      },
+      {
+        "ip": "192.168.1.163",
+        "fap_host_id": 31,
+        "fap_host_name": "solaris163",
+        "vars_hosts": [
+          {
+            "vars_host_id": 10,
+            "vars_host_name": "unix(solaris)"
+          }
+        ]
+      },
+      {
+        "ip": "172.20.2.100",
+        "fap_host_id": 140,
+        "fap_host_name": "windows_lyh_pc",
+        "vars_hosts": [
+          {
+            "vars_host_id": 13,
+            "vars_host_name": "WINDOWSPC"
+          }
+        ]
+      },
+      {
+        "ip": "192.168.1.123",
+        "fap_host_id": 141,
+        "fap_host_name": "RTNET_B1_FILESVR",
+        "vars_hosts": [
+          {
+            "vars_host_id": 8,
             "vars_host_name": "testrocky"
+          }
+        ]
+      },
+      {
+        "ip": "192.168.1.9",
+        "fap_host_id": 148,
+        "fap_host_name": "kss_win2019",
+        "vars_hosts": [
+          {
+            "vars_host_id": 17,
+            "vars_host_name": "window_server1"
+          }
+        ]
+      },
+      {
+        "ip": "33.33.33.33",
+        "fap_host_id": 153,
+        "fap_host_name": "동기화테스트계정",
+        "vars_hosts": [
+          {
+            "vars_host_id": 19,
+            "vars_host_name": "계정동기화테스트"
           }
         ]
       }
     ]
   },
   "decision_counts": {
-    "matched_hai_rows": 2,
-    "skip_credential_type_mismatch": 1,
-    "eligible_update": 1
+    "matched_hai_rows": 7,
+    "skip_area_not_allowed": 5,
+    "eligible_update": 1,
+    "skip_credential_type_mismatch": 1
   },
-  "matched_hai_rows": 2,
+  "matched_hai_rows": 7,
   "eligible_updates": 1,
   "applied_updates": 1,
   "duplicate_ip_errors": [],
   "updates": [
     {
-      "ip": "192.168.1.123",
-      "fap_host_id": 1,
-      "fap_host_name": "test",
-      "source_credential_type_id": 5,
-      "vars_host_id": 1,
-      "vars_host_name": "testrocky",
-      "host_application_id": 5,
-      "area_id": 1,
-      "area_name": "클라우드",
-      "application_type_id": 1,
-      "application_id": 1,
+      "ip": "33.33.33.33",
+      "fap_host_id": 153,
+      "fap_host_name": "동기화테스트계정",
+      "source_credential_type_id": 2,
+      "vars_host_id": 19,
+      "vars_host_name": "계정동기화테스트",
+      "host_application_id": 32,
+      "area_id": 17,
+      "area_name": "테스트분야",
+      "application_type_id": 28,
+      "application_id": 36,
       "application_family_id": null,
       "application_version": null,
-      "target_credential_type_id": 5,
+      "target_credential_type_id": 2,
       "decision": "eligible_update"
     }
   ],
   "skipped": [
     {
-      "ip": "192.168.1.123",
-      "fap_host_id": 1,
+      "ip": "1.1.1.1",
+      "fap_host_id": 6,
       "fap_host_name": "test",
       "source_credential_type_id": 5,
-      "vars_host_id": 1,
-      "vars_host_name": "testrocky",
-      "host_application_id": 4,
-      "area_id": 2,
+      "vars_host_id": 11,
+      "vars_host_name": "test",
+      "host_application_id": 21,
+      "area_id": 12,
       "area_name": "서버",
-      "application_type_id": 3,
-      "application_id": 3,
+      "application_type_id": 19,
+      "application_id": 20,
       "application_family_id": null,
-      "application_version": "8",
+      "application_version": null,
       "target_credential_type_id": 2,
+      "decision": "skip_area_not_allowed"
+    },
+    {
+      "ip": "172.20.2.100",
+      "fap_host_id": 140,
+      "fap_host_name": "windows_lyh_pc",
+      "source_credential_type_id": 4,
+      "vars_host_id": 13,
+      "vars_host_name": "WINDOWSPC",
+      "host_application_id": 23,
+      "area_id": 12,
+      "area_name": "서버",
+      "application_type_id": 27,
+      "application_id": 34,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 4,
+      "decision": "skip_area_not_allowed"
+    },
+    {
+      "ip": "192.168.1.123",
+      "fap_host_id": 141,
+      "fap_host_name": "RTNET_B1_FILESVR",
+      "source_credential_type_id": 2,
+      "vars_host_id": 8,
+      "vars_host_name": "testrocky",
+      "host_application_id": 15,
+      "area_id": 12,
+      "area_name": "서버",
+      "application_type_id": 19,
+      "application_id": 20,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 2,
+      "decision": "skip_area_not_allowed"
+    },
+    {
+      "ip": "192.168.1.163",
+      "fap_host_id": 31,
+      "fap_host_name": "solaris163",
+      "source_credential_type_id": 2,
+      "vars_host_id": 10,
+      "vars_host_name": "unix(solaris)",
+      "host_application_id": 24,
+      "area_id": 12,
+      "area_name": "서버",
+      "application_type_id": 25,
+      "application_id": 32,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 2,
+      "decision": "skip_area_not_allowed"
+    },
+    {
+      "ip": "192.168.1.9",
+      "fap_host_id": 148,
+      "fap_host_name": "kss_win2019",
+      "source_credential_type_id": 4,
+      "vars_host_id": 17,
+      "vars_host_name": "window_server1",
+      "host_application_id": 29,
+      "area_id": 12,
+      "area_name": "서버",
+      "application_type_id": 24,
+      "application_id": 27,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 4,
+      "decision": "skip_area_not_allowed"
+    },
+    {
+      "ip": "33.33.33.33",
+      "fap_host_id": 153,
+      "fap_host_name": "동기화테스트계정",
+      "source_credential_type_id": 2,
+      "vars_host_id": 19,
+      "vars_host_name": "계정동기화테스트",
+      "host_application_id": 33,
+      "area_id": 18,
+      "area_name": "테스트분야2",
+      "application_type_id": 29,
+      "application_id": 37,
+      "application_family_id": null,
+      "application_version": null,
+      "target_credential_type_id": 4,
       "decision": "skip_credential_type_mismatch"
     }
   ]
